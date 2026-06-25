@@ -710,14 +710,14 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .hm-title{font-size:13px;font-weight:800;color:var(--text2);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
 .hm-grid-mes{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .hm-dow{font-size:9px;font-weight:700;text-align:center;color:var(--text3);padding:2px 0;text-transform:uppercase}
-.hm-day{min-height:44px;border-radius:var(--r-lg);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:700;cursor:default;transition:transform .1s;border:1.5px solid transparent;position:relative}
+.hm-day{min-height:44px;border-radius:var(--r-lg);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:700;cursor:pointer;transition:transform .1s;border:1.5px solid transparent;position:relative}
 .hm-day:hover{transform:scale(1.08);z-index:2}
 .hm-day.today{border-color:var(--c-blue)}
 .hm-day.other{opacity:.2;pointer-events:none}
 .hm-day-num{font-size:9px;font-weight:600;margin-bottom:2px;color:var(--text3)}
 .hm-day-cnt{font-size:13px;font-weight:800}
 .hm-grid-ano{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;margin-top:8px}
-.hm-month-cell{border-radius:var(--r-lg);padding:8px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:default;transition:transform .1s;min-height:70px}
+.hm-month-cell{border-radius:var(--r-lg);padding:8px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;transition:transform .1s;min-height:70px}
 .hm-month-cell:hover{transform:scale(1.06);z-index:2}
 .hm-month-name{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3)}
 .hm-month-cnt{font-size:20px;font-weight:800}
@@ -1194,7 +1194,7 @@ function allKeys(inst){
   return keys;
 }
 
-function applyInstEd(inst){var e=ovInstEdit[inst.key]||{};if(Object.keys(e).length)Object.assign(inst,e);return inst;}
+function applyInstEd(inst){var e=ovInstEdit[inst.key]||{};if(Object.keys(e).length){var origDl=inst.deadline;var isWk=inst.kind==="SEMANAL";if(isWk){e=Object.assign({},e);delete e.deadline;delete e.date;delete e.dates;}Object.assign(inst,e);if(!isWk&&inst.deadline&&!(inst.deadline instanceof Date)){var pd=new Date(inst.deadline);inst.deadline=isNaN(pd.getTime())?origDl:pd;}if(isWk)inst.deadline=origDl;}return inst;}
 function hasInstEd(inst){return!!(ovInstEdit[inst.key]&&Object.keys(ovInstEdit[inst.key]).length);}
 function buildInst(){
   var Y=curYear,M=curMonth,tasks=allBase().map(eff);var inst=[];
@@ -1580,7 +1580,9 @@ function renderTimeline(rows){
   html+="</div></div>";
 
   rangeInst.forEach(function(i){
-    var dl=new Date(i.deadline);dl.setHours(0,0,0,0);
+    var dl=new Date(i.deadline);
+    if(isNaN(dl.getTime()))return;
+    dl.setHours(0,0,0,0);
     var diffDl=Math.round((dl-today)/86400000);
     var s=isDone(i)?"ok":sit(i);
     var dotColors={ok:"var(--c-teal)",venc:"var(--c-red)",prox:"var(--c-amber)",fut:"var(--c-blue)",sem:"var(--text3)"};
@@ -1700,11 +1702,24 @@ function renderHeatMapMes(allInst){
     var isToday=(d===todayD);
     var bg=hmRedColor(cnt,maxCnt);
     var tc=hmRedTC(cnt,maxCnt);
-    html+='<div class="hm-day'+(isToday?" today":"")+'" style="background:'+bg+';color:'+tc+'" title="'+cnt+' tarefa'+(cnt!==1?"s":"")+'"><span class="hm-day-num">'+d+'</span>'+(cnt>0?'<span class="hm-day-cnt">'+cnt+'</span>':'')+'</div>';
+    html+='<div class="hm-day'+(isToday?" today":"")+(cnt>0?" hm-day-has":"")+'" data-day="'+d+'" style="background:'+bg+';color:'+tc+'" title="'+cnt+' tarefa'+(cnt!==1?"s":"")+'"><span class="hm-day-num">'+d+'</span>'+(cnt>0?'<span class="hm-day-cnt">'+cnt+'</span>':'')+'</div>';
   }
   html+='</div>';
   html+='</div>';
   document.getElementById("body").innerHTML=html;
+  // Click dia -> lista filtrada por dia
+  document.querySelectorAll(".hm-day[data-day]").forEach(function(cell){
+    cell.onclick=function(){
+      var d=+cell.dataset.day;
+      if(!d)return;
+      viewMode="lista";
+      document.querySelectorAll(".vtbtn").forEach(function(b){b.classList.toggle("active",b.dataset.v==="lista");});
+      focusedKey=null;kpiFilter=null;
+      document.getElementById("q").value="";
+      dayFilter=d;
+      renderAll();
+    };
+  });
 }
 
 /* ── HEATMAP ANUAL (z-score por mês) ── */
@@ -1740,7 +1755,7 @@ function renderHeatMapAno(allInst){
     var bg=hmRedColorZ(z);
     var tc=hmRedTCZ(z);
     var isCurMonth=(Y===curYear&&m===curMonth);
-    html+='<div class="hm-month-cell" style="background:'+bg+';color:'+tc+(isCurMonth?';border:2px solid var(--c-blue)':'') +'" title="'+ML[m-1]+': '+cnt+' tarefas">';
+    html+='<div class="hm-month-cell" data-month="'+m+'" style="background:'+bg+';color:'+tc+(isCurMonth?';border:2px solid var(--c-blue)':'') +'" title="'+ML[m-1]+': '+cnt+' tarefas">';
     html+='<span class="hm-month-name">'+ML[m-1].substring(0,3)+'</span>';
     html+='<span class="hm-month-cnt">'+cnt+'</span>';
     html+='</div>';
@@ -1748,6 +1763,19 @@ function renderHeatMapAno(allInst){
   html+='</div>';
   html+='</div>';
   document.getElementById("body").innerHTML=html;
+  // Click mes -> lista filtrada por mes
+  document.querySelectorAll(".hm-month-cell[data-month]").forEach(function(cell){
+    cell.onclick=function(){
+      var m=+cell.dataset.month;
+      if(!m)return;
+      viewMode="lista";
+      document.querySelectorAll(".vtbtn").forEach(function(b){b.classList.toggle("active",b.dataset.v==="lista");});
+      focusedKey=null;kpiFilter=null;dayFilter=null;
+      document.getElementById("q").value="";
+      curMonth=m;
+      renderAll();
+    };
+  });
 }
 
 var tdKey=null;
