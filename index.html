@@ -874,7 +874,7 @@ Divisão Administrativa"></textarea></div>
 
 <div class="mbg" id="delbg"><div class="modal"><div class="mh"><h3 style="color:var(--c-red)">⚠ Confirmar</h3><button class="mx" id="del_close">✕</button></div><div class="mbody"><p id="del_msg" style="color:var(--text2);font-size:13px;line-height:1.6"></p></div><div class="mfoot"><button class="bcancel" id="del_cancel">Cancelar</button><button class="brestore danger" id="del_confirm">Confirmar</button></div></div></div>
 
-<div class="mbg" id="recdlg"><div class="modal" style="max-width:420px"><div class="mh"><h3>🔁 <span id="recdlg_title">Tarefa recorrente</span></h3><button class="mx" id="recdlg_close">✕</button></div><div class="mbody"><p id="recdlg_msg" style="color:var(--text2);font-size:13px;line-height:1.55;margin:0 0 18px"></p><div style="display:flex;flex-direction:column;gap:10px"><button class="recdlg-opt" id="recdlg_one"><span class="ro-icon">📌</span><span class="ro-text"><b>Somente esta ocorrência</b><small>As demais instâncias não serão afetadas</small></span></button><button class="recdlg-opt success" id="recdlg_past"><span class="ro-icon">⬅</span><span class="ro-text"><b>Esta e as passadas</b><small>Conclui esta e todas as ocorrências de meses anteriores</small></span></button><button class="recdlg-opt primary" id="recdlg_future"><span class="ro-icon">🔁</span><span class="ro-text"><b>Esta e as futuras</b><small>Afeta esta e todas as ocorrências seguintes</small></span></button><button class="recdlg-opt" id="recdlg_all"><span class="ro-icon">⚡</span><span class="ro-text"><b>Todas as ocorrências</b><small>Afeta todas as instâncias desta tarefa</small></span></button></div></div><div class="mfoot"><button class="bcancel" id="recdlg_cancel">Cancelar</button></div></div></div>
+<div class="mbg" id="recdlg"><div class="modal" style="max-width:420px"><div class="mh"><h3>🔁 <span id="recdlg_title">Tarefa recorrente</span></h3><button class="mx" id="recdlg_close">✕</button></div><div class="mbody"><p id="recdlg_msg" style="color:var(--text2);font-size:13px;line-height:1.55;margin:0 0 18px"></p><div style="display:flex;flex-direction:column;gap:10px"><button class="recdlg-opt" id="recdlg_one"><span class="ro-icon">📌</span><span class="ro-text"><b>Somente esta ocorrência</b><small>As demais instâncias não serão afetadas</small></span></button><button class="recdlg-opt success" id="recdlg_past"><span class="ro-icon">⬅</span><span class="ro-text"><b>Esta e as passadas</b><small>Afeta esta e todas as ocorrências de meses anteriores</small></span></button><button class="recdlg-opt primary" id="recdlg_future"><span class="ro-icon">🔁</span><span class="ro-text"><b>Esta e as futuras</b><small>Afeta esta e todas as ocorrências seguintes</small></span></button><button class="recdlg-opt" id="recdlg_all"><span class="ro-icon">⚡</span><span class="ro-text"><b>Todas as ocorrências</b><small>Afeta todas as instâncias desta tarefa</small></span></button></div></div><div class="mfoot"><button class="bcancel" id="recdlg_cancel">Cancelar</button></div></div></div>
 
 <script>
 (function(){
@@ -1128,10 +1128,19 @@ function mk(t,key,dl,ex){var o=Object.assign({},t);o.key=key;o.deadline=dl||null
 function isRecurring(t){return t.kind==="MENSAL"||t.kind==="SEMANAL"||t.kind==="ANUAL"||t.kind==="DIVERSO"||t.kind==="ESPORADICA";}
 function futureKeys(inst){
   var id=inst.id,kind=inst.kind,keys=[];
+  if(inst.key)keys.push(inst.key);
   activeYears.forEach(function(Y){
-    if(kind==="MENSAL"){for(var M=1;M<=12;M++){if(Y>curYear||(Y===curYear&&M>=curMonth))keys.push(id+"|"+Y+"|"+M);}}
-    else if(kind==="SEMANAL"){for(var M=1;M<=12;M++){if(Y>curYear||(Y===curYear&&M>=curMonth)){for(var w=0;w<5;w++)keys.push(id+"|"+Y+"|"+M+"|w"+w);}}}
-    else if(kind==="ANUAL"){if(Y>=curYear)keys.push(id+"|"+Y);}
+    if(kind==="MENSAL"){for(var M=1;M<=12;M++){if(Y>curYear||(Y===curYear&&M>=curMonth)){var k=id+"|"+Y+"|"+M;if(keys.indexOf(k)<0)keys.push(k);}}}
+    else if(kind==="SEMANAL"){for(var M=1;M<=12;M++){if(Y>curYear||(Y===curYear&&M>=curMonth)){for(var w=0;w<5;w++){var k2=id+"|"+Y+"|"+M+"|w"+w;if(keys.indexOf(k2)<0)keys.push(k2);}}}}
+    else if(kind==="ANUAL"){if(Y>=curYear){var k3=id+"|"+Y;if(keys.indexOf(k3)<0)keys.push(k3);}}
+    else if(kind==="DIVERSO"||kind==="ESPORADICA"){
+      var prefix=kind==="DIVERSO"?"o":"esp";
+      (inst.dates||[]).forEach(function(dt,i){
+        if(dt.y>curYear||(dt.y===curYear&&dt.m>=curMonth)){
+          var k4=prefix+"|"+id+"|"+i;if(keys.indexOf(k4)<0)keys.push(k4);
+        }
+      });
+    }
   });
   return keys;
 }
@@ -1191,7 +1200,7 @@ function shRecv(i){return tShips(i).reduce(function(a,n){return a+(sState(i,n).r
 function subsOf(i){return ovSubsids[i.key]||[];}
 function stksOf(i){return ovSubtasks[i.key]||[];}
 function stkPct(i){var s=stksOf(i);if(!s.length)return null;return Math.round(s.filter(function(x){return x.done;}).length/s.length*100);}
-function isDone(i){var s=statusOf(i);if(s==="PENDENTE")return false;if(i.cat==="NAVIOS")return s==="CONCLUIDO"?true:(tShips(i).length>0&&shRecv(i)===tShips(i).length);if(s==="CONCLUIDO")return!!nupOf(i)||SS[i.key]==="CONCLUIDO";return false;}
+function isDone(i){var s=statusOf(i);if(s==="PENDENTE")return false;if(i.cat==="NAVIOS")return s==="CONCLUIDO"?true:(tShips(i).length>0&&shRecv(i)===tShips(i).length);if(s==="CONCLUIDO")return ovStatus[i.key]==="CONCLUIDO"||!!nupOf(i)||SS[i.key]==="CONCLUIDO";return false;}
 function canConc(i){if(i.cat==="NAVIOS")return shRecv(i)===tShips(i).length&&tShips(i).length>0;return!!nupOf(i)||SS[i.key]==="CONCLUIDO";}
 function daysTo(i){if(!i.deadline)return null;var done=isDone(i),di=doneAt(i);if(done&&di){var dd=new Date(di);dd.setHours(0,0,0,0);return Math.round((i.deadline-dd)/86400000);}return Math.round((i.deadline-TODAY)/86400000);}
 function dlbl(i){var done=isDone(i),d=daysTo(i);if(d===null)return{lbl:"Sem prazo",val:"—",col:"var(--text3)"};if(done){if(d===0)return{lbl:"No prazo",val:"0d",col:"var(--c-teal)"};if(d>0)return{lbl:d+"d antes",val:"+"+d+"d",col:"var(--c-teal)"};return{lbl:Math.abs(d)+"d após",val:d+"d",col:"var(--c-amber)"};}if(d<0)return{lbl:Math.abs(d)+"d em atraso",val:d+"d",col:"var(--c-red)"};if(d===0)return{lbl:"Vence hoje",val:"hoje",col:"var(--c-red)"};if(d<=7)return{lbl:"Faltam "+d+"d",val:"+"+d+"d",col:"var(--c-amber)"};return{lbl:"Faltam "+d+"d",val:"+"+d+"d",col:"var(--text2)"};}
@@ -1929,14 +1938,23 @@ async function concluirPassadas(t){
   var CY=TODAY.getFullYear(),CM=TODAY.getMonth()+1;
   var isAnterior=function(Y,M){return Y<CY||(Y===CY&&M<CM);};
   var changed=false;
+  // Data ISO de hoje para registrar em ovDone
+  var todayISO=TODAY.getFullYear()+"-"+(TODAY.getMonth()+1).toString().padStart(2,"0")+"-"+TODAY.getDate().toString().padStart(2,"0")+"T00:00:00.000Z";
+
+  function marcarConcluida(key){
+    if(!ovStatus[key]||ovStatus[key]==="PENDENTE"){
+      ovStatus[key]="CONCLUIDO";
+      // Para userTasks (id começa com 'u'), registrar também em ovDone
+      // para que isDone() retorne true sem precisar de NUP
+      if(!ovDone[key])ovDone[key]=todayISO;
+      changed=true;
+    }
+  }
 
   if(t.kind==="DIVERSO"||t.kind==="ESPORADICA"){
     var prefix=t.kind==="DIVERSO"?"o":"esp";
     (t.dates||[]).forEach(function(dt,i){
-      if(isAnterior(dt.y,dt.m)){
-        var key=prefix+"|"+t.id+"|"+i;
-        if(!ovStatus[key]||ovStatus[key]==="PENDENTE"){ovStatus[key]="CONCLUIDO";changed=true;}
-      }
+      if(isAnterior(dt.y,dt.m)){marcarConcluida(prefix+"|"+t.id+"|"+i);}
     });
   } else if(t.kind==="MENSAL"){
     activeYears.forEach(function(Y){
@@ -1944,8 +1962,7 @@ async function concluirPassadas(t){
         if(!isAnterior(Y,M))continue;
         var dl=ruleDate(t.dayrule,Y,M);
         if(!dl)continue;
-        var key=t.id+"|"+Y+"|"+M;
-        if(!ovStatus[key]||ovStatus[key]==="PENDENTE"){ovStatus[key]="CONCLUIDO";changed=true;}
+        marcarConcluida(t.id+"|"+Y+"|"+M);
       }
     });
   } else if(t.kind==="SEMANAL"){
@@ -1953,21 +1970,17 @@ async function concluirPassadas(t){
     activeYears.forEach(function(Y){
       for(var M=1;M<=12;M++){
         if(!isAnterior(Y,M))continue;
-        wkDates(wd,Y,M).forEach(function(dl,i){
-          var key=t.id+"|"+Y+"|"+M+"|w"+i;
-          if(!ovStatus[key]||ovStatus[key]==="PENDENTE"){ovStatus[key]="CONCLUIDO";changed=true;}
-        });
+        wkDates(wd,Y,M).forEach(function(dl,i){marcarConcluida(t.id+"|"+Y+"|"+M+"|w"+i);});
       }
     });
   } else if(t.kind==="ANUAL"){
     activeYears.forEach(function(Y){
       if(!isAnterior(Y,t.month||1))return;
-      var key=t.id+"|"+Y;
-      if(!ovStatus[key]||ovStatus[key]==="PENDENTE"){ovStatus[key]="CONCLUIDO";changed=true;}
+      marcarConcluida(t.id+"|"+Y);
     });
   }
 
-  if(changed){await svs(K.st,ovStatus);}
+  if(changed){await svs(K.st,ovStatus);await svs(K.dn,ovDone);}
   return changed;
 }
 
@@ -2038,7 +2051,8 @@ async function addYear(Y){
       }
       // se shouldRepeat=true, buildInst já gera automaticamente — nada a fazer
     } else if(te.kind==="DIVERSO"||te.kind==="ESPORADICA"){
-      if(!shouldRepeat)return; // esporádica nunca replica, diverso sem flag também não
+      if(te.kind==="ESPORADICA")return; // esporádica nunca replica (datas pontuais)
+      if(!shouldRepeat)return; // diverso sem flag de repetição também não replica
       // Verificar se já há datas para o ano Y
       var hasDatesForY=(te.dates||[]).some(function(d){return d.y===Y;});
       if(hasDatesForY)return;
