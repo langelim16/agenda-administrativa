@@ -2086,31 +2086,58 @@ var RROW_HDR='<div class="rrow-hdr"><span>Prazo</span><span>Tarefa · Divisão</
 function rrow(i){var ov=!isDone(i)&&i.deadline&&i.deadline<TODAY;return'<div class="rrow'+(ov?" ov":"")+'"><span class="rd">'+(i.deadline?i.deadline.toLocaleDateString("pt-BR"):"s/prazo")+"</span><span>"+esc(i.tarefa)+" <small>· "+esc(i.divisao)+"</small></span><span style=\"font-size:11px;color:#475569\">"+esc(i.destino||"—")+"</span>"+rDays(i)+"</div>";}
 function findBase(key){var parts=key.split("|");var rawId=parts[0]==="o"?parts[1]:parts[0];return allBase().map(eff).find(function(t){return String(t.id)===String(rawId);})||null;}
 function cByMo(items,fmt){var g={};items.forEach(function(o){var d=new Date(o.iso),ch=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");if(!g[ch])g[ch]={label:ML[d.getMonth()]+"/"+d.getFullYear(),itens:[]};g[ch].itens.push(o);});return Object.keys(g).sort().map(function(ch){var info=g[ch];return'<div style="margin-bottom:7px"><div style="font-weight:700;font-size:11px;color:#2c333b;border-bottom:1px solid #e2e8f0;padding-bottom:2px;margin-bottom:3px">'+info.label+" ("+info.itens.length+")</div>"+info.itens.map(function(o){var inst=findI(o.k);var base=inst||findBase(o.k);var nome=base?esc(base.tarefa):esc(o.k);var div=base?(" <small>· "+esc(base.divisao)+"</small>"):"";var resp=base?esc(base.destino||"—"):"";var daysHtml=inst?rDays(inst):'<span class="rdays" style="color:#94a3b8">—</span>';return'<div class="rrow"><span class="rd">'+fmt(o.iso).split(" ")[0]+"</span><span>"+nome+div+"</span><span style='font-size:11px;color:#475569'>"+resp+"</span>"+daysHtml+"</div>";}).join("")+"</div>";}).join("");}
+var rStartDate=null;
 document.getElementById("reportbtn").onclick=function(){
-  var Y=curYear,inst=allYrInst(Y),CUT=new Date(2026,5,1);CUT.setHours(0,0,0,0);
-  var rD=function(i){return isDone(i)||(i.deadline&&i.deadline<CUT);};
-  var venc=inst.filter(function(i){return!rD(i)&&i.deadline&&i.deadline>=CUT&&i.deadline<TODAY;}).sort(function(a,b){return a.deadline-b.deadline;});
-  var sm=new Date(Y,curMonth-1,1),em=new Date(Y,curMonth,0);
-  var pend=inst.filter(function(i){return!rD(i)&&i.deadline&&i.deadline>=sm&&i.deadline<=em&&i.deadline>=TODAY;}).sort(function(a,b){return a.deadline-b.deadline;});
+  var Y=curYear,inst=allYrInst(Y);
+  if(!rStartDate){rStartDate=new Date(Y,curMonth-1,1);}
+  var START=rStartDate,END=new Date(TODAY);END.setHours(23,59,59,999);
   var sn=new Date(Y,curMonth,1),en=new Date(Y,curMonth+1,0);
-  var prox=inst.filter(function(i){return!rD(i)&&i.deadline&&i.deadline>=sn&&i.deadline<=en;}).sort(function(a,b){return a.deadline-b.deadline;});
-  var rec=Object.keys(ovDone).map(function(k){return{k:k,iso:ovDone[k],t:new Date(ovDone[k]).getTime()};}).filter(function(o){return o.t>=CUT.getTime()&&(findI(o.k)||findBase(o.k));}).sort(function(a,b){return a.t-b.t;});
+  var venc=inst.filter(function(i){return!isDone(i)&&i.deadline&&i.deadline>=START&&i.deadline<TODAY;}).sort(function(a,b){return a.deadline-b.deadline;});
+  var pend=inst.filter(function(i){return!isDone(i)&&i.deadline&&i.deadline>=TODAY&&i.deadline>=START&&i.deadline<=new Date(Y,curMonth,0);}).sort(function(a,b){return a.deadline-b.deadline;});
+  var prox=inst.filter(function(i){return!isDone(i)&&i.deadline&&i.deadline>=sn&&i.deadline<=en;}).sort(function(a,b){return a.deadline-b.deadline;});
+  var rec=Object.keys(ovDone).map(function(k){
+    var iso=ovDone[k],t=new Date(iso).getTime(),base2=findI(k)||findBase(k);
+    return{k:k,iso:iso,t:t,base2:base2};
+  }).filter(function(o){
+    if(!o.base2)return false;
+    if(o.t<START.getTime()||o.t>END.getTime())return false;
+    var inst2=findI(o.k);
+    if(inst2&&inst2.deadline&&inst2.deadline<START)return false;
+    return true;
+  }).sort(function(a,b){return a.t-b.t;});
   var fmt=function(iso){var d=new Date(iso);return d.toLocaleDateString("pt-BR")+" "+d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});};
   var sec=function(t,n,h){return'<div class="rsec"><h3>'+t+' <span>'+n+"</span></h3>"+RROW_HDR+h+"</div>";};
   var lst=function(arr){return arr.length?arr.map(rrow).join(""):'<div class="rempty">Nenhuma.</div>';};
   var pfx=profile==="ALL"?"Todas as divisões":esc(profile);
-  // Build function options: Chefe for departamento, Encarregado for each divisão
+  var startISO=START.getFullYear()+"-"+String(START.getMonth()+1).padStart(2,"0")+"-"+String(START.getDate()).padStart(2,"0");
   var funcOpts=['<option value="">— Selecionar função —</option>','<option value="Chefe do Departamento de '+esc(cfg.departamento)+'">Chefe do Departamento de '+esc(cfg.departamento)+'</option>'];
   cfg.divisoes.forEach(function(div){funcOpts.push('<option value="Encarregado da '+esc(div)+'">Encarregado da '+esc(div)+'</option>');});
   var funcSelHtml='<select class="funcinput" id="r_func">'+funcOpts.join("")+'</select>';
-  document.getElementById("reportBody").innerHTML='<div class="r-header"><h2>Passagem de Função</h2><div class="rsub">'+esc(cfg.departamento)+" · "+esc(cfg.om)+" · "+pfx+" · Exercício "+Y+'</div></div><div class="r-meta"><div style="grid-column:1/-1"><span>Função</span>'+funcSelHtml+'</div><div><span>Militar que passa</span><input class="funcinput" id="r_militar" placeholder="Nome do militar" value="'+esc(operador||"")+'"></div><div><span>Emissão</span><b>'+TODAY.toLocaleDateString("pt-BR")+"</b></div></div>"+sec("Tarefas vencidas",venc.length,lst(venc))+sec("Pendentes — "+ML[curMonth-1]+"/"+Y,pend.length,lst(pend))+sec("Próximos prazos — "+ML[curMonth%12]+"/"+(curMonth===12?Y+1:Y),prox.length,lst(prox))+sec("Concluídas",rec.length,rec.length?cByMo(rec,fmt):'<div class="rempty">Nenhuma.</div>')+'<div class="rsec"><h3>Observações</h3><textarea id="r_obs">'+esc(obsText)+"</textarea></div>"+'<div class="r-sign"><div class="sl">Militar que entrega</div><div class="sl">Militar que recebe</div></div>';
-  // Restore saved function selection
+  document.getElementById("reportBody").innerHTML=
+    '<div class="r-header"><h2>Passagem de Função</h2><div class="rsub">'+esc(cfg.departamento)+" · "+esc(cfg.om)+" · "+pfx+" · Exercício "+Y+'</div></div>'+
+    '<div class="r-meta">'+
+      '<div style="grid-column:1/-1"><span>Função</span>'+funcSelHtml+'</div>'+
+      '<div><span>Militar que passa</span><input class="funcinput" id="r_militar" placeholder="Nome do militar" value="'+esc(operador||'')+'"></div>'+
+      '<div><span>Período — início</span><input type="date" class="funcinput" id="r_start" value="'+startISO+'"></div>'+
+      '<div><span>Período — fim (emissão)</span><b>'+TODAY.toLocaleDateString("pt-BR")+'</b></div>'+
+    '</div>'+
+    sec("Tarefas vencidas no período",venc.length,lst(venc))+
+    sec("Pendentes — "+ML[curMonth-1]+"/"+Y,pend.length,lst(pend))+
+    sec("Próximos prazos — "+ML[curMonth%12]+"/"+(curMonth===12?Y+1:Y),prox.length,lst(prox))+
+    sec("Concluídas no período",rec.length,rec.length?cByMo(rec,fmt):'<div class="rempty">Nenhuma.</div>')+
+    '<div class="rsec"><h3>Observações</h3><textarea id="r_obs">'+esc(obsText)+'</textarea></div>'+
+    '<div class="r-sign"><div class="sl">Militar que entrega</div><div class="sl">Militar que recebe</div></div>';
   var rFuncSel=document.getElementById("r_func");
   if(funcText&&rFuncSel){rFuncSel.value=funcText;if(rFuncSel.value!==funcText){rFuncSel.value="";funcText="";svs(K.fn,"");}}
   rFuncSel.onchange=async function(e){funcText=e.target.value;await svs(K.fn,funcText);};
   var rMilitar=document.getElementById("r_militar");
   if(rMilitar){rMilitar.onchange=async function(e){operador=e.target.value;await svs(K.op,operador);renderAll();};}
   document.getElementById("r_obs").onchange=async function(e){obsText=e.target.value;await svs(K.ob,obsText);};
+  document.getElementById("r_start").onchange=function(e){
+    var v=e.target.value;if(!v)return;
+    var p=v.split("-");rStartDate=new Date(+p[0],+p[1]-1,+p[2]);
+    document.getElementById("reportbtn").onclick();
+  };
   document.getElementById("rbg").classList.add("open");
 };
 ["r_close","r_close2"].forEach(function(id){document.getElementById(id).onclick=function(){closeM("rbg");};});
