@@ -2094,7 +2094,7 @@ document.getElementById("reportbtn").onclick=function(){
   var pend=inst.filter(function(i){return!rD(i)&&i.deadline&&i.deadline>=sm&&i.deadline<=em&&i.deadline>=TODAY;}).sort(function(a,b){return a.deadline-b.deadline;});
   var sn=new Date(Y,curMonth,1),en=new Date(Y,curMonth+1,0);
   var prox=inst.filter(function(i){return!rD(i)&&i.deadline&&i.deadline>=sn&&i.deadline<=en;}).sort(function(a,b){return a.deadline-b.deadline;});
-  var rec=Object.keys(ovDone).map(function(k){return{k:k,iso:ovDone[k],t:new Date(ovDone[k]).getTime()};}).filter(function(o){return o.t>=CUT.getTime();}).sort(function(a,b){return a.t-b.t;});
+  var rec=Object.keys(ovDone).map(function(k){return{k:k,iso:ovDone[k],t:new Date(ovDone[k]).getTime()};}).filter(function(o){return o.t>=CUT.getTime()&&(findI(o.k)||findBase(o.k));}).sort(function(a,b){return a.t-b.t;});
   var fmt=function(iso){var d=new Date(iso);return d.toLocaleDateString("pt-BR")+" "+d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});};
   var sec=function(t,n,h){return'<div class="rsec"><h3>'+t+' <span>'+n+"</span></h3>"+RROW_HDR+h+"</div>";};
   var lst=function(arr){return arr.length?arr.map(rrow).join(""):'<div class="rempty">Nenhuma.</div>';};
