@@ -1370,12 +1370,35 @@ function clearFocus(){
   if(el){el.classList.remove("focus-highlight");el.style.boxShadow="";}
 }
 
+function deriveYM(key){
+  var tasks=allBase().map(eff);
+  if(key.indexOf("esp|")===0||key.indexOf("o|")===0){
+    var p=key.split("|"),id=p[1],idx=parseInt(p[2]);
+    var t=tasks.find(function(x){return String(x.id)===String(id);});
+    if(t&&t.dates&&t.dates[idx])return{y:t.dates[idx].y,m:t.dates[idx].m};
+    return null;
+  }
+  var parts=key.split("|");
+  if(parts.length>=3){
+    var y=parseInt(parts[1]),m=parseInt(parts[2]);
+    if(!isNaN(y)&&!isNaN(m))return{y:y,m:m};
+  }
+  if(parts.length===2){
+    var y2=parseInt(parts[1]);
+    if(!isNaN(y2)){
+      var id2=parts[0];
+      var t2=tasks.find(function(x){return String(x.id)===String(id2);});
+      if(t2&&t2.kind==="ANUAL")return{y:y2,m:t2.month};
+    }
+  }
+  return null;
+}
 function focusTask(key){
   // Determina o mês/ano da tarefa e muda a aba se necessário
   var inst=findI(key);
   if(!inst){
-    var parts=key.split("|");
-    if(parts.length>=3){var m=parseInt(parts[2]);if(m&&m!==curMonth){curMonth=m;}}
+    var ym=deriveYM(key);
+    if(ym){curYear=ym.y;curMonth=ym.m;}
   } else {
     if(inst.deadline){
       var nm=inst.deadline.getMonth()+1;
@@ -1580,21 +1603,36 @@ function renderTimeline(rows){
   });
   html+="</div></div>";
 
+  var dotColors={ok:"var(--c-teal)",venc:"var(--c-red)",prox:"var(--c-amber)",fut:"var(--c-blue)",sem:"var(--text3)"};
+  var groups=[],groupByRowKey={};
   rangeInst.forEach(function(i){
     var dl=new Date(i.deadline);
     if(isNaN(dl.getTime()))return;
     dl.setHours(0,0,0,0);
     var diffDl=Math.round((dl-today)/86400000);
     var s=isDone(i)?"ok":sit(i);
-    var dotColors={ok:"var(--c-teal)",venc:"var(--c-red)",prox:"var(--c-amber)",fut:"var(--c-blue)",sem:"var(--text3)"};
-    var dotColor=dotColors[s]||"var(--text3)";
-    html+='<div class="tl-row" data-key="'+esc(i.key)+'"><div class="tl-name" data-tarefa="'+esc(i.tarefa)+'"><div class="tl-dot" style="background:'+dotColor+'"></div>'+esc(i.tarefa.substring(0,30))+'</div><div class="tl-cells">';
+    var rowKey=i.id;
+    var g=groupByRowKey[rowKey];
+    if(!g){g={tarefa:i.tarefa,occurrences:[]};groupByRowKey[rowKey]=g;groups.push(g);}
+    g.occurrences.push({key:i.key,diff:diffDl,s:s,tarefa:i.tarefa,cat:i.cat});
+  });
+  groups.forEach(function(g){
+    g.occurrences.sort(function(a,b){return a.diff-b.diff;});
+  });
+  groups.sort(function(a,b){return a.occurrences[0].diff-b.occurrences[0].diff;});
+
+  groups.forEach(function(g){
+    var first=g.occurrences[0];
+    var dotColor=dotColors[first.s]||"var(--text3)";
+    html+='<div class="tl-row" data-key="'+esc(first.key)+'"><div class="tl-name" data-tarefa="'+esc(g.tarefa)+'"><div class="tl-dot" style="background:'+dotColor+'"></div>'+esc(g.tarefa.substring(0,30))+'</div><div class="tl-cells">';
+    var occByDiff={};
+    g.occurrences.forEach(function(o){occByDiff[o.diff]=o;});
     days30.forEach(function(d,idx){
       var isToday=(idx===0);
       var diff=Math.round((d-today)/86400000);
-      var onDl=(diff===diffDl);
+      var occ=occByDiff[diff];
       var cls="tl-cell"+(isToday?" today":"")+(isWeekend(d)?" weekend":"")+(isMonthStart(d,idx)?" month-start":"");
-      var marker=onDl?'<div class="tl-marker '+s+'" title="'+esc(i.tarefa)+'" data-mkey="'+esc(i.key)+'">'+tlMark(i)+'</div>':"";
+      var marker=occ?'<div class="tl-marker '+occ.s+'" title="'+esc(occ.tarefa)+'" data-mkey="'+esc(occ.key)+'">'+tlMark(occ)+'</div>':"";
       var todayLine=isToday?'<div class="tl-today-line"></div>':"";
       html+='<div class="'+cls+'">'+marker+todayLine+'</div>';
     });
