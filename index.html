@@ -395,14 +395,33 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
 .nv-condef[data-st="PO"]{background:var(--c-teal2);color:var(--c-teal);border-color:rgba(85,122,102,.2)}
 .nv-condef[data-st="P"]{background:var(--c-sky);color:var(--c-blue);border-color:rgba(65,97,140,.15)}
 .nv-condef[data-st=""]{background:var(--c-100);color:var(--text3);border-color:var(--border)}
+select.nv-condef{appearance:none;-webkit-appearance:none;cursor:pointer;outline:none}
+.nv-table td:nth-child(1){font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px}
+.nv-table td:nth-child(3){font-weight:600}
+.nv-table td.nv-cell{cursor:text}
+.nv-table td.nv-cell:focus{outline:2px solid var(--c-blue);outline-offset:-2px;background:var(--c-sky)}
+.nv-table td.nv-cell:empty:before{content:"—";color:var(--text3)}
+.nv-actions{text-align:center}
+.nv-delrow,.nv-card-del,.nv-item-del{background:none;border:none;color:var(--text3);font-size:12px;padding:4px 7px;border-radius:var(--r-sm);line-height:1}
+.nv-delrow:hover,.nv-card-del:hover,.nv-item-del:hover{background:var(--c-red2);color:var(--c-red)}
+.nv-addrow-tr td{padding:0;border-bottom:none}
+.nv-addrow{width:100%;background:var(--c-100);border:none;color:var(--text2);font-size:12px;padding:10px;text-align:center}
+.nv-addrow:hover{background:var(--border)}
 .nv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
-.nv-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xs);padding:14px 16px}
-.nv-card-title{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text2);margin-bottom:9px;display:flex;align-items:center;gap:6px}
+.nv-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xs);padding:14px 16px;display:flex;flex-direction:column}
+.nv-card-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:9px}
+.nv-card-title{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text2);flex:1;cursor:text;border-radius:var(--r-sm)}
+.nv-card-title:focus{outline:2px solid var(--c-blue);outline-offset:2px}
 .nv-card ul{list-style:none;display:flex;flex-direction:column;gap:6px}
-.nv-card li{font-size:12px;color:var(--text);display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--border);padding-bottom:5px}
+.nv-card li{font-size:12px;color:var(--text);display:flex;align-items:center;gap:8px;border-bottom:1px dashed var(--border);padding-bottom:5px}
 .nv-card li:last-child{border-bottom:none;padding-bottom:0}
-.nv-card li b{color:var(--text2);font-weight:600}
-.nv-card li span.v{color:var(--text3);text-align:right}
+.nv-card li b{color:var(--text2);font-weight:600;flex:1;cursor:text;border-radius:var(--r-sm)}
+.nv-card li span.v{color:var(--text3);text-align:right;flex:1;cursor:text;border-radius:var(--r-sm)}
+.nv-card li b:focus,.nv-card li span.v:focus{outline:2px solid var(--c-blue);outline-offset:2px;color:var(--text)}
+.nv-additem{margin-top:10px;background:var(--c-100);border:1px dashed var(--border2);color:var(--text2);font-size:11px;padding:7px 10px;border-radius:var(--r-md)}
+.nv-additem:hover{background:var(--border)}
+.nv-addcard{grid-column:1/-1;background:var(--surface);border:1.5px dashed var(--border2);color:var(--text2);font-size:12px;padding:14px;border-radius:var(--r-lg)}
+.nv-addcard:hover{border-color:var(--c-blue);color:var(--c-blue)}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;margin-bottom:14px;background:var(--header-bg);border-radius:var(--r-xl);box-shadow:var(--sh-lg);flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:12px}
 .crest{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.13);border:1.5px solid rgba(255,255,255,.22);display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px;flex-shrink:0;overflow:hidden}
@@ -907,7 +926,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
   <table class="nv-table">
     <thead>
       <tr>
-        <th>Tipo</th><th>Indicativo / Costado</th><th>Nome</th><th>Msg</th><th>Condef</th><th>Restrição</th><th>Previsão Término</th><th>Comissão</th><th>Período</th><th>Dias de Mar</th><th>Obs.</th>
+        <th>Tipo</th><th>Indicativo / Costado</th><th>Nome</th><th>Msg</th><th>Condef</th><th>Restrição</th><th>Previsão Término</th><th>Comissão</th><th>Período</th><th>Dias de Mar</th><th>Obs.</th><th>Ações</th>
       </tr>
     </thead>
     <tbody id="nv_tbody"></tbody>
@@ -2568,66 +2587,188 @@ setTimeout(hideSplash,20000);
     {tipo:"LHAI",indicativo:"CHN-4-03",nome:"LHAI Rígel",msg:"R1622242/AGO/2024",condef:"PO",restricao:"—",previsao:"—",comissao:"—",periodo:"—",diasMar:"",obs:"—"},
     {tipo:"LHAI",indicativo:"CHN-4-07",nome:"LHAI Jarí",msg:"R0221140/JUL/2024",condef:"IM",restricao:"—",previsao:"—",comissao:"—",periodo:"Salinas II · 12 a 26JUN",diasMar:"",obs:"—"}
   ];
+  var NAVIOS_CARDS_SEED=[
+    {title:"⚙ Docagem / SITREP POSE",items:[
+      {k:"H-37",v:"Fase II"},{k:"H-19",v:"—"},{k:"H-12",v:"Fase II"},{k:"H-13",v:"Fase II"},
+      {k:"NHo G. Sampaio",v:"26 a 28OUT"},{k:"AvHoFlu Rio Tocantins",v:"22 a 24SET"}
+    ]},
+    {title:"💰 Cronograma Financeiro PROGEM",items:[
+      {k:"NHi B Ten Castelo — Tintas",v:"R$ 112.000"},
+      {k:"NHi B Ten Castelo — ND39",v:"R$ 4.088.000"},
+      {k:"NHi B Ten Castelo — ND30",v:"R$ 40.000"},
+      {k:"AvHoFlu Rio Xingu — Tintas",v:"R$ 24.000"},
+      {k:"AvHoFlu Rio Xingu — ND39",v:"R$ 1.270.000"},
+      {k:"AvHoFlu Rio Xingu — ND30",v:"R$ 16.000"}
+    ]},
+    {title:"⏳ Processo de Extensão de Vida Útil",items:[
+      {k:"NHo G. Sampaio",v:"2021 (em processo)"},
+      {k:"NHi B Ten Castelo",v:"2023 (em processo)"},
+      {k:"AvHoFlu Rio Tocantins",v:"2032"},
+      {k:"AvHoFlu Rio Xingu",v:"2033"}
+    ]},
+    {title:"🏦 Saldo Remanescente na BNVC",items:[
+      {k:"NHi B Ten Castelo",v:"R$ 1.233.175,93"},
+      {k:"AvHoFlu Rio Xingu",v:"R$ 781,00"}
+    ]},
+    {title:"📝 Observações Gerais",items:[
+      {k:"ODM",v:"190024045"},
+      {k:"ODR",v:"BR3239766"},
+      {k:"GAS",v:"190009003"},
+      {k:"Escala de prioridade",v:"7–10 Alto · 5–6 Moderado · 1–4 Baixo (reu. 13ABR)"},
+      {k:"SD Petterson — férias",v:"22JUN a 01JUL (PIUÍ)"},
+      {k:"Viaturas",v:"seção a detalhar"}
+    ]}
+  ];
   function nvEsc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  var NAVIOS_KEY="aa_navios_ships_v1",NAVIOS_CARDS_KEY="aa_navios_cards_v1";
+  var navShips=[],navCards=[],navIdSeq=1,navBound=false;
+  function navUid(prefix){return prefix+"_"+Date.now().toString(36)+"_"+(navIdSeq++);}
+  function navLoad(){
+    var s=null,c=null;
+    try{s=JSON.parse(localStorage.getItem(NAVIOS_KEY));}catch(e){}
+    navShips=(s&&s.length)?s:NAVIOS_SEED.map(function(n){var o=Object.assign({},n);o.id=navUid("nv");return o;});
+    try{c=JSON.parse(localStorage.getItem(NAVIOS_CARDS_KEY));}catch(e){}
+    navCards=(c&&c.length)?c:NAVIOS_CARDS_SEED.map(function(cd){var o=Object.assign({},cd);o.id=navUid("card");o.items=cd.items.map(function(it){return Object.assign({},it);});return o;});
+    navSaveShips();navSaveCards();
+  }
+  function navSaveShips(){try{localStorage.setItem(NAVIOS_KEY,JSON.stringify(navShips));}catch(e){}}
+  function navSaveCards(){try{localStorage.setItem(NAVIOS_CARDS_KEY,JSON.stringify(navCards));}catch(e){}}
+  function navTd(id,field,val){
+    return '<td class="nv-cell" data-id="'+id+'" data-field="'+field+'" contenteditable="true" spellcheck="false">'+nvEsc(val||"")+'</td>';
+  }
+  function navCondefTd(id,val){
+    var opts=[["","—"],["IM",'"IM"'],["IO",'"IO"'],["PO",'"PO"'],["P",'"P"']];
+    return '<td><select class="nv-condef" data-id="'+id+'" data-st="'+nvEsc(val||"")+'">'+
+      opts.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===(val||"")?" selected":"")+'>'+o[1]+'</option>';}).join("")+
+    '</select></td>';
+  }
   function renderNavios(){
     var tb=document.getElementById("nv_tbody");
     if(!tb)return;
-    tb.innerHTML=NAVIOS_SEED.map(function(n){
-      return "<tr>"+
-        "<td><span class=\"nv-type\">"+nvEsc(n.tipo)+"</span></td>"+
-        "<td>"+nvEsc(n.indicativo)+"</td>"+
-        "<td><b>"+nvEsc(n.nome)+"</b></td>"+
-        "<td>"+nvEsc(n.msg||"—")+"</td>"+
-        "<td><span class=\"nv-condef\" data-st=\""+nvEsc(n.condef||"")+"\">"+(n.condef?'"'+nvEsc(n.condef)+'"':"—")+"</span></td>"+
-        "<td>"+nvEsc(n.restricao||"—")+"</td>"+
-        "<td>"+nvEsc(n.previsao||"—")+"</td>"+
-        "<td>"+nvEsc(n.comissao||"—")+"</td>"+
-        "<td>"+nvEsc(n.periodo||"—")+"</td>"+
-        "<td>"+nvEsc(n.diasMar||"—")+"</td>"+
-        "<td>"+nvEsc(n.obs||"—")+"</td>"+
-      "</tr>";
-    }).join("");
+    tb.innerHTML=navShips.map(function(n){
+      return '<tr>'+
+        navTd(n.id,"tipo",n.tipo)+
+        navTd(n.id,"indicativo",n.indicativo)+
+        navTd(n.id,"nome",n.nome)+
+        navTd(n.id,"msg",n.msg)+
+        navCondefTd(n.id,n.condef)+
+        navTd(n.id,"restricao",n.restricao)+
+        navTd(n.id,"previsao",n.previsao)+
+        navTd(n.id,"comissao",n.comissao)+
+        navTd(n.id,"periodo",n.periodo)+
+        navTd(n.id,"diasMar",n.diasMar)+
+        navTd(n.id,"obs",n.obs)+
+        '<td class="nv-actions"><button class="nv-delrow" data-id="'+n.id+'" title="Excluir embarcação">🗑</button></td>'+
+      '</tr>';
+    }).join("")+'<tr class="nv-addrow-tr"><td colspan="12"><button class="nv-addrow" id="nv_addrow">+ Adicionar embarcação</button></td></tr>';
   }
   function renderNaviosCards(){
     var grid=document.getElementById("nv_grid");
     if(!grid)return;
-    var cards=[
-      {title:"⚙ Docagem / SITREP POSE",items:[
-        ["H-37","Fase II"],["H-19","—"],["H-12","Fase II"],["H-13","Fase II"],
-        ["NHo G. Sampaio","26 a 28OUT"],["AvHoFlu Rio Tocantins","22 a 24SET"]
-      ]},
-      {title:"💰 Cronograma Financeiro PROGEM",items:[
-        ["NHi B Ten Castelo — Tintas","R$ 112.000"],
-        ["NHi B Ten Castelo — ND39","R$ 4.088.000"],
-        ["NHi B Ten Castelo — ND30","R$ 40.000"],
-        ["AvHoFlu Rio Xingu — Tintas","R$ 24.000"],
-        ["AvHoFlu Rio Xingu — ND39","R$ 1.270.000"],
-        ["AvHoFlu Rio Xingu — ND30","R$ 16.000"]
-      ]},
-      {title:"⏳ Processo de Extensão de Vida Útil",items:[
-        ["NHo G. Sampaio","2021 (em processo)"],
-        ["NHi B Ten Castelo","2023 (em processo)"],
-        ["AvHoFlu Rio Tocantins","2032"],
-        ["AvHoFlu Rio Xingu","2033"]
-      ]},
-      {title:"🏦 Saldo Remanescente na BNVC",items:[
-        ["NHi B Ten Castelo","R$ 1.233.175,93"],
-        ["AvHoFlu Rio Xingu","R$ 781,00"]
-      ]},
-      {title:"📝 Observações Gerais",items:[
-        ["ODM","190024045"],
-        ["ODR","BR3239766"],
-        ["GAS","190009003"],
-        ["Escala de prioridade","7–10 Alto · 5–6 Moderado · 1–4 Baixo (reu. 13ABR)"],
-        ["SD Petterson — férias","22JUN a 01JUL (PIUÍ)"],
-        ["Viaturas","seção a detalhar"]
-      ]}
-    ];
-    grid.innerHTML=cards.map(function(c){
-      return '<div class="nv-card"><div class="nv-card-title">'+c.title+'</div><ul>'+
-        c.items.map(function(it){return '<li><b>'+nvEsc(it[0])+'</b><span class="v">'+nvEsc(it[1])+'</span></li>';}).join("")+
-      '</ul></div>';
-    }).join("");
+    grid.innerHTML=navCards.map(function(c){
+      return '<div class="nv-card">'+
+        '<div class="nv-card-head">'+
+          '<div class="nv-card-title" contenteditable="true" data-cid="'+c.id+'" data-field="title" spellcheck="false">'+nvEsc(c.title)+'</div>'+
+          '<button class="nv-card-del" data-cid="'+c.id+'" title="Excluir cartão">🗑</button>'+
+        '</div>'+
+        '<ul>'+c.items.map(function(it,i){
+          return '<li>'+
+            '<b contenteditable="true" data-cid="'+c.id+'" data-i="'+i+'" data-field="k" spellcheck="false">'+nvEsc(it.k)+'</b>'+
+            '<span class="v" contenteditable="true" data-cid="'+c.id+'" data-i="'+i+'" data-field="v" spellcheck="false">'+nvEsc(it.v)+'</span>'+
+            '<button class="nv-item-del" data-cid="'+c.id+'" data-i="'+i+'" title="Remover item">✕</button>'+
+          '</li>';
+        }).join("")+'</ul>'+
+        '<button class="nv-additem" data-cid="'+c.id+'">+ item</button>'+
+      '</div>';
+    }).join("")+'<button class="nv-addcard" id="nv_addcard">+ Novo cartão</button>';
+  }
+  function navFindShip(id){return navShips.find(function(s){return s.id===id;});}
+  function navFindCard(cid){return navCards.find(function(c){return c.id===cid;});}
+  function navInit(){
+    if(navBound)return;
+    navBound=true;
+    navLoad();
+    var tbody=document.getElementById("nv_tbody");
+    tbody.addEventListener("input",function(e){
+      var td=e.target.closest&&e.target.closest(".nv-cell");
+      if(!td)return;
+      var ship=navFindShip(td.dataset.id);
+      if(ship)ship[td.dataset.field]=td.textContent;
+    });
+    tbody.addEventListener("focusout",function(e){
+      var td=e.target.closest&&e.target.closest(".nv-cell");
+      if(!td)return;
+      var ship=navFindShip(td.dataset.id);
+      if(ship){ship[td.dataset.field]=td.textContent.trim();navSaveShips();}
+    });
+    tbody.addEventListener("keydown",function(e){
+      if(e.key==="Enter"&&e.target.closest&&e.target.closest(".nv-cell")){e.preventDefault();e.target.blur();}
+    });
+    tbody.addEventListener("change",function(e){
+      var sel=e.target.closest&&e.target.closest(".nv-condef");
+      if(!sel)return;
+      var ship=navFindShip(sel.dataset.id);
+      if(ship){ship.condef=sel.value;sel.dataset.st=sel.value;navSaveShips();}
+    });
+    tbody.addEventListener("click",function(e){
+      var del=e.target.closest&&e.target.closest(".nv-delrow");
+      if(del){
+        if(confirm("Excluir esta embarcação da tabela?")){
+          navShips=navShips.filter(function(s){return s.id!==del.dataset.id;});
+          navSaveShips();renderNavios();
+        }
+        return;
+      }
+      if(e.target.id==="nv_addrow"){
+        var nid=navUid("nv");
+        navShips.push({id:nid,tipo:"",indicativo:"",nome:"Nova embarcação",msg:"",condef:"",restricao:"",previsao:"",comissao:"",periodo:"",diasMar:"",obs:""});
+        navSaveShips();renderNavios();
+        setTimeout(function(){
+          var el=document.querySelector('.nv-cell[data-id="'+nid+'"][data-field="nome"]');
+          if(el){el.focus();var r=document.createRange();r.selectNodeContents(el);var sel2=window.getSelection();sel2.removeAllRanges();sel2.addRange(r);}
+        },30);
+      }
+    });
+    var grid=document.getElementById("nv_grid");
+    grid.addEventListener("focusout",function(e){
+      var el=e.target;
+      if(!el.dataset||!el.dataset.cid||!el.dataset.field)return;
+      var c=navFindCard(el.dataset.cid);
+      if(!c)return;
+      if(el.dataset.field==="title"){c.title=el.textContent.trim();}
+      else{var it=c.items[+el.dataset.i];if(it)it[el.dataset.field]=el.textContent.trim();}
+      navSaveCards();
+    });
+    grid.addEventListener("keydown",function(e){
+      if(e.key==="Enter"&&e.target.hasAttribute&&e.target.hasAttribute("contenteditable")){e.preventDefault();e.target.blur();}
+    });
+    grid.addEventListener("click",function(e){
+      var delCard=e.target.closest&&e.target.closest(".nv-card-del");
+      if(delCard){
+        if(confirm("Excluir este cartão e todas as suas informações?")){
+          navCards=navCards.filter(function(c){return c.id!==delCard.dataset.cid;});
+          navSaveCards();renderNaviosCards();
+        }
+        return;
+      }
+      var delItem=e.target.closest&&e.target.closest(".nv-item-del");
+      if(delItem){
+        var c=navFindCard(delItem.dataset.cid);
+        if(c){c.items.splice(+delItem.dataset.i,1);navSaveCards();renderNaviosCards();}
+        return;
+      }
+      var addItem=e.target.closest&&e.target.closest(".nv-additem");
+      if(addItem){
+        var c2=navFindCard(addItem.dataset.cid);
+        if(c2){c2.items.push({k:"Novo item",v:"—"});navSaveCards();renderNaviosCards();}
+        return;
+      }
+      if(e.target.id==="nv_addcard"){
+        navCards.push({id:navUid("card"),title:"Novo cartão",items:[{k:"Item",v:"—"}]});
+        navSaveCards();renderNaviosCards();
+        return;
+      }
+    });
   }
   var APPVIEW_KEY="aa_appview";
   function switchAppView(view){
@@ -2637,7 +2778,7 @@ setTimeout(hideSplash,20000);
     vn.style.display=view==="navios"?"":"none";
     document.querySelectorAll(".nav-item").forEach(function(b){b.classList.toggle("active",b.dataset.view===view);});
     try{localStorage.setItem(APPVIEW_KEY,view);}catch(e){}
-    if(view==="navios"){renderNavios();renderNaviosCards();}
+    if(view==="navios"){navInit();renderNavios();renderNaviosCards();}
   }
   document.querySelectorAll(".nav-item").forEach(function(b){
     b.onclick=function(){switchAppView(b.dataset.view);};
