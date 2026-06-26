@@ -382,41 +382,88 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
 .nav-item .nav-lbl{font-size:8px;letter-spacing:.4px;text-transform:uppercase;text-align:center;line-height:1.1}
 .nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
 .nav-item.active{background:var(--c-blue);color:#fff}
+.nv-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.nv-edit-actions{display:flex;gap:8px}
+.nv-edit-actions[hidden]{display:none}
+.nv-editbtn,.nv-savebtn,.nv-cancelbtn{font-size:11px;font-weight:600;padding:7px 13px;border-radius:var(--r-md);border:1.5px solid var(--border);cursor:pointer;background:var(--surface);color:var(--text2);box-shadow:var(--sh-xs)}
+.nv-editbtn:hover:not(:disabled){border-color:var(--c-blue);color:var(--c-blue)}
+.nv-editbtn:disabled,.nv-savebtn:disabled,.nv-cancelbtn:disabled{opacity:.4;cursor:not-allowed}
+.nv-savebtn{background:var(--c-blue);color:#fff;border-color:var(--c-blue)}
+.nv-savebtn:disabled{background:var(--c-100);color:var(--text3);border-color:var(--border)}
+.nv-cancelbtn{color:var(--c-red)}
+.nv-cancelbtn:hover:not(:disabled){background:var(--c-red2)}
 .nv-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xs);overflow-x:auto;margin-bottom:14px}
-.nv-table{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}
-.nv-table th{background:var(--c-100);color:var(--text2);font-size:10px;letter-spacing:.5px;text-transform:uppercase;text-align:left;padding:9px 11px;border-bottom:1px solid var(--border);position:sticky;top:0}
-.nv-table td{padding:9px 11px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top}
-.nv-table tbody tr:hover{background:var(--c-50)}
+.nv-table{width:100%;min-width:860px;border-collapse:collapse;font-size:11px;table-layout:fixed}
+.nv-table th{background:var(--c-100);color:var(--text2);font-size:9px;letter-spacing:.3px;text-transform:uppercase;text-align:center;padding:7px 6px;border-bottom:1px solid var(--border);position:sticky;top:0;line-height:1.25;white-space:normal}
+.nv-table.nv-editing th:nth-child(1),.nv-table.nv-editing td:nth-child(1){width:5%}
+.nv-table.nv-editing th:nth-child(2),.nv-table.nv-editing td:nth-child(2){width:8%}
+.nv-table.nv-editing th:nth-child(3),.nv-table.nv-editing td:nth-child(3){width:13%}
+.nv-table.nv-editing th:nth-child(4),.nv-table.nv-editing td:nth-child(4){width:10%}
+.nv-table.nv-editing th:nth-child(5),.nv-table.nv-editing td:nth-child(5){width:6%}
+.nv-table.nv-editing th:nth-child(6),.nv-table.nv-editing td:nth-child(6){width:9%}
+.nv-table.nv-editing th:nth-child(7),.nv-table.nv-editing td:nth-child(7){width:9%}
+.nv-table.nv-editing th:nth-child(8),.nv-table.nv-editing td:nth-child(8){width:9%}
+.nv-table.nv-editing th:nth-child(9),.nv-table.nv-editing td:nth-child(9){width:9%}
+.nv-table.nv-editing th:nth-child(10),.nv-table.nv-editing td:nth-child(10){width:9%}
+.nv-table.nv-editing th:nth-child(11),.nv-table.nv-editing td:nth-child(11){width:6%}
+.nv-table.nv-editing th:nth-child(12),.nv-table.nv-editing td:nth-child(12){width:7%}
+.nv-table:not(.nv-editing) th:nth-child(1),.nv-table:not(.nv-editing) td:nth-child(1){width:5.4%}
+.nv-table:not(.nv-editing) th:nth-child(2),.nv-table:not(.nv-editing) td:nth-child(2){width:8.6%}
+.nv-table:not(.nv-editing) th:nth-child(3),.nv-table:not(.nv-editing) td:nth-child(3){width:14%}
+.nv-table:not(.nv-editing) th:nth-child(4),.nv-table:not(.nv-editing) td:nth-child(4){width:10.8%}
+.nv-table:not(.nv-editing) th:nth-child(5),.nv-table:not(.nv-editing) td:nth-child(5){width:6.5%}
+.nv-table:not(.nv-editing) th:nth-child(6),.nv-table:not(.nv-editing) td:nth-child(6){width:9.7%}
+.nv-table:not(.nv-editing) th:nth-child(7),.nv-table:not(.nv-editing) td:nth-child(7){width:9.7%}
+.nv-table:not(.nv-editing) th:nth-child(8),.nv-table:not(.nv-editing) td:nth-child(8){width:9.7%}
+.nv-table:not(.nv-editing) th:nth-child(9),.nv-table:not(.nv-editing) td:nth-child(9){width:9.7%}
+.nv-table:not(.nv-editing) th:nth-child(10),.nv-table:not(.nv-editing) td:nth-child(10){width:9.7%}
+.nv-table:not(.nv-editing) th:nth-child(11),.nv-table:not(.nv-editing) td:nth-child(11){width:6.5%}
+.nv-table:not(.nv-editing) .nv-actions-col{display:none}
+.nv-table td{padding:7px 6px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;line-height:1.3;background:var(--rowbg,transparent)}
+.nv-table tbody tr:hover td{background:var(--c-50)}
 .nv-table tbody tr:last-child td{border-bottom:none}
+.nv-table td.nv-cell:not(.nv-cell-ro){white-space:normal;overflow:visible;text-overflow:clip;max-width:none}
 .nv-type{font-size:9px;font-weight:700;font-family:var(--mono);background:var(--c-100);border:1px solid var(--border);border-radius:var(--r-sm);padding:2px 6px;color:var(--text3)}
-.nv-condef{display:inline-flex;align-items:center;padding:2px 9px;border-radius:99px;font-size:10px;font-family:var(--mono);font-weight:600;border:1px solid transparent;white-space:nowrap}
+.nv-condef{display:inline-flex;align-items:center;justify-content:center;text-align:center;padding:2px 6px;border-radius:99px;font-size:9px;font-family:var(--mono);font-weight:600;border:1px solid transparent;white-space:nowrap;width:100%}
 .nv-condef[data-st="IM"]{background:var(--c-red2);color:var(--c-red);border-color:rgba(168,85,75,.2)}
 .nv-condef[data-st="IO"]{background:#fbf0d2;color:#8a6d1f;border-color:rgba(216,178,58,.3)}
 .nv-condef[data-st="PO"]{background:var(--c-teal2);color:var(--c-teal);border-color:rgba(85,122,102,.2)}
 .nv-condef[data-st="P"]{background:var(--c-sky);color:var(--c-blue);border-color:rgba(65,97,140,.15)}
 .nv-condef[data-st=""]{background:var(--c-100);color:var(--text3);border-color:var(--border)}
 select.nv-condef{appearance:none;-webkit-appearance:none;cursor:pointer;outline:none}
-.nv-table td:nth-child(1){font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px}
+select.nv-condef:disabled{opacity:1;cursor:default}
+.nv-table td:nth-child(1){font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.2px}
 .nv-table td:nth-child(3){font-weight:600}
 .nv-table td.nv-cell{cursor:text}
 .nv-table td.nv-cell:focus{outline:2px solid var(--c-blue);outline-offset:-2px;background:var(--c-sky)}
 .nv-table td.nv-cell:empty:before{content:"—";color:var(--text3)}
-.nv-actions{text-align:center}
-.nv-delrow,.nv-card-del,.nv-item-del{background:none;border:none;color:var(--text3);font-size:12px;padding:4px 7px;border-radius:var(--r-sm);line-height:1}
+.nv-table td.nv-cell-ro{cursor:default}
+.nv-actions{text-align:center;white-space:nowrap}
+.nv-rowcolor{font-size:9px;padding:3px 4px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);color:var(--text2);margin-right:4px;cursor:pointer;outline:none;vertical-align:middle}
+.nv-delrow,.nv-card-del,.nv-item-del{background:none;border:none;color:var(--text3);font-size:12px;padding:4px 7px;border-radius:var(--r-sm);line-height:1;cursor:pointer;vertical-align:middle}
 .nv-delrow:hover,.nv-card-del:hover,.nv-item-del:hover{background:var(--c-red2);color:var(--c-red)}
 .nv-addrow-tr td{padding:0;border-bottom:none}
-.nv-addrow{width:100%;background:var(--c-100);border:none;color:var(--text2);font-size:12px;padding:10px;text-align:center}
+.nv-addrow{width:100%;background:var(--c-100);border:none;color:var(--text2);font-size:12px;padding:10px;text-align:center;cursor:pointer}
 .nv-addrow:hover{background:var(--border)}
 .nv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
 .nv-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xs);padding:14px 16px;display:flex;flex-direction:column}
+.nv-card.nv-card-editing{box-shadow:0 0 0 2px var(--c-blue)}
 .nv-card-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:9px}
-.nv-card-title{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text2);flex:1;cursor:text;border-radius:var(--r-sm)}
+.nv-card-title{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text2);flex:1;cursor:default;border-radius:var(--r-sm)}
+.nv-card-title.nv-editable{cursor:text}
 .nv-card-title:focus{outline:2px solid var(--c-blue);outline-offset:2px}
+.nv-card-toolbar{display:flex;gap:5px;flex-shrink:0}
+.nv-card-toolbar .nv-editbtn,.nv-card-toolbar .nv-savebtn,.nv-card-toolbar .nv-cancelbtn{font-size:9px;padding:4px 8px}
+.nv-card-dh{cursor:grab;color:var(--text3);font-size:14px;user-select:none;padding:2px 4px;border-radius:4px;flex-shrink:0}
+.nv-card-dh:hover{background:var(--c-100);color:var(--c-blue)}
+.nv-card-dh.nv-dh-disabled{cursor:not-allowed;opacity:.35;pointer-events:none}
+.nv-card[draggable="true"]{opacity:.5}
 .nv-card ul{list-style:none;display:flex;flex-direction:column;gap:6px}
 .nv-card li{font-size:12px;color:var(--text);display:flex;align-items:center;gap:8px;border-bottom:1px dashed var(--border);padding-bottom:5px}
 .nv-card li:last-child{border-bottom:none;padding-bottom:0}
-.nv-card li b{color:var(--text2);font-weight:600;flex:1;cursor:text;border-radius:var(--r-sm)}
-.nv-card li span.v{color:var(--text3);text-align:right;flex:1;cursor:text;border-radius:var(--r-sm)}
+.nv-card li b{color:var(--text2);font-weight:600;flex:1;cursor:default;border-radius:var(--r-sm)}
+.nv-card li span.v{color:var(--text3);text-align:right;flex:1;cursor:default;border-radius:var(--r-sm)}
+.nv-card li b.nv-editable,.nv-card li span.v.nv-editable{cursor:text}
 .nv-card li b:focus,.nv-card li span.v:focus{outline:2px solid var(--c-blue);outline-offset:2px;color:var(--text)}
 .nv-additem{margin-top:10px;background:var(--c-100);border:1px dashed var(--border2);color:var(--text2);font-size:11px;padding:7px 10px;border-radius:var(--r-md)}
 .nv-additem:hover{background:var(--border)}
@@ -922,11 +969,18 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
   <span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-blue)"></span>"P" — Pronto para operar</span>
 </div>
 
+<div class="nv-toolbar" id="nv_table_toolbar">
+  <button class="nv-editbtn" id="nv_table_edit">✎ Editar tabela</button>
+  <span class="nv-edit-actions" id="nv_table_edit_actions" hidden>
+    <button class="nv-savebtn" id="nv_table_save" disabled>✓ Salvar</button>
+    <button class="nv-cancelbtn" id="nv_table_cancel">Cancelar</button>
+  </span>
+</div>
 <div class="nv-table-wrap">
   <table class="nv-table">
     <thead>
       <tr>
-        <th>Tipo</th><th>Indicativo / Costado</th><th>Nome</th><th>Msg</th><th>Condef</th><th>Restrição</th><th>Previsão Término</th><th>Comissão</th><th>Período</th><th>Dias de Mar</th><th>Obs.</th><th>Ações</th>
+        <th>Tipo</th><th>Indicativo<br>Costado</th><th>Nome</th><th>Msg</th><th>Condef</th><th>Restrição</th><th>Previsão<br>Término</th><th>Obs.</th><th>Comissão</th><th>Período</th><th>Dias<br>de Mar</th><th class="nv-actions-col">Ações</th>
       </tr>
     </thead>
     <tbody id="nv_tbody"></tbody>
@@ -1069,6 +1123,7 @@ function startRT(){
       var yy=p(K.yrs);if(yy&&yy.length)activeYears=yy;
       var cc=p(K.cf);if(cc){cfg=Object.assign({},CFG0,cc);SUBUNITS=(cfg.subunidades||[]).slice();}
       renderAll();
+      if(navRemoteHook)navRemoteHook(dc);
     }catch(e){}
   },5000);
 }
@@ -1147,6 +1202,7 @@ var SS=(function(){
 var SSH={"m0|2026|6":{NHoGSampaio:{received:true,datahora:"R301740Z/MAI/2026"},NhiBTenCastelo:{received:true,datahora:"R291810Z/MAI/2026"},AvHoFluRioTocantins:{received:true,datahora:"R021503Z/JUN/2026"}},"m1|2026|6":{NHoGSampaio:{received:true,datahora:"R081644Z/JUN/2026"},NhiBTenCastelo:{received:true,datahora:"R291900Z/MAI/2026"},AvHoFluRioTocantins:{received:true,datahora:"R082015Z/JUN/2026"},AvHoFluRioXingu:{received:true,datahora:"R031300Z/JUN/2026"}}};
 
 /* ── ESTADO ── */
+var navRemoteHook=null; // permite ao módulo de Navios receber atualizações em tempo real do Firebase (ver startRT)
 var cfg=Object.assign({},CFG0),SUBUNITS=[];
 var activeYears=[2026],curYear=2026,curMonth=TODAY.getMonth()+1;
 var profile="ALL",catFilter="ALL",recFilter="ALL",assuntoFilter="",kpiFilter=null;
@@ -2518,10 +2574,14 @@ document.getElementById("r_print").onclick=function(){window.print();};
 
 /* ── TECLADO ── */
 document.addEventListener("keydown",function(e){
-  if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA"||e.target.tagName==="SELECT")return;
+  if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA"||e.target.tagName==="SELECT"||e.target.isContentEditable)return;
   if(e.key==="Escape"){["mbg","rbg","cbg","delbg","sbg"].forEach(function(id){document.getElementById(id).classList.remove("open");});mDrop.classList.remove("open");}
   if(e.key==="/"&&!e.ctrlKey&&!e.metaKey){e.preventDefault();document.getElementById("q").focus();}
-  if((e.key==="n"||e.key==="N")&&!e.ctrlKey&&!e.metaKey)openCreate();
+  if((e.key==="n"||e.key==="N")&&!e.ctrlKey&&!e.metaKey){
+    var vn=document.getElementById("viewNavios");
+    if(vn&&vn.style.display!=="none")return;
+    openCreate();
+  }
   if((e.key==="z"||e.key==="Z")&&(e.ctrlKey||e.metaKey)){e.preventDefault();if(e.shiftKey)doRedo();else doUndo();}
   if((e.key==="y"||e.key==="Y")&&(e.ctrlKey||e.metaKey)){e.preventDefault();doRedo();}
 });
@@ -2568,8 +2628,6 @@ setTimeout(hideSplash,20000);
     hideSplash();
     document.getElementById("body").innerHTML='<div class="empty">Erro ao carregar — '+(err.message||err)+"</div>";
   }
-})();
-
 })();
 
 /* ── MÓDULO: CONTROLE DE NAVIOS/EMBARCAÇÕES ── */
@@ -2622,150 +2680,324 @@ setTimeout(hideSplash,20000);
   function nvEsc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
   var NAVIOS_KEY="aa_navios_ships_v1",NAVIOS_CARDS_KEY="aa_navios_cards_v1";
   var navShips=[],navCards=[],navIdSeq=1,navBound=false;
+  // Trava de edição: null (livre) | "table" | "card:<id>" — impede editar tabela e cartões ao mesmo tempo
+  var navEditLock=null;
+  var navTableEditing=false,navTableDirty=false,navTableSnapshot=null;
+  var navCardEditingId=null,navCardDirty=false,navCardSnapshot=null;
   function navUid(prefix){return prefix+"_"+Date.now().toString(36)+"_"+(navIdSeq++);}
-  function navLoad(){
+  // Recebe atualizações em tempo real do polling do Firebase (startRT). Não pisa em edições em andamento.
+  navRemoteHook=function(freshDc){
+    if(!freshDc)return;
+    if(navTableEditing||navCardEditingId)return;
+    var changed=false;
+    try{var s=freshDc[NAVIOS_KEY]?JSON.parse(freshDc[NAVIOS_KEY]):null;if(s&&s.length){navShips=s;changed=true;}}catch(e){}
+    try{var c=freshDc[NAVIOS_CARDS_KEY]?JSON.parse(freshDc[NAVIOS_CARDS_KEY]):null;if(c&&c.length){navCards=c;changed=true;}}catch(e){}
+    if(!changed)return;
+    navSaveShips();navSaveCards();
+    var vn=document.getElementById("viewNavios");
+    if(vn&&vn.style.display!=="none"){renderNavios();renderNaviosCards();}
+  };
+  async function navLoad(){
     var s=null,c=null;
-    try{s=JSON.parse(localStorage.getItem(NAVIOS_KEY));}catch(e){}
+    try{s=await gtj(NAVIOS_KEY);}catch(e){}
+    if(!s||!s.length){try{s=JSON.parse(localStorage.getItem(NAVIOS_KEY));}catch(e){}}
     navShips=(s&&s.length)?s:NAVIOS_SEED.map(function(n){var o=Object.assign({},n);o.id=navUid("nv");return o;});
-    try{c=JSON.parse(localStorage.getItem(NAVIOS_CARDS_KEY));}catch(e){}
+    try{c=await gtj(NAVIOS_CARDS_KEY);}catch(e){}
+    if(!c||!c.length){try{c=JSON.parse(localStorage.getItem(NAVIOS_CARDS_KEY));}catch(e){}}
     navCards=(c&&c.length)?c:NAVIOS_CARDS_SEED.map(function(cd){var o=Object.assign({},cd);o.id=navUid("card");o.items=cd.items.map(function(it){return Object.assign({},it);});return o;});
     navSaveShips();navSaveCards();
   }
   function navSaveShips(){try{localStorage.setItem(NAVIOS_KEY,JSON.stringify(navShips));}catch(e){}}
   function navSaveCards(){try{localStorage.setItem(NAVIOS_CARDS_KEY,JSON.stringify(navCards));}catch(e){}}
-  function navTd(id,field,val){
-    return '<td class="nv-cell" data-id="'+id+'" data-field="'+field+'" contenteditable="true" spellcheck="false">'+nvEsc(val||"")+'</td>';
+  async function navPush(key,data){try{await svs(key,data);}catch(e){console.error("navPush",e);}}
+  function navTd(id,field,val,editing){
+    return '<td class="nv-cell'+(editing?'':' nv-cell-ro')+'" data-id="'+id+'" data-field="'+field+'"'+(editing?' contenteditable="true"':'')+' spellcheck="false" title="'+nvEsc(val||"")+'">'+nvEsc(val||"")+'</td>';
   }
-  function navCondefTd(id,val){
+  function navCondefTd(id,val,editing){
     var opts=[["","—"],["IM",'"IM"'],["IO",'"IO"'],["PO",'"PO"'],["P",'"P"']];
-    return '<td><select class="nv-condef" data-id="'+id+'" data-st="'+nvEsc(val||"")+'">'+
+    return '<td><select class="nv-condef" data-id="'+id+'" data-st="'+nvEsc(val||"")+'"'+(editing?"":" disabled")+'>'+
       opts.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===(val||"")?" selected":"")+'>'+o[1]+'</option>';}).join("")+
     '</select></td>';
+  }
+  var NAV_ROWBG={red:"rgba(168,85,75,.13)",yellow:"rgba(216,178,58,.18)",green:"rgba(85,122,102,.15)"};
+  function navColorTd(id,val,editing){
+    if(!editing)return '<td class="nv-actions nv-actions-col"></td>';
+    var opts=[["","Sem cor"],["red","Vermelha"],["yellow","Amarela"],["green","Verde"]];
+    return '<td class="nv-actions nv-actions-col">'+
+      '<select class="nv-rowcolor" data-id="'+id+'">'+
+        opts.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===(val||"")?" selected":"")+'>'+o[1]+'</option>';}).join("")+
+      '</select>'+
+      '<button class="nv-delrow" data-id="'+id+'" title="Excluir embarcação">🗑</button>'+
+    '</td>';
   }
   function renderNavios(){
     var tb=document.getElementById("nv_tbody");
     if(!tb)return;
+    var editing=navTableEditing;
+    var table=document.querySelector(".nv-table");
+    if(table)table.classList.toggle("nv-editing",editing);
     tb.innerHTML=navShips.map(function(n){
-      return '<tr>'+
-        navTd(n.id,"tipo",n.tipo)+
-        navTd(n.id,"indicativo",n.indicativo)+
-        navTd(n.id,"nome",n.nome)+
-        navTd(n.id,"msg",n.msg)+
-        navCondefTd(n.id,n.condef)+
-        navTd(n.id,"restricao",n.restricao)+
-        navTd(n.id,"previsao",n.previsao)+
-        navTd(n.id,"comissao",n.comissao)+
-        navTd(n.id,"periodo",n.periodo)+
-        navTd(n.id,"diasMar",n.diasMar)+
-        navTd(n.id,"obs",n.obs)+
-        '<td class="nv-actions"><button class="nv-delrow" data-id="'+n.id+'" title="Excluir embarcação">🗑</button></td>'+
+      var bg=NAV_ROWBG[n.rowColor];
+      return '<tr'+(bg?' style="--rowbg:'+bg+'"':'')+'>'+
+        navTd(n.id,"tipo",n.tipo,editing)+
+        navTd(n.id,"indicativo",n.indicativo,editing)+
+        navTd(n.id,"nome",n.nome,editing)+
+        navTd(n.id,"msg",n.msg,editing)+
+        navCondefTd(n.id,n.condef,editing)+
+        navTd(n.id,"restricao",n.restricao,editing)+
+        navTd(n.id,"previsao",n.previsao,editing)+
+        navTd(n.id,"obs",n.obs,editing)+
+        navTd(n.id,"comissao",n.comissao,editing)+
+        navTd(n.id,"periodo",n.periodo,editing)+
+        navTd(n.id,"diasMar",n.diasMar,editing)+
+        navColorTd(n.id,n.rowColor,editing)+
       '</tr>';
-    }).join("")+'<tr class="nv-addrow-tr"><td colspan="12"><button class="nv-addrow" id="nv_addrow">+ Adicionar embarcação</button></td></tr>';
+    }).join("")+(editing?'<tr class="nv-addrow-tr"><td colspan="12"><button class="nv-addrow" id="nv_addrow">+ Adicionar embarcação</button></td></tr>':'');
+    navUpdateTableToolbar();
+    navUpdateSyncTag();
+  }
+  function navUpdateSyncTag(){
+    var tag=document.getElementById("nv_synctag");
+    if(!tag)return;
+    tag.textContent=bk==="firebase"?"☁ Sincronizado":"💾 Somente local";
+    tag.style.color=bk==="firebase"?"var(--c-teal)":"var(--c-amber)";
+  }
+  function navUpdateTableToolbar(){
+    var editBtn=document.getElementById("nv_table_edit");
+    var actions=document.getElementById("nv_table_edit_actions");
+    var saveBtn=document.getElementById("nv_table_save");
+    if(!editBtn)return;
+    if(navTableEditing){
+      editBtn.hidden=true;actions.hidden=false;
+      saveBtn.disabled=!navTableDirty;
+    }else{
+      editBtn.hidden=false;actions.hidden=true;
+      editBtn.disabled=!!(navEditLock&&navEditLock!=="table");
+    }
   }
   function renderNaviosCards(){
     var grid=document.getElementById("nv_grid");
     if(!grid)return;
+    var lockedOut=!!navEditLock;
     grid.innerHTML=navCards.map(function(c){
-      return '<div class="nv-card">'+
+      var isEditing=navCardEditingId===c.id;
+      var disableEdit=lockedOut&&!isEditing;
+      var toolbar=isEditing?
+        '<div class="nv-card-toolbar">'+
+          '<button class="nv-savebtn nv-card-save" data-cid="'+c.id+'"'+(navCardDirty?"":" disabled")+'>✓ Salvar</button>'+
+          '<button class="nv-cancelbtn nv-card-cancel" data-cid="'+c.id+'">Cancelar</button>'+
+        '</div>'
+        :
+        '<div class="nv-card-toolbar">'+
+          '<button class="nv-editbtn nv-card-edit" data-cid="'+c.id+'"'+(disableEdit?" disabled":"")+'>✎ Editar</button>'+
+        '</div>';
+      return '<div class="nv-card'+(isEditing?" nv-card-editing":"")+'" data-cid="'+c.id+'">'+
         '<div class="nv-card-head">'+
-          '<div class="nv-card-title" contenteditable="true" data-cid="'+c.id+'" data-field="title" spellcheck="false">'+nvEsc(c.title)+'</div>'+
-          '<button class="nv-card-del" data-cid="'+c.id+'" title="Excluir cartão">🗑</button>'+
+          '<span class="nv-card-dh'+(lockedOut?" nv-dh-disabled":"")+'" title="Arrastar para reordenar">⠿</span>'+
+          '<div class="nv-card-title'+(isEditing?" nv-editable":"")+'"'+(isEditing?' contenteditable="true"':"")+' data-cid="'+c.id+'" data-field="title" spellcheck="false">'+nvEsc(c.title)+'</div>'+
+          toolbar+
+          (isEditing?'<button class="nv-card-del" data-cid="'+c.id+'" title="Excluir cartão">🗑</button>':"")+
         '</div>'+
         '<ul>'+c.items.map(function(it,i){
           return '<li>'+
-            '<b contenteditable="true" data-cid="'+c.id+'" data-i="'+i+'" data-field="k" spellcheck="false">'+nvEsc(it.k)+'</b>'+
-            '<span class="v" contenteditable="true" data-cid="'+c.id+'" data-i="'+i+'" data-field="v" spellcheck="false">'+nvEsc(it.v)+'</span>'+
-            '<button class="nv-item-del" data-cid="'+c.id+'" data-i="'+i+'" title="Remover item">✕</button>'+
+            '<b'+(isEditing?' class="nv-editable" contenteditable="true"':"")+' data-cid="'+c.id+'" data-i="'+i+'" data-field="k" spellcheck="false">'+nvEsc(it.k)+'</b>'+
+            '<span class="v'+(isEditing?" nv-editable":"")+'"'+(isEditing?' contenteditable="true"':"")+' data-cid="'+c.id+'" data-i="'+i+'" data-field="v" spellcheck="false">'+nvEsc(it.v)+'</span>'+
+            (isEditing?'<button class="nv-item-del" data-cid="'+c.id+'" data-i="'+i+'" title="Remover item">✕</button>':"")+
           '</li>';
         }).join("")+'</ul>'+
-        '<button class="nv-additem" data-cid="'+c.id+'">+ item</button>'+
+        (isEditing?'<button class="nv-additem" data-cid="'+c.id+'">+ item</button>':"")+
       '</div>';
-    }).join("")+'<button class="nv-addcard" id="nv_addcard">+ Novo cartão</button>';
+    }).join("")+'<button class="nv-addcard" id="nv_addcard"'+(lockedOut?" disabled":"")+'>+ Novo cartão</button>';
+    bindNaviosCardDrag();
+  }
+  var navCardDragKey=null;
+  function bindNaviosCardDrag(){
+    document.querySelectorAll(".nv-card").forEach(function(card){
+      var h=card.querySelector(".nv-card-dh");
+      if(h){h.onmousedown=function(){if(navEditLock)return;card.setAttribute("draggable","true");};}
+      card.onmouseup=function(){card.removeAttribute("draggable");};
+      card.ondragstart=function(e){if(card.getAttribute("draggable")!=="true"){e.preventDefault();return;}navCardDragKey=card.dataset.cid;e.dataTransfer.effectAllowed="move";};
+      card.ondragend=function(){card.removeAttribute("draggable");};
+      card.ondragover=function(e){if(!navCardDragKey)return;e.preventDefault();};
+      card.ondrop=function(e){
+        e.preventDefault();
+        if(!navCardDragKey||card.dataset.cid===navCardDragKey)return;
+        var fi=navCards.findIndex(function(c){return c.id===navCardDragKey;});
+        var ti=navCards.findIndex(function(c){return c.id===card.dataset.cid;});
+        if(fi<0||ti<0)return;
+        var m=navCards.splice(fi,1)[0];
+        navCards.splice(ti,0,m);
+        navSaveCards();
+        navPush(NAVIOS_CARDS_KEY,navCards);
+        navCardDragKey=null;
+        renderNaviosCards();
+      };
+    });
   }
   function navFindShip(id){return navShips.find(function(s){return s.id===id;});}
   function navFindCard(cid){return navCards.find(function(c){return c.id===cid;});}
-  function navInit(){
+  async function navInit(){
     if(navBound)return;
     navBound=true;
-    navLoad();
+    await navLoad();
+    navUpdateSyncTag();
     var tbody=document.getElementById("nv_tbody");
     tbody.addEventListener("input",function(e){
       var td=e.target.closest&&e.target.closest(".nv-cell");
-      if(!td)return;
+      if(!td||!navTableEditing)return;
       var ship=navFindShip(td.dataset.id);
-      if(ship)ship[td.dataset.field]=td.textContent;
+      if(ship){ship[td.dataset.field]=td.textContent;navTableDirty=true;navUpdateTableToolbar();}
     });
     tbody.addEventListener("focusout",function(e){
       var td=e.target.closest&&e.target.closest(".nv-cell");
-      if(!td)return;
+      if(!td||!navTableEditing)return;
       var ship=navFindShip(td.dataset.id);
-      if(ship){ship[td.dataset.field]=td.textContent.trim();navSaveShips();}
+      if(ship){var v=td.textContent.trim();ship[td.dataset.field]=v;td.textContent=v;}
     });
     tbody.addEventListener("keydown",function(e){
       if(e.key==="Enter"&&e.target.closest&&e.target.closest(".nv-cell")){e.preventDefault();e.target.blur();}
     });
     tbody.addEventListener("change",function(e){
       var sel=e.target.closest&&e.target.closest(".nv-condef");
-      if(!sel)return;
-      var ship=navFindShip(sel.dataset.id);
-      if(ship){ship.condef=sel.value;sel.dataset.st=sel.value;navSaveShips();}
+      if(sel&&navTableEditing){
+        var ship=navFindShip(sel.dataset.id);
+        if(ship){ship.condef=sel.value;sel.dataset.st=sel.value;navTableDirty=true;navUpdateTableToolbar();}
+        return;
+      }
+      var rc=e.target.closest&&e.target.closest(".nv-rowcolor");
+      if(rc&&navTableEditing){
+        var ship2=navFindShip(rc.dataset.id);
+        if(ship2){ship2.rowColor=rc.value;navTableDirty=true;navUpdateTableToolbar();renderNavios();}
+      }
     });
     tbody.addEventListener("click",function(e){
+      if(!navTableEditing)return;
       var del=e.target.closest&&e.target.closest(".nv-delrow");
       if(del){
         if(confirm("Excluir esta embarcação da tabela?")){
           navShips=navShips.filter(function(s){return s.id!==del.dataset.id;});
-          navSaveShips();renderNavios();
+          navTableDirty=true;renderNavios();
         }
         return;
       }
       if(e.target.id==="nv_addrow"){
         var nid=navUid("nv");
-        navShips.push({id:nid,tipo:"",indicativo:"",nome:"Nova embarcação",msg:"",condef:"",restricao:"",previsao:"",comissao:"",periodo:"",diasMar:"",obs:""});
-        navSaveShips();renderNavios();
+        navShips.push({id:nid,tipo:"",indicativo:"",nome:"Nova embarcação",msg:"",condef:"",restricao:"",previsao:"",comissao:"",periodo:"",diasMar:"",obs:"",rowColor:""});
+        navTableDirty=true;renderNavios();
         setTimeout(function(){
           var el=document.querySelector('.nv-cell[data-id="'+nid+'"][data-field="nome"]');
           if(el){el.focus();var r=document.createRange();r.selectNodeContents(el);var sel2=window.getSelection();sel2.removeAllRanges();sel2.addRange(r);}
         },30);
       }
     });
+    document.getElementById("nv_table_edit").onclick=function(){
+      if(navEditLock&&navEditLock!=="table"){toast("Finalize a edição em andamento antes de iniciar outra.","info");return;}
+      navEditLock="table";navTableEditing=true;navTableDirty=false;
+      navTableSnapshot=JSON.parse(JSON.stringify(navShips));
+      renderNavios();renderNaviosCards();
+    };
+    document.getElementById("nv_table_cancel").onclick=function(){
+      if(navTableSnapshot)navShips=navTableSnapshot;
+      navTableSnapshot=null;navTableEditing=false;navTableDirty=false;navEditLock=null;
+      renderNavios();renderNaviosCards();
+    };
+    document.getElementById("nv_table_save").onclick=async function(){
+      if(!navTableDirty)return;
+      navSaveShips();
+      await navPush(NAVIOS_KEY,navShips);
+      navTableSnapshot=null;navTableEditing=false;navTableDirty=false;navEditLock=null;
+      toast("✓ Embarcações salvas","ok");
+      renderNavios();renderNaviosCards();
+    };
     var grid=document.getElementById("nv_grid");
-    grid.addEventListener("focusout",function(e){
+    grid.addEventListener("input",function(e){
       var el=e.target;
-      if(!el.dataset||!el.dataset.cid||!el.dataset.field)return;
+      if(!el.dataset||el.dataset.cid!==navCardEditingId||!el.dataset.field)return;
       var c=navFindCard(el.dataset.cid);
       if(!c)return;
-      if(el.dataset.field==="title"){c.title=el.textContent.trim();}
-      else{var it=c.items[+el.dataset.i];if(it)it[el.dataset.field]=el.textContent.trim();}
-      navSaveCards();
+      if(el.dataset.field==="title")c.title=el.textContent;
+      else{var it=c.items[+el.dataset.i];if(it)it[el.dataset.field]=el.textContent;}
+      navCardDirty=true;
+      var sb=grid.querySelector('.nv-card-save[data-cid="'+el.dataset.cid+'"]');
+      if(sb)sb.disabled=false;
+    });
+    grid.addEventListener("focusout",function(e){
+      var el=e.target;
+      if(!el.dataset||el.dataset.cid!==navCardEditingId||!el.dataset.field)return;
+      var c=navFindCard(el.dataset.cid);
+      if(!c)return;
+      if(el.dataset.field==="title"){c.title=el.textContent.trim();el.textContent=c.title;}
+      else{var it=c.items[+el.dataset.i];if(it){it[el.dataset.field]=el.textContent.trim();el.textContent=it[el.dataset.field];}}
     });
     grid.addEventListener("keydown",function(e){
       if(e.key==="Enter"&&e.target.hasAttribute&&e.target.hasAttribute("contenteditable")){e.preventDefault();e.target.blur();}
     });
     grid.addEventListener("click",function(e){
+      var editBtn=e.target.closest&&e.target.closest(".nv-card-edit");
+      if(editBtn){
+        var cid=editBtn.dataset.cid;
+        if(navEditLock&&navEditLock!=="card:"+cid){toast("Finalize a edição em andamento antes de iniciar outra.","info");return;}
+        navEditLock="card:"+cid;navCardEditingId=cid;navCardDirty=false;
+        var c=navFindCard(cid);
+        navCardSnapshot=c?JSON.parse(JSON.stringify(c)):null;
+        renderNavios();renderNaviosCards();
+        return;
+      }
+      var saveBtn=e.target.closest&&e.target.closest(".nv-card-save");
+      if(saveBtn){
+        if(!navCardDirty)return;
+        navSaveCards();
+        navPush(NAVIOS_CARDS_KEY,navCards).then(function(){toast("✓ Cartão salvo","ok");});
+        navCardEditingId=null;navCardSnapshot=null;navCardDirty=false;navEditLock=null;
+        renderNavios();renderNaviosCards();
+        return;
+      }
+      var cancelBtn=e.target.closest&&e.target.closest(".nv-card-cancel");
+      if(cancelBtn){
+        var cid2=cancelBtn.dataset.cid;
+        if(navCardSnapshot&&navCardSnapshot.__new){
+          navCards=navCards.filter(function(c){return c.id!==cid2;});
+        }else if(navCardSnapshot){
+          var idx=navCards.findIndex(function(c){return c.id===cid2;});
+          if(idx>-1)navCards[idx]=navCardSnapshot;
+        }
+        navCardEditingId=null;navCardSnapshot=null;navCardDirty=false;navEditLock=null;
+        renderNavios();renderNaviosCards();
+        return;
+      }
       var delCard=e.target.closest&&e.target.closest(".nv-card-del");
       if(delCard){
-        if(confirm("Excluir este cartão e todas as suas informações?")){
-          navCards=navCards.filter(function(c){return c.id!==delCard.dataset.cid;});
-          navSaveCards();renderNaviosCards();
-        }
+        if(delCard.dataset.cid!==navCardEditingId)return;
+        if(!confirm("Excluir este cartão e todas as suas informações?"))return;
+        var wasNew=navCardSnapshot&&navCardSnapshot.__new;
+        navCards=navCards.filter(function(c){return c.id!==delCard.dataset.cid;});
+        navCardEditingId=null;navCardSnapshot=null;navCardDirty=false;navEditLock=null;
+        navSaveCards();
+        if(!wasNew)navPush(NAVIOS_CARDS_KEY,navCards).then(function(){toast("🗑 Cartão excluído","ok");});
+        renderNavios();renderNaviosCards();
         return;
       }
       var delItem=e.target.closest&&e.target.closest(".nv-item-del");
       if(delItem){
-        var c=navFindCard(delItem.dataset.cid);
-        if(c){c.items.splice(+delItem.dataset.i,1);navSaveCards();renderNaviosCards();}
+        if(delItem.dataset.cid!==navCardEditingId)return;
+        var c2=navFindCard(delItem.dataset.cid);
+        if(c2){c2.items.splice(+delItem.dataset.i,1);navCardDirty=true;renderNaviosCards();}
         return;
       }
       var addItem=e.target.closest&&e.target.closest(".nv-additem");
       if(addItem){
-        var c2=navFindCard(addItem.dataset.cid);
-        if(c2){c2.items.push({k:"Novo item",v:"—"});navSaveCards();renderNaviosCards();}
+        if(addItem.dataset.cid!==navCardEditingId)return;
+        var c3=navFindCard(addItem.dataset.cid);
+        if(c3){c3.items.push({k:"Novo item",v:"—"});navCardDirty=true;renderNaviosCards();}
         return;
       }
       if(e.target.id==="nv_addcard"){
-        navCards.push({id:navUid("card"),title:"Novo cartão",items:[{k:"Item",v:"—"}]});
-        navSaveCards();renderNaviosCards();
+        if(navEditLock){toast("Finalize a edição em andamento antes de criar um novo cartão.","info");return;}
+        var nc={id:navUid("card"),title:"Novo cartão",items:[{k:"Item",v:"—"}]};
+        navCards.push(nc);
+        navEditLock="card:"+nc.id;navCardEditingId=nc.id;navCardDirty=true;
+        navCardSnapshot={__new:true};
+        renderNavios();renderNaviosCards();
         return;
       }
     });
@@ -2778,7 +3010,7 @@ setTimeout(hideSplash,20000);
     vn.style.display=view==="navios"?"":"none";
     document.querySelectorAll(".nav-item").forEach(function(b){b.classList.toggle("active",b.dataset.view===view);});
     try{localStorage.setItem(APPVIEW_KEY,view);}catch(e){}
-    if(view==="navios"){navInit();renderNavios();renderNaviosCards();}
+    if(view==="navios"){navInit().then(function(){renderNavios();renderNaviosCards();});}
   }
   document.querySelectorAll(".nav-item").forEach(function(b){
     b.onclick=function(){switchAppView(b.dataset.view);};
@@ -2786,6 +3018,7 @@ setTimeout(hideSplash,20000);
   var savedView="agenda";
   try{savedView=localStorage.getItem(APPVIEW_KEY)||"agenda";}catch(e){}
   switchAppView(savedView);
+})();
 })();
 </script>
 
