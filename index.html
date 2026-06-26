@@ -2441,7 +2441,7 @@ document.addEventListener("keydown",function(e){
   var pct=document.getElementById("splashPct");
   if(!fill||!pct)return;
   // Keyframes: [time_ms, percent]
-  var kf=[[0,0],[600,18],[1200,32],[1900,47],[2700,59],[3600,68],[4500,76],[5400,83],[6200,89],[6700,95],[6950,100]];
+  var kf=[[0,0],[863,18],[1727,32],[2734,47],[3886,59],[5180,68],[6475,76],[7771,83],[8922,89],[9641,95],[10000,100]];
   var i=1;
   function step(){
     if(i>=kf.length)return;
@@ -2455,7 +2455,9 @@ document.addEventListener("keydown",function(e){
   step();
 })();
 function hideSplash(){var sp=document.getElementById("splash");if(sp&&!sp.classList.contains("hide")){sp.classList.add("hide");setTimeout(function(){if(sp.parentNode)sp.remove();},650);}}
-setTimeout(hideSplash,7000);
+var splashStart=Date.now();
+var SPLASH_MIN_MS=10000;
+setTimeout(hideSplash,20000);
 (async function(){
   try{
     await initBk();
@@ -2467,7 +2469,8 @@ setTimeout(hideSplash,7000);
     startRT();
     var tag=document.getElementById("backend_tag");
     if(tag){tag.textContent=bk==="firebase"?"☁ Sincronizado":"💾 Somente local";tag.style.color=bk==="firebase"?"var(--c-teal)":"var(--c-amber)";}
-    setTimeout(hideSplash,300);
+    var elapsed=Date.now()-splashStart;
+    setTimeout(hideSplash,Math.max(300,SPLASH_MIN_MS-elapsed));
   }catch(err){
     console.error("Erro na inicialização:",err);
     hideSplash();
