@@ -364,7 +364,7 @@
     </script>
   
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>Agenda Administrativa</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -825,7 +825,24 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .foot{color:var(--text3);font-size:10px;text-align:center;padding-top:22px;letter-spacing:1.2px;text-transform:uppercase}
 .foot b{color:var(--c-blue);font-weight:600}
 .kbd{font-family:var(--mono);font-size:10px;background:var(--c-100);border:1px solid var(--border2);border-radius:3px;padding:1px 4px;color:var(--text3)}
-@media(max-width:700px){.trow{grid-template-columns:auto auto auto 1fr auto auto}.tprazo,.dias-col{display:none}.mgrid,.drow{grid-template-columns:1fr}}
+@media(max-width:700px){
+.trow{grid-template-columns:auto auto auto 1fr auto auto}.tprazo,.dias-col{display:none}.mgrid,.drow{grid-template-columns:1fr}
+/* raiz do overflow mobile: view-toggle forçava largura > tela, zerando zoom da página inteira */
+.view-toggle{width:100%;flex-wrap:wrap}
+.vtbtn{flex:1 1 auto;padding:7px 6px;font-size:10px;text-align:center}
+.appnav{width:50px}
+body{padding-left:50px}
+.wrap{padding:12px 10px 70px}
+.cal-grid{gap:3px}
+.cal-day{min-height:58px;padding:4px 3px 2px}
+.cal-dn{font-size:11px}
+.cal-chip{font-size:8px}
+.hm-grid-ano{grid-template-columns:repeat(4,1fr);gap:5px}
+.hm-month-cell{min-height:58px;padding:6px 2px}
+.tl-label-col,.tl-name{min-width:120px;max-width:120px}
+.seg{gap:4px}
+.segbtn{min-width:0}
+}
 @media print{.wrap{display:none!important}#rbg{position:static!important;display:block!important;background:#fff!important;padding:0!important;overflow:visible!important}#rbg .modal{max-width:100%!important;box-shadow:none!important;border:none!important}.noprint{display:none!important}.mbody{padding:0!important}}
 
 .synctag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.94);border-radius:99px;padding:5px 12px;font-size:11px;font-weight:700;letter-spacing:.4px;color:var(--c-amber);box-shadow:0 1px 4px rgba(0,0,0,.18);white-space:nowrap}
