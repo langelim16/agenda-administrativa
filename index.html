@@ -568,6 +568,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .spot-top{display:grid;grid-template-columns:auto auto 1fr auto auto;gap:9px;align-items:center;padding:9px 11px}
 .drag-handle{cursor:grab;color:var(--text3);font-size:15px;user-select:none;touch-action:none}
 .touch-dragging{opacity:.6;box-shadow:var(--sh-lg)}
+.no-select-dragging,.no-select-dragging *{user-select:none!important;-webkit-user-select:none!important;-webkit-touch-callout:none!important}
 .prio-badge{font-weight:700;font-size:14px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#fff;flex-shrink:0}
 .prio-1{background:var(--c-red)}.prio-2{background:var(--c-amber)}.prio-3{background:var(--c-blue)}.prio-n{background:var(--c-500)}
 .spot-title{font-weight:600;font-size:13.5px;color:var(--text)}
@@ -1772,6 +1773,7 @@ function enableColReorder(theadEl,getCols,setDirty,rerenderFn){
     if(!th)return;
     dragTh=th;
     th.classList.add("touch-dragging");
+    document.body.classList.add("no-select-dragging");
     try{handle.setPointerCapture(e.pointerId);}catch(_){}
     e.preventDefault();
   });
@@ -1792,6 +1794,7 @@ function enableColReorder(theadEl,getCols,setDirty,rerenderFn){
   function end(){
     if(!dragTh)return;
     dragTh.classList.remove("touch-dragging");
+    document.body.classList.remove("no-select-dragging");
     var theadRow=dragTh.parentElement;
     dragTh=null;
     var cols=getCols();
