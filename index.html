@@ -1173,6 +1173,10 @@ body{padding-left:50px}
   </div>
 </header>
 
+<div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+  <button class="btn primary" id="horas_add_maint">+ Inserir manutenção</button>
+</div>
+
 <div id="horas_tables_container"></div>
 
 <div class="cachebar" title="Uso do armazenamento local (limite 1 MB)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div>
@@ -1182,6 +1186,19 @@ body{padding-left:50px}
 <!-- modais -->
 <div class="mbg" id="sbg"><div class="modal"><div class="mh"><h3 id="s_title">Demanda do dia</h3><button class="mx" id="s_close">✕</button></div><div class="mbody"><div class="mgrid"><div class="fld full"><label>Descrição</label><textarea id="s_desc" rows="2" placeholder="Ex: Elaborar relatório mensal de consumo de CLG"></textarea></div><div class="fld"><label>Demandante</label><input id="s_from" placeholder="Ex: Comandante / Diretor"></div><div class="fld"><label>Prazo</label><input type="date" id="s_due"></div><div class="fld full"><label>Etapas (uma por linha)</label><textarea id="s_steps" rows="3" placeholder="Etapa 1
 Etapa 2"></textarea></div></div></div><div class="mfoot"><button class="brestore left" id="s_del" style="display:none">Excluir</button><button class="bcancel" id="s_cancel">Cancelar</button><button class="bsave" id="s_save">Salvar</button></div></div></div>
+
+<div class="mbg" id="hmbg"><div class="modal"><div class="mh"><h3>Inserir manutenção</h3><button class="mx" id="hm_close">✕</button></div><div class="mbody"><div class="mgrid">
+  <div class="fld full"><label>Navio / Embarcação</label><select id="hm_ship"></select></div>
+  <div class="fld"><label>Tipo do motor</label><select id="hm_tipo"><option value="">— selecionar —</option><option value="MCP">MCP</option><option value="MCA">MCA</option><option value="DGE">DGE</option></select></div>
+  <div class="fld"><label>Bordo do motor</label><select id="hm_bordo"><option value="">— selecionar —</option><option value="BB">BB</option><option value="BE">BE</option><option value="DGE">DGE</option><option value="BB e BE">BB e BE</option></select></div>
+  <div class="fld"><label>Fabricante</label><input id="hm_fab" readonly placeholder="(auto)"></div>
+  <div class="fld"><label>Modelo</label><input id="hm_mod" readonly placeholder="(auto)"></div>
+  <div class="fld full"><label>Nº de Série</label><input id="hm_ns" readonly placeholder="(auto)"></div>
+  <div class="fld"><label>Horas em operação (na manutenção)</label><input id="hm_horas" placeholder="Ex: 12.000"></div>
+  <div class="fld"><label>Tipo da revisão</label><input id="hm_tiporev" placeholder="Ex: REV. 6.000hs"></div>
+  <div class="fld"><label>Data da manutenção</label><input id="hm_data" placeholder="MM/AAAA"></div>
+  <div class="fld"><label>Data da próxima revisão</label><input id="hm_dataprox" placeholder="Ex: 06/2027"></div>
+</div></div><div class="mfoot"><button class="bcancel" id="hm_cancel">Cancelar</button><button class="bsave" id="hm_save">Registrar manutenção</button></div></div></div>
 
 <div class="mbg" id="mbg"><div class="modal"><div class="mh"><h3 id="m_title">Tarefa</h3><button class="mx" id="m_close">✕</button></div><div class="mbody"><div class="mgrid">
   <div class="fld full"><label>Título</label><textarea id="e_tarefa" rows="2" placeholder="Ex: ENVIAR MAPA MENSAL DE CLG"></textarea></div>
@@ -4544,6 +4561,60 @@ setTimeout(hideSplash,20000);
       pushLabel:"horasPush",undoLabel:"Editar Horas — "+s.title
     });
   }
+  // ── Inserir manutenção (formulário global, vale para todos os navios) ──
+  function horasMatchRows(shipKey,tipo,bordo){
+    var s=horasShips[shipKey];
+    if(!s||!tipo||!bordo)return [];
+    var rows=s.rows.filter(function(r){return (r.tipoMotor||"").toUpperCase()===tipo;});
+    if(bordo==="BB e BE")return rows.filter(function(r){var b=(r.bordo||"").toUpperCase();return b==="BB"||b==="BE";});
+    var exact=rows.filter(function(r){return (r.bordo||"").toUpperCase()===bordo;});
+    if(exact.length)return exact;
+    if(rows.length===1)return rows; // fallback (ex.: DGE com bordo "NA")
+    return [];
+  }
+  function horasMaintAutofill(){
+    var rows=horasMatchRows(document.getElementById("hm_ship").value,document.getElementById("hm_tipo").value,document.getElementById("hm_bordo").value);
+    function uniq(k){return Array.from(new Set(rows.map(function(r){return r[k]||"";}).filter(Boolean))).join(" / ");}
+    document.getElementById("hm_fab").value=uniq("fabricante");
+    document.getElementById("hm_mod").value=uniq("modelo");
+    document.getElementById("hm_ns").value=uniq("numSerie");
+  }
+  function horasOpenMaint(){
+    if(horasEditLock){toast("Finalize a edição da tabela antes de inserir manutenção.","info");return;}
+    var sel=document.getElementById("hm_ship");
+    sel.innerHTML='<option value="">— selecionar —</option>'+HORAS_SHIP_LIST.map(function(sk){return '<option value="'+sk.key+'">'+esc(horasShips[sk.key].title)+'</option>';}).join("");
+    ["hm_tipo","hm_bordo","hm_fab","hm_mod","hm_ns","hm_horas","hm_tiporev","hm_data","hm_dataprox"].forEach(function(id){document.getElementById(id).value="";});
+    document.getElementById("hmbg").classList.add("open");
+  }
+  function horasCloseMaint(){document.getElementById("hmbg").classList.remove("open");}
+  function horasBindMaintModal(){
+    document.getElementById("horas_add_maint").onclick=horasOpenMaint;
+    ["hm_ship","hm_tipo","hm_bordo"].forEach(function(id){document.getElementById(id).onchange=horasMaintAutofill;});
+    ["hm_close","hm_cancel"].forEach(function(id){document.getElementById(id).onclick=horasCloseMaint;});
+    document.getElementById("hmbg").onclick=function(e){if(e.target.id==="hmbg")horasCloseMaint();};
+    document.getElementById("hm_save").onclick=async function(){
+      var shipKey=document.getElementById("hm_ship").value,tipo=document.getElementById("hm_tipo").value,bordo=document.getElementById("hm_bordo").value;
+      if(!shipKey||!tipo||!bordo){toast("Selecione navio, tipo do motor e bordo.","info");return;}
+      var rows=horasMatchRows(shipKey,tipo,bordo);
+      if(!rows.length){toast("Nenhum motor correspondente encontrado.","info");return;}
+      var horas=document.getElementById("hm_horas").value.trim(),tiporev=document.getElementById("hm_tiporev").value.trim();
+      var data=document.getElementById("hm_data").value.trim(),dataprox=document.getElementById("hm_dataprox").value.trim();
+      var s=horasShips[shipKey],snap=JSON.parse(JSON.stringify(s.rows));
+      rows.forEach(function(r){
+        if(horas){r.horasManutencao=horas;r.horasOperacao=horas;}
+        if(tiporev)r.tipoRevisaoUltima=tiporev;
+        if(data)r.dataUltimaManutencao=data;
+        if(dataprox)r.dataProxRevisao=dataprox;
+        horasRecalcRow(r);
+      });
+      horasSaveShip(s);
+      await pushKV("horasPush",s.rowsKey,s.rows);
+      pushUndo("Inserir manutenção — "+s.title,async function(){s.rows=snap;horasSaveShip(s);await pushKV("horasPush",s.rowsKey,s.rows);renderHorasShip(shipKey);});
+      horasCloseMaint();
+      renderHorasShip(shipKey);
+      toast("✓ Manutenção registrada ("+rows.length+(rows.length>1?" motores":" motor")+")","ok");
+    };
+  }
   horasInit=async function(){
     if(horasBound)return;
     horasBound=true;
@@ -4553,6 +4624,7 @@ setTimeout(hideSplash,20000);
       await horasLoadShip(horasShips[HORAS_SHIP_LIST[i].key]);
     }
     HORAS_SHIP_LIST.forEach(function(sk){horasBindShip(sk.key);bindShipCardGrid(sk.key);});
+    horasBindMaintModal();
     var tag=document.getElementById("horas_synctag");
     if(tag){tag.textContent=bk==="firebase"?"☁ Sincronizado":"💾 Somente local";tag.style.color=bk==="firebase"?"var(--c-teal)":"var(--c-amber)";}
   };
