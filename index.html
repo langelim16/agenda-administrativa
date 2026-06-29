@@ -459,6 +459,7 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
 .dt-table td.dt-cell:not(.dt-cell-ro){white-space:normal;overflow:visible;text-overflow:clip;max-width:none}
 .dt-table td.dt-cell:focus{outline:2px solid var(--c-blue);outline-offset:-2px;background:var(--c-sky)}
 .dt-table td.dt-cell:empty:before{content:"—";color:var(--text3)}
+.dt-table.dt-editing td.dt-cell-computed{background:var(--c-50);font-style:italic;color:var(--text2)}
 .dt-table td.dt-cell-ro{cursor:default}
 .dt-table:not(.dt-editing) .dt-actions-col{display:none}
 .dt-table.dt-editing .dt-actions-col{position:sticky;right:0;background:var(--surface);box-shadow:-4px 0 6px -4px rgba(0,0,0,.25);z-index:3}
@@ -1617,6 +1618,7 @@ function bindDataTable(cfg){
   var getTitlesSnap=cfg.getTitlesSnap,setTitlesSnap=cfg.setTitlesSnap,fixedKeys=cfg.fixedKeys||[];
   var getLock=cfg.getLock,setLock=cfg.setLock,who=cfg.who,renderFn=cfg.renderFn,afterRender=cfg.afterRender||function(){};
   var updateToolbar=cfg.updateToolbar,pushLabel=cfg.pushLabel||"pushTable",undoLabel=cfg.undoLabel||"Editar tabela";
+  var afterCellEdit=cfg.afterCellEdit||function(){};
   var focusKey=cfg.focusKey||(getTitles()[0]&&getTitles()[0].key);
   var tbody=document.getElementById(cfg.prefix+"_tbody");
   var thead=document.getElementById(cfg.prefix+"_thead");
@@ -1628,6 +1630,7 @@ function bindDataTable(cfg){
     var row=findRow(td.dataset.id);
     if(!row)return;
     row[td.dataset.key]=td.textContent;
+    afterCellEdit(row,td.dataset.key);
     setDirty(true);updateToolbar();
   });
   tbody.addEventListener("focusout",function(e){
@@ -1638,6 +1641,7 @@ function bindDataTable(cfg){
     var v=td.textContent.trim();
     row[td.dataset.key]=v;
     td.textContent=v;
+    afterCellEdit(row,td.dataset.key);
   });
   tbody.addEventListener("keydown",function(e){
     if(e.key==="Enter"&&e.target.closest&&e.target.closest(".dt-cell")){e.preventDefault();e.target.blur();}
@@ -1972,7 +1976,9 @@ function colTd(row,col,editing,cellCls,roCls,forceEditableRowId){
   if(col.type==="select")return navCondefTd(row.id,row[col.key],editing);
   var wStyle=colWidthStyle(col);
   var isEditable=(editing&&col.type!=="locked")||row.id===forceEditableRowId;
-  return '<td class="'+cellCls+(isEditable?'':' '+roCls)+'"'+wStyle+' data-id="'+row.id+'" data-key="'+col.key+'"'+(isEditable?' contenteditable="true"':'')+' spellcheck="false">'+esc(row[col.key]||"")+'</td>';
+  var compCls=col.computed?' dt-cell-computed':'';
+  var compTitle=(col.computed&&editing)?' title="Calculado automaticamente (Operação, Manutenção e Cronograma)"':'';
+  return '<td class="'+cellCls+(isEditable?'':' '+roCls)+compCls+'"'+wStyle+compTitle+' data-id="'+row.id+'" data-key="'+col.key+'"'+(isEditable?' contenteditable="true"':'')+' spellcheck="false">'+esc(row[col.key]||"")+'</td>';
 }
 function addTableColumn(cols,rows){
   var n=0;
@@ -4187,8 +4193,9 @@ setTimeout(hideSplash,20000);
     {key:"numSerie",title:"Nº de Série"},
     {key:"horasOperacao",title:"Horas em Operação"},
     {key:"horasManutencao",title:"Horas na Manutenção"},
-    {key:"horasProxRevisao",title:"Horas p/ Próxima Revisão"},
-    {key:"horasUltrapassadas",title:"Horas Ultrapassadas"},
+    {key:"cronograma",title:"Cronograma (h)"},
+    {key:"horasProxRevisao",title:"Horas p/ Próxima Revisão",type:"locked",computed:true},
+    {key:"horasUltrapassadas",title:"Horas Ultrapassadas",type:"locked",computed:true},
     {key:"tipoProxRevisao",title:"Tipo Próx. Revisão"},
     {key:"dataUltimaManutencao",title:"Data Última Manutenção"},
     {key:"tipoRevisaoUltima",title:"Tipo Revisão da Última Manut."},
@@ -4198,7 +4205,49 @@ setTimeout(hideSplash,20000);
     {key:"ano",title:"Ano"},
     {key:"pmRelacionado",title:"PM Relacionado"}
   ];
-  function horasColsDefault(){return HORAS_FIXED.map(function(c){return{key:c.key,title:c.title};});}
+  function horasColsDefault(){return HORAS_FIXED.map(function(c){var o={key:c.key,title:c.title};if(c.type)o.type=c.type;if(c.computed)o.computed=true;return o;});}
+  // Cálculo automático: horas p/ próxima revisão e ultrapassadas a partir de Operação, Manutenção (última revisão) e Cronograma.
+  function horasParseNum(s){
+    if(s==null)return NaN;
+    var c=String(s).trim().replace(/[^\d.,-]/g,"");
+    if(!c||c==="-")return NaN;
+    c=c.replace(/\./g,"").replace(/,/g,".");
+    var n=parseFloat(c);
+    return isNaN(n)?NaN:n;
+  }
+  function horasFmtNum(n){
+    n=Math.round(n);
+    var neg=n<0;n=Math.abs(n);
+    return (neg?"-":"")+String(n).replace(/\B(?=(\d{3})+(?!\d))/g,".");
+  }
+  // Preenche row.horasProxRevisao e row.horasUltrapassadas. Se faltar dado (cronograma vazio etc.), NÃO mexe (preserva valores atuais).
+  function horasRecalcRow(row){
+    var op=horasParseNum(row.horasOperacao),man=horasParseNum(row.horasManutencao),crono=horasParseNum(row.cronograma);
+    if(isNaN(op)||isNaN(man)||isNaN(crono))return;
+    var delta=(man+crono)-op; // horas restantes até a próxima revisão
+    row.horasProxRevisao=delta>0?horasFmtNum(delta):"0";
+    row.horasUltrapassadas=delta<0?horasFmtNum(delta):"0";
+  }
+  function horasUpdateComputedCells(key,row){
+    var tb=document.getElementById("horas_"+key+"_tbody");
+    if(!tb)return;
+    ["horasProxRevisao","horasUltrapassadas"].forEach(function(k){
+      var td=tb.querySelector('td[data-id="'+row.id+'"][data-key="'+k+'"]');
+      if(td)td.textContent=row[k]==null?"":row[k];
+    });
+  }
+  // Garante que colunas salvas (formato antigo) recebam o tipo computado/locked e a coluna Cronograma.
+  function horasReconcileCols(cols,rows){
+    var byKey={};HORAS_FIXED.forEach(function(c){byKey[c.key]=c;});
+    cols.forEach(function(c){var f=byKey[c.key];if(f){if(f.type)c.type=f.type;else delete c.type;if(f.computed)c.computed=true;else delete c.computed;}});
+    if(!cols.some(function(c){return c.key==="cronograma";})){
+      var idx=cols.map(function(c){return c.key;}).indexOf("horasManutencao");
+      var col={key:"cronograma",title:"Cronograma (h)"};
+      if(idx>=0)cols.splice(idx+1,0,col);else cols.push(col);
+    }
+    rows.forEach(function(r){if(r.cronograma===undefined)r.cronograma="";});
+    return cols;
+  }
   var HORAS_SHIP_LIST=HORAS_SHIPS_SEED.map(function(s){return{key:s.key,title:s.title};});
   var horasShips={};
   HORAS_SHIPS_SEED.forEach(function(s){
@@ -4242,7 +4291,8 @@ setTimeout(hideSplash,20000);
     s.rows=(r&&r.length)?r:s.seedRows.map(function(row){var o=Object.assign({},row);o.id=genUid("hr");return o;});
     try{c=await gtj(s.colsKey);}catch(e){}
     if(!c||!c.length){try{c=JSON.parse(localStorage.getItem(s.colsKey));}catch(e){}}
-    s.cols=migrateCols(c,HORAS_FIXED,s.rows);
+    s.cols=horasReconcileCols(migrateCols(c,HORAS_FIXED,s.rows),s.rows);
+    s.rows.forEach(horasRecalcRow);
     try{cd=await gtj(s.cardsKey);}catch(e){}
     if(!cd){try{cd=JSON.parse(localStorage.getItem(s.cardsKey));}catch(e){}}
     s.cards=(cd&&cd.length)?cd:[];
@@ -4488,6 +4538,9 @@ setTimeout(hideSplash,20000);
       fixedKeys:[],getLock:function(){return horasEditLock;},setLock:function(v){horasEditLock=v;},who:key,
       renderFn:function(){renderHorasShip(key);},afterRender:function(){},
       updateToolbar:function(){horasUpdateToolbar(key);},
+      afterCellEdit:function(row,k){
+        if(k==="horasOperacao"||k==="horasManutencao"||k==="cronograma"){horasRecalcRow(row);horasUpdateComputedCells(key,row);}
+      },
       pushLabel:"horasPush",undoLabel:"Editar Horas — "+s.title
     });
   }
