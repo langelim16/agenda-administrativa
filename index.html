@@ -441,7 +441,7 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
 .nv-table:not(.nv-editing) .nv-actions-col{display:none}
 .nv-table.nv-editing .nv-actions-col{position:sticky;right:0;background:var(--surface);box-shadow:-4px 0 6px -4px rgba(0,0,0,.25);z-index:3}
 .nv-table.nv-editing th.nv-actions-col{background:var(--c-100)}
-.nv-table td{padding:7px 6px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;line-height:1.3;background:var(--rowbg,transparent);text-align:center}
+.nv-table td{padding:7px 6px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;white-space:normal;line-height:1.3;background:var(--rowbg,transparent);text-align:center}
 .nv-table td:nth-child(3),.nv-table td.nv-cell{text-align:left}
 .nv-table tbody tr:hover td{background:var(--c-50)}
 .nv-table tbody tr:last-child td{border-bottom:none}
@@ -450,7 +450,7 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
 .dt-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xs);overflow-x:auto;margin-bottom:14px}
 .dt-table{width:100%;min-width:520px;border-collapse:collapse;font-size:13px}
 .dt-table th{background:var(--c-100);color:var(--text2);font-size:10px;letter-spacing:.3px;text-transform:uppercase;text-align:center;padding:7px 6px;border-bottom:1px solid var(--border);position:sticky;top:0;line-height:1.25;white-space:normal}
-.dt-table td{padding:7px 6px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0;line-height:1.3;text-align:center}
+.dt-table td{padding:7px 6px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;white-space:normal;line-height:1.3;text-align:center}
 .dt-table td:first-child{text-align:left}
 .dt-table tbody tr:hover td{background:var(--c-50)}
 .dt-table tbody tr:last-child td{border-bottom:none}
@@ -1173,23 +1173,7 @@ body{padding-left:50px}
   </div>
 </header>
 
-<div class="dt-section-head">
-  <h3 class="dt-table-title">Motores — Horas de Funcionamento</h3>
-  <div class="nv-toolbar" id="horas_table_toolbar">
-    <button class="nv-editbtn" id="horas_table_edit">✎ Editar</button>
-    <span class="nv-edit-actions" id="horas_table_edit_actions" hidden>
-      <button class="nv-savebtn" id="horas_table_save" disabled>✓ Salvar</button>
-      <button class="nv-cancelbtn" id="horas_table_cancel">Cancelar</button>
-    </span>
-  </div>
-</div>
-<p style="font-size:11px;color:var(--text3);margin:-6px 0 10px">Somente "Horas em Operação" é editável diretamente. As demais colunas só mudam ao inserir ou excluir um registro de manutenção.</p>
-<div class="dt-table-wrap">
-  <table class="dt-table" id="horas_table">
-    <thead id="horas_thead"><tr></tr></thead>
-    <tbody id="horas_tbody"></tbody>
-  </table>
-</div>
+<div id="horas_tables_container"></div>
 
 <div class="cachebar" title="Uso do armazenamento local (limite 1 MB)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div>
 <div class="foot">Horas de Funcionamento dos Motores · dados transcritos do controle físico — versão inicial, sujeita a ajustes</div>
@@ -1625,6 +1609,97 @@ function genUid(prefix){return prefix+"_"+Date.now().toString(36)+"_"+(_uidSeq++
 async function pushKV(label,key,data){try{await svs(key,data);}catch(e){console.error(label,e);}}
 function reorderByIds(arr,ids){var byId={};arr.forEach(function(x){byId[x.id]=x;});return ids.map(function(id){return byId[id];}).filter(Boolean);}
 function cloneCols(cols){return cols.map(function(c){return Object.assign({},c);});}
+/* ── Tabela genérica completa: edição de célula, título/coluna (add/del/reorder/resize),
+   reordenar linha, inserir/excluir linha, com undo. Usado por CLG, e pelas tabelas de Horas. ── */
+function bindDataTable(cfg){
+  var getArr=cfg.getArr,setArr=cfg.setArr,onSaveKey=cfg.onSaveKey,onSaveDataFn=cfg.onSaveDataFn;
+  var getEditing=cfg.getEditing,setEditing=cfg.setEditing,getDirty=cfg.getDirty,setDirty=cfg.setDirty;
+  var getSnap=cfg.getSnap,setSnap=cfg.setSnap,newRowFn=cfg.newRowFn,addRowBtnId=cfg.addRowBtnId;
+  var getTitles=cfg.getTitles,setTitles=cfg.setTitles,saveTitlesFn=cfg.saveTitlesFn,titlesKey=cfg.titlesKey;
+  var getTitlesSnap=cfg.getTitlesSnap,setTitlesSnap=cfg.setTitlesSnap,fixedKeys=cfg.fixedKeys||[];
+  var getLock=cfg.getLock,setLock=cfg.setLock,who=cfg.who,renderFn=cfg.renderFn,afterRender=cfg.afterRender||function(){};
+  var updateToolbar=cfg.updateToolbar,pushLabel=cfg.pushLabel||"pushTable",undoLabel=cfg.undoLabel||"Editar tabela";
+  var focusKey=cfg.focusKey||(getTitles()[0]&&getTitles()[0].key);
+  var tbody=document.getElementById(cfg.prefix+"_tbody");
+  var thead=document.getElementById(cfg.prefix+"_thead");
+  function findRow(id){return getArr().find(function(r){return r.id===id;});}
+  bindTheadEdit(thead,getTitles,function(v){setDirty(v);updateToolbar();},function(){renderFn();});
+  tbody.addEventListener("input",function(e){
+    var td=e.target.closest&&e.target.closest(".dt-cell");
+    if(!td||!getEditing())return;
+    var row=findRow(td.dataset.id);
+    if(!row)return;
+    row[td.dataset.key]=td.textContent;
+    setDirty(true);updateToolbar();
+  });
+  tbody.addEventListener("focusout",function(e){
+    var td=e.target.closest&&e.target.closest(".dt-cell");
+    if(!td||!getEditing())return;
+    var row=findRow(td.dataset.id);
+    if(!row)return;
+    var v=td.textContent.trim();
+    row[td.dataset.key]=v;
+    td.textContent=v;
+  });
+  tbody.addEventListener("keydown",function(e){
+    if(e.key==="Enter"&&e.target.closest&&e.target.closest(".dt-cell")){e.preventDefault();e.target.blur();}
+  });
+  tbody.addEventListener("click",function(e){
+    if(!getEditing())return;
+    var del=e.target.closest&&e.target.closest(".nv-delrow");
+    if(del){
+      setArr(getArr().filter(function(r){return r.id!==del.dataset.id;}));
+      setDirty(true);
+      renderFn();
+      return;
+    }
+    if(e.target.id===addRowBtnId){
+      var nr=newRowFn();
+      getArr().push(nr);
+      setDirty(true);
+      renderFn();
+      setTimeout(function(){
+        var el=document.querySelector('.dt-cell[data-id="'+nr.id+'"][data-key="'+focusKey+'"]');
+        if(el){el.focus();var r=document.createRange();r.selectNodeContents(el);var sel=window.getSelection();sel.removeAllRanges();sel.addRange(r);}
+      },30);
+    }
+  });
+  document.getElementById(cfg.prefix+"_addcol").onclick=function(){
+    if(!getEditing())return;
+    addTableColumn(getTitles(),getArr());
+    setDirty(true);
+    renderFn();
+  };
+  document.getElementById(cfg.prefix+"_delcol").onclick=function(){
+    if(!getEditing())return;
+    if(delTableColumnWithConfirm(getTitles(),getArr(),fixedKeys)){setDirty(true);renderFn();}
+  };
+  document.getElementById(cfg.prefix+"_edit").onclick=function(){
+    if(getLock()&&getLock()!==who){toast("Finalize a edição em andamento antes de iniciar outra.","info");return;}
+    setLock(who);setEditing(true);setDirty(false);
+    setSnap(JSON.parse(JSON.stringify(getArr())));
+    setTitlesSnap(cloneCols(getTitles()));
+    renderFn();afterRender();
+  };
+  document.getElementById(cfg.prefix+"_cancel").onclick=function(){
+    if(getSnap())setArr(getSnap());
+    if(getTitlesSnap())setTitles(getTitlesSnap());
+    setSnap(null);setTitlesSnap(null);setEditing(false);setDirty(false);setLock(null);
+    renderFn();afterRender();
+  };
+  document.getElementById(cfg.prefix+"_save").onclick=async function(){
+    if(!getDirty())return;
+    var preTbl=getSnap(),preTitles=getTitlesSnap();
+    onSaveDataFn();
+    saveTitlesFn();
+    await pushKV(pushLabel,onSaveKey,getArr());
+    await pushKV(pushLabel,titlesKey,getTitles());
+    setSnap(null);setTitlesSnap(null);setEditing(false);setDirty(false);setLock(null);
+    if(preTbl)pushUndo(undoLabel,async function(){setArr(JSON.parse(JSON.stringify(preTbl)));if(preTitles)setTitles(cloneCols(preTitles));onSaveDataFn();saveTitlesFn();await pushKV(pushLabel,onSaveKey,getArr());await pushKV(pushLabel,titlesKey,getTitles());renderFn();afterRender();});
+    toast("✓ Salvo","ok");
+    renderFn();afterRender();
+  };
+}
 function reorderByIndex(arr,idxStrs){return idxStrs.map(function(s){return arr[+s];}).filter(Boolean);}
 /* ── Masonry real (mural de post-its): colunas são divs de verdade, então um cartão pode ser
    arrastado para qualquer coluna — inclusive o espaço vazio sob a coluna vizinha mais curta. ── */
@@ -3980,101 +4055,13 @@ setTimeout(hideSplash,20000);
   function isClgWide(c){return((c.items[0]&&(c.items[0].vals||[]).length)||1)>=4;}
   function bindClgItemDrag(){bindItemDragGeneric(document.getElementById("clg_grid"),clgFindCard,function(v){clgCardDirty=v;},renderClgCards);}
   function bindClgCardDrag(){bindMasonryCardDrag(document.getElementById("clg_grid"),function(){return clgCards;},function(v){clgCards=v;},clgSaveCards,CLG_CARDS_KEY,renderClgCards,"Reordenar cartões CLG",function(){return!!clgEditLock;});}
-  function clgBindTable(cfg){
-    var prefix=cfg.prefix,getArr=cfg.getArr,setArr=cfg.setArr,onSaveKey=cfg.onSaveKey,onSaveDataFn=cfg.onSaveDataFn;
-    var getEditing=cfg.getEditing,setEditing=cfg.setEditing,getDirty=cfg.getDirty,setDirty=cfg.setDirty;
-    var getSnap=cfg.getSnap,setSnap=cfg.setSnap,newRowFn=cfg.newRowFn,addRowBtnId=cfg.addRowBtnId;
-    var getTitles=cfg.getTitles,setTitles=cfg.setTitles,saveTitlesFn=cfg.saveTitlesFn,titlesKey=cfg.titlesKey;
-    var getTitlesSnap=cfg.getTitlesSnap,setTitlesSnap=cfg.setTitlesSnap;
-    var renderFn=prefix==="clg_t1"?renderClgT1:renderClgT2;
-    var tbody=document.getElementById(prefix+"_tbody");
-    var thead=document.getElementById(prefix+"_thead");
-    bindTheadEdit(thead,getTitles,function(v){setDirty(v);clgUpdateToolbar(prefix,true,true,false);},function(){renderFn();});
-    tbody.addEventListener("input",function(e){
-      var td=e.target.closest&&e.target.closest(".dt-cell");
-      if(!td||!getEditing())return;
-      var row=clgFindRow(getArr(),td.dataset.id);
-      if(!row)return;
-      row[td.dataset.key]=td.textContent;
-      setDirty(true);clgUpdateToolbar(prefix,true,true,false);
-    });
-    tbody.addEventListener("focusout",function(e){
-      var td=e.target.closest&&e.target.closest(".dt-cell");
-      if(!td||!getEditing())return;
-      var row=clgFindRow(getArr(),td.dataset.id);
-      if(!row)return;
-      var v=td.textContent.trim();
-      row[td.dataset.key]=v;
-      td.textContent=v;
-    });
-    tbody.addEventListener("keydown",function(e){
-      if(e.key==="Enter"&&e.target.closest&&e.target.closest(".dt-cell")){e.preventDefault();e.target.blur();}
-    });
-    tbody.addEventListener("click",function(e){
-      if(!getEditing())return;
-      var del=e.target.closest&&e.target.closest(".nv-delrow");
-      if(del){
-        setArr(getArr().filter(function(r){return r.id!==del.dataset.id;}));
-        setDirty(true);
-        renderFn();
-        return;
-      }
-      if(e.target.id===addRowBtnId){
-        var nr=newRowFn();
-        getArr().push(nr);
-        setDirty(true);
-        renderFn();
-        setTimeout(function(){
-          var el=document.querySelector('.dt-cell[data-id="'+nr.id+'"][data-key="meio"]');
-          if(el){el.focus();var r=document.createRange();r.selectNodeContents(el);var sel=window.getSelection();sel.removeAllRanges();sel.addRange(r);}
-        },30);
-      }
-    });
-    document.getElementById(prefix+"_addcol").onclick=function(){
-      if(!getEditing())return;
-      addTableColumn(getTitles(),getArr());
-      setDirty(true);
-      renderFn();
-    };
-    document.getElementById(prefix+"_delcol").onclick=function(){
-      if(!getEditing())return;
-      var fixedKeys=prefix==="clg_t1"?CLG_T1_FIXED_KEYS:CLG_T2_FIXED_KEYS;
-      if(delTableColumnWithConfirm(getTitles(),getArr(),fixedKeys)){setDirty(true);renderFn();}
-    };
-    document.getElementById(prefix+"_edit").onclick=function(){
-      var who=prefix==="clg_t1"?"t1":"t2";
-      if(clgEditLock&&clgEditLock!==who){toast("Finalize a edição em andamento antes de iniciar outra.","info");return;}
-      clgEditLock=who;setEditing(true);setDirty(false);
-      setSnap(JSON.parse(JSON.stringify(getArr())));
-      setTitlesSnap(cloneCols(getTitles()));
-      renderClgTables();renderClgCards();
-    };
-    document.getElementById(prefix+"_cancel").onclick=function(){
-      if(getSnap())setArr(getSnap());
-      if(getTitlesSnap())setTitles(getTitlesSnap());
-      setSnap(null);setTitlesSnap(null);setEditing(false);setDirty(false);clgEditLock=null;
-      renderClgTables();renderClgCards();
-    };
-    document.getElementById(prefix+"_save").onclick=async function(){
-      if(!getDirty())return;
-      var preTbl=getSnap(),preTitles=getTitlesSnap();
-      onSaveDataFn();
-      saveTitlesFn();
-      await pushKV("clgPush",onSaveKey,getArr());
-      await pushKV("clgPush",titlesKey,getTitles());
-      setSnap(null);setTitlesSnap(null);setEditing(false);setDirty(false);clgEditLock=null;
-      if(preTbl)pushUndo("Editar tabela CLG",async function(){setArr(JSON.parse(JSON.stringify(preTbl)));if(preTitles)setTitles(cloneCols(preTitles));onSaveDataFn();saveTitlesFn();await pushKV("clgPush",onSaveKey,getArr());await pushKV("clgPush",titlesKey,getTitles());renderClgTables();renderClgCards();});
-      toast("✓ Salvo","ok");
-      renderClgTables();renderClgCards();
-    };
-  }
   clgInit=async function(){
     if(clgBound)return;
     clgBound=true;
     await clgLoad();
     var tag=document.getElementById("clg_synctag");
     if(tag){tag.textContent=bk==="firebase"?"☁ Sincronizado":"💾 Somente local";tag.style.color=bk==="firebase"?"var(--c-teal)":"var(--c-amber)";}
-    clgBindTable({
+    bindDataTable({
       prefix:"clg_t1",
       getArr:function(){return clgT1;},setArr:function(v){clgT1=v;},
       onSaveKey:CLG_T1_KEY,onSaveDataFn:clgSaveT1,
@@ -4085,9 +4072,12 @@ setTimeout(hideSplash,20000);
       addRowBtnId:"clg_t1_addrow",
       getTitles:function(){return clgT1Cols;},setTitles:function(v){clgT1Cols=v;},
       saveTitlesFn:clgSaveT1Cols,titlesKey:CLG_T1_COLS_KEY,
-      getTitlesSnap:function(){return clgT1ColsSnapshot;},setTitlesSnap:function(v){clgT1ColsSnapshot=v;}
+      getTitlesSnap:function(){return clgT1ColsSnapshot;},setTitlesSnap:function(v){clgT1ColsSnapshot=v;},
+      fixedKeys:CLG_T1_FIXED_KEYS,getLock:function(){return clgEditLock;},setLock:function(v){clgEditLock=v;},who:"t1",
+      renderFn:renderClgT1,afterRender:renderClgCards,updateToolbar:function(){clgUpdateToolbar("clg_t1",true,true,false);},
+      pushLabel:"clgPush",undoLabel:"Editar tabela CLG"
     });
-    clgBindTable({
+    bindDataTable({
       prefix:"clg_t2",
       getArr:function(){return clgT2;},setArr:function(v){clgT2=v;},
       onSaveKey:CLG_T2_KEY,onSaveDataFn:clgSaveT2,
@@ -4098,7 +4088,10 @@ setTimeout(hideSplash,20000);
       addRowBtnId:"clg_t2_addrow",
       getTitles:function(){return clgT2Cols;},setTitles:function(v){clgT2Cols=v;},
       saveTitlesFn:clgSaveT2Cols,titlesKey:CLG_T2_COLS_KEY,
-      getTitlesSnap:function(){return clgT2ColsSnapshot;},setTitlesSnap:function(v){clgT2ColsSnapshot=v;}
+      getTitlesSnap:function(){return clgT2ColsSnapshot;},setTitlesSnap:function(v){clgT2ColsSnapshot=v;},
+      fixedKeys:CLG_T2_FIXED_KEYS,getLock:function(){return clgEditLock;},setLock:function(v){clgEditLock=v;},who:"t2",
+      renderFn:renderClgT2,afterRender:renderClgCards,updateToolbar:function(){clgUpdateToolbar("clg_t2",true,true,false);},
+      pushLabel:"clgPush",undoLabel:"Editar tabela CLG"
     });
     var grid=document.getElementById("clg_grid");
     grid.addEventListener("input",function(e){
@@ -4238,152 +4231,160 @@ setTimeout(hideSplash,20000);
 })();
 /* MODULE_HORAS_PLACEHOLDER */
 (function(){
-  var HORAS_KEY="aa_horas_v1",HORAS_COLS_KEY="aa_horas_cols_v1";
-  var HORAS_SEED=[{"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "RUSTON", "modelo": "6 R K C M", "numSerie": "1H9564", "horasOperacao": "40.644,00", "horasManutencao": "35.960", "horasProxRevisao": "315,00", "horasUltrapassadas": "NA", "tipoProxRevisao": "REV.", "dataUltimaManutencao": "2021", "tipoRevisaoUltima": "REV. 30.000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "RUSTON", "modelo": "6 R K C M", "numSerie": "1H9563", "horasOperacao": "34.857,00", "horasManutencao": "31.990", "horasProxRevisao": "2.132", "horasUltrapassadas": "NA", "tipoProxRevisao": "REV.5.000hs", "dataUltimaManutencao": "2022", "tipoRevisaoUltima": "REV. 30.000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "CATERPILLAR", "modelo": "3 3 0 6 B", "numSerie": "85Z13908", "horasOperacao": "13.642,00", "horasManutencao": "9.496", "horasProxRevisao": "-2.146,00", "horasUltrapassadas": "2.146,00", "tipoProxRevisao": "REV.", "dataUltimaManutencao": "2022", "tipoRevisaoUltima": "REV. 6.000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2025", "pmRelacionado": "PMA2026"}, {"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "CATERPILLAR", "modelo": "3 3 0 6 B", "numSerie": "85Z13909", "horasOperacao": "12.837,00", "horasManutencao": "8.770", "horasProxRevisao": "-2.067,00", "horasUltrapassadas": "2.067,00", "tipoProxRevisao": "REV.", "dataUltimaManutencao": "2022", "tipoRevisaoUltima": "REV. 6.000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2025", "pmRelacionado": "PMA2026"}, {"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "DGE", "bordo": "NA", "fabricante": "PETTEN", "modelo": "A C 1", "numSerie": "NA", "horasOperacao": "NA", "horasManutencao": "NA", "horasProxRevisao": "NA", "horasUltrapassadas": "NA", "tipoProxRevisao": "NA", "dataUltimaManutencao": "NA", "tipoRevisaoUltima": "NA", "dataProxRevisao": "NA", "situacao": "BAIXA", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "VOLVO PENTA", "modelo": "D16C-CMH", "numSerie": "1016041115", "horasOperacao": "14848", "horasManutencao": "10531", "horasProxRevisao": "-2054", "horasUltrapassadas": "2054", "tipoProxRevisao": "1000H", "dataUltimaManutencao": "MAI2024", "tipoRevisaoUltima": "500H", "dataProxRevisao": "JUN2026", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "VOLVO PENTA", "modelo": "D16C-CMH", "numSerie": "1016041114", "horasOperacao": "14822", "horasManutencao": "10490", "horasProxRevisao": "-2069", "horasUltrapassadas": "2069", "tipoProxRevisao": "1000H", "dataUltimaManutencao": "MAI2024", "tipoRevisaoUltima": "500H", "dataProxRevisao": "JUN2026", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "MTU", "modelo": "6R099TB50B", "numSerie": "1009103891", "horasOperacao": "10073", "horasManutencao": "10065", "horasProxRevisao": "1592", "horasUltrapassadas": "-1592", "tipoProxRevisao": "1600H", "dataUltimaManutencao": "FEV2026", "tipoRevisaoUltima": "3200H", "dataProxRevisao": "MAI2028", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "MTU", "modelo": "6R099TB50B", "numSerie": "1009103890", "horasOperacao": "9283", "horasManutencao": "9277", "horasProxRevisao": "1594", "horasUltrapassadas": "-1594", "tipoProxRevisao": "1600H", "dataUltimaManutencao": "FEV2026", "tipoRevisaoUltima": "3200H", "dataProxRevisao": "MAI2028", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "DGE", "bordo": "BE", "fabricante": "MTU", "modelo": "6R099TB50B", "numSerie": "1009103889", "horasOperacao": "10426", "horasManutencao": "4125", "horasProxRevisao": "-3101", "horasUltrapassadas": "3101", "tipoProxRevisao": "3200H", "dataUltimaManutencao": "MAI2024", "tipoRevisaoUltima": "1600H", "dataProxRevisao": "MAI2028", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "AvHoFlu Rio Tocantins", "indicativo": "H-12", "classe": "Rio Tocantins", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "MTU", "modelo": "6R 199 TB60", "numSerie": "1112195421", "horasOperacao": "12.000", "horasManutencao": "11.005", "horasProxRevisao": "1.005", "horasUltrapassadas": "-", "tipoProxRevisao": "W6", "dataUltimaManutencao": "2025", "tipoRevisaoUltima": "W6", "dataProxRevisao": "2028", "situacao": "O", "projetos": "-", "ano": "2028", "pmRelacionado": "PMG"}, {"meio": "AvHoFlu Rio Tocantins", "indicativo": "H-12", "classe": "Rio Tocantins", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "MTU", "modelo": "6R 199 TB60", "numSerie": "1112195423", "horasOperacao": "12.000", "horasManutencao": "11.005", "horasProxRevisao": "1.005", "horasUltrapassadas": "-", "tipoProxRevisao": "W6", "dataUltimaManutencao": "2025", "tipoRevisaoUltima": "W6", "dataProxRevisao": "2028", "situacao": "O", "projetos": "-", "ano": "2028", "pmRelacionado": "PMG"}, {"meio": "AvHoFlu Rio Tocantins", "indicativo": "H-12", "classe": "Rio Tocantins", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "MWM", "modelo": "D-229-6", "numSerie": "C1N211153", "horasOperacao": "20.485", "horasManutencao": "20.135", "horasProxRevisao": "2.071", "horasUltrapassadas": "-", "tipoProxRevisao": "W5", "dataUltimaManutencao": "2026", "tipoRevisaoUltima": "W5", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PMA"}, {"meio": "AvHoFlu Rio Tocantins", "indicativo": "H-12", "classe": "Rio Tocantins", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "MWM", "modelo": "D-229-6", "numSerie": "C1N211035", "horasOperacao": "18.784", "horasManutencao": "14.855", "horasProxRevisao": "5.650", "horasUltrapassadas": "-", "tipoProxRevisao": "W5", "dataUltimaManutencao": "2023", "tipoRevisaoUltima": "W5", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PMA"}, {"meio": "AvHoFlu Rio Xingu", "indicativo": "H-13", "classe": "Rio Tocantins", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "MTU", "modelo": "6R 199 TB60", "numSerie": "1203235653", "horasOperacao": "22.810", "horasManutencao": "9.209", "horasProxRevisao": "-", "horasUltrapassadas": "7.601", "tipoProxRevisao": "REV. 6.000H (GERAL)", "dataUltimaManutencao": "2019", "tipoRevisaoUltima": "REV. 6000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "AvHoFlu Rio Xingu", "indicativo": "H-13", "classe": "Rio Tocantins", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "MTU", "modelo": "6R 199 TB60", "numSerie": "1203235652", "horasOperacao": "22.617", "horasManutencao": "18.299", "horasProxRevisao": "-", "horasUltrapassadas": "1.318", "tipoProxRevisao": "REV. 3.000H", "dataUltimaManutencao": "2023", "tipoRevisaoUltima": "REV. 6000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "AvHoFlu Rio Xingu", "indicativo": "H-13", "classe": "Rio Tocantins", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "MWM", "modelo": "229-6", "numSerie": "C1N211309", "horasOperacao": "12.661", "horasManutencao": "5.769", "horasProxRevisao": "-", "horasUltrapassadas": "2.892", "tipoProxRevisao": "REV. 4.000H (GERAL)", "dataUltimaManutencao": "2019", "tipoRevisaoUltima": "REV. 4000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "AvHoFlu Rio Xingu", "indicativo": "H-13", "classe": "Rio Tocantins", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "MWM", "modelo": "229-6", "numSerie": "C1N211155", "horasOperacao": "12.661", "horasManutencao": "5.769", "horasProxRevisao": "-", "horasUltrapassadas": "2.892", "tipoProxRevisao": "REV. 4.000H (GERAL)", "dataUltimaManutencao": "2019", "tipoRevisaoUltima": "REV. 4000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "AvB Vega", "indicativo": "CHN-4-01", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BE-30359485", "horasOperacao": "2.109", "horasManutencao": "831,0", "horasProxRevisao": "222", "horasUltrapassadas": "-", "tipoProxRevisao": "1500h(INTERMEDIARIA)", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Vega", "indicativo": "CHN-4-01", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BB-30359503", "horasOperacao": "2.125", "horasManutencao": "895,0", "horasProxRevisao": "270", "horasUltrapassadas": "-", "tipoProxRevisao": "1500h(INTERMEDIARIA)", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Vega", "indicativo": "CHN-4-01", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "4700003", "horasOperacao": "2.966", "horasManutencao": "1.182,0", "horasProxRevisao": "716", "horasUltrapassadas": "-", "tipoProxRevisao": "2500h(INTERMEDIARIA)", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "5.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Vega", "indicativo": "CHN-4-01", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "4700006", "horasOperacao": "2.607", "horasManutencao": "674,0", "horasProxRevisao": "567", "horasUltrapassadas": "-", "tipoProxRevisao": "2500h(INTERMEDIARIA)", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "5.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Denébola", "indicativo": "CHN-4-02", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BE-80856784", "horasOperacao": "4.591", "horasManutencao": "-", "horasProxRevisao": "-1.425", "horasUltrapassadas": "1.425", "tipoProxRevisao": "6.000h(OVERHAUL)", "dataUltimaManutencao": "JUL2019", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "OR", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Denébola", "indicativo": "CHN-4-02", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BB-80356785", "horasOperacao": "4.591", "horasManutencao": "-", "horasProxRevisao": "-1.425", "horasUltrapassadas": "1.425", "tipoProxRevisao": "6.000h(OVERHAUL)", "dataUltimaManutencao": "JUL2019", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "OR", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Denébola", "indicativo": "CHN-4-02", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "4500170", "horasOperacao": "6.745", "horasManutencao": "-", "horasProxRevisao": "605", "horasUltrapassadas": "-", "tipoProxRevisao": "2.500(INTERMEDIÁRIA)", "dataUltimaManutencao": "OUT2022", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Denébola", "indicativo": "CHN-4-02", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "4500172", "horasOperacao": "7.284", "horasManutencao": "-", "horasProxRevisao": "-2.284", "horasUltrapassadas": "2.284", "tipoProxRevisao": "5.000(OVERHAUL)", "dataUltimaManutencao": "JUL2019", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Régulus", "indicativo": "CHN-4-03", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BE-30358437", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "-", "dataUltimaManutencao": "IM desde 2012", "tipoRevisaoUltima": "-", "dataProxRevisao": "-", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Régulus", "indicativo": "CHN-4-03", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BB-30358438", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "-", "dataUltimaManutencao": "IM desde 2012", "tipoRevisaoUltima": "-", "dataProxRevisao": "-", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Régulus", "indicativo": "CHN-4-03", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "INEXISTENTE", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "-", "dataUltimaManutencao": "IM desde 2012", "tipoRevisaoUltima": "-", "dataProxRevisao": "-", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Régulus", "indicativo": "CHN-4-03", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "INEXISTENTE", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "-", "dataUltimaManutencao": "IM desde 2012", "tipoRevisaoUltima": "-", "dataProxRevisao": "-", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Boto", "indicativo": "CHN-4-04", "classe": "Classe Makandra", "tipoMotor": "MCP", "bordo": "1", "fabricante": "CATERPILLAR", "modelo": "3412 DT", "numSerie": "60MO2001", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "ASD", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "Geral", "dataProxRevisao": "ASD", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Boto", "indicativo": "CHN-4-04", "classe": "Classe Makandra", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "MWM", "modelo": "D229-3", "numSerie": "22903032920", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "ASD", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "Geral", "dataProxRevisao": "ASD", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Boto", "indicativo": "CHN-4-04", "classe": "Classe Makandra", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "MWM", "modelo": "D229-3", "numSerie": "22903056957", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "ASD", "dataUltimaManutencao": "2014", "tipoRevisaoUltima": "Parcial", "dataProxRevisao": "ASD", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}]
-;
+  var HORAS_SHIPS_SEED=[{"key": "nsampaio", "title": "NHO G. Sampaio", "rows": [{"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "RUSTON", "modelo": "6 R K C M", "numSerie": "1H9564", "horasOperacao": "40.644,00", "horasManutencao": "35.960", "horasProxRevisao": "315,00", "horasUltrapassadas": "NA", "tipoProxRevisao": "REV.", "dataUltimaManutencao": "2021", "tipoRevisaoUltima": "REV. 30.000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "RUSTON", "modelo": "6 R K C M", "numSerie": "1H9563", "horasOperacao": "34.857,00", "horasManutencao": "31.990", "horasProxRevisao": "2.132", "horasUltrapassadas": "NA", "tipoProxRevisao": "REV.5.000hs", "dataUltimaManutencao": "2022", "tipoRevisaoUltima": "REV. 30.000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "CATERPILLAR", "modelo": "3 3 0 6 B", "numSerie": "85Z13908", "horasOperacao": "13.642,00", "horasManutencao": "9.496", "horasProxRevisao": "-2.146,00", "horasUltrapassadas": "2.146,00", "tipoProxRevisao": "REV.", "dataUltimaManutencao": "2022", "tipoRevisaoUltima": "REV. 6.000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2025", "pmRelacionado": "PMA2026"}, {"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "CATERPILLAR", "modelo": "3 3 0 6 B", "numSerie": "85Z13909", "horasOperacao": "12.837,00", "horasManutencao": "8.770", "horasProxRevisao": "-2.067,00", "horasUltrapassadas": "2.067,00", "tipoProxRevisao": "REV.", "dataUltimaManutencao": "2022", "tipoRevisaoUltima": "REV. 6.000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2025", "pmRelacionado": "PMA2026"}, {"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "DGE", "bordo": "NA", "fabricante": "PETTEN", "modelo": "A C 1", "numSerie": "NA", "horasOperacao": "NA", "horasManutencao": "NA", "horasProxRevisao": "NA", "horasUltrapassadas": "NA", "tipoProxRevisao": "NA", "dataUltimaManutencao": "NA", "tipoRevisaoUltima": "NA", "dataProxRevisao": "NA", "situacao": "BAIXA", "projetos": "-", "ano": "-", "pmRelacionado": "-"}]}, {"key": "castelo", "title": "NHiBTenCastelo", "rows": [{"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "VOLVO PENTA", "modelo": "D16C-CMH", "numSerie": "1016041115", "horasOperacao": "14848", "horasManutencao": "10531", "horasProxRevisao": "-2054", "horasUltrapassadas": "2054", "tipoProxRevisao": "1000H", "dataUltimaManutencao": "MAI2024", "tipoRevisaoUltima": "500H", "dataProxRevisao": "JUN2026", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "VOLVO PENTA", "modelo": "D16C-CMH", "numSerie": "1016041114", "horasOperacao": "14822", "horasManutencao": "10490", "horasProxRevisao": "-2069", "horasUltrapassadas": "2069", "tipoProxRevisao": "1000H", "dataUltimaManutencao": "MAI2024", "tipoRevisaoUltima": "500H", "dataProxRevisao": "JUN2026", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "MTU", "modelo": "6R099TB50B", "numSerie": "1009103891", "horasOperacao": "10073", "horasManutencao": "10065", "horasProxRevisao": "1592", "horasUltrapassadas": "-1592", "tipoProxRevisao": "1600H", "dataUltimaManutencao": "FEV2026", "tipoRevisaoUltima": "3200H", "dataProxRevisao": "MAI2028", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "MTU", "modelo": "6R099TB50B", "numSerie": "1009103890", "horasOperacao": "9283", "horasManutencao": "9277", "horasProxRevisao": "1594", "horasUltrapassadas": "-1594", "tipoProxRevisao": "1600H", "dataUltimaManutencao": "FEV2026", "tipoRevisaoUltima": "3200H", "dataProxRevisao": "MAI2028", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "DGE", "bordo": "BE", "fabricante": "MTU", "modelo": "6R099TB50B", "numSerie": "1009103889", "horasOperacao": "10426", "horasManutencao": "4125", "horasProxRevisao": "-3101", "horasUltrapassadas": "3101", "tipoProxRevisao": "3200H", "dataUltimaManutencao": "MAI2024", "tipoRevisaoUltima": "1600H", "dataProxRevisao": "MAI2028", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}]}, {"key": "tocantins", "title": "AvHoFlu Rio Tocantins", "rows": [{"meio": "AvHoFlu Rio Tocantins", "indicativo": "H-12", "classe": "Rio Tocantins", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "MTU", "modelo": "6R 199 TB60", "numSerie": "1112195421", "horasOperacao": "12.000", "horasManutencao": "11.005", "horasProxRevisao": "1.005", "horasUltrapassadas": "-", "tipoProxRevisao": "W6", "dataUltimaManutencao": "2025", "tipoRevisaoUltima": "W6", "dataProxRevisao": "2028", "situacao": "O", "projetos": "-", "ano": "2028", "pmRelacionado": "PMG"}, {"meio": "AvHoFlu Rio Tocantins", "indicativo": "H-12", "classe": "Rio Tocantins", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "MTU", "modelo": "6R 199 TB60", "numSerie": "1112195423", "horasOperacao": "12.000", "horasManutencao": "11.005", "horasProxRevisao": "1.005", "horasUltrapassadas": "-", "tipoProxRevisao": "W6", "dataUltimaManutencao": "2025", "tipoRevisaoUltima": "W6", "dataProxRevisao": "2028", "situacao": "O", "projetos": "-", "ano": "2028", "pmRelacionado": "PMG"}, {"meio": "AvHoFlu Rio Tocantins", "indicativo": "H-12", "classe": "Rio Tocantins", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "MWM", "modelo": "D-229-6", "numSerie": "C1N211153", "horasOperacao": "20.485", "horasManutencao": "20.135", "horasProxRevisao": "2.071", "horasUltrapassadas": "-", "tipoProxRevisao": "W5", "dataUltimaManutencao": "2026", "tipoRevisaoUltima": "W5", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PMA"}, {"meio": "AvHoFlu Rio Tocantins", "indicativo": "H-12", "classe": "Rio Tocantins", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "MWM", "modelo": "D-229-6", "numSerie": "C1N211035", "horasOperacao": "18.784", "horasManutencao": "14.855", "horasProxRevisao": "5.650", "horasUltrapassadas": "-", "tipoProxRevisao": "W5", "dataUltimaManutencao": "2023", "tipoRevisaoUltima": "W5", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PMA"}]}, {"key": "xingu", "title": "AvHoFlu Rio Xingu", "rows": [{"meio": "AvHoFlu Rio Xingu", "indicativo": "H-13", "classe": "Rio Tocantins", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "MTU", "modelo": "6R 199 TB60", "numSerie": "1203235653", "horasOperacao": "22.810", "horasManutencao": "9.209", "horasProxRevisao": "-", "horasUltrapassadas": "7.601", "tipoProxRevisao": "REV. 6.000H (GERAL)", "dataUltimaManutencao": "2019", "tipoRevisaoUltima": "REV. 6000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "AvHoFlu Rio Xingu", "indicativo": "H-13", "classe": "Rio Tocantins", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "MTU", "modelo": "6R 199 TB60", "numSerie": "1203235652", "horasOperacao": "22.617", "horasManutencao": "18.299", "horasProxRevisao": "-", "horasUltrapassadas": "1.318", "tipoProxRevisao": "REV. 3.000H", "dataUltimaManutencao": "2023", "tipoRevisaoUltima": "REV. 6000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "AvHoFlu Rio Xingu", "indicativo": "H-13", "classe": "Rio Tocantins", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "MWM", "modelo": "229-6", "numSerie": "C1N211309", "horasOperacao": "12.661", "horasManutencao": "5.769", "horasProxRevisao": "-", "horasUltrapassadas": "2.892", "tipoProxRevisao": "REV. 4.000H (GERAL)", "dataUltimaManutencao": "2019", "tipoRevisaoUltima": "REV. 4000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "AvHoFlu Rio Xingu", "indicativo": "H-13", "classe": "Rio Tocantins", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "MWM", "modelo": "229-6", "numSerie": "C1N211155", "horasOperacao": "12.661", "horasManutencao": "5.769", "horasProxRevisao": "-", "horasUltrapassadas": "2.892", "tipoProxRevisao": "REV. 4.000H (GERAL)", "dataUltimaManutencao": "2019", "tipoRevisaoUltima": "REV. 4000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PDR 2026"}]}, {"key": "vega", "title": "AvB Vega", "rows": [{"meio": "AvB Vega", "indicativo": "CHN-4-01", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BE-30359485", "horasOperacao": "2.109", "horasManutencao": "831,0", "horasProxRevisao": "222", "horasUltrapassadas": "-", "tipoProxRevisao": "1500h(INTERMEDIARIA)", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Vega", "indicativo": "CHN-4-01", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BB-30359503", "horasOperacao": "2.125", "horasManutencao": "895,0", "horasProxRevisao": "270", "horasUltrapassadas": "-", "tipoProxRevisao": "1500h(INTERMEDIARIA)", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Vega", "indicativo": "CHN-4-01", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "4700003", "horasOperacao": "2.966", "horasManutencao": "1.182,0", "horasProxRevisao": "716", "horasUltrapassadas": "-", "tipoProxRevisao": "2500h(INTERMEDIARIA)", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "5.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Vega", "indicativo": "CHN-4-01", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "4700006", "horasOperacao": "2.607", "horasManutencao": "674,0", "horasProxRevisao": "567", "horasUltrapassadas": "-", "tipoProxRevisao": "2500h(INTERMEDIARIA)", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "5.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}]}, {"key": "denebola", "title": "AvB Denébola", "rows": [{"meio": "AvB Denébola", "indicativo": "CHN-4-02", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BE-80856784", "horasOperacao": "4.591", "horasManutencao": "-", "horasProxRevisao": "-1.425", "horasUltrapassadas": "1.425", "tipoProxRevisao": "6.000h(OVERHAUL)", "dataUltimaManutencao": "JUL2019", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "OR", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Denébola", "indicativo": "CHN-4-02", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BB-80356785", "horasOperacao": "4.591", "horasManutencao": "-", "horasProxRevisao": "-1.425", "horasUltrapassadas": "1.425", "tipoProxRevisao": "6.000h(OVERHAUL)", "dataUltimaManutencao": "JUL2019", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "OR", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Denébola", "indicativo": "CHN-4-02", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "4500170", "horasOperacao": "6.745", "horasManutencao": "-", "horasProxRevisao": "605", "horasUltrapassadas": "-", "tipoProxRevisao": "2.500(INTERMEDIÁRIA)", "dataUltimaManutencao": "OUT2022", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Denébola", "indicativo": "CHN-4-02", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "4500172", "horasOperacao": "7.284", "horasManutencao": "-", "horasProxRevisao": "-2.284", "horasUltrapassadas": "2.284", "tipoProxRevisao": "5.000(OVERHAUL)", "dataUltimaManutencao": "JUL2019", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}]}, {"key": "regulus", "title": "AvB Régulus", "rows": [{"meio": "AvB Régulus", "indicativo": "CHN-4-03", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BE-30358437", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "-", "dataUltimaManutencao": "IM desde 2012", "tipoRevisaoUltima": "-", "dataProxRevisao": "-", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Régulus", "indicativo": "CHN-4-03", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BB-30358438", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "-", "dataUltimaManutencao": "IM desde 2012", "tipoRevisaoUltima": "-", "dataProxRevisao": "-", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Régulus", "indicativo": "CHN-4-03", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "INEXISTENTE", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "-", "dataUltimaManutencao": "IM desde 2012", "tipoRevisaoUltima": "-", "dataProxRevisao": "-", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Régulus", "indicativo": "CHN-4-03", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "INEXISTENTE", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "-", "dataUltimaManutencao": "IM desde 2012", "tipoRevisaoUltima": "-", "dataProxRevisao": "-", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}]}, {"key": "boto", "title": "AvB Boto", "rows": [{"meio": "AvB Boto", "indicativo": "CHN-4-04", "classe": "Classe Makandra", "tipoMotor": "MCP", "bordo": "1", "fabricante": "CATERPILLAR", "modelo": "3412 DT", "numSerie": "60MO2001", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "ASD", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "Geral", "dataProxRevisao": "ASD", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Boto", "indicativo": "CHN-4-04", "classe": "Classe Makandra", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "MWM", "modelo": "D229-3", "numSerie": "22903032920", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "ASD", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "Geral", "dataProxRevisao": "ASD", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Boto", "indicativo": "CHN-4-04", "classe": "Classe Makandra", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "MWM", "modelo": "D229-3", "numSerie": "22903056957", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "ASD", "dataUltimaManutencao": "2014", "tipoRevisaoUltima": "Parcial", "dataProxRevisao": "ASD", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}]}];
   var HORAS_FIXED=[
-    {key:"meio",title:"Meio",type:"locked"},
-    {key:"indicativo",title:"Indicativo",type:"locked"},
-    {key:"classe",title:"Classe",type:"locked"},
-    {key:"tipoMotor",title:"Tipo do Motor",type:"locked"},
-    {key:"bordo",title:"Bordo",type:"locked"},
-    {key:"fabricante",title:"Fabricante",type:"locked"},
-    {key:"modelo",title:"Modelo",type:"locked"},
-    {key:"numSerie",title:"Nº de Série",type:"locked"},
+    {key:"meio",title:"Meio"},
+    {key:"indicativo",title:"Indicativo"},
+    {key:"classe",title:"Classe"},
+    {key:"tipoMotor",title:"Tipo do Motor"},
+    {key:"bordo",title:"Bordo"},
+    {key:"fabricante",title:"Fabricante"},
+    {key:"modelo",title:"Modelo"},
+    {key:"numSerie",title:"Nº de Série"},
     {key:"horasOperacao",title:"Horas em Operação"},
-    {key:"horasManutencao",title:"Horas na Manutenção",type:"locked"},
-    {key:"horasProxRevisao",title:"Horas p/ Próxima Revisão",type:"locked"},
-    {key:"horasUltrapassadas",title:"Horas Ultrapassadas",type:"locked"},
-    {key:"tipoProxRevisao",title:"Tipo Próx. Revisão",type:"locked"},
-    {key:"dataUltimaManutencao",title:"Data Última Manutenção",type:"locked"},
-    {key:"tipoRevisaoUltima",title:"Tipo Revisão da Última Manut.",type:"locked"},
-    {key:"dataProxRevisao",title:"Data Próx. Revisão",type:"locked"},
-    {key:"situacao",title:"Situação",type:"locked"},
-    {key:"projetos",title:"Projetos Relacionados",type:"locked"},
-    {key:"ano",title:"Ano",type:"locked"},
-    {key:"pmRelacionado",title:"PM Relacionado",type:"locked"}
+    {key:"horasManutencao",title:"Horas na Manutenção"},
+    {key:"horasProxRevisao",title:"Horas p/ Próxima Revisão"},
+    {key:"horasUltrapassadas",title:"Horas Ultrapassadas"},
+    {key:"tipoProxRevisao",title:"Tipo Próx. Revisão"},
+    {key:"dataUltimaManutencao",title:"Data Última Manutenção"},
+    {key:"tipoRevisaoUltima",title:"Tipo Revisão da Última Manut."},
+    {key:"dataProxRevisao",title:"Data Próx. Revisão"},
+    {key:"situacao",title:"Situação"},
+    {key:"projetos",title:"Projetos Relacionados"},
+    {key:"ano",title:"Ano"},
+    {key:"pmRelacionado",title:"PM Relacionado"}
   ];
-  var HORAS_FIXED_KEYS=HORAS_FIXED.map(function(c){return c.key;});
-  function horasColsDefault(){return HORAS_FIXED.map(function(c){return{key:c.key,title:c.title,type:c.type};});}
-  var horasRows=[],horasCols=horasColsDefault(),horasBound=false;
-  var horasEditing=false,horasDirty=false,horasSnapshot=null,horasColsSnapshot=null,horasNewRowId=null;
-  async function horasLoad(){
+  function horasColsDefault(){return HORAS_FIXED.map(function(c){return{key:c.key,title:c.title};});}
+  var HORAS_SHIP_LIST=HORAS_SHIPS_SEED.map(function(s){return{key:s.key,title:s.title};});
+  var horasShips={};
+  HORAS_SHIPS_SEED.forEach(function(s){
+    horasShips[s.key]={
+      key:s.key,title:s.title,seedRows:s.rows,
+      rows:[],cols:horasColsDefault(),
+      editing:false,dirty:false,snapshot:null,colsSnapshot:null,
+      rowsKey:"aa_horas_"+s.key+"_v1",colsKey:"aa_horas_"+s.key+"_cols_v1"
+    };
+  });
+  var horasEditLock=null,horasBound=false;
+  function horasShipHtml(s){
+    var prefix="horas_"+s.key;
+    return ''+
+    '<div class="dt-section-head">'+
+      '<h3 class="dt-table-title">'+esc(s.title)+'</h3>'+
+      '<div class="nv-toolbar" id="'+prefix+'_toolbar">'+
+        '<button class="nv-editbtn" id="'+prefix+'_edit">✎ Editar</button>'+
+        '<span class="nv-edit-actions" id="'+prefix+'_edit_actions" hidden>'+
+          '<button class="dt-colbtn" id="'+prefix+'_addcol">+ coluna</button>'+
+          '<button class="dt-colbtn" id="'+prefix+'_delcol">✕ coluna</button>'+
+          '<button class="nv-savebtn" id="'+prefix+'_save" disabled>✓ Salvar</button>'+
+          '<button class="nv-cancelbtn" id="'+prefix+'_cancel">Cancelar</button>'+
+        '</span>'+
+      '</div>'+
+    '</div>'+
+    '<div class="dt-table-wrap">'+
+      '<table class="dt-table" id="'+prefix+'_table">'+
+        '<thead id="'+prefix+'_thead"><tr></tr></thead>'+
+        '<tbody id="'+prefix+'_tbody"></tbody>'+
+      '</table>'+
+    '</div>';
+  }
+  async function horasLoadShip(s){
     var r=null,c=null;
-    try{r=await gtj(HORAS_KEY);}catch(e){}
-    if(!r||!r.length){try{r=JSON.parse(localStorage.getItem(HORAS_KEY));}catch(e){}}
-    horasRows=(r&&r.length)?r:HORAS_SEED.map(function(row){var o=Object.assign({},row);o.id=genUid("hr");return o;});
-    try{c=await gtj(HORAS_COLS_KEY);}catch(e){}
-    if(!c||!c.length){try{c=JSON.parse(localStorage.getItem(HORAS_COLS_KEY));}catch(e){}}
-    horasCols=migrateCols(c,HORAS_FIXED,horasRows);
-    horasSaveRows();horasSaveCols();
+    try{r=await gtj(s.rowsKey);}catch(e){}
+    if(!r||!r.length){try{r=JSON.parse(localStorage.getItem(s.rowsKey));}catch(e){}}
+    s.rows=(r&&r.length)?r:s.seedRows.map(function(row){var o=Object.assign({},row);o.id=genUid("hr");return o;});
+    try{c=await gtj(s.colsKey);}catch(e){}
+    if(!c||!c.length){try{c=JSON.parse(localStorage.getItem(s.colsKey));}catch(e){}}
+    s.cols=migrateCols(c,HORAS_FIXED,s.rows);
+    horasSaveShip(s);
   }
-  function horasSaveRows(){try{localStorage.setItem(HORAS_KEY,JSON.stringify(horasRows));}catch(e){}}
-  function horasSaveCols(){try{localStorage.setItem(HORAS_COLS_KEY,JSON.stringify(horasCols));}catch(e){}}
-  function horasFindRow(id){return horasRows.find(function(r){return r.id===id;});}
-  horasGetState=function(){return{rows:JSON.parse(JSON.stringify(horasRows)),cols:cloneCols(horasCols)};};
-  horasSetState=async function(s){horasRows=s.rows;horasCols=s.cols||horasColsDefault();horasSaveRows();horasSaveCols();await pushKV("horasPush",HORAS_KEY,horasRows);await pushKV("horasPush",HORAS_COLS_KEY,horasCols);};
-  function horasUpdateToolbar(){
-    var editBtn=document.getElementById("horas_table_edit");
-    var actions=document.getElementById("horas_table_edit_actions");
-    var saveBtn=document.getElementById("horas_table_save");
-    if(!editBtn)return;
-    if(horasEditing){editBtn.hidden=true;actions.hidden=false;saveBtn.disabled=!horasDirty;}
-    else{editBtn.hidden=false;actions.hidden=true;editBtn.disabled=false;}
+  function horasSaveShip(s){
+    try{localStorage.setItem(s.rowsKey,JSON.stringify(s.rows));}catch(e){}
+    try{localStorage.setItem(s.colsKey,JSON.stringify(s.cols));}catch(e){}
   }
-  renderHoras=function(){
-    var tb=document.getElementById("horas_tbody");
-    if(!tb)return;
-    var editing=horasEditing;
-    var table=document.getElementById("horas_table");
-    if(table)table.classList.toggle("dt-editing",editing);
-    renderThead(document.getElementById("horas_thead"),horasCols,editing,"dt-actions-col",true);
-    var colspan=horasCols.length+1;
-    tb.innerHTML=horasRows.map(function(r){
-      return '<tr>'+
-        horasCols.map(function(col){return colTd(r,col,editing,"dt-cell","dt-cell-ro",horasNewRowId);}).join("")+
-        '<td class="dt-actions dt-actions-col">'+(editing?'<button class="nv-delrow" data-id="'+r.id+'" title="Excluir registro">🗑</button>':'')+'</td>'+
-      '</tr>';
-    }).join("")+(editing?'<tr class="dt-addrow-tr"><td colspan="'+colspan+'"><button class="nv-addrow" id="horas_addrow">+ Adicionar registro de manutenção</button></td></tr>':'');
-    horasUpdateToolbar();
-    var tag=document.getElementById("horas_synctag");
-    if(tag){tag.textContent=bk==="firebase"?"☁ Sincronizado":"💾 Somente local";tag.style.color=bk==="firebase"?"var(--c-teal)":"var(--c-amber)";}
+  horasGetState=function(){
+    var out={};
+    HORAS_SHIP_LIST.forEach(function(sk){var s=horasShips[sk.key];out[sk.key]={rows:JSON.parse(JSON.stringify(s.rows)),cols:cloneCols(s.cols)};});
+    return out;
   };
+  horasSetState=async function(d){
+    for(var i=0;i<HORAS_SHIP_LIST.length;i++){
+      var key=HORAS_SHIP_LIST[i].key,s=horasShips[key];
+      if(d[key]){
+        s.rows=d[key].rows;s.cols=d[key].cols||horasColsDefault();
+        try{localStorage.setItem(s.rowsKey,JSON.stringify(s.rows));}catch(e){}
+        try{localStorage.setItem(s.colsKey,JSON.stringify(s.cols));}catch(e){}
+        await pushKV("horasPush",s.rowsKey,s.rows);
+        await pushKV("horasPush",s.colsKey,s.cols);
+      }
+    }
+  };
+  function horasUpdateToolbar(key){
+    var s=horasShips[key];
+    var prefix="horas_"+key;
+    var editBtn=document.getElementById(prefix+"_edit");
+    var actions=document.getElementById(prefix+"_edit_actions");
+    var saveBtn=document.getElementById(prefix+"_save");
+    if(!editBtn)return;
+    if(s.editing){editBtn.hidden=true;actions.hidden=false;saveBtn.disabled=!s.dirty;}
+    else{editBtn.hidden=false;actions.hidden=true;editBtn.disabled=!!(horasEditLock&&horasEditLock!==key);}
+    var delcol=document.getElementById(prefix+"_delcol");
+    if(delcol)delcol.disabled=s.cols.length<1;
+  }
+  function renderHorasShip(key){
+    var s=horasShips[key];
+    var prefix="horas_"+key;
+    var tb=document.getElementById(prefix+"_tbody");
+    if(!tb)return;
+    var editing=s.editing;
+    var table=document.getElementById(prefix+"_table");
+    if(table)table.classList.toggle("dt-editing",editing);
+    renderThead(document.getElementById(prefix+"_thead"),s.cols,editing,"dt-actions-col");
+    var colspan=s.cols.length+1;
+    tb.innerHTML=s.rows.map(function(r){
+      return '<tr'+(editing?' data-rid="'+r.id+'"':'')+'>'+
+        s.cols.map(function(col){return colTd(r,col,editing,"dt-cell","dt-cell-ro");}).join("")+
+        '<td class="dt-actions dt-actions-col">'+(editing?'<span class="row-dh" title="Arrastar para reordenar">⠿</span><button class="nv-delrow" data-id="'+r.id+'" title="Excluir">🗑</button>':'')+'</td>'+
+      '</tr>';
+    }).join("")+(editing?'<tr class="dt-addrow-tr"><td colspan="'+colspan+'"><button class="nv-addrow" id="'+prefix+'_addrow">+ Adicionar motor</button></td></tr>':'');
+    horasUpdateToolbar(key);
+    if(editing)bindRowDragGeneric(tb,function(){return s.rows;},function(){renderHorasShip(key);},function(){s.dirty=true;});
+  }
+  renderHoras=function(){HORAS_SHIP_LIST.forEach(function(sk){renderHorasShip(sk.key);});};
+  function horasBindShip(key){
+    var s=horasShips[key];
+    bindDataTable({
+      prefix:"horas_"+key,
+      getArr:function(){return s.rows;},setArr:function(v){s.rows=v;},
+      onSaveKey:s.rowsKey,onSaveDataFn:function(){horasSaveShip(s);},
+      getEditing:function(){return s.editing;},setEditing:function(v){s.editing=v;},
+      getDirty:function(){return s.dirty;},setDirty:function(v){s.dirty=v;},
+      getSnap:function(){return s.snapshot;},setSnap:function(v){s.snapshot=v;},
+      newRowFn:function(){var nr={id:genUid("hr")};s.cols.forEach(function(c){nr[c.key]="";});return nr;},
+      addRowBtnId:"horas_"+key+"_addrow",
+      getTitles:function(){return s.cols;},setTitles:function(v){s.cols=v;},
+      saveTitlesFn:function(){horasSaveShip(s);},titlesKey:s.colsKey,
+      getTitlesSnap:function(){return s.colsSnapshot;},setTitlesSnap:function(v){s.colsSnapshot=v;},
+      fixedKeys:[],getLock:function(){return horasEditLock;},setLock:function(v){horasEditLock=v;},who:key,
+      renderFn:function(){renderHorasShip(key);},afterRender:function(){},
+      updateToolbar:function(){horasUpdateToolbar(key);},
+      pushLabel:"horasPush",undoLabel:"Editar Horas — "+s.title
+    });
+  }
   horasInit=async function(){
     if(horasBound)return;
     horasBound=true;
-    await horasLoad();
-    var tbody=document.getElementById("horas_tbody");
-    var thead=document.getElementById("horas_thead");
-    bindTheadEdit(thead,function(){return horasCols;},function(v){horasDirty=v;horasUpdateToolbar();},renderHoras);
-    tbody.addEventListener("input",function(e){
-      var td=e.target.closest&&e.target.closest(".dt-cell");
-      if(!td||!td.isContentEditable)return;
-      var row=horasFindRow(td.dataset.id);
-      if(!row)return;
-      row[td.dataset.key]=td.textContent;
-      horasDirty=true;horasUpdateToolbar();
-    });
-    tbody.addEventListener("focusout",function(e){
-      var td=e.target.closest&&e.target.closest(".dt-cell");
-      if(!td||!td.isContentEditable)return;
-      var row=horasFindRow(td.dataset.id);
-      if(!row)return;
-      var v=td.textContent.trim();
-      row[td.dataset.key]=v;
-      td.textContent=v;
-    });
-    tbody.addEventListener("keydown",function(e){
-      if(e.key==="Enter"&&e.target.closest&&e.target.closest(".dt-cell")){e.preventDefault();e.target.blur();}
-    });
-    tbody.addEventListener("click",function(e){
-      if(!horasEditing)return;
-      var del=e.target.closest&&e.target.closest(".nv-delrow");
-      if(del){
-        if(confirm("Excluir este registro de manutenção?")){
-          horasRows=horasRows.filter(function(r){return r.id!==del.dataset.id;});
-          if(horasNewRowId===del.dataset.id)horasNewRowId=null;
-          horasDirty=true;renderHoras();
-        }
-        return;
-      }
-      if(e.target.id==="horas_addrow"){
-        var nid=genUid("hr");
-        var nr={id:nid};
-        horasCols.forEach(function(c){nr[c.key]="";});
-        horasRows.push(nr);
-        horasNewRowId=nid;
-        horasDirty=true;renderHoras();
-        setTimeout(function(){
-          var el=document.querySelector('.dt-cell[data-id="'+nid+'"][data-key="meio"]');
-          if(el){el.focus();var r=document.createRange();r.selectNodeContents(el);var sel=window.getSelection();sel.removeAllRanges();sel.addRange(r);}
-        },30);
-      }
-    });
-    document.getElementById("horas_table_edit").onclick=function(){
-      horasEditing=true;horasDirty=false;
-      horasSnapshot=JSON.parse(JSON.stringify(horasRows));
-      horasColsSnapshot=cloneCols(horasCols);
-      renderHoras();
-    };
-    document.getElementById("horas_table_cancel").onclick=function(){
-      if(horasSnapshot)horasRows=horasSnapshot;
-      if(horasColsSnapshot)horasCols=horasColsSnapshot;
-      horasSnapshot=null;horasColsSnapshot=null;horasEditing=false;horasDirty=false;horasNewRowId=null;
-      renderHoras();
-    };
-    document.getElementById("horas_table_save").onclick=async function(){
-      if(!horasDirty)return;
-      var preRows=horasSnapshot,preCols=horasColsSnapshot;
-      horasSaveRows();horasSaveCols();
-      await pushKV("horasPush",HORAS_KEY,horasRows);
-      await pushKV("horasPush",HORAS_COLS_KEY,horasCols);
-      horasSnapshot=null;horasColsSnapshot=null;horasEditing=false;horasDirty=false;horasNewRowId=null;
-      if(preRows)pushUndo("Editar Horas de Funcionamento",async function(){horasRows=JSON.parse(JSON.stringify(preRows));if(preCols)horasCols=cloneCols(preCols);horasSaveRows();horasSaveCols();await pushKV("horasPush",HORAS_KEY,horasRows);await pushKV("horasPush",HORAS_COLS_KEY,horasCols);renderHoras();});
-      toast("✓ Salvo","ok");
-      renderHoras();
-    };
+    var container=document.getElementById("horas_tables_container");
+    container.innerHTML=HORAS_SHIP_LIST.map(function(sk){return horasShipHtml(horasShips[sk.key]);}).join("");
+    for(var i=0;i<HORAS_SHIP_LIST.length;i++){
+      await horasLoadShip(horasShips[HORAS_SHIP_LIST[i].key]);
+    }
+    HORAS_SHIP_LIST.forEach(function(sk){horasBindShip(sk.key);});
+    var tag=document.getElementById("horas_synctag");
+    if(tag){tag.textContent=bk==="firebase"?"☁ Sincronizado":"💾 Somente local";tag.style.color=bk==="firebase"?"var(--c-teal)":"var(--c-amber)";}
   };
 })();
+
 })();
 </script>
 
