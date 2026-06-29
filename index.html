@@ -531,6 +531,9 @@ tr[draggable="true"]{opacity:.5}
 .th-inner{display:flex;align-items:center;gap:4px;justify-content:center}
 .th-inner .row-dh{flex-shrink:0}
 .th-inner .dt-th-edit{flex:1;min-width:0;text-align:left}
+.dt-table th[data-ci],.nv-table th[data-ci]{position:relative}
+.col-resize{position:absolute;top:0;right:0;bottom:0;width:7px;cursor:col-resize;touch-action:none}
+.col-resize:hover,.col-resize:active{background:var(--c-blue)}
 .nv-addcolbtn:hover{background:var(--border)}
 .nv-additem:hover{background:var(--border)}
 .nv-addcard{display:block;width:100%;background:var(--surface);border:1.5px dashed var(--border2);color:var(--text2);font-size:12px;padding:14px;border-radius:var(--r-lg)}
@@ -989,6 +992,7 @@ body{padding-left:50px}
   <button class="nav-item active" data-view="agenda" title="Agenda Administrativa"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="18" rx="2"></rect><path d="M9 3.5V2.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"></path><line x1="8.5" y1="9" x2="15.5" y2="9"></line><line x1="8.5" y1="12.5" x2="15.5" y2="12.5"></line><line x1="8.5" y1="16" x2="13" y2="16"></line></svg></span><span class="nav-lbl">Agenda</span></button>
   <button class="nav-item" data-view="navios" title="Controle de CONDEF"><span class="nav-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="2"></circle><line x1="12" y1="7.5" x2="12" y2="19"></line><line x1="8" y1="11" x2="16" y2="11"></line><path d="M5 14a7 7 0 0 0 14 0"></path><path d="M5 14l-1.5-1"></path><path d="M19 14l1.5-1"></path></svg></span><span class="nav-lbl">CONDEF</span></button>
   <button class="nav-item" data-view="clg" title="Controle de CLG"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M6 21V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v15"></path><line x1="5" y1="21" x2="15" y2="21"></line><path d="M14 9h2a2 2 0 0 1 2 2v2.3a1.7 1.7 0 0 0 1.7 1.7"></path><path d="M18 6.5l1.6 1.6a1 1 0 0 1 .4.8V11"></path><line x1="8" y1="6" x2="12" y2="6"></line></svg></span><span class="nav-lbl">CLG</span></button>
+  <button class="nav-item" data-view="horas" title="Horas de Funcionamento dos Motores"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></span><span class="nav-lbl">Horas</span></button>
 </nav>
 <div id="toast-container"></div>
 <div id="splash" class="splash"><div class="splash-inner"><div class="splash-crest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" width="220" height="220"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,0.95)"/><stop offset="100%" stop-color="rgba(255,255,255,0.65)"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="3.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g filter="url(#glow)" fill="none" stroke="url(#ag)" stroke-linecap="round" stroke-linejoin="round"><circle cx="110" cy="55" r="18" stroke-width="7"/><line x1="110" y1="73" x2="110" y2="175" stroke-width="7"/><line x1="74" y1="95" x2="146" y2="95" stroke-width="7"/><path d="M74 175 Q54 155 52 130" stroke-width="7"/><path d="M146 175 Q166 155 168 130" stroke-width="7"/><path d="M52 130 Q60 148 74 155" stroke-width="7"/><path d="M168 130 Q160 148 146 155" stroke-width="7"/><path d="M74 155 Q92 170 110 175 Q128 170 146 155" stroke-width="7"/><circle cx="110" cy="55" r="5" fill="url(#ag)" stroke="none"/></g><g fill="rgba(255,255,255,0.18)"><circle cx="110" cy="55" r="10"/></g></svg></div><div class="splash-welcome">Bem-vindo à</div><div class="splash-title">Agenda Administrativa</div><div class="splash-sub">Carregando ambiente…</div><div class="splash-bar-wrap"><div class="splash-bar"><div class="splash-bar-fill" id="splashFill"></div></div><div class="splash-pct" id="splashPct">0%</div></div></div></div>
@@ -1155,6 +1159,42 @@ body{padding-left:50px}
 <div class="foot" id="clg_hdr_foot">Controle de CLG · dados transcritos do quadro físico — versão inicial, sujeita a ajustes</div>
 </div>
 
+<div class="wrap" id="viewHoras" style="display:none;font-family: 'Josefin Sans', sans-serif">
+<header>
+  <div class="brand">
+    <div class="crest" id="horas_hdr_crest" style="background:none"><span style="font-size:22px">🔧</span></div>
+    <div><h1 style="font-size:25px;text-align:center">Horas de Funcionamento</h1><div class="sub" style="font-size:12px;letter-spacing:1px">Motores dos Meios · Seção de Logística</div></div>
+  </div>
+  <div class="hright">
+    <span class="synctag" id="horas_synctag" style="color:var(--c-teal)">💾 Somente local</span>
+    <button class="btn undo-btn" disabled>↩ Desfazer</button>
+    <button class="btn redo-btn" disabled>↪ Refazer</button>
+    <button class="hbtn theme-toggle-btn">🌙 Noturno</button>
+  </div>
+</header>
+
+<div class="dt-section-head">
+  <h3 class="dt-table-title">Motores — Horas de Funcionamento</h3>
+  <div class="nv-toolbar" id="horas_table_toolbar">
+    <button class="nv-editbtn" id="horas_table_edit">✎ Editar</button>
+    <span class="nv-edit-actions" id="horas_table_edit_actions" hidden>
+      <button class="nv-savebtn" id="horas_table_save" disabled>✓ Salvar</button>
+      <button class="nv-cancelbtn" id="horas_table_cancel">Cancelar</button>
+    </span>
+  </div>
+</div>
+<p style="font-size:11px;color:var(--text3);margin:-6px 0 10px">Somente "Horas em Operação" é editável diretamente. As demais colunas só mudam ao inserir ou excluir um registro de manutenção.</p>
+<div class="dt-table-wrap">
+  <table class="dt-table" id="horas_table">
+    <thead id="horas_thead"><tr></tr></thead>
+    <tbody id="horas_tbody"></tbody>
+  </table>
+</div>
+
+<div class="cachebar" title="Uso do armazenamento local (limite 1 MB)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div>
+<div class="foot">Horas de Funcionamento dos Motores · dados transcritos do controle físico — versão inicial, sujeita a ajustes</div>
+</div>
+
 <!-- modais -->
 <div class="mbg" id="sbg"><div class="modal"><div class="mh"><h3 id="s_title">Demanda do dia</h3><button class="mx" id="s_close">✕</button></div><div class="mbody"><div class="mgrid"><div class="fld full"><label>Descrição</label><textarea id="s_desc" rows="2" placeholder="Ex: Elaborar relatório mensal de consumo de CLG"></textarea></div><div class="fld"><label>Demandante</label><input id="s_from" placeholder="Ex: Comandante / Diretor"></div><div class="fld"><label>Prazo</label><input type="date" id="s_due"></div><div class="fld full"><label>Etapas (uma por linha)</label><textarea id="s_steps" rows="3" placeholder="Etapa 1
 Etapa 2"></textarea></div></div></div><div class="mfoot"><button class="brestore left" id="s_del" style="display:none">Excluir</button><button class="bcancel" id="s_cancel">Cancelar</button><button class="bsave" id="s_save">Salvar</button></div></div></div>
@@ -1228,7 +1268,7 @@ Divisão Administrativa"></textarea></div>
 (function(){
 "use strict";
 var clgInit,renderClgTables,renderClgCards,appSwitchTab;
-var clgGetState,clgSetState,navGetState,navSetState;
+var clgGetState,clgSetState,navGetState,navSetState,horasGetState,horasSetState,horasInit,renderHoras;
 
 /* ── FIREBASE REST (fetch puro, sem CDN) ── */
 var FB="https://firestore.googleapis.com/v1/projects/agenda-administrativa-alt1/databases/(default)/documents/agenda/main";
@@ -1424,11 +1464,11 @@ async function loadAll(){
 
 /* ── TOAST / UNDO ── */
 function toast(msg,tp){var t=document.createElement("div");t.className="toast "+(tp||"info");t.textContent=msg;document.getElementById("toast-container").appendChild(t);setTimeout(function(){t.remove();},3500);}
-function snapState(){return JSON.stringify({st:ovStatus,sh:ovShips,ed:ovEdit,ie:ovInstEdit,us:userTasks,dn:ovDone,hi:ovHist,np:ovNup,sb:ovSubsids,sub:ovSubtasks,tsh:ovTaskShips,ord:ovOrder,sp:spots,clg:clgGetState?clgGetState():null,nav:navGetState?navGetState():null});}
-async function restoreState(j){var d=JSON.parse(j);ovStatus=d.st;ovShips=d.sh;ovEdit=d.ed;ovInstEdit=d.ie||{};userTasks=d.us;ovDone=d.dn;ovHist=d.hi;ovNup=d.np;ovSubsids=d.sb;ovSubtasks=d.sub;ovTaskShips=d.tsh;ovOrder=d.ord;spots=d.sp;await svs(K.st,ovStatus);await svs(K.sh,ovShips);await svs(K.ed,ovEdit);await svs(K.ie,ovInstEdit);await svs(K.us,userTasks);await svs(K.dn,ovDone);await svs(K.hi,ovHist);await svs(K.np,ovNup);await svs(K.sb,ovSubsids);await svs(K.sub,ovSubtasks);await svs(K.tsh,ovTaskShips);await svs(K.ord,ovOrder);await svs(K.sp,spots);if(d.clg&&clgSetState)await clgSetState(d.clg);if(d.nav&&navSetState)await navSetState(d.nav);}
+function snapState(){return JSON.stringify({st:ovStatus,sh:ovShips,ed:ovEdit,ie:ovInstEdit,us:userTasks,dn:ovDone,hi:ovHist,np:ovNup,sb:ovSubsids,sub:ovSubtasks,tsh:ovTaskShips,ord:ovOrder,sp:spots,clg:clgGetState?clgGetState():null,nav:navGetState?navGetState():null,horas:horasGetState?horasGetState():null});}
+async function restoreState(j){var d=JSON.parse(j);ovStatus=d.st;ovShips=d.sh;ovEdit=d.ed;ovInstEdit=d.ie||{};userTasks=d.us;ovDone=d.dn;ovHist=d.hi;ovNup=d.np;ovSubsids=d.sb;ovSubtasks=d.sub;ovTaskShips=d.tsh;ovOrder=d.ord;spots=d.sp;await svs(K.st,ovStatus);await svs(K.sh,ovShips);await svs(K.ed,ovEdit);await svs(K.ie,ovInstEdit);await svs(K.us,userTasks);await svs(K.dn,ovDone);await svs(K.hi,ovHist);await svs(K.np,ovNup);await svs(K.sb,ovSubsids);await svs(K.sub,ovSubtasks);await svs(K.tsh,ovTaskShips);await svs(K.ord,ovOrder);await svs(K.sp,spots);if(d.clg&&clgSetState)await clgSetState(d.clg);if(d.nav&&navSetState)await navSetState(d.nav);if(d.horas&&horasSetState)await horasSetState(d.horas);}
 function updHist(){document.querySelectorAll(".undo-btn").forEach(function(u){u.disabled=!undoStack.length;u.title=undoStack.length?"Desfazer: "+undoStack[undoStack.length-1].d:"Nada para desfazer";});document.querySelectorAll(".redo-btn").forEach(function(r){r.disabled=!redoStack.length;r.title=redoStack.length?"Refazer: "+redoStack[redoStack.length-1].d:"Nada para refazer";});}
 function pushUndo(d,fn){undoStack.push({d:d,fn:fn});if(undoStack.length>30)undoStack.shift();redoStack=[];updHist();}
-function renderCurrentView(){var vn=document.getElementById("viewNavios"),vc=document.getElementById("viewCLG");if(vn&&vn.style.display!=="none"){renderNavios();renderNaviosCards();}else if(vc&&vc.style.display!=="none"){renderClgTables();renderClgCards();}else renderAll();}
+function renderCurrentView(){var vn=document.getElementById("viewNavios"),vc=document.getElementById("viewCLG"),vh=document.getElementById("viewHoras");if(vn&&vn.style.display!=="none"){renderNavios();renderNaviosCards();}else if(vc&&vc.style.display!=="none"){renderClgTables();renderClgCards();}else if(vh&&vh.style.display!=="none"&&typeof renderHoras==="function"){renderHoras();}else renderAll();}
 async function doUndo(){if(!undoStack.length)return;var u=undoStack.pop();var after=snapState();await u.fn();redoStack.push({d:u.d,snap:after});if(redoStack.length>30)redoStack.shift();updHist();toast("↩ Desfeito: "+u.d,"info");renderCurrentView();}
 async function doRedo(){if(!redoStack.length)return;var r=redoStack.pop();var before=snapState();await restoreState(r.snap);undoStack.push({d:r.d,fn:(async function(b){return async function(){await restoreState(b);};})(before)});if(undoStack.length>30)undoStack.shift();updHist();toast("↪ Refeito: "+r.d,"info");renderCurrentView();}
 document.querySelectorAll(".undo-btn").forEach(function(b){b.onclick=doUndo;});
@@ -1584,6 +1624,7 @@ var _uidSeq=1;
 function genUid(prefix){return prefix+"_"+Date.now().toString(36)+"_"+(_uidSeq++);}
 async function pushKV(label,key,data){try{await svs(key,data);}catch(e){console.error(label,e);}}
 function reorderByIds(arr,ids){var byId={};arr.forEach(function(x){byId[x.id]=x;});return ids.map(function(id){return byId[id];}).filter(Boolean);}
+function cloneCols(cols){return cols.map(function(c){return Object.assign({},c);});}
 function reorderByIndex(arr,idxStrs){return idxStrs.map(function(s){return arr[+s];}).filter(Boolean);}
 /* ── Masonry real (mural de post-its): colunas são divs de verdade, então um cartão pode ser
    arrastado para qualquer coluna — inclusive o espaço vazio sob a coluna vizinha mais curta. ── */
@@ -1733,14 +1774,19 @@ function migrateCols(loaded,fixedCols,rows){
   });
   return cols;
 }
-function renderThead(theadEl,cols,editing,actionsCls){
+function colWidthStyle(col){
+  if(!col.width)return"";
+  return ' style="width:'+col.width+'px;max-width:'+col.width+'px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"';
+}
+function renderThead(theadEl,cols,editing,actionsCls,noReorder){
   if(!theadEl)return;
   theadEl.innerHTML='<tr>'+cols.map(function(col,i){
-    if(!editing)return '<th>'+esc(col.title)+'</th>';
-    return '<th data-ci="'+i+'"><span class="th-inner">'+
-      '<span class="row-dh" title="Arrastar para reordenar">⠿</span>'+
+    var wStyle=colWidthStyle(col);
+    if(!editing)return '<th'+wStyle+'>'+esc(col.title)+'</th>';
+    return '<th data-ci="'+i+'"'+wStyle+'><span class="th-inner">'+
+      (noReorder?'':'<span class="row-dh" title="Arrastar para reordenar">⠿</span>')+
       '<span contenteditable="true" class="dt-th-edit" data-ci="'+i+'" spellcheck="false">'+esc(col.title)+'</span>'+
-    '</span></th>';
+    '</span><span class="col-resize" data-ci="'+i+'" title="Arrastar para ajustar largura"></span></th>';
   }).join("")+'<th class="'+actionsCls+'">Ações</th></tr>';
 }
 function bindTheadEdit(theadEl,getCols,setDirty,rerenderFn){
@@ -1762,7 +1808,43 @@ function bindTheadEdit(theadEl,getCols,setDirty,rerenderFn){
   theadEl.addEventListener("keydown",function(e){
     if(e.key==="Enter"&&e.target.closest&&e.target.closest(".dt-th-edit")){e.preventDefault();e.target.blur();}
   });
+  enableColResize(theadEl,getCols,setDirty,rerenderFn);
   enableColReorder(theadEl,getCols,setDirty,rerenderFn);
+}
+function enableColResize(theadEl,getCols,setDirty,rerenderFn){
+  var th=null,startX=0,startW=0;
+  theadEl.addEventListener("pointerdown",function(e){
+    var handle=e.target.closest&&e.target.closest(".col-resize");
+    if(!handle)return;
+    th=handle.closest("th[data-ci]");
+    if(!th)return;
+    startX=e.clientX;
+    startW=th.getBoundingClientRect().width;
+    document.body.classList.add("no-select-dragging");
+    try{handle.setPointerCapture(e.pointerId);}catch(_){}
+    e.preventDefault();
+    e.stopPropagation();
+  });
+  theadEl.addEventListener("pointermove",function(e){
+    if(!th)return;
+    e.preventDefault();
+    e.stopPropagation();
+    var w=Math.max(40,Math.round(startW+(e.clientX-startX)));
+    th.style.width=w+"px";
+    th.style.maxWidth=w+"px";
+  });
+  function end(e){
+    if(!th)return;
+    if(e){e.preventDefault();e.stopPropagation();}
+    document.body.classList.remove("no-select-dragging");
+    var w=Math.max(40,Math.round(th.getBoundingClientRect().width));
+    getCols()[+th.dataset.ci].width=w;
+    setDirty(true);
+    th=null;
+    if(rerenderFn)rerenderFn();
+  }
+  theadEl.addEventListener("pointerup",end);
+  theadEl.addEventListener("pointercancel",end);
 }
 function enableColReorder(theadEl,getCols,setDirty,rerenderFn){
   var dragTh=null;
@@ -1813,9 +1895,11 @@ function navCondefTd(id,val,editing){
     opts.map(function(o){return '<option value="'+o[0]+'"'+(o[0]===(val||"")?" selected":"")+'>'+o[1]+'</option>';}).join("")+
   '</select></td>';
 }
-function colTd(row,col,editing,cellCls,roCls){
+function colTd(row,col,editing,cellCls,roCls,forceEditableRowId){
   if(col.type==="select")return navCondefTd(row.id,row[col.key],editing);
-  return '<td class="'+cellCls+(editing?'':' '+roCls)+'" data-id="'+row.id+'" data-key="'+col.key+'"'+(editing?' contenteditable="true"':'')+' spellcheck="false">'+esc(row[col.key]||"")+'</td>';
+  var wStyle=colWidthStyle(col);
+  var isEditable=(editing&&col.type!=="locked")||row.id===forceEditableRowId;
+  return '<td class="'+cellCls+(isEditable?'':' '+roCls)+'"'+wStyle+' data-id="'+row.id+'" data-key="'+col.key+'"'+(isEditable?' contenteditable="true"':'')+' spellcheck="false">'+esc(row[col.key]||"")+'</td>';
 }
 function addTableColumn(cols,rows){
   var n=0;
@@ -3461,7 +3545,7 @@ setTimeout(hideSplash,20000);
   function bindNaviosCardDrag(){bindMasonryCardDrag(document.getElementById("nv_grid"),function(){return navCards;},function(v){navCards=v;},navSaveCards,NAVIOS_CARDS_KEY,renderNaviosCards,"Reordenar cartões CONDEF",function(){return!!navEditLock;});}
   function navFindShip(id){return navShips.find(function(s){return s.id===id;});}
   function navFindCard(cid){return navCards.find(function(c){return c.id===cid;});}
-  navGetState=function(){return{ships:JSON.parse(JSON.stringify(navShips)),cards:JSON.parse(JSON.stringify(navCards)),cols:navCols.slice()};};
+  navGetState=function(){return{ships:JSON.parse(JSON.stringify(navShips)),cards:JSON.parse(JSON.stringify(navCards)),cols:cloneCols(navCols)};};
   navSetState=async function(s){navShips=s.ships;navCards=s.cards;navCols=s.cols||navColsDefault();navSaveShips();navSaveCards();navSaveCols();await pushKV("navPush",NAVIOS_KEY,navShips);await pushKV("navPush",NAVIOS_CARDS_KEY,navCards);await pushKV("navPush",NAVIOS_COLS_KEY,navCols);};
   async function navInit(){
     if(navBound)return;
@@ -3536,7 +3620,7 @@ setTimeout(hideSplash,20000);
       if(navEditLock&&navEditLock!=="table"){toast("Finalize a edição em andamento antes de iniciar outra.","info");return;}
       navEditLock="table";navTableEditing=true;navTableDirty=false;
       navTableSnapshot=JSON.parse(JSON.stringify(navShips));
-      navColsSnapshot=navCols.slice();
+      navColsSnapshot=cloneCols(navCols);
       renderNavios();renderNaviosCards();
     };
     document.getElementById("nv_table_cancel").onclick=function(){
@@ -3552,7 +3636,7 @@ setTimeout(hideSplash,20000);
       await pushKV("navPush",NAVIOS_KEY,navShips);
       await pushKV("navPush",NAVIOS_COLS_KEY,navCols);
       navTableSnapshot=null;navColsSnapshot=null;navTableEditing=false;navTableDirty=false;navEditLock=null;
-      if(preTbl)pushUndo("Editar tabela CONDEF",async function(){navShips=JSON.parse(JSON.stringify(preTbl));if(preCols)navCols=preCols.slice();navSaveShips();navSaveCols();await pushKV("navPush",NAVIOS_KEY,navShips);await pushKV("navPush",NAVIOS_COLS_KEY,navCols);renderNavios();renderNaviosCards();});
+      if(preTbl)pushUndo("Editar tabela CONDEF",async function(){navShips=JSON.parse(JSON.stringify(preTbl));if(preCols)navCols=cloneCols(preCols);navSaveShips();navSaveCols();await pushKV("navPush",NAVIOS_KEY,navShips);await pushKV("navPush",NAVIOS_COLS_KEY,navCols);renderNavios();renderNaviosCards();});
       toast("✓ Embarcações salvas","ok");
       renderNavios();renderNaviosCards();
     };
@@ -3693,16 +3777,18 @@ setTimeout(hideSplash,20000);
   }
   var APPVIEW_KEY="aa_appview";
   function switchAppView(view){
-    var va=document.getElementById("viewAgenda"),vn=document.getElementById("viewNavios"),vc=document.getElementById("viewCLG"),vo=document.getElementById("viewConfigOM");
+    var va=document.getElementById("viewAgenda"),vn=document.getElementById("viewNavios"),vc=document.getElementById("viewCLG"),vo=document.getElementById("viewConfigOM"),vh=document.getElementById("viewHoras");
     if(!va||!vn)return;
     va.style.display=view==="agenda"?"":"none";
     vn.style.display=view==="navios"?"":"none";
     if(vc)vc.style.display=view==="clg"?"":"none";
     if(vo)vo.style.display=view==="config"?"":"none";
+    if(vh)vh.style.display=view==="horas"?"":"none";
     document.querySelectorAll(".nav-item").forEach(function(b){b.classList.toggle("active",b.dataset.view===view);});
     try{localStorage.setItem(APPVIEW_KEY,view);}catch(e){}
     if(view==="navios"){navInit().then(function(){renderNavios();renderNaviosCards();});}
     if(view==="clg"&&typeof clgInit==="function"){clgInit().then(function(){renderClgTables();renderClgCards();});}
+    if(view==="horas"&&typeof horasInit==="function"){horasInit().then(renderHoras);}
     if(view==="config"&&typeof fillConfigOMForm==="function")fillConfigOMForm();
   }
   appSwitchTab=switchAppView;
@@ -3808,7 +3894,7 @@ setTimeout(hideSplash,20000);
   }
   function clgFindRow(arr,id){return arr.find(function(r){return r.id===id;});}
   function clgFindCard(cid){return clgCards.find(function(c){return c.id===cid;});}
-  clgGetState=function(){return{t1:JSON.parse(JSON.stringify(clgT1)),t2:JSON.parse(JSON.stringify(clgT2)),cards:JSON.parse(JSON.stringify(clgCards)),t1c:clgT1Cols.slice(),t2c:clgT2Cols.slice()};};
+  clgGetState=function(){return{t1:JSON.parse(JSON.stringify(clgT1)),t2:JSON.parse(JSON.stringify(clgT2)),cards:JSON.parse(JSON.stringify(clgCards)),t1c:cloneCols(clgT1Cols),t2c:cloneCols(clgT2Cols)};};
   clgSetState=async function(s){clgT1=s.t1;clgT2=s.t2;clgCards=s.cards;clgT1Cols=s.t1c||clgT1ColsDefault();clgT2Cols=s.t2c||clgT2ColsDefault();clgSaveT1();clgSaveT2();clgSaveCards();clgSaveT1Cols();clgSaveT2Cols();await pushKV("clgPush",CLG_T1_KEY,clgT1);await pushKV("clgPush",CLG_T2_KEY,clgT2);await pushKV("clgPush",CLG_CARDS_KEY,clgCards);await pushKV("clgPush",CLG_T1_COLS_KEY,clgT1Cols);await pushKV("clgPush",CLG_T2_COLS_KEY,clgT2Cols);};
   function renderClgT1(){
     var tb=document.getElementById("clg_t1_tbody");
@@ -3960,7 +4046,7 @@ setTimeout(hideSplash,20000);
       if(clgEditLock&&clgEditLock!==who){toast("Finalize a edição em andamento antes de iniciar outra.","info");return;}
       clgEditLock=who;setEditing(true);setDirty(false);
       setSnap(JSON.parse(JSON.stringify(getArr())));
-      setTitlesSnap(getTitles().slice());
+      setTitlesSnap(cloneCols(getTitles()));
       renderClgTables();renderClgCards();
     };
     document.getElementById(prefix+"_cancel").onclick=function(){
@@ -3977,7 +4063,7 @@ setTimeout(hideSplash,20000);
       await pushKV("clgPush",onSaveKey,getArr());
       await pushKV("clgPush",titlesKey,getTitles());
       setSnap(null);setTitlesSnap(null);setEditing(false);setDirty(false);clgEditLock=null;
-      if(preTbl)pushUndo("Editar tabela CLG",async function(){setArr(JSON.parse(JSON.stringify(preTbl)));if(preTitles)setTitles(preTitles.slice());onSaveDataFn();saveTitlesFn();await pushKV("clgPush",onSaveKey,getArr());await pushKV("clgPush",titlesKey,getTitles());renderClgTables();renderClgCards();});
+      if(preTbl)pushUndo("Editar tabela CLG",async function(){setArr(JSON.parse(JSON.stringify(preTbl)));if(preTitles)setTitles(cloneCols(preTitles));onSaveDataFn();saveTitlesFn();await pushKV("clgPush",onSaveKey,getArr());await pushKV("clgPush",titlesKey,getTitles());renderClgTables();renderClgCards();});
       toast("✓ Salvo","ok");
       renderClgTables();renderClgCards();
     };
@@ -4148,6 +4234,154 @@ setTimeout(hideSplash,20000);
         return;
       }
     });
+  };
+})();
+/* MODULE_HORAS_PLACEHOLDER */
+(function(){
+  var HORAS_KEY="aa_horas_v1",HORAS_COLS_KEY="aa_horas_cols_v1";
+  var HORAS_SEED=[{"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "RUSTON", "modelo": "6 R K C M", "numSerie": "1H9564", "horasOperacao": "40.644,00", "horasManutencao": "35.960", "horasProxRevisao": "315,00", "horasUltrapassadas": "NA", "tipoProxRevisao": "REV.", "dataUltimaManutencao": "2021", "tipoRevisaoUltima": "REV. 30.000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "RUSTON", "modelo": "6 R K C M", "numSerie": "1H9563", "horasOperacao": "34.857,00", "horasManutencao": "31.990", "horasProxRevisao": "2.132", "horasUltrapassadas": "NA", "tipoProxRevisao": "REV.5.000hs", "dataUltimaManutencao": "2022", "tipoRevisaoUltima": "REV. 30.000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "CATERPILLAR", "modelo": "3 3 0 6 B", "numSerie": "85Z13908", "horasOperacao": "13.642,00", "horasManutencao": "9.496", "horasProxRevisao": "-2.146,00", "horasUltrapassadas": "2.146,00", "tipoProxRevisao": "REV.", "dataUltimaManutencao": "2022", "tipoRevisaoUltima": "REV. 6.000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2025", "pmRelacionado": "PMA2026"}, {"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "CATERPILLAR", "modelo": "3 3 0 6 B", "numSerie": "85Z13909", "horasOperacao": "12.837,00", "horasManutencao": "8.770", "horasProxRevisao": "-2.067,00", "horasUltrapassadas": "2.067,00", "tipoProxRevisao": "REV.", "dataUltimaManutencao": "2022", "tipoRevisaoUltima": "REV. 6.000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2025", "pmRelacionado": "PMA2026"}, {"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "DGE", "bordo": "NA", "fabricante": "PETTEN", "modelo": "A C 1", "numSerie": "NA", "horasOperacao": "NA", "horasManutencao": "NA", "horasProxRevisao": "NA", "horasUltrapassadas": "NA", "tipoProxRevisao": "NA", "dataUltimaManutencao": "NA", "tipoRevisaoUltima": "NA", "dataProxRevisao": "NA", "situacao": "BAIXA", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "VOLVO PENTA", "modelo": "D16C-CMH", "numSerie": "1016041115", "horasOperacao": "14848", "horasManutencao": "10531", "horasProxRevisao": "-2054", "horasUltrapassadas": "2054", "tipoProxRevisao": "1000H", "dataUltimaManutencao": "MAI2024", "tipoRevisaoUltima": "500H", "dataProxRevisao": "JUN2026", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "VOLVO PENTA", "modelo": "D16C-CMH", "numSerie": "1016041114", "horasOperacao": "14822", "horasManutencao": "10490", "horasProxRevisao": "-2069", "horasUltrapassadas": "2069", "tipoProxRevisao": "1000H", "dataUltimaManutencao": "MAI2024", "tipoRevisaoUltima": "500H", "dataProxRevisao": "JUN2026", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "MTU", "modelo": "6R099TB50B", "numSerie": "1009103891", "horasOperacao": "10073", "horasManutencao": "10065", "horasProxRevisao": "1592", "horasUltrapassadas": "-1592", "tipoProxRevisao": "1600H", "dataUltimaManutencao": "FEV2026", "tipoRevisaoUltima": "3200H", "dataProxRevisao": "MAI2028", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "MTU", "modelo": "6R099TB50B", "numSerie": "1009103890", "horasOperacao": "9283", "horasManutencao": "9277", "horasProxRevisao": "1594", "horasUltrapassadas": "-1594", "tipoProxRevisao": "1600H", "dataUltimaManutencao": "FEV2026", "tipoRevisaoUltima": "3200H", "dataProxRevisao": "MAI2028", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "DGE", "bordo": "BE", "fabricante": "MTU", "modelo": "6R099TB50B", "numSerie": "1009103889", "horasOperacao": "10426", "horasManutencao": "4125", "horasProxRevisao": "-3101", "horasUltrapassadas": "3101", "tipoProxRevisao": "3200H", "dataUltimaManutencao": "MAI2024", "tipoRevisaoUltima": "1600H", "dataProxRevisao": "MAI2028", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "AvHoFlu Rio Tocantins", "indicativo": "H-12", "classe": "Rio Tocantins", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "MTU", "modelo": "6R 199 TB60", "numSerie": "1112195421", "horasOperacao": "12.000", "horasManutencao": "11.005", "horasProxRevisao": "1.005", "horasUltrapassadas": "-", "tipoProxRevisao": "W6", "dataUltimaManutencao": "2025", "tipoRevisaoUltima": "W6", "dataProxRevisao": "2028", "situacao": "O", "projetos": "-", "ano": "2028", "pmRelacionado": "PMG"}, {"meio": "AvHoFlu Rio Tocantins", "indicativo": "H-12", "classe": "Rio Tocantins", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "MTU", "modelo": "6R 199 TB60", "numSerie": "1112195423", "horasOperacao": "12.000", "horasManutencao": "11.005", "horasProxRevisao": "1.005", "horasUltrapassadas": "-", "tipoProxRevisao": "W6", "dataUltimaManutencao": "2025", "tipoRevisaoUltima": "W6", "dataProxRevisao": "2028", "situacao": "O", "projetos": "-", "ano": "2028", "pmRelacionado": "PMG"}, {"meio": "AvHoFlu Rio Tocantins", "indicativo": "H-12", "classe": "Rio Tocantins", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "MWM", "modelo": "D-229-6", "numSerie": "C1N211153", "horasOperacao": "20.485", "horasManutencao": "20.135", "horasProxRevisao": "2.071", "horasUltrapassadas": "-", "tipoProxRevisao": "W5", "dataUltimaManutencao": "2026", "tipoRevisaoUltima": "W5", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PMA"}, {"meio": "AvHoFlu Rio Tocantins", "indicativo": "H-12", "classe": "Rio Tocantins", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "MWM", "modelo": "D-229-6", "numSerie": "C1N211035", "horasOperacao": "18.784", "horasManutencao": "14.855", "horasProxRevisao": "5.650", "horasUltrapassadas": "-", "tipoProxRevisao": "W5", "dataUltimaManutencao": "2023", "tipoRevisaoUltima": "W5", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PMA"}, {"meio": "AvHoFlu Rio Xingu", "indicativo": "H-13", "classe": "Rio Tocantins", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "MTU", "modelo": "6R 199 TB60", "numSerie": "1203235653", "horasOperacao": "22.810", "horasManutencao": "9.209", "horasProxRevisao": "-", "horasUltrapassadas": "7.601", "tipoProxRevisao": "REV. 6.000H (GERAL)", "dataUltimaManutencao": "2019", "tipoRevisaoUltima": "REV. 6000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "AvHoFlu Rio Xingu", "indicativo": "H-13", "classe": "Rio Tocantins", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "MTU", "modelo": "6R 199 TB60", "numSerie": "1203235652", "horasOperacao": "22.617", "horasManutencao": "18.299", "horasProxRevisao": "-", "horasUltrapassadas": "1.318", "tipoProxRevisao": "REV. 3.000H", "dataUltimaManutencao": "2023", "tipoRevisaoUltima": "REV. 6000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "AvHoFlu Rio Xingu", "indicativo": "H-13", "classe": "Rio Tocantins", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "MWM", "modelo": "229-6", "numSerie": "C1N211309", "horasOperacao": "12.661", "horasManutencao": "5.769", "horasProxRevisao": "-", "horasUltrapassadas": "2.892", "tipoProxRevisao": "REV. 4.000H (GERAL)", "dataUltimaManutencao": "2019", "tipoRevisaoUltima": "REV. 4000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "AvHoFlu Rio Xingu", "indicativo": "H-13", "classe": "Rio Tocantins", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "MWM", "modelo": "229-6", "numSerie": "C1N211155", "horasOperacao": "12.661", "horasManutencao": "5.769", "horasProxRevisao": "-", "horasUltrapassadas": "2.892", "tipoProxRevisao": "REV. 4.000H (GERAL)", "dataUltimaManutencao": "2019", "tipoRevisaoUltima": "REV. 4000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "AvB Vega", "indicativo": "CHN-4-01", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BE-30359485", "horasOperacao": "2.109", "horasManutencao": "831,0", "horasProxRevisao": "222", "horasUltrapassadas": "-", "tipoProxRevisao": "1500h(INTERMEDIARIA)", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Vega", "indicativo": "CHN-4-01", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BB-30359503", "horasOperacao": "2.125", "horasManutencao": "895,0", "horasProxRevisao": "270", "horasUltrapassadas": "-", "tipoProxRevisao": "1500h(INTERMEDIARIA)", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Vega", "indicativo": "CHN-4-01", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "4700003", "horasOperacao": "2.966", "horasManutencao": "1.182,0", "horasProxRevisao": "716", "horasUltrapassadas": "-", "tipoProxRevisao": "2500h(INTERMEDIARIA)", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "5.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Vega", "indicativo": "CHN-4-01", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "4700006", "horasOperacao": "2.607", "horasManutencao": "674,0", "horasProxRevisao": "567", "horasUltrapassadas": "-", "tipoProxRevisao": "2500h(INTERMEDIARIA)", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "5.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Denébola", "indicativo": "CHN-4-02", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BE-80856784", "horasOperacao": "4.591", "horasManutencao": "-", "horasProxRevisao": "-1.425", "horasUltrapassadas": "1.425", "tipoProxRevisao": "6.000h(OVERHAUL)", "dataUltimaManutencao": "JUL2019", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "OR", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Denébola", "indicativo": "CHN-4-02", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BB-80356785", "horasOperacao": "4.591", "horasManutencao": "-", "horasProxRevisao": "-1.425", "horasUltrapassadas": "1.425", "tipoProxRevisao": "6.000h(OVERHAUL)", "dataUltimaManutencao": "JUL2019", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "OR", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Denébola", "indicativo": "CHN-4-02", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "4500170", "horasOperacao": "6.745", "horasManutencao": "-", "horasProxRevisao": "605", "horasUltrapassadas": "-", "tipoProxRevisao": "2.500(INTERMEDIÁRIA)", "dataUltimaManutencao": "OUT2022", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Denébola", "indicativo": "CHN-4-02", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "4500172", "horasOperacao": "7.284", "horasManutencao": "-", "horasProxRevisao": "-2.284", "horasUltrapassadas": "2.284", "tipoProxRevisao": "5.000(OVERHAUL)", "dataUltimaManutencao": "JUL2019", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Régulus", "indicativo": "CHN-4-03", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BE-30358437", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "-", "dataUltimaManutencao": "IM desde 2012", "tipoRevisaoUltima": "-", "dataProxRevisao": "-", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Régulus", "indicativo": "CHN-4-03", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BB-30358438", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "-", "dataUltimaManutencao": "IM desde 2012", "tipoRevisaoUltima": "-", "dataProxRevisao": "-", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Régulus", "indicativo": "CHN-4-03", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "INEXISTENTE", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "-", "dataUltimaManutencao": "IM desde 2012", "tipoRevisaoUltima": "-", "dataProxRevisao": "-", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Régulus", "indicativo": "CHN-4-03", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "INEXISTENTE", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "-", "dataUltimaManutencao": "IM desde 2012", "tipoRevisaoUltima": "-", "dataProxRevisao": "-", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Boto", "indicativo": "CHN-4-04", "classe": "Classe Makandra", "tipoMotor": "MCP", "bordo": "1", "fabricante": "CATERPILLAR", "modelo": "3412 DT", "numSerie": "60MO2001", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "ASD", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "Geral", "dataProxRevisao": "ASD", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Boto", "indicativo": "CHN-4-04", "classe": "Classe Makandra", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "MWM", "modelo": "D229-3", "numSerie": "22903032920", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "ASD", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "Geral", "dataProxRevisao": "ASD", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Boto", "indicativo": "CHN-4-04", "classe": "Classe Makandra", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "MWM", "modelo": "D229-3", "numSerie": "22903056957", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "ASD", "dataUltimaManutencao": "2014", "tipoRevisaoUltima": "Parcial", "dataProxRevisao": "ASD", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}]
+;
+  var HORAS_FIXED=[
+    {key:"meio",title:"Meio",type:"locked"},
+    {key:"indicativo",title:"Indicativo",type:"locked"},
+    {key:"classe",title:"Classe",type:"locked"},
+    {key:"tipoMotor",title:"Tipo do Motor",type:"locked"},
+    {key:"bordo",title:"Bordo",type:"locked"},
+    {key:"fabricante",title:"Fabricante",type:"locked"},
+    {key:"modelo",title:"Modelo",type:"locked"},
+    {key:"numSerie",title:"Nº de Série",type:"locked"},
+    {key:"horasOperacao",title:"Horas em Operação"},
+    {key:"horasManutencao",title:"Horas na Manutenção",type:"locked"},
+    {key:"horasProxRevisao",title:"Horas p/ Próxima Revisão",type:"locked"},
+    {key:"horasUltrapassadas",title:"Horas Ultrapassadas",type:"locked"},
+    {key:"tipoProxRevisao",title:"Tipo Próx. Revisão",type:"locked"},
+    {key:"dataUltimaManutencao",title:"Data Última Manutenção",type:"locked"},
+    {key:"tipoRevisaoUltima",title:"Tipo Revisão da Última Manut.",type:"locked"},
+    {key:"dataProxRevisao",title:"Data Próx. Revisão",type:"locked"},
+    {key:"situacao",title:"Situação",type:"locked"},
+    {key:"projetos",title:"Projetos Relacionados",type:"locked"},
+    {key:"ano",title:"Ano",type:"locked"},
+    {key:"pmRelacionado",title:"PM Relacionado",type:"locked"}
+  ];
+  var HORAS_FIXED_KEYS=HORAS_FIXED.map(function(c){return c.key;});
+  function horasColsDefault(){return HORAS_FIXED.map(function(c){return{key:c.key,title:c.title,type:c.type};});}
+  var horasRows=[],horasCols=horasColsDefault(),horasBound=false;
+  var horasEditing=false,horasDirty=false,horasSnapshot=null,horasColsSnapshot=null,horasNewRowId=null;
+  async function horasLoad(){
+    var r=null,c=null;
+    try{r=await gtj(HORAS_KEY);}catch(e){}
+    if(!r||!r.length){try{r=JSON.parse(localStorage.getItem(HORAS_KEY));}catch(e){}}
+    horasRows=(r&&r.length)?r:HORAS_SEED.map(function(row){var o=Object.assign({},row);o.id=genUid("hr");return o;});
+    try{c=await gtj(HORAS_COLS_KEY);}catch(e){}
+    if(!c||!c.length){try{c=JSON.parse(localStorage.getItem(HORAS_COLS_KEY));}catch(e){}}
+    horasCols=migrateCols(c,HORAS_FIXED,horasRows);
+    horasSaveRows();horasSaveCols();
+  }
+  function horasSaveRows(){try{localStorage.setItem(HORAS_KEY,JSON.stringify(horasRows));}catch(e){}}
+  function horasSaveCols(){try{localStorage.setItem(HORAS_COLS_KEY,JSON.stringify(horasCols));}catch(e){}}
+  function horasFindRow(id){return horasRows.find(function(r){return r.id===id;});}
+  horasGetState=function(){return{rows:JSON.parse(JSON.stringify(horasRows)),cols:cloneCols(horasCols)};};
+  horasSetState=async function(s){horasRows=s.rows;horasCols=s.cols||horasColsDefault();horasSaveRows();horasSaveCols();await pushKV("horasPush",HORAS_KEY,horasRows);await pushKV("horasPush",HORAS_COLS_KEY,horasCols);};
+  function horasUpdateToolbar(){
+    var editBtn=document.getElementById("horas_table_edit");
+    var actions=document.getElementById("horas_table_edit_actions");
+    var saveBtn=document.getElementById("horas_table_save");
+    if(!editBtn)return;
+    if(horasEditing){editBtn.hidden=true;actions.hidden=false;saveBtn.disabled=!horasDirty;}
+    else{editBtn.hidden=false;actions.hidden=true;editBtn.disabled=false;}
+  }
+  renderHoras=function(){
+    var tb=document.getElementById("horas_tbody");
+    if(!tb)return;
+    var editing=horasEditing;
+    var table=document.getElementById("horas_table");
+    if(table)table.classList.toggle("dt-editing",editing);
+    renderThead(document.getElementById("horas_thead"),horasCols,editing,"dt-actions-col",true);
+    var colspan=horasCols.length+1;
+    tb.innerHTML=horasRows.map(function(r){
+      return '<tr>'+
+        horasCols.map(function(col){return colTd(r,col,editing,"dt-cell","dt-cell-ro",horasNewRowId);}).join("")+
+        '<td class="dt-actions dt-actions-col">'+(editing?'<button class="nv-delrow" data-id="'+r.id+'" title="Excluir registro">🗑</button>':'')+'</td>'+
+      '</tr>';
+    }).join("")+(editing?'<tr class="dt-addrow-tr"><td colspan="'+colspan+'"><button class="nv-addrow" id="horas_addrow">+ Adicionar registro de manutenção</button></td></tr>':'');
+    horasUpdateToolbar();
+    var tag=document.getElementById("horas_synctag");
+    if(tag){tag.textContent=bk==="firebase"?"☁ Sincronizado":"💾 Somente local";tag.style.color=bk==="firebase"?"var(--c-teal)":"var(--c-amber)";}
+  };
+  horasInit=async function(){
+    if(horasBound)return;
+    horasBound=true;
+    await horasLoad();
+    var tbody=document.getElementById("horas_tbody");
+    var thead=document.getElementById("horas_thead");
+    bindTheadEdit(thead,function(){return horasCols;},function(v){horasDirty=v;horasUpdateToolbar();},renderHoras);
+    tbody.addEventListener("input",function(e){
+      var td=e.target.closest&&e.target.closest(".dt-cell");
+      if(!td||!td.isContentEditable)return;
+      var row=horasFindRow(td.dataset.id);
+      if(!row)return;
+      row[td.dataset.key]=td.textContent;
+      horasDirty=true;horasUpdateToolbar();
+    });
+    tbody.addEventListener("focusout",function(e){
+      var td=e.target.closest&&e.target.closest(".dt-cell");
+      if(!td||!td.isContentEditable)return;
+      var row=horasFindRow(td.dataset.id);
+      if(!row)return;
+      var v=td.textContent.trim();
+      row[td.dataset.key]=v;
+      td.textContent=v;
+    });
+    tbody.addEventListener("keydown",function(e){
+      if(e.key==="Enter"&&e.target.closest&&e.target.closest(".dt-cell")){e.preventDefault();e.target.blur();}
+    });
+    tbody.addEventListener("click",function(e){
+      if(!horasEditing)return;
+      var del=e.target.closest&&e.target.closest(".nv-delrow");
+      if(del){
+        if(confirm("Excluir este registro de manutenção?")){
+          horasRows=horasRows.filter(function(r){return r.id!==del.dataset.id;});
+          if(horasNewRowId===del.dataset.id)horasNewRowId=null;
+          horasDirty=true;renderHoras();
+        }
+        return;
+      }
+      if(e.target.id==="horas_addrow"){
+        var nid=genUid("hr");
+        var nr={id:nid};
+        horasCols.forEach(function(c){nr[c.key]="";});
+        horasRows.push(nr);
+        horasNewRowId=nid;
+        horasDirty=true;renderHoras();
+        setTimeout(function(){
+          var el=document.querySelector('.dt-cell[data-id="'+nid+'"][data-key="meio"]');
+          if(el){el.focus();var r=document.createRange();r.selectNodeContents(el);var sel=window.getSelection();sel.removeAllRanges();sel.addRange(r);}
+        },30);
+      }
+    });
+    document.getElementById("horas_table_edit").onclick=function(){
+      horasEditing=true;horasDirty=false;
+      horasSnapshot=JSON.parse(JSON.stringify(horasRows));
+      horasColsSnapshot=cloneCols(horasCols);
+      renderHoras();
+    };
+    document.getElementById("horas_table_cancel").onclick=function(){
+      if(horasSnapshot)horasRows=horasSnapshot;
+      if(horasColsSnapshot)horasCols=horasColsSnapshot;
+      horasSnapshot=null;horasColsSnapshot=null;horasEditing=false;horasDirty=false;horasNewRowId=null;
+      renderHoras();
+    };
+    document.getElementById("horas_table_save").onclick=async function(){
+      if(!horasDirty)return;
+      var preRows=horasSnapshot,preCols=horasColsSnapshot;
+      horasSaveRows();horasSaveCols();
+      await pushKV("horasPush",HORAS_KEY,horasRows);
+      await pushKV("horasPush",HORAS_COLS_KEY,horasCols);
+      horasSnapshot=null;horasColsSnapshot=null;horasEditing=false;horasDirty=false;horasNewRowId=null;
+      if(preRows)pushUndo("Editar Horas de Funcionamento",async function(){horasRows=JSON.parse(JSON.stringify(preRows));if(preCols)horasCols=cloneCols(preCols);horasSaveRows();horasSaveCols();await pushKV("horasPush",HORAS_KEY,horasRows);await pushKV("horasPush",HORAS_COLS_KEY,horasCols);renderHoras();});
+      toast("✓ Salvo","ok");
+      renderHoras();
+    };
   };
 })();
 })();
