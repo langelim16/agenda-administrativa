@@ -463,7 +463,13 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
 .ferias-table td.fcell{width:17px;height:20px;min-width:17px;background:var(--mtint,transparent)}
 .ferias-table td.fcell.fprev{background:#d8b23a}
 .ferias-table td.fcell.fgozo{background:#5a9b6e}
-.ferias-table td.fcell.ftoday{box-shadow:inset 0 0 0 2px var(--c-blue)}
+.ferias-jump{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.ferias-jump button{background:var(--c-100);border:1px solid var(--border2);color:var(--text2);font-size:10px;padding:5px 9px;border-radius:var(--r-sm);text-transform:uppercase;letter-spacing:.3px}
+.ferias-jump button:hover{background:var(--c-blue);color:#fff;border-color:var(--c-blue)}
+.ferias-msg{font-size:11.5px;border-radius:var(--r-md);padding:7px 10px;margin-top:2px;display:none}
+.ferias-msg.info{background:var(--c-sky);color:var(--text2)}
+.ferias-msg.warn{background:var(--c-red2);color:var(--c-red);font-weight:600}
+td.dt-cell[data-key="previsaoFerias"],td[data-key="previsaoFerias"]{white-space:pre-line;text-align:left;line-height:1.5}
 .dt-table{width:100%;min-width:520px;border-collapse:collapse;font-size:13px}
 .dt-table th{background:var(--c-100);color:var(--text2);font-size:10px;letter-spacing:.3px;text-transform:uppercase;text-align:center;padding:7px 6px;border-bottom:1px solid var(--border);position:sticky;top:0;line-height:1.25;white-space:normal}
 .dt-table td{padding:7px 6px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;white-space:normal;line-height:1.3;text-align:center}
@@ -1242,6 +1248,7 @@ body{padding-left:50px}
   </div>
 </div>
 <div class="ferias-legend"><span class="ferias-sw" style="background:#d8b23a"></span> Previsão de férias <span class="ferias-sw" style="background:#5a9b6e;margin-left:14px"></span> Férias gozadas</div>
+<div class="ferias-jump" id="ferias_jump"></div>
 <div class="ferias-wrap" id="ferias_wrap">
   <table class="ferias-table" id="ferias_table"></table>
 </div>
@@ -1257,6 +1264,7 @@ body{padding-left:50px}
   <div class="fld"><label>Fim do período</label><input type="date" id="f_fim"></div>
   <div class="fld full"><label>Motivo</label><input id="f_motivo" placeholder="Ex: Férias regulamentares"></div>
   <div class="fld"><label>Quantidade de dias</label><input id="f_dias" readonly placeholder="(auto)"></div>
+  <div class="fld full"><div id="f_msg" class="ferias-msg"></div></div>
 </div></div><div class="mfoot"><button class="brestore left" id="f_del" style="display:none">Excluir</button><button class="bcancel" id="f_cancel">Cancelar</button><button class="bsave" id="f_save">Salvar</button></div></div></div>
 
 <div class="mbg" id="fe1bg"><div class="modal"><div class="mh"><h3>Editar — o que deseja alterar?</h3><button class="mx" id="fe1_close">✕</button></div><div class="mbody" style="display:flex;gap:10px;justify-content:center;padding:24px 18px">
@@ -4714,9 +4722,29 @@ setTimeout(hideSplash,20000);
     {key:"nome",title:"Nome"},
     {key:"posto",title:"Posto/Graduação"},
     {key:"divisao",title:"Divisão"},
+    {key:"feriasDisponiveis",title:"Férias disponíveis",type:"locked",computed:true},
+    {key:"feriasGozadas",title:"Férias gozadas",type:"locked",computed:true},
+    {key:"previsaoFerias",title:"Previsão de Férias",type:"locked",computed:true},
     {key:"contato",title:"Contato"}
   ];
-  function pessoalColsDefault(){return PESSOAL_FIXED.map(function(c){return{key:c.key,title:c.title};});}
+  var FERIAS_TOTAL_DIAS=30;
+  function pessoalColsDefault(){return PESSOAL_FIXED.map(function(c){var o={key:c.key,title:c.title};if(c.type)o.type=c.type;if(c.computed)o.computed=true;return o;});}
+  function pessoalReconcileCols(cols){
+    var keys=cols.map(function(c){return c.key;});
+    var newCols=[
+      {key:"feriasDisponiveis",title:"Férias disponíveis",type:"locked",computed:true},
+      {key:"feriasGozadas",title:"Férias gozadas",type:"locked",computed:true},
+      {key:"previsaoFerias",title:"Previsão de Férias",type:"locked",computed:true}
+    ];
+    if(keys.indexOf("feriasDisponiveis")<0){
+      var divIdx=keys.indexOf("divisao");
+      if(divIdx>=0)cols.splice.apply(cols,[divIdx+1,0].concat(newCols));
+      else cols.push.apply(cols,newCols);
+    }else{
+      newCols.forEach(function(nc){var c=cols.find(function(x){return x.key===nc.key;});if(c){c.type="locked";c.computed=true;}});
+    }
+    return cols;
+  }
   var pessoalRows=[],pessoalCols=pessoalColsDefault(),pessoalFerias=[],pessoalBound=false;
   var pessoalEditLock=null;
   var pessoalEditing=false,pessoalDirty=false,pessoalSnapshot=null,pessoalColsSnapshot=null;
@@ -4727,12 +4755,12 @@ setTimeout(hideSplash,20000);
     try{r=await gtj(PESSOAL_KEY);}catch(e){}
     if(!r){try{r=JSON.parse(localStorage.getItem(PESSOAL_KEY));}catch(e){}}
     if(!r||!r.length){
-      r=(cfg.militares||[]).map(function(m){return{id:genUid("ps"),nome:m.nome||"",posto:"",divisao:m.divisao||"",contato:""};});
+      r=(cfg.militares||[]).map(function(m){return{id:genUid("ps"),nome:m.nome||"",posto:"",divisao:m.divisao||"",feriasDisponiveis:String(FERIAS_TOTAL_DIAS),feriasGozadas:"0",previsaoFerias:"",contato:""};});
     }
     pessoalRows=r;
     try{c=await gtj(PESSOAL_COLS_KEY);}catch(e){}
     if(!c||!c.length){try{c=JSON.parse(localStorage.getItem(PESSOAL_COLS_KEY));}catch(e){}}
-    pessoalCols=migrateCols(c,PESSOAL_FIXED,pessoalRows);
+    pessoalCols=pessoalReconcileCols(migrateCols(c,PESSOAL_FIXED,pessoalRows));
     try{f=await gtj(PESSOAL_FERIAS_KEY);}catch(e){}
     if(!f){try{f=JSON.parse(localStorage.getItem(PESSOAL_FERIAS_KEY));}catch(e){}}
     pessoalFerias=f||[];
@@ -4757,7 +4785,7 @@ setTimeout(hideSplash,20000);
     var editing=pessoalEditing;
     var table=document.getElementById("pessoal_tbl_table");
     if(table)table.classList.toggle("dt-editing",editing);
-    renderThead(document.getElementById("pessoal_tbl_thead"),pessoalCols,editing);
+    renderThead(document.getElementById("pessoal_tbl_thead"),pessoalCols,editing,"dt-actions-col");
     var colspan=pessoalCols.length+1;
     tb.innerHTML=pessoalRows.map(function(r){
       return '<tr'+(editing?' data-rid="'+r.id+'"':'')+'>'+
@@ -4809,10 +4837,25 @@ setTimeout(hideSplash,20000);
       if(!groups.length||groups[groups.length-1].key!==key)groups.push({key:key,label:MONTHS[d.getMonth()]+"/"+d.getFullYear(),count:0});
       groups[groups.length-1].count++;
     });
-    var row1='<th class="fname-h">Militar</th>'+groups.map(function(g){return '<th class="fmonth" colspan="'+g.count+'">'+g.label+'</th>';}).join("");
+    var row1='<th class="fname-h">Militar</th>'+groups.map(function(g){return '<th class="fmonth" id="fm-'+g.key+'" colspan="'+g.count+'">'+g.label+'</th>';}).join("");
     var row2='<th class="fname-h"></th>'+FERIAS_DAYS.map(function(d){var we=(d.getDay()===0||d.getDay()===6);return '<th class="fday'+(we?" fweekend":"")+'">'+d.getDate()+'</th>';}).join("");
     var row3='<th class="fname-h"></th>'+FERIAS_DAYS.map(function(d){var we=(d.getDay()===0||d.getDay()===6);return '<th class="fwd'+(we?" fweekend":"")+'">'+WD1[d.getDay()]+'</th>';}).join("");
     return '<thead><tr>'+row1+'</tr><tr>'+row2+'</tr><tr>'+row3+'</tr></thead>';
+  }
+  function renderFeriasJump(){
+    var box=document.getElementById("ferias_jump");
+    if(!box||box._bound)return;
+    box._bound=true;
+    box.innerHTML=FERIAS_MONTH_KEYS.map(function(key,i){
+      var parts=key.split("-"),label=MONTHS[+parts[1]]+"/"+parts[0];
+      return '<button type="button" data-mkey="'+key+'">'+label+'</button>';
+    }).join("");
+    box.querySelectorAll("button").forEach(function(b){
+      b.onclick=function(){
+        var th=document.getElementById("fm-"+b.dataset.mkey);
+        if(th)th.scrollIntoView({inline:"start",block:"nearest",behavior:"smooth"});
+      };
+    });
   }
   function dayStatus(nome,ds){
     var hasGozo=pessoalFerias.some(function(f){return f.militar===nome&&f.tipo==="gozo"&&ds>=f.inicio&&ds<=f.fim;});
@@ -4820,30 +4863,73 @@ setTimeout(hideSplash,20000);
     var hasPrev=pessoalFerias.some(function(f){return f.militar===nome&&f.tipo==="previsao"&&ds>=f.inicio&&ds<=f.fim;});
     return hasPrev?"fprev":"";
   }
+  function militarLabel(r){return((r.posto||"")+" "+(r.nome||"")).trim()||"(sem nome)";}
+  function periodDays(inicio,fim){var di=new Date(inicio+"T00:00:00"),df=new Date(fim+"T00:00:00");return Math.round((df-di)/86400000)+1;}
+  function vacationDaysOf(nome,tipo){
+    var sum=0;
+    pessoalFerias.forEach(function(f){if(f.militar===nome&&f.tipo===tipo)sum+=periodDays(f.inicio,f.fim);});
+    return sum;
+  }
+  function diasDisponiveisPara(nome,excludeId){
+    var used=0;
+    pessoalFerias.forEach(function(f){if(f.militar!==nome)return;if(excludeId&&f.id===excludeId)return;used+=periodDays(f.inicio,f.fim);});
+    return FERIAS_TOTAL_DIAS-used;
+  }
+  function pessoalRecalcVacation(){
+    pessoalRows.forEach(function(r){
+      var nome=r.nome||"";
+      var gozadas=vacationDaysOf(nome,"gozo");
+      r.feriasGozadas=String(gozadas);
+      r.feriasDisponiveis=String(Math.max(0,FERIAS_TOTAL_DIAS-gozadas));
+      var prevEntries=pessoalFerias.filter(function(f){return f.militar===nome&&f.tipo==="previsao";});
+      r.previsaoFerias=prevEntries.map(function(f){
+        return f.inicio.split("-").reverse().join("/")+" a "+f.fim.split("-").reverse().join("/")+" ("+periodDays(f.inicio,f.fim)+"d)";
+      }).join("\n");
+    });
+  }
   function renderFeriasTable(){
     var table=document.getElementById("ferias_table");
     if(!table)return;
-    var todayStr=dstr(new Date());
     var body=pessoalRows.map(function(r){
-      var nome=r.nome||"(sem nome)";
+      var nome=r.nome||"",label=militarLabel(r);
       var cells=FERIAS_DAYS.map(function(d){
         var ds=dstr(d),st=dayStatus(nome,ds);
-        return '<td class="fcell'+(st?" "+st:"")+(ds===todayStr?" ftoday":"")+'" style="--mtint:'+monthTintFor(d)+'" title="'+esc(nome)+" — "+d.toLocaleDateString("pt-BR")+'"></td>';
+        return '<td class="fcell'+(st?" "+st:"")+'" style="--mtint:'+monthTintFor(d)+'" title="'+esc(label)+" — "+d.toLocaleDateString("pt-BR")+'"></td>';
       }).join("");
-      return '<tr><td class="fname">'+esc(nome)+'</td>'+cells+'</tr>';
+      return '<tr><td class="fname">'+esc(label)+'</td>'+cells+'</tr>';
     }).join("");
     table.innerHTML=feriasTheadHtml()+'<tbody>'+body+'</tbody>';
   }
+  function refreshPessoal(){pessoalRecalcVacation();renderPessoalTable();renderFeriasTable();}
   function pessoalMilitarNames(){return pessoalRows.map(function(r){return r.nome;}).filter(Boolean);}
+  function pessoalMilitarLabelOf(nome){var r=pessoalRows.find(function(x){return x.nome===nome;});return r?militarLabel(r):nome;}
 
   function updFeriasDias(){
+    var militar=document.getElementById("f_militar").value;
     var i=document.getElementById("f_inicio").value,f=document.getElementById("f_fim").value;
-    var out=document.getElementById("f_dias");
+    var diasOut=document.getElementById("f_dias"),msg=document.getElementById("f_msg"),saveBtn=document.getElementById("f_save");
+    var dias=null;
     if(i&&f){
-      var di=new Date(i+"T00:00:00"),df=new Date(f+"T00:00:00");
-      var days=Math.round((df-di)/86400000)+1;
-      out.value=days>0?days+" dia(s)":"Período inválido";
-    }else out.value="";
+      dias=periodDays(i,f);
+      diasOut.value=dias>0?dias+" dia(s)":"Período inválido";
+    }else diasOut.value="";
+    if(!militar){msg.className="ferias-msg";msg.style.display="none";saveBtn.disabled=true;return;}
+    var disponivel=diasDisponiveisPara(militar,feriasFormState.editId);
+    if(dias===null){
+      msg.className="ferias-msg info";msg.style.display="block";
+      msg.textContent=disponivel+" dia(s) disponível(eis) de "+FERIAS_TOTAL_DIAS+" para "+pessoalMilitarLabelOf(militar)+".";
+      saveBtn.disabled=true;return;
+    }
+    if(dias<=0){msg.className="ferias-msg warn";msg.style.display="block";msg.textContent="Período inválido.";saveBtn.disabled=true;return;}
+    if(dias>30){msg.className="ferias-msg warn";msg.style.display="block";msg.textContent="Um único período não pode ultrapassar 30 dias (selecionado: "+dias+" dia(s)). Parcele em períodos menores.";saveBtn.disabled=true;return;}
+    if(dias>disponivel){
+      msg.className="ferias-msg warn";msg.style.display="block";
+      msg.textContent=pessoalMilitarLabelOf(militar)+" tem "+disponivel+" dia(s) disponível(eis), mas o período selecionado soma "+dias+" dia(s). Ajuste o período.";
+      saveBtn.disabled=true;return;
+    }
+    msg.className="ferias-msg info";msg.style.display="block";
+    msg.textContent=disponivel+" dia(s) disponível(eis) · período selecionado: "+dias+" dia(s).";
+    saveBtn.disabled=false;
   }
   function openFeriasForm(tipo,editEntry){
     var sel=document.getElementById("f_militar");
@@ -4898,28 +4984,29 @@ setTimeout(hideSplash,20000);
     document.getElementById("ferias_add_prev").onclick=function(){openFeriasForm("previsao",null);};
     document.getElementById("ferias_add_gozo").onclick=function(){openFeriasForm("gozo",null);};
     document.getElementById("ferias_edit_btn").onclick=function(){document.getElementById("fe1bg").classList.add("open");};
+    document.getElementById("f_militar").onchange=updFeriasDias;
     document.getElementById("f_inicio").onchange=updFeriasDias;
     document.getElementById("f_fim").onchange=updFeriasDias;
     ["f_close","f_cancel"].forEach(function(id){document.getElementById(id).onclick=function(){closeMbg("fmbg");};});
     document.getElementById("fmbg").onclick=function(e){if(e.target.id==="fmbg")closeMbg("fmbg");};
     document.getElementById("f_save").onclick=async function(){
+      if(document.getElementById("f_save").disabled)return;
       var militar=document.getElementById("f_militar").value;
       var inicio=document.getElementById("f_inicio").value,fim=document.getElementById("f_fim").value;
       var motivo=document.getElementById("f_motivo").value.trim();
-      if(!militar||!inicio||!fim){toast("Preencha militar e período.","info");return;}
-      if(fim<inicio){toast("Data fim deve ser depois do início.","info");return;}
-      var snap=JSON.parse(JSON.stringify(pessoalFerias));
+      if(!militar||!inicio||!fim)return;
+      var snap=JSON.parse(JSON.stringify(pessoalFerias)),rowsSnap=JSON.parse(JSON.stringify(pessoalRows));
       if(feriasFormState.editId){
         var idx=pessoalFerias.findIndex(function(x){return x.id===feriasFormState.editId;});
         if(idx>-1)pessoalFerias[idx]=Object.assign({},pessoalFerias[idx],{militar:militar,inicio:inicio,fim:fim,motivo:motivo});
       }else{
         pessoalFerias.push({id:genUid("fer"),tipo:feriasFormState.tipo,militar:militar,inicio:inicio,fim:fim,motivo:motivo});
       }
-      pessoalSaveFerias();
+      pessoalSaveFerias();refreshPessoal();
       await pushKV("pessoalPush",PESSOAL_FERIAS_KEY,pessoalFerias);
-      pushUndo((feriasFormState.editId?"Editar":"Inserir")+" férias — "+militar,async function(){pessoalFerias=snap;pessoalSaveFerias();await pushKV("pessoalPush",PESSOAL_FERIAS_KEY,pessoalFerias);renderFeriasTable();});
+      await pushKV("pessoalPush",PESSOAL_KEY,pessoalRows);
+      pushUndo((feriasFormState.editId?"Editar":"Inserir")+" férias — "+militar,async function(){pessoalFerias=snap;pessoalRows=rowsSnap;pessoalSaveFerias();pessoalSaveRows();await pushKV("pessoalPush",PESSOAL_FERIAS_KEY,pessoalFerias);await pushKV("pessoalPush",PESSOAL_KEY,pessoalRows);refreshPessoal();});
       closeMbg("fmbg");
-      renderFeriasTable();
       toast("✓ Salvo","ok");
     };
     document.getElementById("f_del").onclick=async function(){
@@ -4927,12 +5014,13 @@ setTimeout(hideSplash,20000);
       if(!confirm("Excluir este período?"))return;
       var delIdx=pessoalFerias.findIndex(function(x){return x.id===feriasFormState.editId;});
       var delObj=pessoalFerias[delIdx];
+      var rowsSnap=JSON.parse(JSON.stringify(pessoalRows));
       pessoalFerias=pessoalFerias.filter(function(x){return x.id!==feriasFormState.editId;});
-      pessoalSaveFerias();
+      pessoalSaveFerias();refreshPessoal();
       await pushKV("pessoalPush",PESSOAL_FERIAS_KEY,pessoalFerias);
-      pushUndo("Excluir período de férias",async function(){pessoalFerias.splice(delIdx,0,delObj);pessoalSaveFerias();await pushKV("pessoalPush",PESSOAL_FERIAS_KEY,pessoalFerias);renderFeriasTable();});
+      await pushKV("pessoalPush",PESSOAL_KEY,pessoalRows);
+      pushUndo("Excluir período de férias",async function(){pessoalFerias.splice(delIdx,0,delObj);pessoalRows=rowsSnap;pessoalSaveFerias();pessoalSaveRows();await pushKV("pessoalPush",PESSOAL_FERIAS_KEY,pessoalFerias);await pushKV("pessoalPush",PESSOAL_KEY,pessoalRows);refreshPessoal();});
       closeMbg("fmbg");closeMbg("fe3bg");
-      renderFeriasTable();
       toast("🗑 Excluído","ok");
     };
     document.getElementById("fe1_close").onclick=function(){closeMbg("fe1bg");};
@@ -4956,13 +5044,13 @@ setTimeout(hideSplash,20000);
       getEditing:function(){return pessoalEditing;},setEditing:function(v){pessoalEditing=v;},
       getDirty:function(){return pessoalDirty;},setDirty:function(v){pessoalDirty=v;},
       getSnap:function(){return pessoalSnapshot;},setSnap:function(v){pessoalSnapshot=v;},
-      newRowFn:function(){var nr={id:genUid("ps")};pessoalCols.forEach(function(c){nr[c.key]="";});return nr;},
+      newRowFn:function(){var nr={id:genUid("ps")};pessoalCols.forEach(function(c){nr[c.key]=c.key==="feriasDisponiveis"?String(FERIAS_TOTAL_DIAS):(c.key==="feriasGozadas"?"0":"");});return nr;},
       addRowBtnId:"pessoal_tbl_addrow",
       getTitles:function(){return pessoalCols;},setTitles:function(v){pessoalCols=v;},
       saveTitlesFn:pessoalSaveCols,titlesKey:PESSOAL_COLS_KEY,
       getTitlesSnap:function(){return pessoalColsSnapshot;},setTitlesSnap:function(v){pessoalColsSnapshot=v;},
       fixedKeys:[],getLock:function(){return pessoalEditLock;},setLock:function(v){pessoalEditLock=v;},who:"tbl",
-      renderFn:renderPessoalTable,afterRender:renderFeriasTable,
+      renderFn:renderPessoalTable,afterRender:refreshPessoal,
       updateToolbar:function(){
         var eb=document.getElementById("pessoal_tbl_edit"),actions=document.getElementById("pessoal_tbl_edit_actions"),sb=document.getElementById("pessoal_tbl_save");
         if(eb){if(pessoalEditing){eb.hidden=true;actions.hidden=false;sb.disabled=!pessoalDirty;}}
@@ -4970,12 +5058,12 @@ setTimeout(hideSplash,20000);
       pushLabel:"pessoalPush",undoLabel:"Editar Pessoal"
     });
     wireFeriasUI();
-    renderPessoalTable();
-    renderFeriasTable();
+    refreshPessoal();
+    renderFeriasJump();
     var tag=document.getElementById("pessoal_synctag");
     if(tag){tag.textContent=bk==="firebase"?"☁ Sincronizado":"💾 Somente local";tag.style.color=bk==="firebase"?"var(--c-teal)":"var(--c-amber)";}
   };
-  renderPessoal=function(){renderPessoalTable();renderFeriasTable();};
+  renderPessoal=refreshPessoal;
 })();
 
 })();
