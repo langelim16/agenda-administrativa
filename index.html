@@ -1244,11 +1244,9 @@ Etapa 2"></textarea></div></div></div><div class="mfoot"><button class="brestore
   <div class="fld"><label>CLG · Subtítulo</label><input id="c_hdr_clg_sub" placeholder="Ex: Combustíveis, Lubrificantes e Graxas"></div>
   <div class="fld"><label>Sigla da OM</label><input id="c_om" placeholder="Ex: CHN"></div>
   <div class="fld"><label>Departamento</label><input id="c_dep" placeholder="Ex: Logística"></div>
-  <div class="fld full"><label>Ícone do cabeçalho (Agenda)</label><div class="crest-row"><div class="crest-preview" id="c_crest_prev"><span id="c_crest_prev_inner">AA</span></div><div style="flex:1"><div class="crest-options" style="margin-bottom:7px"><button class="crest-opt active" id="copt_text">Texto/Emoji</button><button class="crest-opt" id="copt_img">Imagem</button></div><input id="c_crest_text" placeholder="AA, 🚢, ⚓ …" maxlength="8" style="width:100%;padding:6px 9px;border-radius:var(--r-md);border:1.5px solid var(--border);background:var(--c-50);color:var(--text);font-size:14px;outline:none"><input type="file" id="c_crest_file" class="crest-inp-file" accept="image/*"><button class="crest-opt" id="c_crest_upload_btn" style="margin-top:5px;display:none">📁 Selecionar imagem</button><span id="c_crest_fname" style="font-size:11px;color:var(--text3);margin-left:5px"></span></div></div></div>
-  <div class="fld full"><label>Ícone do cabeçalho (CONDEF)</label><div class="crest-row"><div class="crest-preview" id="ti_navios_prev"><span id="ti_navios_prev_inner">⚓</span></div><div style="flex:1"><div class="crest-options" style="margin-bottom:7px"><button type="button" class="crest-opt active" data-tabicon="navios" data-mode="text">Texto/Emoji</button><button type="button" class="crest-opt" data-tabicon="navios" data-mode="img">Imagem</button></div><input id="ti_navios_text" placeholder="⚓, 🚢 …" maxlength="8" style="width:100%;padding:6px 9px;border-radius:var(--r-md);border:1.5px solid var(--border);background:var(--c-50);color:var(--text);font-size:14px;outline:none"><input type="file" id="ti_navios_file" class="crest-inp-file" accept="image/*"><button type="button" class="crest-opt" id="ti_navios_upload_btn" style="margin-top:5px;display:none">📁 Selecionar imagem</button><span id="ti_navios_fname" style="font-size:11px;color:var(--text3);margin-left:5px"></span></div></div></div>
-  <div class="fld full"><label>Ícone do cabeçalho (CLG)</label><div class="crest-row"><div class="crest-preview" id="ti_clg_prev"><span id="ti_clg_prev_inner">⛽</span></div><div style="flex:1"><div class="crest-options" style="margin-bottom:7px"><button type="button" class="crest-opt active" data-tabicon="clg" data-mode="text">Texto/Emoji</button><button type="button" class="crest-opt" data-tabicon="clg" data-mode="img">Imagem</button></div><input id="ti_clg_text" placeholder="⛽, 🛢 …" maxlength="8" style="width:100%;padding:6px 9px;border-radius:var(--r-md);border:1.5px solid var(--border);background:var(--c-50);color:var(--text);font-size:14px;outline:none"><input type="file" id="ti_clg_file" class="crest-inp-file" accept="image/*"><button type="button" class="crest-opt" id="ti_clg_upload_btn" style="margin-top:5px;display:none">📁 Selecionar imagem</button><span id="ti_clg_fname" style="font-size:11px;color:var(--text3);margin-left:5px"></span></div></div></div>
+  <div class="fld full"><label>Ícone do cabeçalho (todas as abas)</label><div class="crest-row"><div class="crest-preview" id="c_crest_prev"><span id="c_crest_prev_inner">AA</span></div><div style="flex:1"><div class="crest-options" style="margin-bottom:7px"><button class="crest-opt active" id="copt_text">Texto/Emoji</button><button class="crest-opt" id="copt_img">Imagem</button></div><input id="c_crest_text" placeholder="AA, 🚢, ⚓ …" maxlength="8" style="width:100%;padding:6px 9px;border-radius:var(--r-md);border:1.5px solid var(--border);background:var(--c-50);color:var(--text);font-size:14px;outline:none"><input type="file" id="c_crest_file" class="crest-inp-file" accept="image/*"><button class="crest-opt" id="c_crest_upload_btn" style="margin-top:5px;display:none">📁 Selecionar imagem</button><span id="c_crest_fname" style="font-size:11px;color:var(--text3);margin-left:5px"></span></div></div></div>
   <div class="fld full"><label>Cor do cabeçalho</label><div class="color-row" id="colorSwatches"></div><div class="color-custom" style="margin-top:5px"><span>Personalizada:</span><input type="color" id="c_color_custom" value="#2f3a44"><span id="c_color_hex" style="font-family:var(--mono);font-size:11px">#2f3a44</span></div></div>
-  <div class="fld full"><label>Paleta de cores</label><div class="pal-presets" id="palPresets"></div><div class="pal-grid"><div class="pal-item"><input type="color" id="pc_danger"><span>Alerta</span></div><div class="pal-item"><input type="color" id="pc_warning"><span>Atenção</span></div><div class="pal-item"><input type="color" id="pc_success"><span>Concluído</span></div><button type="button" class="pal-reset" id="pc_reset">Restaurar padrão</button></div></div>
+  <div class="fld full"><label>Paleta de cores do fundo</label><div class="pal-presets" id="palPresets"></div><div class="pal-grid"><div class="pal-item"><input type="color" id="pc_danger"><span>Alerta</span></div><div class="pal-item"><input type="color" id="pc_warning"><span>Atenção</span></div><div class="pal-item"><input type="color" id="pc_success"><span>Concluído</span></div><button type="button" class="pal-reset" id="pc_reset">Restaurar padrão</button></div></div>
   <div class="fld full"><label>Divisões (uma por linha)</label><textarea id="c_div" rows="3" placeholder="Ex: Divisão de Meios
 Divisão Administrativa"></textarea></div>
   <div class="fld full"><label>Militares do Departamento (Nome | Divisão — um por linha, em MAIÚSCULAS) — compartilhado por todas as abas</label><textarea id="c_militares" rows="5" placeholder="SILVA - DIVISÃO DE MEIOS&#10;SOUZA - DIVISÃO ADMINISTRATIVA"></textarea></div>
@@ -3016,9 +3014,8 @@ function defaultTabHeader(tab){
   return{title:"",sub:""};
 }
 function getTabHeader(tab){var th=(cfg.tabHeaders&&cfg.tabHeaders[tab])||{};var d=defaultTabHeader(tab);return{title:th.title||d.title,sub:th.sub||d.sub};}
-function defaultTabIcon(tab){if(tab==="navios")return"⚓";if(tab==="clg")return"⛽";return"";}
 var TAB_HDR_ELID={agenda:{title:"agenda_hdr_title",sub:"appSub"},navios:{title:"nv_hdr_title",sub:"nv_hdr_sub"},clg:{title:"clg_hdr_title",sub:"clg_hdr_sub"}};
-var TAB_CREST_ELID={navios:"nv_hdr_crest",clg:"clg_hdr_crest"};
+var TAB_CREST_ELID={navios:"nv_hdr_crest",clg:"clg_hdr_crest",horas:"horas_hdr_crest"};
 var TAB_FOOT_ELID={navios:"nv_hdr_foot",clg:"clg_hdr_foot"};
 function applyTabHeaders(){
   Object.keys(TAB_HDR_ELID).forEach(function(tab){
@@ -3032,48 +3029,14 @@ function applyTabHeaders(){
     var fEl=fId&&document.getElementById(fId);
     if(fEl)fEl.textContent=h.title+" · "+h.sub;
   });
+  // Ícone do cabeçalho é único e vale para todas as abas (Texto/Emoji ou Imagem definidos em CONFIG OM).
   Object.keys(TAB_CREST_ELID).forEach(function(tab){
     var el=document.getElementById(TAB_CREST_ELID[tab]);
     if(!el)return;
-    var th=(cfg.tabHeaders&&cfg.tabHeaders[tab])||{};
-    if(th.crestType==="img"&&th.crestImg)el.innerHTML='<img src="'+th.crestImg+'" alt="" style="width:100%;height:100%;object-fit:cover">';
-    else el.innerHTML='<span style="font-size:22px">'+esc(th.crestText||defaultTabIcon(tab))+'</span>';
+    if(cfg.crestType==="img"&&cfg.crestImg)el.innerHTML='<img src="'+cfg.crestImg+'" alt="" style="width:100%;height:100%;object-fit:cover">';
+    else el.innerHTML='<span style="font-size:22px">'+esc(cfg.crestText||"AA")+'</span>';
   });
 }
-var tabIconState={};
-function wireTabIconPicker(tab){
-  tabIconState[tab]={mode:"text",imgData:""};
-  var textBtn=document.querySelector('[data-tabicon="'+tab+'"][data-mode="text"]');
-  var imgBtn=document.querySelector('[data-tabicon="'+tab+'"][data-mode="img"]');
-  var uploadBtn=document.getElementById("ti_"+tab+"_upload_btn");
-  var fileInp=document.getElementById("ti_"+tab+"_file");
-  var textInp=document.getElementById("ti_"+tab+"_text");
-  var prevInner=document.getElementById("ti_"+tab+"_prev_inner");
-  var prev=document.getElementById("ti_"+tab+"_prev");
-  if(!textBtn||!imgBtn||!uploadBtn||!fileInp||!textInp||!prev)return;
-  function setMode(m){
-    tabIconState[tab].mode=m;
-    textBtn.classList.toggle("active",m==="text");
-    imgBtn.classList.toggle("active",m==="img");
-    textInp.style.display=m==="text"?"":"none";
-    uploadBtn.style.display=m==="img"?"":"none";
-  }
-  textBtn.onclick=function(){setMode("text");};
-  imgBtn.onclick=function(){setMode("img");};
-  uploadBtn.onclick=function(){fileInp.click();};
-  fileInp.onchange=async function(e){
-    var f=e.target.files[0];if(!f)return;
-    var dataUrl=await compressIconFile(f,160,0.82);
-    if(!dataUrl)return;
-    tabIconState[tab].imgData=dataUrl;
-    prev.innerHTML='<img src="'+dataUrl+'" alt="">';
-    var fn=document.getElementById("ti_"+tab+"_fname");if(fn)fn.textContent=f.name;
-  };
-  textInp.oninput=function(e){if(prevInner)prevInner.textContent=e.target.value||defaultTabIcon(tab);};
-  setMode("text");
-}
-wireTabIconPicker("navios");
-wireTabIconPicker("clg");
 function fillConfigOMForm(){
   var ctag=document.getElementById("config_synctag");
   if(ctag){ctag.textContent=bk==="firebase"?"☁ Sincronizado":"💾 Somente local";ctag.style.color=bk==="firebase"?"var(--c-teal)":"var(--c-amber)";}
@@ -3085,25 +3048,6 @@ function fillConfigOMForm(){
     var tIn=document.getElementById("c_hdr_"+tab+"_title"),sIn=document.getElementById("c_hdr_"+tab+"_sub");
     if(tIn)tIn.value=h.title;
     if(sIn)sIn.value=h.sub;
-  });
-  ["navios","clg"].forEach(function(tab){
-    var th=(cfg.tabHeaders&&cfg.tabHeaders[tab])||{};
-    var mode=th.crestType==="img"?"img":"text";
-    tabIconState[tab]={mode:mode,imgData:th.crestImg||""};
-    var textInp=document.getElementById("ti_"+tab+"_text");if(textInp)textInp.value=th.crestText||defaultTabIcon(tab);
-    var fn=document.getElementById("ti_"+tab+"_fname");if(fn)fn.textContent=th.crestImg?"(imagem carregada)":"";
-    var textBtn=document.querySelector('[data-tabicon="'+tab+'"][data-mode="text"]');
-    var imgBtn=document.querySelector('[data-tabicon="'+tab+'"][data-mode="img"]');
-    var textInpEl=document.getElementById("ti_"+tab+"_text");
-    var uploadBtn=document.getElementById("ti_"+tab+"_upload_btn");
-    if(textBtn&&imgBtn&&textInpEl&&uploadBtn){
-      textBtn.classList.toggle("active",mode==="text");
-      imgBtn.classList.toggle("active",mode==="img");
-      textInpEl.style.display=mode==="text"?"":"none";
-      uploadBtn.style.display=mode==="img"?"":"none";
-    }
-    var pv=document.getElementById("ti_"+tab+"_prev");
-    if(pv){if(mode==="img"&&th.crestImg)pv.innerHTML='<img src="'+th.crestImg+'" alt="">';else pv.innerHTML='<span id="ti_'+tab+'_prev_inner">'+esc(th.crestText||defaultTabIcon(tab))+'</span>';}
   });
   selHC=cfg.headerColor||"#2f3a44";document.getElementById("c_color_custom").value=selHC;document.getElementById("c_color_hex").textContent=selHC;document.getElementById("c_crest_prev").style.background=selHC;
   _cM=cfg.crestType||"text";document.getElementById("c_crest_text").value=cfg.crestText||"AA";crestImgData=cfg.crestImg||"";document.getElementById("c_crest_fname").textContent=cfg.crestImg?"(imagem carregada)":"";
@@ -3123,13 +3067,6 @@ document.getElementById("c_save").onclick=async function(){
     cfg.tabHeaders[tab]=cfg.tabHeaders[tab]||{};
     cfg.tabHeaders[tab].title=(tIn&&tIn.value.trim())||defaultTabHeader(tab).title;
     cfg.tabHeaders[tab].sub=(sIn&&sIn.value.trim())||defaultTabHeader(tab).sub;
-  });
-  ["navios","clg"].forEach(function(tab){
-    var st=tabIconState[tab]||{mode:"text",imgData:""};
-    var textInp=document.getElementById("ti_"+tab+"_text");
-    cfg.tabHeaders[tab].crestType=st.mode;
-    cfg.tabHeaders[tab].crestText=(textInp&&textInp.value.trim())||defaultTabIcon(tab);
-    if(st.mode==="img"&&st.imgData)cfg.tabHeaders[tab].crestImg=st.imgData;else if(st.mode==="text")cfg.tabHeaders[tab].crestImg="";
   });
   if(cfg.divisoes.indexOf(profile)<0&&profile!=="ALL")profile="ALL";
   await svs(K.cf,cfg);await svs(K.pf,profile);toast("✓ Configurações salvas","ok");applyHdr();renderAll();
