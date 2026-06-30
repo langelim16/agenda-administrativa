@@ -1399,15 +1399,34 @@ var FK="AIzaSyDxY236v6WD9K1vGhRp1o9qn63ETkFz3X8";
 var bk="local", dc=null, rtActive=false;
 var docUpdateTimes={}, flushTimers={};
 
+/* ── SUPABASE REST (PostgREST, fetch puro — mesma chave/valor, tabela agenda_data(key,value,updated_at)) ── */
+var SB_URL="https://jsrnjdjoxhstbfqhxwoi.supabase.co";
+var SB_KEY="sb_publishable_797_trm8U-IVk0jzVeA6IQ_DVsBl9m6";
+var SB_TABLE=SB_URL+"/rest/v1/agenda_data";
+// Override de teste: null = automático (tenta Firebase, senão local). "supabase" força Supabase E
+// desliga o Firebase por completo (nem o probe roda) — usar só durante a validação isolada da migração.
+var BACKEND_OVERRIDE=null;
+function sbHeaders(extra){var h={apikey:SB_KEY,Authorization:"Bearer "+SB_KEY};if(extra)Object.assign(h,extra);return h;}
+function bkSynced(){return bk==="firebase"||bk==="supabase";}
+
 function toFV(v){return{stringValue:typeof v==="string"?v:JSON.stringify(v)};}
 function fromFV(f){return(f&&f.stringValue!==undefined)?f.stringValue:null;}
 
 async function initBk(){
+  if(BACKEND_OVERRIDE==="local"){bk="local";return;}
+  if(BACKEND_OVERRIDE==="supabase"){await initBkSupabase();return;} // Firebase nem é tentado: zero requisições a firestore.googleapis.com
   try{
     var r=await Promise.race([fetch(FB_COLL+"?key="+FK+"&pageSize=1"),new Promise(function(_,j){setTimeout(function(){j(new Error("timeout"));},5000);})]);
     if(!r.ok&&r.status!==404)throw new Error("HTTP "+r.status);
     bk="firebase";
   }catch(e){console.warn("Firebase indisponível:",e.message);bk="local";}
+}
+async function initBkSupabase(){
+  try{
+    var r=await Promise.race([fetch(SB_TABLE+"?select=key&limit=1",{headers:sbHeaders()}),new Promise(function(_,j){setTimeout(function(){j(new Error("timeout"));},5000);})]);
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    bk="supabase";
+  }catch(e){console.warn("Supabase indisponível:",e.message);bk="local";}
 }
 
 async function getDoc(){
@@ -1425,6 +1444,17 @@ async function getDoc(){
   }catch(e){}
   return dc;
 }
+async function sbGetDoc(){
+  if(dc)return dc;
+  dc={};
+  try{
+    var r=await fetch(SB_TABLE+"?select=key,value,updated_at",{headers:sbHeaders()});
+    if(!r.ok)return dc;
+    var rows=await r.json();
+    rows.forEach(function(row){dc[row.key]=row.value;docUpdateTimes[row.key]=row.updated_at;});
+  }catch(e){}
+  return dc;
+}
 
 async function flushKey(k){
   try{
@@ -1434,22 +1464,36 @@ async function flushKey(k){
     bumpMeta();
   }catch(e){console.error("flushKey",k,e);}
 }
-function schedFlushKey(k){clearTimeout(flushTimers[k]);flushTimers[k]=setTimeout(function(){delete flushTimers[k];flushKey(k);},400);}
+async function sbFlushKey(k){
+  try{
+    var body=[{key:k,value:dc[k],updated_at:new Date().toISOString()}];
+    var r=await fetch(SB_TABLE,{method:"POST",headers:sbHeaders({"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=representation"}),body:JSON.stringify(body)});
+    if(r.ok){var j=await r.json();if(j[0])docUpdateTimes[k]=j[0].updated_at;}
+    sbBumpMeta();
+  }catch(e){console.error("sbFlushKey",k,e);}
+}
+function schedFlushKey(k){
+  clearTimeout(flushTimers[k]);
+  flushTimers[k]=setTimeout(function(){delete flushTimers[k];if(bk==="supabase")sbFlushKey(k);else flushKey(k);},400);
+}
 
 async function svs(k,v){
   var val=typeof v==="string"?v:JSON.stringify(v);
   if(bk==="firebase"){if(!dc)await getDoc();dc[k]=val;schedFlushKey(k);return;}
+  if(bk==="supabase"){if(!dc)await sbGetDoc();dc[k]=val;schedFlushKey(k);return;}
   try{await window.storage.set(k,val);}catch(e){}
 }
 async function gts(k){
   if(bk==="firebase"){var d=await getDoc();return d[k]!==undefined?d[k]:null;}
+  if(bk==="supabase"){var d=await sbGetDoc();return d[k]!==undefined?d[k]:null;}
   try{var r=await window.storage.get(k);return(r&&r.value)?r.value:null;}catch(e){return null;}
 }
 async function gtj(k){var v=await gts(k);try{return v?JSON.parse(v):null;}catch(e){return null;}}
 
-/* ── Sync entre abas/dispositivos: doc-sentinela "_meta" (1 leitura) sinaliza se algo mudou em
-   QUALQUER chave; só faz a listagem completa (até 300 docs) quando o sentinela indica mudança real.
-   Evita poll cego da coleção inteira a cada ciclo — é isso que esgotava a cota de leituras. */
+/* ── Sync entre abas/dispositivos: doc/linha-sentinela "_meta" (1 leitura) sinaliza se algo mudou em
+   QUALQUER chave; só faz a listagem completa quando o sentinela indica mudança real. Evita poll cego
+   da coleção inteira a cada ciclo (esgotava cota de leitura na Firestore; no Supabase, estouraria o
+   limite de egress do free tier do mesmo jeito se reaplicado sem essa otimização). */
 var META_DOC=FB_COLL+"/_meta",lastSeenMetaTs=0,metaBumpTimer=null;
 function bumpMeta(){
   clearTimeout(metaBumpTimer);
@@ -1459,6 +1503,35 @@ function bumpMeta(){
       .then(function(r){if(r.ok)lastSeenMetaTs=ts;}) // já é a própria gravação local: não precisa reler depois
       .catch(function(){});
   },300);
+}
+function sbBumpMeta(){
+  clearTimeout(metaBumpTimer);
+  metaBumpTimer=setTimeout(function(){
+    var ts=Date.now();
+    fetch(SB_TABLE,{method:"POST",headers:sbHeaders({"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"}),body:JSON.stringify([{key:"_meta",value:String(ts),updated_at:new Date().toISOString()}])})
+      .then(function(r){if(r.ok)lastSeenMetaTs=ts;})
+      .catch(function(){});
+  },300);
+}
+// Aplica o conteúdo já mesclado em dc/docUpdateTimes ao estado do app — comum a Firebase e Supabase.
+function applyDcToState(){
+  function p(k){try{return dc[k]?JSON.parse(dc[k]):null;}catch(e){return null;}}
+  var ns=p(K.st);if(ns){ovStatus=ns;var _mg=false;Object.keys(ovStatus).forEach(function(k){if(/^o\|[^|]+$/.test(k)){ovStatus[k.replace(/^(o\|[^|]+)$/,"$1|0")]=ovStatus[k];delete ovStatus[k];_mg=true;}});if(_mg)svs(K.st,ovStatus);}
+  var nh=p(K.sh);if(nh)ovShips=nh;
+  var ne=p(K.ed);if(ne)ovEdit=ne;
+  var nu=p(K.us);if(nu)userTasks=nu;
+  var nd=p(K.dn);if(nd)ovDone=nd;
+  var nn=p(K.np);if(nn)ovNup=nn;
+  var nb=p(K.sb);if(nb)ovSubsids=nb;
+  var nst=p(K.sub);if(nst)ovSubtasks=nst;
+  var nt=p(K.tsh);if(nt)ovTaskShips=nt;
+  var no=p(K.ord);if(no)ovOrder=no;
+  var nie=p(K.ie);if(nie)ovInstEdit=nie;
+  var nsp=p(K.sp);if(nsp)spots=nsp;
+  var yy=p(K.yrs);if(yy&&yy.length)activeYears=yy;
+  var cc=p(K.cf);if(cc){cfg=Object.assign({},CFG0,cc);SUBUNITS=(cfg.subunidades||[]).slice();}
+  renderAll();
+  if(navRemoteHook)navRemoteHook(dc);
 }
 async function fetchFullAndApply(){
   try{
@@ -1476,38 +1549,50 @@ async function fetchFullAndApply(){
       dc[k]=fromFV(d.fields&&d.fields.value);
       changed=true;
     });
-    if(!changed)return;
-    function p(k){try{return dc[k]?JSON.parse(dc[k]):null;}catch(e){return null;}}
-    var ns=p(K.st);if(ns){ovStatus=ns;var _mg=false;Object.keys(ovStatus).forEach(function(k){if(/^o\|[^|]+$/.test(k)){ovStatus[k.replace(/^(o\|[^|]+)$/,"$1|0")]=ovStatus[k];delete ovStatus[k];_mg=true;}});if(_mg)svs(K.st,ovStatus);}
-    var nh=p(K.sh);if(nh)ovShips=nh;
-    var ne=p(K.ed);if(ne)ovEdit=ne;
-    var nu=p(K.us);if(nu)userTasks=nu;
-    var nd=p(K.dn);if(nd)ovDone=nd;
-    var nn=p(K.np);if(nn)ovNup=nn;
-    var nb=p(K.sb);if(nb)ovSubsids=nb;
-    var nst=p(K.sub);if(nst)ovSubtasks=nst;
-    var nt=p(K.tsh);if(nt)ovTaskShips=nt;
-    var no=p(K.ord);if(no)ovOrder=no;
-    var nie=p(K.ie);if(nie)ovInstEdit=nie;
-    var nsp=p(K.sp);if(nsp)spots=nsp;
-    var yy=p(K.yrs);if(yy&&yy.length)activeYears=yy;
-    var cc=p(K.cf);if(cc){cfg=Object.assign({},CFG0,cc);SUBUNITS=(cfg.subunidades||[]).slice();}
-    renderAll();
-    if(navRemoteHook)navRemoteHook(dc);
+    if(changed)applyDcToState();
   }catch(e){}
 }
+async function sbFetchFullAndApply(){
+  try{
+    var r=await fetch(SB_TABLE+"?select=key,value,updated_at",{headers:sbHeaders()});
+    if(!r.ok)return;
+    var rows=await r.json();
+    var changed=false;
+    if(!dc)dc={};
+    rows.forEach(function(row){
+      var k=row.key;
+      if(k==="_meta")return;
+      if(flushTimers[k])return;
+      if(docUpdateTimes[k]===row.updated_at)return;
+      docUpdateTimes[k]=row.updated_at;
+      dc[k]=row.value;
+      changed=true;
+    });
+    if(changed)applyDcToState();
+  }catch(e){}
+}
+async function checkMetaTs(){
+  if(bk==="supabase"){
+    var r=await fetch(SB_TABLE+"?select=value&key=eq._meta&limit=1",{headers:sbHeaders()});
+    if(!r.ok)return 0;
+    var rows=await r.json();
+    return +((rows[0]&&rows[0].value)||0);
+  }
+  var r=await fetch(META_DOC+"?key="+FK); // 1 leitura, barato
+  if(!r.ok)return 0;
+  var j=await r.json();
+  return +((j.fields&&j.fields.ts&&j.fields.ts.integerValue)||0);
+}
 function startRT(){
-  if(rtActive||bk!=="firebase")return;
+  if(rtActive||(bk!=="firebase"&&bk!=="supabase"))return;
   rtActive=true;
   var VISIBLE_POLL_MS=20000,HIDDEN_POLL_MS=60000; // aba em 2º plano: poll bem mais espaçado
   function poll(){
     setTimeout(async function(){
       if(!document.hidden){
         try{
-          var r=await fetch(META_DOC+"?key="+FK); // 1 leitura, barato
-          var ts=0;
-          if(r.ok){var j=await r.json();ts=+((j.fields&&j.fields.ts&&j.fields.ts.integerValue)||0);}
-          if(ts>lastSeenMetaTs){lastSeenMetaTs=ts;await fetchFullAndApply();}
+          var ts=await checkMetaTs();
+          if(ts>lastSeenMetaTs){lastSeenMetaTs=ts;await(bk==="supabase"?sbFetchFullAndApply():fetchFullAndApply());}
         }catch(e){}
       }
       poll();
@@ -1600,6 +1685,7 @@ var openPanels=new Set(),histOpen=new Set(),undoStack=[],redoStack=[],spotOpen=n
 
 async function loadAll(){
   if(bk==="firebase")await getDoc();
+  if(bk==="supabase")await sbGetDoc();
   ovStatus=(await gtj(K.st))||{};ovShips=(await gtj(K.sh))||{};ovEdit=(await gtj(K.ed))||{};
   // migrar chaves legadas "o|<id>" → "o|<id>|0" (prazos diversos pré-múltiplos)
   var _migSt=false;Object.keys(ovStatus).forEach(function(k){if(/^o\|[^|]+$/.test(k)){ovStatus[k.replace(/^(o\|[^|]+)$/,"$1|0")]=ovStatus[k];delete ovStatus[k];_migSt=true;}});if(_migSt)svs(K.st,ovStatus);
@@ -2933,7 +3019,7 @@ function enablePointerReorder(container,itemSel,handleSel,getId,onCommit){
 }
 function bytesFor(prefix){
   var bytes=0;
-  if(bk==="firebase"&&dc){
+  if(bkSynced()&&dc){
     Object.keys(dc).forEach(function(k){
       if(prefix!=="*"&&k.indexOf(prefix)!==0)return;
       var v=dc[k];if(!v)return;
@@ -3256,7 +3342,7 @@ function applyTabHeaders(){
 }
 function fillConfigOMForm(){
   var ctag=document.getElementById("config_synctag");
-  if(ctag){ctag.textContent=bk==="firebase"?"☁ Sincronizado":"💾 Somente local";ctag.style.color=bk==="firebase"?"var(--c-teal)":"var(--c-amber)";}
+  if(ctag){ctag.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";ctag.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
   document.getElementById("c_om").value=cfg.om;document.getElementById("c_dep").value=cfg.departamento;var milEl=document.getElementById("c_militares");if(milEl)milEl.value=(cfg.militares||[]).map(function(m){return m.nome+" - "+m.divisao;}).join("\n");
   document.getElementById("c_div").value=cfg.divisoes.join("\n");document.getElementById("c_resp_types").value=(cfg.tiposResposta||CFG0.tiposResposta||[]).join("\n");
   document.getElementById("c_lp").value=cfg.labelProprio;document.getElementById("c_ls").value=cfg.labelSubsidio;
@@ -3563,13 +3649,13 @@ setTimeout(hideSplash,20000);
   try{
     await initBk();
     var tag0=document.getElementById("backend_tag");
-    if(tag0){tag0.textContent=bk==="firebase"?"☁ Sincronizado":"💾 Somente local";tag0.style.color=bk==="firebase"?"var(--c-teal)":"var(--c-amber)";}
+    if(tag0){tag0.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";tag0.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
     try{updCache();}catch(e){}
     await loadAll();
     applyTheme();applyHdr();renderAll();
     startRT();
     var tag=document.getElementById("backend_tag");
-    if(tag){tag.textContent=bk==="firebase"?"☁ Sincronizado":"💾 Somente local";tag.style.color=bk==="firebase"?"var(--c-teal)":"var(--c-amber)";}
+    if(tag){tag.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";tag.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
     var elapsed=Date.now()-splashStart;
     setTimeout(hideSplash,Math.max(300,SPLASH_MIN_MS-elapsed));
   }catch(err){
@@ -3706,8 +3792,8 @@ setTimeout(hideSplash,20000);
   function navUpdateSyncTag(){
     var tag=document.getElementById("nv_synctag");
     if(!tag)return;
-    tag.textContent=bk==="firebase"?"☁ Sincronizado":"💾 Somente local";
-    tag.style.color=bk==="firebase"?"var(--c-teal)":"var(--c-amber)";
+    tag.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";
+    tag.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";
   }
   function navUpdateTableToolbar(){
     var editBtn=document.getElementById("nv_table_edit");
@@ -4211,7 +4297,7 @@ setTimeout(hideSplash,20000);
     clgBound=true;
     await clgLoad();
     var tag=document.getElementById("clg_synctag");
-    if(tag){tag.textContent=bk==="firebase"?"☁ Sincronizado":"💾 Somente local";tag.style.color=bk==="firebase"?"var(--c-teal)":"var(--c-amber)";}
+    if(tag){tag.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";tag.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
     bindDataTable({
       prefix:"clg_t1",
       getArr:function(){return clgT1;},setArr:function(v){clgT1=v;},
@@ -4810,7 +4896,7 @@ setTimeout(hideSplash,20000);
     HORAS_SHIP_LIST.forEach(function(sk){horasBindShip(sk.key);bindShipCardGrid(sk.key);});
     horasBindMaintModal();
     var tag=document.getElementById("horas_synctag");
-    if(tag){tag.textContent=bk==="firebase"?"☁ Sincronizado":"💾 Somente local";tag.style.color=bk==="firebase"?"var(--c-teal)":"var(--c-amber)";}
+    if(tag){tag.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";tag.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
   };
 })();
 
@@ -5431,7 +5517,7 @@ setTimeout(hideSplash,20000);
     refreshPessoal();
     renderFeriasJump();
     var tag=document.getElementById("pessoal_synctag");
-    if(tag){tag.textContent=bk==="firebase"?"☁ Sincronizado":"💾 Somente local";tag.style.color=bk==="firebase"?"var(--c-teal)":"var(--c-amber)";}
+    if(tag){tag.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";tag.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
   };
   renderPessoal=refreshPessoal;
 })();
