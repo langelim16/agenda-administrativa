@@ -1272,16 +1272,21 @@ var clgInit,renderClgTables,renderClgCards,appSwitchTab;
 var clgGetState,clgSetState,navGetState,navSetState,horasGetState,horasSetState,horasInit,renderHoras;
 
 /* ── FIREBASE REST (fetch puro, sem CDN) ── */
-var FB="https://firestore.googleapis.com/v1/projects/agenda-administrativa-alt1/databases/(default)/documents/agenda/main";
+/* Cada chave (ag_*, aa_*) é seu próprio documento em agenda_data/{chave} — não compete por espaço
+   com as demais (limite de 1 MiB por documento, não por app) e cada gravação só toca o que mudou.
+   agenda/main (modelo antigo, doc único) fica intocado como backup. */
+var FB_BASE="https://firestore.googleapis.com/v1/projects/agenda-administrativa-alt1/databases/(default)/documents";
+var FB_COLL=FB_BASE+"/agenda_data";
 var FK="AIzaSyDxY236v6WD9K1vGhRp1o9qn63ETkFz3X8";
-var bk="local", dc=null, dirty=false, ftimer=null, rtActive=false, lastUpd="";
+var bk="local", dc=null, rtActive=false;
+var docUpdateTimes={}, flushTimers={};
 
 function toFV(v){return{stringValue:typeof v==="string"?v:JSON.stringify(v)};}
 function fromFV(f){return(f&&f.stringValue!==undefined)?f.stringValue:null;}
 
 async function initBk(){
   try{
-    var r=await Promise.race([fetch(FB+"?key="+FK),new Promise(function(_,j){setTimeout(function(){j(new Error("timeout"));},5000);})]);
+    var r=await Promise.race([fetch(FB_COLL+"?key="+FK+"&pageSize=1"),new Promise(function(_,j){setTimeout(function(){j(new Error("timeout"));},5000);})]);
     if(!r.ok&&r.status!==404)throw new Error("HTTP "+r.status);
     bk="firebase";
   }catch(e){console.warn("Firebase indisponível:",e.message);bk="local";}
@@ -1289,32 +1294,32 @@ async function initBk(){
 
 async function getDoc(){
   if(dc)return dc;
+  dc={};
   try{
-    var r=await fetch(FB+"?key="+FK);
-    if(r.status===404){dc={};return dc;}
-    if(!r.ok)throw new Error();
+    var r=await fetch(FB_COLL+"?key="+FK+"&pageSize=300");
+    if(!r.ok)return dc;
     var j=await r.json();
-    dc={};
-    if(j.fields)Object.keys(j.fields).forEach(function(k){dc[k]=fromFV(j.fields[k]);});
-    if(j.updateTime)lastUpd=j.updateTime;
-    return dc;
-  }catch(e){dc={};return dc;}
+    (j.documents||[]).forEach(function(d){
+      var k=d.name.split("/").pop();
+      dc[k]=fromFV(d.fields&&d.fields.value);
+      docUpdateTimes[k]=d.updateTime;
+    });
+  }catch(e){}
+  return dc;
 }
 
-async function flush(){
-  if(!dirty||!dc)return;
-  dirty=false;
+async function flushKey(k){
   try{
-    var f={};Object.keys(dc).forEach(function(k){f[k]=toFV(dc[k]);});
-    await fetch(FB+"?key="+FK,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({fields:f})});
-  }catch(e){console.error("flush",e);}
+    var url=FB_COLL+"/"+encodeURIComponent(k)+"?key="+FK+"&updateMask.fieldPaths=value";
+    var r=await fetch(url,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({fields:{value:toFV(dc[k])}})});
+    if(r.ok){var j=await r.json();docUpdateTimes[k]=j.updateTime;}
+  }catch(e){console.error("flushKey",k,e);}
 }
-
-function schedFlush(){dirty=true;clearTimeout(ftimer);ftimer=setTimeout(flush,800);}
+function schedFlushKey(k){clearTimeout(flushTimers[k]);flushTimers[k]=setTimeout(function(){delete flushTimers[k];flushKey(k);},400);}
 
 async function svs(k,v){
   var val=typeof v==="string"?v:JSON.stringify(v);
-  if(bk==="firebase"){var d=await getDoc();d[k]=val;schedFlush();return;}
+  if(bk==="firebase"){if(!dc)await getDoc();dc[k]=val;schedFlushKey(k);return;}
   try{await window.storage.set(k,val);}catch(e){}
 }
 async function gts(k){
@@ -1328,15 +1333,20 @@ function startRT(){
   rtActive=true;
   setInterval(async function(){
     try{
-      if(dirty)return;
-      var r=await fetch(FB+"?key="+FK);
+      var r=await fetch(FB_COLL+"?key="+FK+"&pageSize=300");
       if(!r.ok)return;
       var j=await r.json();
-      var u=j.updateTime||"";
-      if(u===lastUpd)return;
-      lastUpd=u;
-      dc={};
-      if(j.fields)Object.keys(j.fields).forEach(function(k){dc[k]=fromFV(j.fields[k]);});
+      var changed=false;
+      if(!dc)dc={};
+      (j.documents||[]).forEach(function(d){
+        var k=d.name.split("/").pop();
+        if(flushTimers[k])return; // gravação local pendente para esta chave: não pisar
+        if(docUpdateTimes[k]===d.updateTime)return;
+        docUpdateTimes[k]=d.updateTime;
+        dc[k]=fromFV(d.fields&&d.fields.value);
+        changed=true;
+      });
+      if(!changed)return;
       function p(k){try{return dc[k]?JSON.parse(dc[k]):null;}catch(e){return null;}}
       var ns=p(K.st);if(ns){ovStatus=ns;var _mg=false;Object.keys(ovStatus).forEach(function(k){if(/^o\|[^|]+$/.test(k)){ovStatus[k.replace(/^(o\|[^|]+)$/,"$1|0")]=ovStatus[k];delete ovStatus[k];_mg=true;}});if(_mg)svs(K.st,ovStatus);}
       var nh=p(K.sh);if(nh)ovShips=nh;
@@ -1619,6 +1629,26 @@ function syncDone(i,was){
 function logH(sc,id,act,det){var k=sc+":"+id;if(!ovHist[k])ovHist[k]=[];ovHist[k].push({a:act,d:det||"",u:operador||"—",at:nowISO()});svs(K.hi,ovHist);}
 function histFor(i){var o=[];(ovHist["b:"+i.id]||[]).forEach(function(e){o.push(Object.assign({},e,{src:"modelo"}));});(ovHist["i:"+i.key]||[]).forEach(function(e){o.push(Object.assign({},e,{src:"mês"}));});if(!String(i.id).startsWith("u")&&!(ovHist["b:"+i.id]||[]).some(function(e){return e.a==="Origem";}))o.push({a:"Origem",d:"Importado da planilha 2026",u:"sistema",at:"2026-01-01T00:00:00.000Z",src:"base"});return o.sort(function(a,b){return b.at.localeCompare(a.at);});}
 function esc(s){return(s||"").toString().replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+// Reduz ícones enviados (brasão/crest) antes de salvar, evitando que ag_config volte a inchar com base64 grande.
+function compressIconFile(file,maxDim,quality){
+  return new Promise(function(resolve){
+    var rd=new FileReader();
+    rd.onload=function(ev){
+      var img=new Image();
+      img.onload=function(){
+        var scale=Math.min(1,(maxDim||160)/Math.max(img.width,img.height));
+        var w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale));
+        var cv=document.createElement("canvas");cv.width=w;cv.height=h;
+        cv.getContext("2d").drawImage(img,0,0,w,h);
+        resolve(cv.toDataURL("image/jpeg",quality||0.82));
+      };
+      img.onerror=function(){resolve(ev.target.result);};
+      img.src=ev.target.result;
+    };
+    rd.onerror=function(){resolve(null);};
+    rd.readAsDataURL(file);
+  });
+}
 /* ── Compartilhado: CLG/Navios usam estes helpers para evitar duplicação de módulo ── */
 var _uidSeq=1;
 function genUid(prefix){return prefix+"_"+Date.now().toString(36)+"_"+(_uidSeq++);}
@@ -2977,7 +3007,7 @@ function setCM(mode){_cM=mode;document.getElementById("copt_text").classList.tog
 document.getElementById("copt_text").onclick=function(){setCM("text");};
 document.getElementById("copt_img").onclick=function(){setCM("img");};
 document.getElementById("c_crest_upload_btn").onclick=function(){document.getElementById("c_crest_file").click();};
-document.getElementById("c_crest_file").onchange=function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(ev){crestImgData=ev.target.result;var pv=document.getElementById("c_crest_prev");pv.innerHTML='<img src="'+crestImgData+'" alt="">';document.getElementById("c_crest_fname").textContent=f.name;};rd.readAsDataURL(f);};
+document.getElementById("c_crest_file").onchange=async function(e){var f=e.target.files[0];if(!f)return;var dataUrl=await compressIconFile(f,160,0.82);if(!dataUrl)return;crestImgData=dataUrl;var pv=document.getElementById("c_crest_prev");pv.innerHTML='<img src="'+dataUrl+'" alt="">';document.getElementById("c_crest_fname").textContent=f.name;};
 document.getElementById("c_crest_text").oninput=function(e){var inn=document.getElementById("c_crest_prev_inner");if(inn)inn.textContent=e.target.value||"AA";};
 function defaultTabHeader(tab){
   if(tab==="agenda")return{title:"Agenda Administrativa",sub:(cfg.departamento||"Logística")+" · "+(cfg.om||"OM")};
@@ -3031,15 +3061,13 @@ function wireTabIconPicker(tab){
   textBtn.onclick=function(){setMode("text");};
   imgBtn.onclick=function(){setMode("img");};
   uploadBtn.onclick=function(){fileInp.click();};
-  fileInp.onchange=function(e){
+  fileInp.onchange=async function(e){
     var f=e.target.files[0];if(!f)return;
-    var rd=new FileReader();
-    rd.onload=function(ev){
-      tabIconState[tab].imgData=ev.target.result;
-      prev.innerHTML='<img src="'+ev.target.result+'" alt="">';
-      var fn=document.getElementById("ti_"+tab+"_fname");if(fn)fn.textContent=f.name;
-    };
-    rd.readAsDataURL(f);
+    var dataUrl=await compressIconFile(f,160,0.82);
+    if(!dataUrl)return;
+    tabIconState[tab].imgData=dataUrl;
+    prev.innerHTML='<img src="'+dataUrl+'" alt="">';
+    var fn=document.getElementById("ti_"+tab+"_fname");if(fn)fn.textContent=f.name;
   };
   textInp.oninput=function(e){if(prevInner)prevInner.textContent=e.target.value||defaultTabIcon(tab);};
   setMode("text");
