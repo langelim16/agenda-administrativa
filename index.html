@@ -1416,14 +1416,13 @@ function bkSynced(){return bk==="firebase"||bk==="supabase";}
 function toFV(v){return{stringValue:typeof v==="string"?v:JSON.stringify(v)};}
 function fromFV(f){return(f&&f.stringValue!==undefined)?f.stringValue:null;}
 
-// Supabase é o backend padrão (sem limite de requisições no free tier); Firebase vira fallback
-// secundário só se o Supabase estiver fora do ar, antes de cair pro modo local.
+// Supabase é a única fonte de verdade em uso — sem fallback automático pro Firebase: as duas bases
+// não são sincronizadas entre si, então cair de uma pra outra silenciosamente arrisca perder edição
+// feita durante a janela de fallback. Firebase só entra via BACKEND_OVERRIDE manual (debug/migração).
 async function initBk(){
   if(BACKEND_OVERRIDE==="local"){bk="local";return;}
   if(BACKEND_OVERRIDE==="firebase"){await initBkFirebase();return;}
-  if(BACKEND_OVERRIDE==="supabase"){await initBkSupabase();return;} // isolado: nunca cai pro Firebase, nem em falha
-  await initBkSupabase();
-  if(bk==="local")await initBkFirebase(); // sem override: Supabase é o padrão, Firebase só como fallback
+  await initBkSupabase(); // se falhar, cai direto pro modo local — nunca pro Firebase sem ser pedido
 }
 async function initBkFirebase(){
   try{
