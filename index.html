@@ -1404,8 +1404,9 @@ var SB_URL="https://jsrnjdjoxhstbfqhxwoi.supabase.co";
 var SB_KEY="sb_publishable_797_trm8U-IVk0jzVeA6IQ_DVsBl9m6";
 var SB_TABLE=SB_URL+"/rest/v1/agenda_data";
 // Override de teste, lido do localStorage (sobrevive a reload, então dá pra setar 1x no console e
-// recarregar): null/ausente = automático (tenta Firebase, senão local). "supabase" força Supabase E
-// desliga o Firebase por completo (nem o probe roda) — usar só durante a validação isolada da migração.
+// recarregar): null/ausente = automático (tenta Supabase, senão Firebase, senão local — padrão de
+// produção). "supabase" ou "firebase" força um backend isolado, sem cair pro outro nem em falha
+// (nem o probe do outro roda) — usar só durante validação isolada de migração/teste.
 // Setar: localStorage.setItem('aa_backend_override','supabase'); depois recarregar a página.
 // Voltar ao normal: localStorage.removeItem('aa_backend_override'); recarregar de novo.
 var BACKEND_OVERRIDE=localStorage.getItem("aa_backend_override")||null;
@@ -1415,9 +1416,16 @@ function bkSynced(){return bk==="firebase"||bk==="supabase";}
 function toFV(v){return{stringValue:typeof v==="string"?v:JSON.stringify(v)};}
 function fromFV(f){return(f&&f.stringValue!==undefined)?f.stringValue:null;}
 
+// Supabase é o backend padrão (sem limite de requisições no free tier); Firebase vira fallback
+// secundário só se o Supabase estiver fora do ar, antes de cair pro modo local.
 async function initBk(){
   if(BACKEND_OVERRIDE==="local"){bk="local";return;}
-  if(BACKEND_OVERRIDE==="supabase"){await initBkSupabase();return;} // Firebase nem é tentado: zero requisições a firestore.googleapis.com
+  if(BACKEND_OVERRIDE==="firebase"){await initBkFirebase();return;}
+  if(BACKEND_OVERRIDE==="supabase"){await initBkSupabase();return;} // isolado: nunca cai pro Firebase, nem em falha
+  await initBkSupabase();
+  if(bk==="local")await initBkFirebase(); // sem override: Supabase é o padrão, Firebase só como fallback
+}
+async function initBkFirebase(){
   try{
     var r=await Promise.race([fetch(FB_COLL+"?key="+FK+"&pageSize=1"),new Promise(function(_,j){setTimeout(function(){j(new Error("timeout"));},5000);})]);
     if(!r.ok&&r.status!==404)throw new Error("HTTP "+r.status);
