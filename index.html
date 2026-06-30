@@ -1431,6 +1431,7 @@ async function flushKey(k){
     var url=FB_COLL+"/"+encodeURIComponent(k)+"?key="+FK+"&updateMask.fieldPaths=value";
     var r=await fetch(url,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({fields:{value:toFV(dc[k])}})});
     if(r.ok){var j=await r.json();docUpdateTimes[k]=j.updateTime;}
+    bumpMeta();
   }catch(e){console.error("flushKey",k,e);}
 }
 function schedFlushKey(k){clearTimeout(flushTimers[k]);flushTimers[k]=setTimeout(function(){delete flushTimers[k];flushKey(k);},400);}
@@ -1446,44 +1447,73 @@ async function gts(k){
 }
 async function gtj(k){var v=await gts(k);try{return v?JSON.parse(v):null;}catch(e){return null;}}
 
+/* ── Sync entre abas/dispositivos: doc-sentinela "_meta" (1 leitura) sinaliza se algo mudou em
+   QUALQUER chave; só faz a listagem completa (até 300 docs) quando o sentinela indica mudança real.
+   Evita poll cego da coleção inteira a cada ciclo — é isso que esgotava a cota de leituras. */
+var META_DOC=FB_COLL+"/_meta",lastSeenMetaTs=0,metaBumpTimer=null;
+function bumpMeta(){
+  clearTimeout(metaBumpTimer);
+  metaBumpTimer=setTimeout(function(){
+    var ts=Date.now();
+    fetch(META_DOC+"?key="+FK+"&updateMask.fieldPaths=ts",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({fields:{ts:{integerValue:String(ts)}}})})
+      .then(function(r){if(r.ok)lastSeenMetaTs=ts;}) // já é a própria gravação local: não precisa reler depois
+      .catch(function(){});
+  },300);
+}
+async function fetchFullAndApply(){
+  try{
+    var r=await fetch(FB_COLL+"?key="+FK+"&pageSize=300");
+    if(!r.ok)return;
+    var j=await r.json();
+    var changed=false;
+    if(!dc)dc={};
+    (j.documents||[]).forEach(function(d){
+      var k=d.name.split("/").pop();
+      if(k==="_meta")return;
+      if(flushTimers[k])return; // gravação local pendente para esta chave: não pisar
+      if(docUpdateTimes[k]===d.updateTime)return;
+      docUpdateTimes[k]=d.updateTime;
+      dc[k]=fromFV(d.fields&&d.fields.value);
+      changed=true;
+    });
+    if(!changed)return;
+    function p(k){try{return dc[k]?JSON.parse(dc[k]):null;}catch(e){return null;}}
+    var ns=p(K.st);if(ns){ovStatus=ns;var _mg=false;Object.keys(ovStatus).forEach(function(k){if(/^o\|[^|]+$/.test(k)){ovStatus[k.replace(/^(o\|[^|]+)$/,"$1|0")]=ovStatus[k];delete ovStatus[k];_mg=true;}});if(_mg)svs(K.st,ovStatus);}
+    var nh=p(K.sh);if(nh)ovShips=nh;
+    var ne=p(K.ed);if(ne)ovEdit=ne;
+    var nu=p(K.us);if(nu)userTasks=nu;
+    var nd=p(K.dn);if(nd)ovDone=nd;
+    var nn=p(K.np);if(nn)ovNup=nn;
+    var nb=p(K.sb);if(nb)ovSubsids=nb;
+    var nst=p(K.sub);if(nst)ovSubtasks=nst;
+    var nt=p(K.tsh);if(nt)ovTaskShips=nt;
+    var no=p(K.ord);if(no)ovOrder=no;
+    var nie=p(K.ie);if(nie)ovInstEdit=nie;
+    var nsp=p(K.sp);if(nsp)spots=nsp;
+    var yy=p(K.yrs);if(yy&&yy.length)activeYears=yy;
+    var cc=p(K.cf);if(cc){cfg=Object.assign({},CFG0,cc);SUBUNITS=(cfg.subunidades||[]).slice();}
+    renderAll();
+    if(navRemoteHook)navRemoteHook(dc);
+  }catch(e){}
+}
 function startRT(){
   if(rtActive||bk!=="firebase")return;
   rtActive=true;
-  setInterval(async function(){
-    try{
-      var r=await fetch(FB_COLL+"?key="+FK+"&pageSize=300");
-      if(!r.ok)return;
-      var j=await r.json();
-      var changed=false;
-      if(!dc)dc={};
-      (j.documents||[]).forEach(function(d){
-        var k=d.name.split("/").pop();
-        if(flushTimers[k])return; // gravação local pendente para esta chave: não pisar
-        if(docUpdateTimes[k]===d.updateTime)return;
-        docUpdateTimes[k]=d.updateTime;
-        dc[k]=fromFV(d.fields&&d.fields.value);
-        changed=true;
-      });
-      if(!changed)return;
-      function p(k){try{return dc[k]?JSON.parse(dc[k]):null;}catch(e){return null;}}
-      var ns=p(K.st);if(ns){ovStatus=ns;var _mg=false;Object.keys(ovStatus).forEach(function(k){if(/^o\|[^|]+$/.test(k)){ovStatus[k.replace(/^(o\|[^|]+)$/,"$1|0")]=ovStatus[k];delete ovStatus[k];_mg=true;}});if(_mg)svs(K.st,ovStatus);}
-      var nh=p(K.sh);if(nh)ovShips=nh;
-      var ne=p(K.ed);if(ne)ovEdit=ne;
-      var nu=p(K.us);if(nu)userTasks=nu;
-      var nd=p(K.dn);if(nd)ovDone=nd;
-      var nn=p(K.np);if(nn)ovNup=nn;
-      var nb=p(K.sb);if(nb)ovSubsids=nb;
-      var nst=p(K.sub);if(nst)ovSubtasks=nst;
-      var nt=p(K.tsh);if(nt)ovTaskShips=nt;
-      var no=p(K.ord);if(no)ovOrder=no;
-      var nie=p(K.ie);if(nie)ovInstEdit=nie;
-      var nsp=p(K.sp);if(nsp)spots=nsp;
-      var yy=p(K.yrs);if(yy&&yy.length)activeYears=yy;
-      var cc=p(K.cf);if(cc){cfg=Object.assign({},CFG0,cc);SUBUNITS=(cfg.subunidades||[]).slice();}
-      renderAll();
-      if(navRemoteHook)navRemoteHook(dc);
-    }catch(e){}
-  },5000);
+  var VISIBLE_POLL_MS=20000,HIDDEN_POLL_MS=60000; // aba em 2º plano: poll bem mais espaçado
+  function poll(){
+    setTimeout(async function(){
+      if(!document.hidden){
+        try{
+          var r=await fetch(META_DOC+"?key="+FK); // 1 leitura, barato
+          var ts=0;
+          if(r.ok){var j=await r.json();ts=+((j.fields&&j.fields.ts&&j.fields.ts.integerValue)||0);}
+          if(ts>lastSeenMetaTs){lastSeenMetaTs=ts;await fetchFullAndApply();}
+        }catch(e){}
+      }
+      poll();
+    },document.hidden?HIDDEN_POLL_MS:VISIBLE_POLL_MS);
+  }
+  poll();
 }
 
 /* ── CONSTANTES ── */
