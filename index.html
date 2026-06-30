@@ -453,12 +453,14 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
 .ferias-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xs);overflow-x:auto;margin-bottom:14px;max-height:520px;overflow-y:auto}
 .ferias-table{border-collapse:collapse;font-size:10px}
 .ferias-table th,.ferias-table td{border:1px solid var(--border);padding:0;text-align:center}
-.ferias-table th{background:var(--c-100);color:var(--text2);font-weight:600;position:sticky;top:0;z-index:2;white-space:nowrap;padding:3px 2px}
-.ferias-table th.fmonth{font-size:10px;letter-spacing:.4px;text-transform:uppercase}
-.ferias-table th.fday{font-size:9px;color:var(--text3);min-width:17px;width:17px}
+.ferias-table th{background:var(--c-100);color:var(--text2);font-weight:600;position:sticky;z-index:2;white-space:nowrap;padding:3px 2px;height:15px;box-sizing:border-box}
+.ferias-table th.fmonth{font-size:10px;letter-spacing:.4px;text-transform:uppercase;top:0}
+.ferias-table th.fday{font-size:9px;color:var(--text3);min-width:17px;width:17px;top:15px}
+.ferias-table th.fwd{font-size:8px;color:var(--text3);font-weight:400;min-width:17px;width:17px;top:30px;text-transform:uppercase}
+.ferias-table th.fwd.fweekend,.ferias-table th.fday.fweekend{color:var(--c-blue)}
 .ferias-table td.fname{position:sticky;left:0;background:var(--surface);z-index:1;text-align:left;font-weight:600;padding:5px 10px;white-space:nowrap;border-right:2px solid var(--border)}
 .ferias-table th.fname-h{position:sticky;left:0;z-index:3;text-align:left;padding:5px 10px;border-right:2px solid var(--border)}
-.ferias-table td.fcell{width:17px;height:20px;min-width:17px}
+.ferias-table td.fcell{width:17px;height:20px;min-width:17px;background:var(--mtint,transparent)}
 .ferias-table td.fcell.fprev{background:#d8b23a}
 .ferias-table td.fcell.fgozo{background:#5a9b6e}
 .ferias-table td.fcell.ftoday{box-shadow:inset 0 0 0 2px var(--c-blue)}
@@ -4777,6 +4779,29 @@ setTimeout(hideSplash,20000);
   var FERIAS_START=new Date(2025,11,1),FERIAS_END=new Date(2026,10,30);
   var FERIAS_DAYS=(function(){var a=[],d=new Date(FERIAS_START);while(d<=FERIAS_END){a.push(new Date(d));d.setDate(d.getDate()+1);}return a;})();
   function dstr(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+  var WD1=["D","S","T","Q","Q","S","S"]; // domingo..sábado, uma letra
+  function hexToRgba(hex,alpha){
+    var h=(hex||"").replace("#","");
+    if(h.length===3)h=h.split("").map(function(c){return c+c;}).join("");
+    var n=parseInt(h,16);
+    if(isNaN(n))return "rgba(150,150,150,"+alpha+")";
+    var r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+    return "rgba("+r+","+g+","+b+","+alpha+")";
+  }
+  var FERIAS_MONTH_KEYS=(function(){
+    var keys=[];
+    FERIAS_DAYS.forEach(function(d){var k=d.getFullYear()+"-"+d.getMonth();if(keys.indexOf(k)<0)keys.push(k);});
+    return keys;
+  })();
+  function monthTintFor(d){
+    var key=d.getFullYear()+"-"+d.getMonth();
+    var idx=FERIAS_MONTH_KEYS.indexOf(key);
+    var pal=(cfg&&cfg.palette)||PAL0;
+    var colors=[pal.danger||PAL0.danger,pal.warning||PAL0.warning,pal.success||PAL0.success];
+    var hex=colors[idx%3];
+    var wd=d.getDay(),isWeekend=(wd===0||wd===6);
+    return hexToRgba(hex,isWeekend?0.24:0.11);
+  }
   function feriasTheadHtml(){
     var groups=[];
     FERIAS_DAYS.forEach(function(d){
@@ -4785,8 +4810,9 @@ setTimeout(hideSplash,20000);
       groups[groups.length-1].count++;
     });
     var row1='<th class="fname-h">Militar</th>'+groups.map(function(g){return '<th class="fmonth" colspan="'+g.count+'">'+g.label+'</th>';}).join("");
-    var row2='<th class="fname-h"></th>'+FERIAS_DAYS.map(function(d){return '<th class="fday">'+d.getDate()+'</th>';}).join("");
-    return '<thead><tr>'+row1+'</tr><tr>'+row2+'</tr></thead>';
+    var row2='<th class="fname-h"></th>'+FERIAS_DAYS.map(function(d){var we=(d.getDay()===0||d.getDay()===6);return '<th class="fday'+(we?" fweekend":"")+'">'+d.getDate()+'</th>';}).join("");
+    var row3='<th class="fname-h"></th>'+FERIAS_DAYS.map(function(d){var we=(d.getDay()===0||d.getDay()===6);return '<th class="fwd'+(we?" fweekend":"")+'">'+WD1[d.getDay()]+'</th>';}).join("");
+    return '<thead><tr>'+row1+'</tr><tr>'+row2+'</tr><tr>'+row3+'</tr></thead>';
   }
   function dayStatus(nome,ds){
     var hasGozo=pessoalFerias.some(function(f){return f.militar===nome&&f.tipo==="gozo"&&ds>=f.inicio&&ds<=f.fim;});
@@ -4802,7 +4828,7 @@ setTimeout(hideSplash,20000);
       var nome=r.nome||"(sem nome)";
       var cells=FERIAS_DAYS.map(function(d){
         var ds=dstr(d),st=dayStatus(nome,ds);
-        return '<td class="fcell'+(st?" "+st:"")+(ds===todayStr?" ftoday":"")+'" title="'+esc(nome)+" — "+d.toLocaleDateString("pt-BR")+'"></td>';
+        return '<td class="fcell'+(st?" "+st:"")+(ds===todayStr?" ftoday":"")+'" style="--mtint:'+monthTintFor(d)+'" title="'+esc(nome)+" — "+d.toLocaleDateString("pt-BR")+'"></td>';
       }).join("");
       return '<tr><td class="fname">'+esc(nome)+'</td>'+cells+'</tr>';
     }).join("");
