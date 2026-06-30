@@ -1403,9 +1403,12 @@ var docUpdateTimes={}, flushTimers={};
 var SB_URL="https://jsrnjdjoxhstbfqhxwoi.supabase.co";
 var SB_KEY="sb_publishable_797_trm8U-IVk0jzVeA6IQ_DVsBl9m6";
 var SB_TABLE=SB_URL+"/rest/v1/agenda_data";
-// Override de teste: null = automático (tenta Firebase, senão local). "supabase" força Supabase E
+// Override de teste, lido do localStorage (sobrevive a reload, então dá pra setar 1x no console e
+// recarregar): null/ausente = automático (tenta Firebase, senão local). "supabase" força Supabase E
 // desliga o Firebase por completo (nem o probe roda) — usar só durante a validação isolada da migração.
-var BACKEND_OVERRIDE=null;
+// Setar: localStorage.setItem('aa_backend_override','supabase'); depois recarregar a página.
+// Voltar ao normal: localStorage.removeItem('aa_backend_override'); recarregar de novo.
+var BACKEND_OVERRIDE=localStorage.getItem("aa_backend_override")||null;
 function sbHeaders(extra){var h={apikey:SB_KEY,Authorization:"Bearer "+SB_KEY};if(extra)Object.assign(h,extra);return h;}
 function bkSynced(){return bk==="firebase"||bk==="supabase";}
 
