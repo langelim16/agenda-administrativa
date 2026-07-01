@@ -497,6 +497,8 @@ td.dt-daterange-cell input[type="date"]{width:100%;background:var(--c-50);border
 .pessoal-sort-btn .sort-arrow{font-size:9px;opacity:.55}
 .pessoal-sort-btn.active .sort-arrow{opacity:1;color:var(--c-blue)}
 .pessoal-sort-btn:hover .sort-arrow{opacity:.85}
+.pessoal-sort-clear{background:none;border:none;color:var(--c-red);opacity:.6;font-size:9px;padding:0 0 0 4px;cursor:pointer;vertical-align:middle}
+.pessoal-sort-clear:hover{opacity:1}
 .dt-table td{padding:7px 6px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;white-space:normal;line-height:1.3;text-align:center}
 .dt-table td:first-child{text-align:left}
 .dt-table tbody tr:hover td{background:var(--c-50)}
@@ -4985,6 +4987,7 @@ setTimeout(hideSplash,20000);
   function afastTypeOf(key){return AFASTAMENTO_TYPES.find(function(t){return t.key===key;});}
   var PESSOAL_FIXED=[
     {key:"nome",title:"Nome"},
+    {key:"antiguidade",title:"Antiguidade",hidden:true},
     {key:"posto",title:"Posto/Graduação"},
     {key:"divisao",title:"Divisão"},
     {key:"disponibilidade",title:"Disponibilidade",type:"locked",computed:true},
@@ -4995,9 +4998,20 @@ setTimeout(hideSplash,20000);
     {key:"contato",title:"Contato"}
   ];
   var FERIAS_TOTAL_DIAS=30;
-  function pessoalColsDefault(){return PESSOAL_FIXED.map(function(c){var o={key:c.key,title:c.title};if(c.type)o.type=c.type;if(c.computed)o.computed=true;return o;});}
+  function pessoalColsDefault(){return PESSOAL_FIXED.map(function(c){var o={key:c.key,title:c.title};if(c.type)o.type=c.type;if(c.computed)o.computed=true;if(c.hidden)o.hidden=true;return o;});}
   function pessoalReconcileCols(cols){
     var keys=cols.map(function(c){return c.key;});
+    // "antiguidade" entra logo após "nome" (oculta fora do modo de edição); os demais campos calculados
+    // entram após "divisao", como já era.
+    if(keys.indexOf("antiguidade")<0){
+      var nomeIdx=keys.indexOf("nome");
+      var antCol={key:"antiguidade",title:"Antiguidade",hidden:true};
+      if(nomeIdx>=0)cols.splice(nomeIdx+1,0,antCol);else cols.unshift(antCol);
+    }else{
+      var ac=cols.find(function(x){return x.key==="antiguidade";});
+      if(ac)ac.hidden=true;
+    }
+    keys=cols.map(function(c){return c.key;});
     var newCols=[
       {key:"disponibilidade",title:"Disponibilidade",type:"locked",computed:true},
       {key:"periodo",title:"Período",type:"locked",computed:true},
@@ -5024,28 +5038,40 @@ setTimeout(hideSplash,20000);
   var pessoalEditing=false,pessoalDirty=false,pessoalSnapshot=null,pessoalColsSnapshot=null;
   var pessoalCardEditingId=null,pessoalCardDirty=false,pessoalCardSnapshot=null;
   // Ordenação da tabela (só ativa fora do modo de edição, pra não conflitar com o drag de linhas).
-  // Hierarquia de Posto/Graduação usada como critério — não é ordem alfabética.
+  // Cada coluna filtrável liga/desliga independentemente (botão seta = ativa/inverte, botão x = limpa
+  // só aquela coluna, as demais ativas continuam). Hierarquia de Posto/Graduação usada como critério
+  // de ORDENAÇÃO PRIMÁRIA da própria coluna Posto/Grad — não é ordem alfabética.
   var POSTO_RANK=["AE","VA","CA","CMG","CF","CC","CT","1T","2T","SO","1°SG","2°SG","3°SG","CB","MN"];
   function postoRank(v){
     var s=String(v||"").split("-")[0].trim().toUpperCase();
     var idx=POSTO_RANK.indexOf(s);
     return idx<0?POSTO_RANK.length:idx;
   }
+  // Critério secundário de todo agrupamento por texto: antiguidade (coluna oculta, 1=mais antigo).
+  // Sem antiguidade atribuída, o militar vai para o fim do grupo.
+  function antiguidadeVal(r){var n=parseInt(r.antiguidade,10);return isNaN(n)?Infinity:n;}
   var PESSOAL_SORTABLE=["posto","divisao","feriasDisponiveis","feriasGozadas","disponibilidade"];
   var PESSOAL_NUMERIC_SORT=["feriasDisponiveis","feriasGozadas"];
-  var pessoalSort={key:null,dir:"asc"};
-  function pessoalCompare(a,b){
-    var key=pessoalSort.key,dir=pessoalSort.dir==="desc"?-1:1;
+  var pessoalSort={}; // {<key>:{active:true,dir:"asc"|"desc"}, ...} — populado sob demanda ao clicar
+  function pessoalLevelCompare(a,b,key,dir){
     if(PESSOAL_NUMERIC_SORT.indexOf(key)>=0)return((+a[key]||0)-(+b[key]||0))*dir;
-    // Texto: agrupa pela coluna selecionada; dentro do grupo, ordena por Posto/Graduação.
     var av,bv;
     if(key==="posto"){av=postoRank(a.posto);bv=postoRank(b.posto);}
     else{av=String(a[key]||"").toLowerCase();bv=String(b[key]||"").toLowerCase();}
-    var primary=(av<bv?-1:(av>bv?1:0))*dir;
-    if(primary!==0||key==="posto")return primary;
-    return postoRank(a.posto)-postoRank(b.posto);
+    return(av<bv?-1:(av>bv?1:0))*dir;
   }
-  function pessoalSortedRows(){return pessoalSort.key?pessoalRows.slice().sort(pessoalCompare):pessoalRows;}
+  function pessoalCompare(a,b){
+    var activeKeys=PESSOAL_SORTABLE.filter(function(k){return pessoalSort[k]&&pessoalSort[k].active;});
+    for(var i=0;i<activeKeys.length;i++){
+      var key=activeKeys[i],dir=pessoalSort[key].dir==="desc"?-1:1;
+      var d=pessoalLevelCompare(a,b,key,dir);
+      if(d!==0)return d;
+      var ad=antiguidadeVal(a)-antiguidadeVal(b);
+      if(ad!==0)return ad;
+    }
+    return antiguidadeVal(a)-antiguidadeVal(b); // sem filtro ativo: ordem natural = antiguidade
+  }
+  function pessoalSortedRows(){return pessoalRows.slice().sort(pessoalCompare);}
   var feriasFormState={categoria:"ferias",subtipo:"previsao",editId:null},feriasEditTipo=null,feriasEditSub=null;
 
   async function pessoalLoad(){
@@ -5094,23 +5120,30 @@ setTimeout(hideSplash,20000);
     await pushKV("pessoalPush",PESSOAL_CARDS_KEY,pessoalCards);
   };
 
+  // "antiguidade" é oculta fora do modo de edição — só aparece (antes de Posto/Grad) quando editando.
+  function pessoalVisibleCols(editing){return editing?pessoalCols:pessoalCols.filter(function(c){return!c.hidden;});}
   function renderPessoalTheadView(){
     var thead=document.getElementById("pessoal_tbl_thead");
     if(!thead)return;
-    thead.innerHTML='<tr>'+pessoalCols.map(function(col){
+    thead.innerHTML='<tr>'+pessoalVisibleCols(false).map(function(col){
       var wStyle=colWidthStyle(col);
       if(PESSOAL_SORTABLE.indexOf(col.key)<0)return '<th'+wStyle+'>'+esc(col.title)+'</th>';
-      var active=pessoalSort.key===col.key;
-      var arrow=active?(pessoalSort.dir==="desc"?"▼":"▲"):"⇅";
-      return '<th'+wStyle+'><button type="button" class="pessoal-sort-btn'+(active?" active":"")+'" data-sort-key="'+col.key+'">'+esc(col.title)+' <span class="sort-arrow">'+arrow+'</span></button></th>';
+      var st=pessoalSort[col.key],active=!!(st&&st.active);
+      var arrow=active?(st.dir==="desc"?"▼":"▲"):"⇅";
+      return '<th'+wStyle+'><button type="button" class="pessoal-sort-btn'+(active?" active":"")+'" data-sort-key="'+col.key+'">'+esc(col.title)+' <span class="sort-arrow">'+arrow+'</span></button>'+
+        (active?'<button type="button" class="pessoal-sort-clear" data-clear-key="'+col.key+'" title="Limpar ordenação desta coluna">✕</button>':'')+'</th>';
     }).join("")+'<th class="dt-actions-col">Ações</th></tr>';
     thead.querySelectorAll(".pessoal-sort-btn").forEach(function(b){
       b.onclick=function(){
         var k=b.dataset.sortKey;
-        if(pessoalSort.key===k)pessoalSort.dir=pessoalSort.dir==="asc"?"desc":"asc";
-        else{pessoalSort.key=k;pessoalSort.dir="asc";}
+        var st=pessoalSort[k];
+        if(st&&st.active)st.dir=st.dir==="asc"?"desc":"asc";
+        else pessoalSort[k]={active:true,dir:"asc"};
         renderPessoalTable();
       };
+    });
+    thead.querySelectorAll(".pessoal-sort-clear").forEach(function(b){
+      b.onclick=function(){delete pessoalSort[b.dataset.clearKey];renderPessoalTable();};
     });
   }
   function renderPessoalTable(){
@@ -5119,14 +5152,15 @@ setTimeout(hideSplash,20000);
     var editing=pessoalEditing;
     var table=document.getElementById("pessoal_tbl_table");
     if(table)table.classList.toggle("dt-editing",editing);
+    var viewCols=pessoalVisibleCols(editing);
     // Ordenação só é aplicada fora do modo de edição — em edição a ordem das linhas é a de arrastar/soltar.
-    if(editing)renderThead(document.getElementById("pessoal_tbl_thead"),pessoalCols,editing,"dt-actions-col");
+    if(editing)renderThead(document.getElementById("pessoal_tbl_thead"),viewCols,editing,"dt-actions-col");
     else renderPessoalTheadView();
-    var colspan=pessoalCols.length+1;
+    var colspan=viewCols.length+1;
     var displayRows=editing?pessoalRows:pessoalSortedRows();
     tb.innerHTML=displayRows.map(function(r){
       return '<tr'+(editing?' data-rid="'+r.id+'"':'')+'>'+
-        pessoalCols.map(function(col){return colTd(r,col,editing,"dt-cell","dt-cell-ro");}).join("")+
+        viewCols.map(function(col){return colTd(r,col,editing,"dt-cell","dt-cell-ro");}).join("")+
         '<td class="dt-actions dt-actions-col">'+(editing?'<span class="row-dh" title="Arrastar para reordenar">⠿</span><button class="nv-delrow" data-id="'+r.id+'" title="Excluir">🗑</button>':'')+'</td>'+
       '</tr>';
     }).join("")+(editing?'<tr class="dt-addrow-tr"><td colspan="'+colspan+'"><button class="nv-addrow" id="pessoal_tbl_addrow">+ Incluir militar</button></td></tr>':'');
