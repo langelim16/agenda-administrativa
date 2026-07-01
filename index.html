@@ -387,16 +387,16 @@ body{
     radial-gradient(ellipse 24% 24% at 30% 70%, color-mix(in srgb,var(--c-red) 26%,transparent) 0%, transparent 100%);
   background-repeat:no-repeat;
   background-attachment:fixed;
-  color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5;padding-left:64px;min-height:100vh
+  color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5;padding-left:84px;min-height:100vh
 }
 button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inherit}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
 .wrap{max-width:1340px;margin:0 auto;padding:20px 24px 80px}
-.appnav{position:fixed;left:0;top:0;bottom:0;width:64px;background:var(--header-bg);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:8px;z-index:600;box-shadow:var(--sh-lg)}
-.nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:50px;height:54px;border:none;border-radius:var(--r-md);background:none;color:rgba(255,255,255,.55);font-family:var(--sans)}
+.appnav{position:fixed;left:0;top:0;bottom:0;width:84px;background:var(--header-bg);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:8px;z-index:600;box-shadow:var(--sh-lg)}
+.nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:70px;height:58px;border:none;border-radius:var(--r-md);background:none;color:rgba(255,255,255,.55);font-family:var(--sans)}
 .nav-item .nav-ic{font-size:19px;display:flex;align-items:center;justify-content:center}
 .nav-item .nav-ic svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.nav-item .nav-lbl{font-size:8px;letter-spacing:.4px;text-transform:uppercase;text-align:center;line-height:1.1}
+.nav-item .nav-lbl{font-size:8px;letter-spacing:.3px;text-transform:uppercase;text-align:center;line-height:1.15;padding:0 2px}
 .nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
 .nav-item.active{background:var(--c-blue);color:#fff}
 .nv-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
@@ -947,8 +947,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 /* raiz do overflow mobile: view-toggle forçava largura > tela, zerando zoom da página inteira */
 .view-toggle{width:100%;flex-wrap:wrap}
 .vtbtn{flex:1 1 auto;padding:7px 6px;font-size:10px;text-align:center}
-.appnav{width:50px}
-body{padding-left:50px}
+.appnav{width:84px}
+.nav-item{width:70px}
+body{padding-left:84px}
 .wrap{padding:12px 10px 70px}
 .cal-grid{gap:3px}
 .cal-day{min-height:58px;padding:4px 3px 2px}
@@ -1031,7 +1032,7 @@ body{padding-left:50px}
 </head>
 <body id="artifacts-component-root-html" style="font-family: 'Josefin Sans', sans-serif">
 <nav class="appnav" id="appnav">
-  <button class="nav-item" data-view="config" title="Configurações da OM"><span class="nav-ic">⚙</span><span class="nav-lbl">CONFIG OM</span></button>
+  <button class="nav-item" data-view="config" title="Configurações da OM"><span class="nav-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2.5v2.6M12 18.9v2.6M4.2 6.3l2.1 1.5M17.7 16.2l2.1 1.5M2.5 12h2.6M18.9 12h2.6M4.2 17.7l2.1-1.5M17.7 7.8l2.1-1.5"></path></svg></span><span class="nav-lbl">CONFIG OM</span></button>
   <button class="nav-item active" data-view="agenda" title="Agenda Administrativa"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="18" rx="2"></rect><path d="M9 3.5V2.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"></path><line x1="8.5" y1="9" x2="15.5" y2="9"></line><line x1="8.5" y1="12.5" x2="15.5" y2="12.5"></line><line x1="8.5" y1="16" x2="13" y2="16"></line></svg></span><span class="nav-lbl">Agenda</span></button>
   <button class="nav-item" data-view="navios" title="Controle de CONDEF"><span class="nav-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="2"></circle><line x1="12" y1="7.5" x2="12" y2="19"></line><line x1="8" y1="11" x2="16" y2="11"></line><path d="M5 14a7 7 0 0 0 14 0"></path><path d="M5 14l-1.5-1"></path><path d="M19 14l1.5-1"></path></svg></span><span class="nav-lbl">CONDEF</span></button>
   <button class="nav-item" data-view="clg" title="Controle de CLG"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M6 21V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v15"></path><line x1="5" y1="21" x2="15" y2="21"></line><path d="M14 9h2a2 2 0 0 1 2 2v2.3a1.7 1.7 0 0 0 1.7 1.7"></path><path d="M18 6.5l1.6 1.6a1 1 0 0 1 .4.8V11"></path><line x1="8" y1="6" x2="12" y2="6"></line></svg></span><span class="nav-lbl">CLG</span></button>
