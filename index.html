@@ -532,8 +532,8 @@ select.nv-condef:disabled{opacity:1;cursor:default}
 .nv-actions{text-align:center;white-space:normal}
 .nv-rowcolor{display:block;margin:0 auto 4px}
 .nv-rowcolor{font-size:9px;padding:3px 4px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);color:var(--text2);margin-right:4px;cursor:pointer;outline:none;vertical-align:middle}
-.nv-delrow,.nv-card-del,.nv-item-del{background:none;border:none;color:var(--text3);font-size:12px;padding:4px 7px;border-radius:var(--r-sm);line-height:1;cursor:pointer;vertical-align:middle}
-.nv-delrow:hover,.nv-card-del:hover,.nv-item-del:hover{background:var(--c-red2);color:var(--c-red)}
+.nv-delrow,.card-del,.item-del{background:none;border:none;color:var(--text3);font-size:12px;padding:4px 7px;border-radius:var(--r-sm);line-height:1;cursor:pointer;vertical-align:middle}
+.nv-delrow:hover,.card-del:hover,.item-del:hover{background:var(--c-red2);color:var(--c-red)}
 .nv-addrow-tr td{padding:0;border-bottom:none}
 .nv-addrow{width:100%;background:var(--c-100);border:none;color:var(--text2);font-size:12px;padding:10px;text-align:center;cursor:pointer}
 .nv-addrow:hover{background:var(--border)}
@@ -569,9 +569,9 @@ tr[draggable="true"]{opacity:.5}
 .nv-card li b.nv-editable:empty:before{content:"Nome do item";color:var(--text3);font-weight:400}
 .nv-card li span.v.nv-editable:empty:before{content:"Valor";color:var(--text3)}
 .nv-card li b:focus,.nv-card li span.v:focus{outline:2px solid var(--c-blue);outline-offset:2px;color:var(--text)}
-.nv-additem{margin-top:10px;background:var(--c-100);border:1px dashed var(--border2);color:var(--text2);font-size:11px;padding:7px 10px;border-radius:var(--r-md)}
+.additem{margin-top:10px;background:var(--c-100);border:1px dashed var(--border2);color:var(--text2);font-size:11px;padding:7px 10px;border-radius:var(--r-md)}
 .nv-card-rowbtns{display:flex;gap:8px;margin-top:10px}
-.nv-card-rowbtns .nv-additem{margin-top:0;flex:1}
+.nv-card-rowbtns .additem{margin-top:0;flex:1}
 .nv-addcolbtn{margin-top:0;flex:1;background:var(--c-100);border:1px dashed var(--border2);color:var(--text2);font-size:11px;padding:7px 10px;border-radius:var(--r-md)}
 .dt-colbtn{background:var(--c-100);border:1px dashed var(--border2);color:var(--text2);font-size:11px;padding:6px 10px;border-radius:var(--r-md)}
 .dt-colbtn:disabled{opacity:.4;cursor:not-allowed}
@@ -584,7 +584,7 @@ tr[draggable="true"]{opacity:.5}
 .col-resize{position:absolute;top:0;right:0;bottom:0;width:7px;cursor:col-resize;touch-action:none}
 .col-resize:hover,.col-resize:active{background:var(--c-blue)}
 .nv-addcolbtn:hover{background:var(--border)}
-.nv-additem:hover{background:var(--border)}
+.additem:hover{background:var(--border)}
 .nv-addcard{display:block;width:100%;background:var(--surface);border:1.5px dashed var(--border2);color:var(--text2);font-size:12px;padding:14px;border-radius:var(--r-lg)}
 .nv-addcard:hover{border-color:var(--c-blue);color:var(--c-blue)}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;margin-bottom:14px;background:var(--header-bg);border-radius:var(--r-xl);box-shadow:var(--sh-lg);flex-wrap:wrap}
@@ -1909,6 +1909,173 @@ function reorderByIds(arr,ids){var byId={};arr.forEach(function(x){byId[x.id]=x;
 function cloneCols(cols){return cols.map(function(c){return Object.assign({},c);});}
 /* ── Tabela genérica completa: edição de célula, título/coluna (add/del/reorder/resize),
    reordenar linha, inserir/excluir linha, com undo. Usado por CLG, e pelas tabelas de Horas. ── */
+/* ══════════ SISTEMA GENÉRICO DE CARTÕES (layout + handlers únicos para todas as abas) ══════════
+   Para uma aba nova: criar var <aba>CardSt={editingId:null,dirty:false,snapshot:null};
+   renderizar com renderMasonryGrid(grid,cards,function(c){return cardHtmlGeneric(c,st,lockedOut);},isCardWide)
+   e ligar com wireCardsGrid({gridId,addcardId,st,getCards,setCards,save,pushTag,key,label,render}). */
+function isCardWide(c){return((c.items[0]&&(c.items[0].vals||[]).length)||1)>=4;}
+function cardHtmlGeneric(c,st,lockedOut){
+  var isEditing=st.editingId===c.id;
+  var disableEdit=lockedOut&&!isEditing;
+  var toolbar=isEditing?
+    '<div class="nv-card-toolbar"><button class="nv-savebtn card-save" data-cid="'+c.id+'"'+(st.dirty?"":" disabled")+'>\u2713 Salvar</button><button class="nv-cancelbtn card-cancel" data-cid="'+c.id+'">Cancelar</button></div>'
+    :
+    '<div class="nv-card-toolbar"><button class="nv-editbtn card-edit" data-cid="'+c.id+'"'+(disableEdit?" disabled":"")+'>\u270E Editar</button></div>';
+  return '<div class="nv-card'+(isEditing?" nv-card-editing":"")+(isCardWide(c)?" nv-card-wide":"")+'" data-cid="'+c.id+'">'+
+    '<div class="nv-card-head">'+
+      '<span class="nv-card-dh'+(lockedOut?" nv-dh-disabled":"")+'" title="Arrastar para reordenar">\u283F</span>'+
+      '<div class="nv-card-title'+(isEditing?" nv-editable":"")+'"'+(isEditing?' contenteditable="true"':"")+' data-cid="'+c.id+'" data-field="title" spellcheck="false">'+esc(c.title)+'</div>'+
+      toolbar+
+      (isEditing?'<button class="card-del" data-cid="'+c.id+'" title="Excluir cart\u00E3o">\uD83D\uDDD1</button>':"")+
+    '</div>'+
+    '<ul>'+c.items.map(function(it,i){
+      var vals=it.vals||[it.v!==undefined?it.v:""];
+      return '<li'+(isEditing?' data-cid="'+c.id+'" data-ri="'+i+'"':"")+'>'+
+        (isEditing?'<span class="row-dh" title="Arrastar para reordenar">\u283F</span>':"")+
+        '<b'+(isEditing?' class="nv-editable" contenteditable="true"':"")+' data-cid="'+c.id+'" data-i="'+i+'" data-field="k" spellcheck="false">'+esc(it.k)+'</b>'+
+        vals.map(function(val,vi){
+          return '<span class="v'+(isEditing?" nv-editable":"")+'"'+(isEditing?' contenteditable="true"':"")+' data-cid="'+c.id+'" data-i="'+i+'" data-vi="'+vi+'" data-field="val" spellcheck="false">'+esc(val)+'</span>';
+        }).join("")+
+        (isEditing?'<button class="item-del" data-cid="'+c.id+'" data-i="'+i+'" title="Remover item">\u2715</button>':"")+
+      '</li>';
+    }).join("")+'</ul>'+
+    (isEditing?'<div class="nv-card-rowbtns"><button class="additem" data-cid="'+c.id+'">+ item</button><button class="nv-addcolbtn addcol" data-cid="'+c.id+'">+ coluna</button>'+((c.items[0]&&(c.items[0].vals||[]).length>1)?'<button class="nv-addcolbtn delcol" data-cid="'+c.id+'" title="Excluir \u00FAltima coluna">\u2715 coluna</button>':'')+'</div>':"")+
+  '</div>';
+}
+function wireCardsGrid(o){
+  var grid=document.getElementById(o.gridId);
+  if(!grid||grid._cardsBound)return;
+  grid._cardsBound=true;
+  var st=o.st;
+  function find(cid){return o.getCards().find(function(c){return c.id===cid;});}
+  function push(){return pushKV(o.pushTag,o.key(),o.getCards());}
+  grid.addEventListener("input",function(e){
+    var el=e.target;
+    if(!el.dataset||el.dataset.cid!==st.editingId||!el.dataset.field)return;
+    var c=find(el.dataset.cid);
+    if(!c)return;
+    if(el.dataset.field==="title")c.title=el.textContent;
+    else if(el.dataset.field==="val"){var it=c.items[+el.dataset.i];if(it){if(!it.vals)it.vals=[it.v!==undefined?it.v:""];it.vals[+el.dataset.vi]=el.textContent;}}
+    else{var it2=c.items[+el.dataset.i];if(it2)it2[el.dataset.field]=el.textContent;}
+    st.dirty=true;
+    var sb=grid.querySelector('.card-save[data-cid="'+el.dataset.cid+'"]');
+    if(sb)sb.disabled=false;
+  });
+  grid.addEventListener("focusout",function(e){
+    var el=e.target;
+    if(!el.dataset||el.dataset.cid!==st.editingId||!el.dataset.field)return;
+    var c=find(el.dataset.cid);
+    if(!c)return;
+    if(el.dataset.field==="title"){c.title=el.textContent.trim();el.textContent=c.title;}
+    else if(el.dataset.field==="val"){var it=c.items[+el.dataset.i];if(it){if(!it.vals)it.vals=[it.v!==undefined?it.v:""];var v=el.textContent.trim();it.vals[+el.dataset.vi]=v;el.textContent=v;}}
+    else{var it2=c.items[+el.dataset.i];if(it2){it2[el.dataset.field]=el.textContent.trim();el.textContent=it2[el.dataset.field];}}
+  });
+  grid.addEventListener("keydown",function(e){
+    if(e.key==="Enter"&&e.target.hasAttribute&&e.target.hasAttribute("contenteditable")){e.preventDefault();e.target.blur();}
+  });
+  grid.addEventListener("click",function(e){
+    var editBtn=e.target.closest&&e.target.closest(".card-edit");
+    if(editBtn){
+      var cid=editBtn.dataset.cid;
+      if(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="card:"+cid){toast("Finalize a edi\u00E7\u00E3o em andamento antes de iniciar outra.","info");return;}
+      GLOBAL_EDIT_LOCK="card:"+cid;st.editingId=cid;st.dirty=false;
+      var c=find(cid);
+      st.snapshot=c?JSON.parse(JSON.stringify(c)):null;
+      o.render();
+      return;
+    }
+    var saveBtn=e.target.closest&&e.target.closest(".card-save");
+    if(saveBtn){
+      if(!st.dirty)return;
+      var preCard=st.snapshot,cidSv=saveBtn.dataset.cid;
+      o.save();
+      push().then(function(){toast("\u2713 Cart\u00E3o salvo","ok");});
+      st.editingId=null;st.snapshot=null;st.dirty=false;GLOBAL_EDIT_LOCK=null;
+      if(preCard&&preCard.__new){
+        pushUndo("Adicionar "+o.label,async function(){o.setCards(o.getCards().filter(function(c){return c.id!==cidSv;}));o.save();await push();o.render();});
+      }else if(preCard){
+        pushUndo("Editar "+o.label,async function(){var arr=o.getCards(),idx=arr.findIndex(function(c){return c.id===cidSv;});if(idx>-1)arr[idx]=JSON.parse(JSON.stringify(preCard));o.save();await push();o.render();});
+      }
+      o.render();
+      return;
+    }
+    var cancelBtn=e.target.closest&&e.target.closest(".card-cancel");
+    if(cancelBtn){
+      var cid2=cancelBtn.dataset.cid;
+      if(st.snapshot&&st.snapshot.__new){o.setCards(o.getCards().filter(function(c){return c.id!==cid2;}));}
+      else if(st.snapshot){var arr2=o.getCards(),idx2=arr2.findIndex(function(c){return c.id===cid2;});if(idx2>-1)arr2[idx2]=st.snapshot;}
+      st.editingId=null;st.snapshot=null;st.dirty=false;GLOBAL_EDIT_LOCK=null;
+      o.render();
+      return;
+    }
+    var delCard=e.target.closest&&e.target.closest(".card-del");
+    if(delCard){
+      if(delCard.dataset.cid!==st.editingId)return;
+      if(!confirm("Excluir este cart\u00E3o e todas as suas informa\u00E7\u00F5es?"))return;
+      var wasNew=st.snapshot&&st.snapshot.__new;
+      var arr3=o.getCards(),delIdx=arr3.findIndex(function(c){return c.id===delCard.dataset.cid;});
+      var delCardObj=arr3[delIdx];
+      o.setCards(arr3.filter(function(c){return c.id!==delCard.dataset.cid;}));
+      st.editingId=null;st.snapshot=null;st.dirty=false;GLOBAL_EDIT_LOCK=null;
+      o.save();
+      if(!wasNew){
+        push().then(function(){toast("\uD83D\uDDD1 Cart\u00E3o exclu\u00EDdo","ok");});
+        pushUndo("Excluir "+o.label,async function(){o.getCards().splice(delIdx,0,delCardObj);o.save();await push();o.render();});
+      }
+      o.render();
+      return;
+    }
+    var delItem=e.target.closest&&e.target.closest(".item-del");
+    if(delItem){
+      if(delItem.dataset.cid!==st.editingId)return;
+      var c2=find(delItem.dataset.cid);
+      if(c2){c2.items.splice(+delItem.dataset.i,1);st.dirty=true;o.render();}
+      return;
+    }
+    var addItem=e.target.closest&&e.target.closest(".additem");
+    if(addItem){
+      if(addItem.dataset.cid!==st.editingId)return;
+      var c3=find(addItem.dataset.cid);
+      if(c3){
+        var ncols=(c3.items[0]&&(c3.items[0].vals||[c3.items[0].v]).length)||1;
+        c3.items.push({k:"",vals:new Array(ncols).fill("")});
+        st.dirty=true;o.render();
+      }
+      return;
+    }
+    var addCol=e.target.closest&&e.target.closest(".addcol");
+    if(addCol){
+      if(addCol.dataset.cid!==st.editingId)return;
+      var c5=find(addCol.dataset.cid);
+      if(c5){c5.items.forEach(function(it){if(!it.vals)it.vals=[it.v!==undefined?it.v:""];it.vals.push("");});st.dirty=true;o.render();}
+      return;
+    }
+    var delCol=e.target.closest&&e.target.closest(".delcol");
+    if(delCol){
+      if(delCol.dataset.cid!==st.editingId)return;
+      var c6=find(delCol.dataset.cid);
+      if(c6){
+        var lastIdx=((c6.items[0]&&c6.items[0].vals)||[]).length-1;
+        if(lastIdx<1)return;
+        var hasData=c6.items.some(function(it){var v=(it.vals||[])[lastIdx];return v&&v!=="\u2014";});
+        if(hasData&&!confirm("Esta coluna cont\u00E9m informa\u00E7\u00F5es preenchidas. Deseja realmente exclu\u00ED-la?"))return;
+        c6.items.forEach(function(it){if(it.vals&&it.vals.length>1)it.vals.pop();});
+        st.dirty=true;o.render();
+      }
+      return;
+    }
+    if(e.target.id===o.addcardId){
+      if(GLOBAL_EDIT_LOCK){toast("Finalize a edi\u00E7\u00E3o em andamento antes de criar um novo cart\u00E3o.","info");return;}
+      var numCols=computeNumCols(grid);
+      var nc={id:genUid("card"),title:"",items:[{k:"",vals:[""]}],col:pickLeastPopulatedCol(o.getCards(),numCols)};
+      o.getCards().push(nc);
+      GLOBAL_EDIT_LOCK="card:"+nc.id;st.editingId=nc.id;st.dirty=true;
+      st.snapshot={__new:true};
+      o.render();
+      return;
+    }
+  });
+}
 function bindDataTable(cfg){
   var getArr=cfg.getArr,setArr=cfg.setArr,onSaveKey=cfg.onSaveKey,onSaveDataFn=cfg.onSaveDataFn;
   var getEditing=cfg.getEditing,setEditing=cfg.setEditing,getDirty=cfg.getDirty,setDirty=cfg.setDirty;
@@ -3764,11 +3931,11 @@ setTimeout(hideSplash,20000);
   var navCols=navColsDefault();
   // Trava de edição: null (livre) | "table" | "card:<id>" — impede editar tabela e cartões ao mesmo tempo
   var navTableEditing=false,navTableDirty=false,navTableSnapshot=null,navColsSnapshot=null;
-  var navCardEditingId=null,navCardDirty=false,navCardSnapshot=null;
+  var navCardSt={editingId:null,dirty:false,snapshot:null};
   // Recebe atualizações em tempo real do polling do Firebase (startRT). Não pisa em edições em andamento.
   navRemoteHook=function(freshDc){
     if(!freshDc)return;
-    if(navTableEditing||navCardEditingId)return;
+    if(navTableEditing||navCardSt.editingId)return;
     var changed=false;
     try{var s=freshDc[NAVIOS_KEY]?JSON.parse(freshDc[NAVIOS_KEY]):null;if(s&&s.length){navShips=s;changed=true;}}catch(e){}
     try{var c=freshDc[NAVIOS_CARDS_KEY]?JSON.parse(freshDc[NAVIOS_CARDS_KEY]):null;if(c&&c.length){navCards=c;changed=true;}}catch(e){}
@@ -3850,46 +4017,12 @@ setTimeout(hideSplash,20000);
     var grid=document.getElementById("nv_grid");
     if(!grid)return;
     var lockedOut=!!GLOBAL_EDIT_LOCK;
-    function cardHtml(c){
-      var isEditing=navCardEditingId===c.id;
-      var disableEdit=lockedOut&&!isEditing;
-      var toolbar=isEditing?
-        '<div class="nv-card-toolbar">'+
-          '<button class="nv-savebtn nv-card-save" data-cid="'+c.id+'"'+(navCardDirty?"":" disabled")+'>✓ Salvar</button>'+
-          '<button class="nv-cancelbtn nv-card-cancel" data-cid="'+c.id+'">Cancelar</button>'+
-        '</div>'
-        :
-        '<div class="nv-card-toolbar">'+
-          '<button class="nv-editbtn nv-card-edit" data-cid="'+c.id+'"'+(disableEdit?" disabled":"")+'>✎ Editar</button>'+
-        '</div>';
-      return '<div class="nv-card'+(isEditing?" nv-card-editing":"")+(isNavWide(c)?" nv-card-wide":"")+'" data-cid="'+c.id+'">'+
-        '<div class="nv-card-head">'+
-          '<span class="nv-card-dh'+(lockedOut?" nv-dh-disabled":"")+'" title="Arrastar para reordenar">⠿</span>'+
-          '<div class="nv-card-title'+(isEditing?" nv-editable":"")+'"'+(isEditing?' contenteditable="true"':"")+' data-cid="'+c.id+'" data-field="title" spellcheck="false">'+esc(c.title)+'</div>'+
-          toolbar+
-          (isEditing?'<button class="nv-card-del" data-cid="'+c.id+'" title="Excluir cartão">🗑</button>':"")+
-        '</div>'+
-        '<ul>'+c.items.map(function(it,i){
-          var vals=it.vals||[it.v!==undefined?it.v:""];
-          return '<li'+(isEditing?' data-cid="'+c.id+'" data-ri="'+i+'"':"")+'>'+
-            (isEditing?'<span class="row-dh" title="Arrastar para reordenar">⠿</span>':"")+
-            '<b'+(isEditing?' class="nv-editable" contenteditable="true"':"")+' data-cid="'+c.id+'" data-i="'+i+'" data-field="k" spellcheck="false">'+esc(it.k)+'</b>'+
-            vals.map(function(val,vi){
-              return '<span class="v'+(isEditing?" nv-editable":"")+'"'+(isEditing?' contenteditable="true"':"")+' data-cid="'+c.id+'" data-i="'+i+'" data-vi="'+vi+'" data-field="val" spellcheck="false">'+esc(val)+'</span>';
-            }).join("")+
-            (isEditing?'<button class="nv-item-del" data-cid="'+c.id+'" data-i="'+i+'" title="Remover item">✕</button>':"")+
-          '</li>';
-        }).join("")+'</ul>'+
-        (isEditing?'<div class="nv-card-rowbtns"><button class="nv-additem" data-cid="'+c.id+'">+ item</button><button class="nv-addcolbtn nv-addcol" data-cid="'+c.id+'">+ coluna</button>'+((c.items[0]&&(c.items[0].vals||[]).length>1)?'<button class="nv-addcolbtn nv-delcol" data-cid="'+c.id+'" title="Excluir última coluna">✕ coluna</button>':'')+'</div>':"")+
-      '</div>';
-    }
-    renderMasonryGrid(grid,navCards,cardHtml,isNavWide);
+    renderMasonryGrid(grid,navCards,function(c){return cardHtmlGeneric(c,navCardSt,lockedOut);},isCardWide);
     grid.insertAdjacentHTML("beforeend",'<button class="nv-addcard" id="nv_addcard"'+(lockedOut?" disabled":"")+'>+ Novo cartão</button>');
     bindNaviosCardDrag();
     bindNavItemDrag();
   }
-  function isNavWide(c){return((c.items[0]&&(c.items[0].vals||[]).length)||1)>=4;}
-  function bindNavItemDrag(){bindItemDragGeneric(document.getElementById("nv_grid"),navFindCard,function(v){navCardDirty=v;},renderNaviosCards);}
+  function bindNavItemDrag(){bindItemDragGeneric(document.getElementById("nv_grid"),navFindCard,function(v){navCardSt.dirty=v;},renderNaviosCards);}
   function bindNaviosCardDrag(){bindMasonryCardDrag(document.getElementById("nv_grid"),function(){return navCards;},function(v){navCards=v;},navSaveCards,NAVIOS_CARDS_KEY,renderNaviosCards,"Reordenar cartões CONDEF",function(){return!!GLOBAL_EDIT_LOCK;});}
   function navFindShip(id){return navShips.find(function(s){return s.id===id;});}
   function navFindCard(cid){return navCards.find(function(c){return c.id===cid;});}
@@ -3988,140 +4121,10 @@ setTimeout(hideSplash,20000);
       toast("✓ Embarcações salvas","ok");
       renderNavios();renderNaviosCards();
     };
-    var grid=document.getElementById("nv_grid");
-    grid.addEventListener("input",function(e){
-      var el=e.target;
-      if(!el.dataset||el.dataset.cid!==navCardEditingId||!el.dataset.field)return;
-      var c=navFindCard(el.dataset.cid);
-      if(!c)return;
-      if(el.dataset.field==="title")c.title=el.textContent;
-      else if(el.dataset.field==="val"){var it=c.items[+el.dataset.i];if(it){if(!it.vals)it.vals=[it.v!==undefined?it.v:""];it.vals[+el.dataset.vi]=el.textContent;}}
-      else{var it2=c.items[+el.dataset.i];if(it2)it2[el.dataset.field]=el.textContent;}
-      navCardDirty=true;
-      var sb=grid.querySelector('.nv-card-save[data-cid="'+el.dataset.cid+'"]');
-      if(sb)sb.disabled=false;
-    });
-    grid.addEventListener("focusout",function(e){
-      var el=e.target;
-      if(!el.dataset||el.dataset.cid!==navCardEditingId||!el.dataset.field)return;
-      var c=navFindCard(el.dataset.cid);
-      if(!c)return;
-      if(el.dataset.field==="title"){c.title=el.textContent.trim();el.textContent=c.title;}
-      else if(el.dataset.field==="val"){var it=c.items[+el.dataset.i];if(it){if(!it.vals)it.vals=[it.v!==undefined?it.v:""];var v=el.textContent.trim();it.vals[+el.dataset.vi]=v;el.textContent=v;}}
-      else{var it2=c.items[+el.dataset.i];if(it2){it2[el.dataset.field]=el.textContent.trim();el.textContent=it2[el.dataset.field];}}
-    });
-    grid.addEventListener("keydown",function(e){
-      if(e.key==="Enter"&&e.target.hasAttribute&&e.target.hasAttribute("contenteditable")){e.preventDefault();e.target.blur();}
-    });
-    grid.addEventListener("click",function(e){
-      var editBtn=e.target.closest&&e.target.closest(".nv-card-edit");
-      if(editBtn){
-        var cid=editBtn.dataset.cid;
-        if(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="card:"+cid){toast("Finalize a edição em andamento antes de iniciar outra.","info");return;}
-        GLOBAL_EDIT_LOCK="card:"+cid;navCardEditingId=cid;navCardDirty=false;
-        var c=navFindCard(cid);
-        navCardSnapshot=c?JSON.parse(JSON.stringify(c)):null;
-        renderNavios();renderNaviosCards();
-        return;
-      }
-      var saveBtn=e.target.closest&&e.target.closest(".nv-card-save");
-      if(saveBtn){
-        if(!navCardDirty)return;
-        var preCard=navCardSnapshot,cidSv=saveBtn.dataset.cid;
-        navSaveCards();
-        pushKV("navPush",NAVIOS_CARDS_KEY,navCards).then(function(){toast("✓ Cartão salvo","ok");});
-        navCardEditingId=null;navCardSnapshot=null;navCardDirty=false;GLOBAL_EDIT_LOCK=null;
-        if(preCard&&preCard.__new){
-          pushUndo("Adicionar cartão CONDEF",async function(){navCards=navCards.filter(function(c){return c.id!==cidSv;});navSaveCards();await pushKV("navPush",NAVIOS_CARDS_KEY,navCards);renderNavios();renderNaviosCards();});
-        }else if(preCard){
-          pushUndo("Editar cartão CONDEF",async function(){var idx=navCards.findIndex(function(c){return c.id===cidSv;});if(idx>-1)navCards[idx]=JSON.parse(JSON.stringify(preCard));navSaveCards();await pushKV("navPush",NAVIOS_CARDS_KEY,navCards);renderNavios();renderNaviosCards();});
-        }
-        renderNavios();renderNaviosCards();
-        return;
-      }
-      var cancelBtn=e.target.closest&&e.target.closest(".nv-card-cancel");
-      if(cancelBtn){
-        var cid2=cancelBtn.dataset.cid;
-        if(navCardSnapshot&&navCardSnapshot.__new){
-          navCards=navCards.filter(function(c){return c.id!==cid2;});
-        }else if(navCardSnapshot){
-          var idx=navCards.findIndex(function(c){return c.id===cid2;});
-          if(idx>-1)navCards[idx]=navCardSnapshot;
-        }
-        navCardEditingId=null;navCardSnapshot=null;navCardDirty=false;GLOBAL_EDIT_LOCK=null;
-        renderNavios();renderNaviosCards();
-        return;
-      }
-      var delCard=e.target.closest&&e.target.closest(".nv-card-del");
-      if(delCard){
-        if(delCard.dataset.cid!==navCardEditingId)return;
-        if(!confirm("Excluir este cartão e todas as suas informações?"))return;
-        var wasNew=navCardSnapshot&&navCardSnapshot.__new;
-        var delIdx=navCards.findIndex(function(c){return c.id===delCard.dataset.cid;});
-        var delCardObj=navCards[delIdx];
-        navCards=navCards.filter(function(c){return c.id!==delCard.dataset.cid;});
-        navCardEditingId=null;navCardSnapshot=null;navCardDirty=false;GLOBAL_EDIT_LOCK=null;
-        navSaveCards();
-        if(!wasNew){
-          pushKV("navPush",NAVIOS_CARDS_KEY,navCards).then(function(){toast("🗑 Cartão excluído","ok");});
-          pushUndo("Excluir cartão CONDEF",async function(){navCards.splice(delIdx,0,delCardObj);navSaveCards();await pushKV("navPush",NAVIOS_CARDS_KEY,navCards);renderNavios();renderNaviosCards();});
-        }
-        renderNavios();renderNaviosCards();
-        return;
-      }
-      var delItem=e.target.closest&&e.target.closest(".nv-item-del");
-      if(delItem){
-        if(delItem.dataset.cid!==navCardEditingId)return;
-        var c2=navFindCard(delItem.dataset.cid);
-        if(c2){c2.items.splice(+delItem.dataset.i,1);navCardDirty=true;renderNaviosCards();}
-        return;
-      }
-      var addItem=e.target.closest&&e.target.closest(".nv-additem");
-      if(addItem){
-        if(addItem.dataset.cid!==navCardEditingId)return;
-        var c3=navFindCard(addItem.dataset.cid);
-        if(c3){
-          var ncols=(c3.items[0]&&(c3.items[0].vals||[c3.items[0].v]).length)||1;
-          c3.items.push({k:"",vals:new Array(ncols).fill("")});
-          navCardDirty=true;renderNaviosCards();
-        }
-        return;
-      }
-      var addCol=e.target.closest&&e.target.closest(".nv-addcol");
-      if(addCol){
-        if(addCol.dataset.cid!==navCardEditingId)return;
-        var c5=navFindCard(addCol.dataset.cid);
-        if(c5){
-          c5.items.forEach(function(it){if(!it.vals)it.vals=[it.v!==undefined?it.v:""];it.vals.push("");});
-          navCardDirty=true;renderNaviosCards();
-        }
-        return;
-      }
-      var delCol=e.target.closest&&e.target.closest(".nv-delcol");
-      if(delCol){
-        if(delCol.dataset.cid!==navCardEditingId)return;
-        var c6=navFindCard(delCol.dataset.cid);
-        if(c6){
-          var lastIdx=((c6.items[0]&&c6.items[0].vals)||[]).length-1;
-          if(lastIdx<1)return;
-          var hasData=c6.items.some(function(it){var v=(it.vals||[])[lastIdx];return v&&v!=="—";});
-          if(hasData&&!confirm("Esta coluna contém informações preenchidas. Deseja realmente excluí-la?"))return;
-          c6.items.forEach(function(it){if(it.vals&&it.vals.length>1)it.vals.pop();});
-          navCardDirty=true;renderNaviosCards();
-        }
-        return;
-      }
-      if(e.target.id==="nv_addcard"){
-        if(GLOBAL_EDIT_LOCK){toast("Finalize a edição em andamento antes de criar um novo cartão.","info");return;}
-        var numColsNv=computeNumCols(grid);
-        var nc={id:genUid("card"),title:"",items:[{k:"",vals:[""]}],col:pickLeastPopulatedCol(navCards,numColsNv)};
-        navCards.push(nc);
-        GLOBAL_EDIT_LOCK="card:"+nc.id;navCardEditingId=nc.id;navCardDirty=true;
-        navCardSnapshot={__new:true};
-        renderNavios();renderNaviosCards();
-        return;
-      }
-    });
+    wireCardsGrid({gridId:"nv_grid",addcardId:"nv_addcard",st:navCardSt,
+      getCards:function(){return navCards;},setCards:function(v){navCards=v;},
+      save:navSaveCards,pushTag:"navPush",key:function(){return NAVIOS_CARDS_KEY;},
+      label:"cart\u00E3o CONDEF",render:function(){renderNavios();renderNaviosCards();}});
   }
   var APPVIEW_KEY="aa_appview";
   function switchAppView(view){
@@ -4202,7 +4205,7 @@ setTimeout(hideSplash,20000);
   var clgT1Cols=clgT1ColsDefault(),clgT2Cols=clgT2ColsDefault();
   var clgT1Editing=false,clgT1Dirty=false,clgT1Snapshot=null,clgT1ColsSnapshot=null;
   var clgT2Editing=false,clgT2Dirty=false,clgT2Snapshot=null,clgT2ColsSnapshot=null;
-  var clgCardEditingId=null,clgCardDirty=false,clgCardSnapshot=null;
+  var clgCardSt={editingId:null,dirty:false,snapshot:null};
   async function clgLoad(){
     var t1=null,t2=null,c=null,t1c=null,t2c=null;
     try{t1=await gtj(CLG_T1_KEY);}catch(e){}
@@ -4288,46 +4291,12 @@ setTimeout(hideSplash,20000);
     var grid=document.getElementById("clg_grid");
     if(!grid)return;
     var lockedOut=!!GLOBAL_EDIT_LOCK;
-    function cardHtml(c){
-      var isEditing=clgCardEditingId===c.id;
-      var disableEdit=lockedOut&&!isEditing;
-      var toolbar=isEditing?
-        '<div class="nv-card-toolbar">'+
-          '<button class="nv-savebtn clg-card-save" data-cid="'+c.id+'"'+(clgCardDirty?"":" disabled")+'>✓ Salvar</button>'+
-          '<button class="nv-cancelbtn clg-card-cancel" data-cid="'+c.id+'">Cancelar</button>'+
-        '</div>'
-        :
-        '<div class="nv-card-toolbar">'+
-          '<button class="nv-editbtn clg-card-edit" data-cid="'+c.id+'"'+(disableEdit?" disabled":"")+'>✎ Editar</button>'+
-        '</div>';
-      return '<div class="nv-card'+(isEditing?" nv-card-editing":"")+(isClgWide(c)?" nv-card-wide":"")+'" data-cid="'+c.id+'">'+
-        '<div class="nv-card-head">'+
-          '<span class="nv-card-dh'+(lockedOut?" nv-dh-disabled":"")+'" title="Arrastar para reordenar">⠿</span>'+
-          '<div class="nv-card-title'+(isEditing?" nv-editable":"")+'"'+(isEditing?' contenteditable="true"':"")+' data-cid="'+c.id+'" data-field="title" spellcheck="false">'+esc(c.title)+'</div>'+
-          toolbar+
-          (isEditing?'<button class="clg-card-del" data-cid="'+c.id+'" title="Excluir cartão">🗑</button>':"")+
-        '</div>'+
-        '<ul>'+c.items.map(function(it,i){
-          var vals=it.vals||[it.v!==undefined?it.v:""];
-          return '<li'+(isEditing?' data-cid="'+c.id+'" data-ri="'+i+'"':"")+'>'+
-            (isEditing?'<span class="row-dh" title="Arrastar para reordenar">⠿</span>':"")+
-            '<b'+(isEditing?' class="nv-editable" contenteditable="true"':"")+' data-cid="'+c.id+'" data-i="'+i+'" data-field="k" spellcheck="false">'+esc(it.k)+'</b>'+
-            vals.map(function(val,vi){
-              return '<span class="v'+(isEditing?" nv-editable":"")+'"'+(isEditing?' contenteditable="true"':"")+' data-cid="'+c.id+'" data-i="'+i+'" data-vi="'+vi+'" data-field="val" spellcheck="false">'+esc(val)+'</span>';
-            }).join("")+
-            (isEditing?'<button class="clg-item-del" data-cid="'+c.id+'" data-i="'+i+'" title="Remover item">✕</button>':"")+
-          '</li>';
-        }).join("")+'</ul>'+
-        (isEditing?'<div class="nv-card-rowbtns"><button class="clg-additem" data-cid="'+c.id+'">+ item</button><button class="nv-addcolbtn clg-addcol" data-cid="'+c.id+'">+ coluna</button>'+((c.items[0]&&(c.items[0].vals||[]).length>1)?'<button class="nv-addcolbtn clg-delcol" data-cid="'+c.id+'" title="Excluir última coluna">✕ coluna</button>':'')+'</div>':"")+
-      '</div>';
-    }
-    renderMasonryGrid(grid,clgCards,cardHtml,isClgWide);
+    renderMasonryGrid(grid,clgCards,function(c){return cardHtmlGeneric(c,clgCardSt,lockedOut);},isCardWide);
     grid.insertAdjacentHTML("beforeend",'<button class="nv-addcard" id="clg_addcard"'+(lockedOut?" disabled":"")+'>+ Novo cartão</button>');
     bindClgCardDrag();
     bindClgItemDrag();
   };
-  function isClgWide(c){return((c.items[0]&&(c.items[0].vals||[]).length)||1)>=4;}
-  function bindClgItemDrag(){bindItemDragGeneric(document.getElementById("clg_grid"),clgFindCard,function(v){clgCardDirty=v;},renderClgCards);}
+  function bindClgItemDrag(){bindItemDragGeneric(document.getElementById("clg_grid"),clgFindCard,function(v){clgCardSt.dirty=v;},renderClgCards);}
   function bindClgCardDrag(){bindMasonryCardDrag(document.getElementById("clg_grid"),function(){return clgCards;},function(v){clgCards=v;},clgSaveCards,CLG_CARDS_KEY,renderClgCards,"Reordenar cartões CLG",function(){return!!GLOBAL_EDIT_LOCK;});}
   clgInit=async function(){
     if(clgBound)return;
@@ -4367,140 +4336,10 @@ setTimeout(hideSplash,20000);
       renderFn:renderClgT2,afterRender:renderClgCards,updateToolbar:function(){clgUpdateToolbar("clg_t2",true,true,false);},
       pushLabel:"clgPush",undoLabel:"Editar tabela CLG"
     });
-    var grid=document.getElementById("clg_grid");
-    grid.addEventListener("input",function(e){
-      var el=e.target;
-      if(!el.dataset||el.dataset.cid!==clgCardEditingId||!el.dataset.field)return;
-      var c=clgFindCard(el.dataset.cid);
-      if(!c)return;
-      if(el.dataset.field==="title")c.title=el.textContent;
-      else if(el.dataset.field==="val"){var it=c.items[+el.dataset.i];if(it){if(!it.vals)it.vals=[it.v!==undefined?it.v:""];it.vals[+el.dataset.vi]=el.textContent;}}
-      else{var it2=c.items[+el.dataset.i];if(it2)it2[el.dataset.field]=el.textContent;}
-      clgCardDirty=true;
-      var sb=grid.querySelector('.clg-card-save[data-cid="'+el.dataset.cid+'"]');
-      if(sb)sb.disabled=false;
-    });
-    grid.addEventListener("focusout",function(e){
-      var el=e.target;
-      if(!el.dataset||el.dataset.cid!==clgCardEditingId||!el.dataset.field)return;
-      var c=clgFindCard(el.dataset.cid);
-      if(!c)return;
-      if(el.dataset.field==="title"){c.title=el.textContent.trim();el.textContent=c.title;}
-      else if(el.dataset.field==="val"){var it=c.items[+el.dataset.i];if(it){if(!it.vals)it.vals=[it.v!==undefined?it.v:""];var v=el.textContent.trim();it.vals[+el.dataset.vi]=v;el.textContent=v;}}
-      else{var it2=c.items[+el.dataset.i];if(it2){it2[el.dataset.field]=el.textContent.trim();el.textContent=it2[el.dataset.field];}}
-    });
-    grid.addEventListener("keydown",function(e){
-      if(e.key==="Enter"&&e.target.hasAttribute&&e.target.hasAttribute("contenteditable")){e.preventDefault();e.target.blur();}
-    });
-    grid.addEventListener("click",function(e){
-      var editBtn=e.target.closest&&e.target.closest(".clg-card-edit");
-      if(editBtn){
-        var cid=editBtn.dataset.cid;
-        if(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!==cid){toast("Finalize a edição em andamento antes de iniciar outra.","info");return;}
-        GLOBAL_EDIT_LOCK=cid;clgCardEditingId=cid;clgCardDirty=false;
-        var c=clgFindCard(cid);
-        clgCardSnapshot=c?JSON.parse(JSON.stringify(c)):null;
-        renderClgTables();renderClgCards();
-        return;
-      }
-      var saveBtn=e.target.closest&&e.target.closest(".clg-card-save");
-      if(saveBtn){
-        if(!clgCardDirty)return;
-        var preCard=clgCardSnapshot,cidSv=saveBtn.dataset.cid;
-        clgSaveCards();
-        pushKV("clgPush",CLG_CARDS_KEY,clgCards).then(function(){toast("✓ Cartão salvo","ok");});
-        clgCardEditingId=null;clgCardSnapshot=null;clgCardDirty=false;GLOBAL_EDIT_LOCK=null;
-        if(preCard&&preCard.__new){
-          pushUndo("Adicionar cartão CLG",async function(){clgCards=clgCards.filter(function(c){return c.id!==cidSv;});clgSaveCards();await pushKV("clgPush",CLG_CARDS_KEY,clgCards);renderClgTables();renderClgCards();});
-        }else if(preCard){
-          pushUndo("Editar cartão CLG",async function(){var idx=clgCards.findIndex(function(c){return c.id===cidSv;});if(idx>-1)clgCards[idx]=JSON.parse(JSON.stringify(preCard));clgSaveCards();await pushKV("clgPush",CLG_CARDS_KEY,clgCards);renderClgTables();renderClgCards();});
-        }
-        renderClgTables();renderClgCards();
-        return;
-      }
-      var cancelBtn=e.target.closest&&e.target.closest(".clg-card-cancel");
-      if(cancelBtn){
-        var cid2=cancelBtn.dataset.cid;
-        if(clgCardSnapshot&&clgCardSnapshot.__new){
-          clgCards=clgCards.filter(function(c){return c.id!==cid2;});
-        }else if(clgCardSnapshot){
-          var idx=clgCards.findIndex(function(c){return c.id===cid2;});
-          if(idx>-1)clgCards[idx]=clgCardSnapshot;
-        }
-        clgCardEditingId=null;clgCardSnapshot=null;clgCardDirty=false;GLOBAL_EDIT_LOCK=null;
-        renderClgTables();renderClgCards();
-        return;
-      }
-      var delCard=e.target.closest&&e.target.closest(".clg-card-del");
-      if(delCard){
-        if(delCard.dataset.cid!==clgCardEditingId)return;
-        if(!confirm("Excluir este cartão e todas as suas informações?"))return;
-        var wasNew=clgCardSnapshot&&clgCardSnapshot.__new;
-        var delIdx=clgCards.findIndex(function(c){return c.id===delCard.dataset.cid;});
-        var delCardObj=clgCards[delIdx];
-        clgCards=clgCards.filter(function(c){return c.id!==delCard.dataset.cid;});
-        clgCardEditingId=null;clgCardSnapshot=null;clgCardDirty=false;GLOBAL_EDIT_LOCK=null;
-        clgSaveCards();
-        if(!wasNew){
-          pushKV("clgPush",CLG_CARDS_KEY,clgCards).then(function(){toast("🗑 Cartão excluído","ok");});
-          pushUndo("Excluir cartão CLG",async function(){clgCards.splice(delIdx,0,delCardObj);clgSaveCards();await pushKV("clgPush",CLG_CARDS_KEY,clgCards);renderClgTables();renderClgCards();});
-        }
-        renderClgTables();renderClgCards();
-        return;
-      }
-      var delItem=e.target.closest&&e.target.closest(".clg-item-del");
-      if(delItem){
-        if(delItem.dataset.cid!==clgCardEditingId)return;
-        var c2=clgFindCard(delItem.dataset.cid);
-        if(c2){c2.items.splice(+delItem.dataset.i,1);clgCardDirty=true;renderClgCards();}
-        return;
-      }
-      var addItem=e.target.closest&&e.target.closest(".clg-additem");
-      if(addItem){
-        if(addItem.dataset.cid!==clgCardEditingId)return;
-        var c3=clgFindCard(addItem.dataset.cid);
-        if(c3){
-          var ncols=(c3.items[0]&&(c3.items[0].vals||[c3.items[0].v]).length)||1;
-          c3.items.push({k:"",vals:new Array(ncols).fill("")});
-          clgCardDirty=true;renderClgCards();
-        }
-        return;
-      }
-      var addCol=e.target.closest&&e.target.closest(".clg-addcol");
-      if(addCol){
-        if(addCol.dataset.cid!==clgCardEditingId)return;
-        var c5=clgFindCard(addCol.dataset.cid);
-        if(c5){
-          c5.items.forEach(function(it){if(!it.vals)it.vals=[it.v!==undefined?it.v:""];it.vals.push("");});
-          clgCardDirty=true;renderClgCards();
-        }
-        return;
-      }
-      var delCol=e.target.closest&&e.target.closest(".clg-delcol");
-      if(delCol){
-        if(delCol.dataset.cid!==clgCardEditingId)return;
-        var c6=clgFindCard(delCol.dataset.cid);
-        if(c6){
-          var lastIdx=((c6.items[0]&&c6.items[0].vals)||[]).length-1;
-          if(lastIdx<1)return;
-          var hasData=c6.items.some(function(it){var v=(it.vals||[])[lastIdx];return v&&v!=="—";});
-          if(hasData&&!confirm("Esta coluna contém informações preenchidas. Deseja realmente excluí-la?"))return;
-          c6.items.forEach(function(it){if(it.vals&&it.vals.length>1)it.vals.pop();});
-          clgCardDirty=true;renderClgCards();
-        }
-        return;
-      }
-      if(e.target.id==="clg_addcard"){
-        if(GLOBAL_EDIT_LOCK){toast("Finalize a edição em andamento antes de criar um novo cartão.","info");return;}
-        var numColsClg=computeNumCols(grid);
-        var nc={id:genUid("card"),title:"",items:[{k:"",vals:[""]}],col:pickLeastPopulatedCol(clgCards,numColsClg)};
-        clgCards.push(nc);
-        GLOBAL_EDIT_LOCK=nc.id;clgCardEditingId=nc.id;clgCardDirty=true;
-        clgCardSnapshot={__new:true};
-        renderClgTables();renderClgCards();
-        return;
-      }
-    });
+    wireCardsGrid({gridId:"clg_grid",addcardId:"clg_addcard",st:clgCardSt,
+      getCards:function(){return clgCards;},setCards:function(v){clgCards=v;},
+      save:clgSaveCards,pushTag:"clgPush",key:function(){return CLG_CARDS_KEY;},
+      label:"cart\u00E3o CLG",render:function(){renderClgTables();renderClgCards();}});
   };
 })();
 /* MODULE_HORAS_PLACEHOLDER */
@@ -4580,7 +4419,7 @@ setTimeout(hideSplash,20000);
       rows:[],cols:horasColsDefault(),
       editing:false,dirty:false,snapshot:null,colsSnapshot:null,
       rowsKey:"aa_horas_"+s.key+"_v1",colsKey:"aa_horas_"+s.key+"_cols_v1",
-      cards:[],cardEditingId:null,cardDirty:false,cardSnapshot:null,
+      cards:[],cardSt:{editingId:null,dirty:false,snapshot:null},
       cardsKey:"aa_horas_"+s.key+"_cards_v1"
     };
   });
@@ -4676,173 +4515,23 @@ setTimeout(hideSplash,20000);
     horasUpdateToolbar(key);
     if(editing)bindRowDragGeneric(tb,function(){return s.rows;},function(){renderHorasShip(key);},function(){s.dirty=true;});
   }
-  function isShipCardWide(c){return((c.items[0]&&(c.items[0].vals||[]).length)||1)>=4;}
-  function shipCardHtml(c,editingId,dirty){
-    var isEditing=editingId===c.id;
-    var toolbar=isEditing?
-      '<div class="nv-card-toolbar"><button class="nv-savebtn card-save" data-cid="'+c.id+'"'+(dirty?"":" disabled")+'>✓ Salvar</button><button class="nv-cancelbtn card-cancel" data-cid="'+c.id+'">Cancelar</button></div>'
-      :
-      '<div class="nv-card-toolbar"><button class="nv-editbtn card-edit" data-cid="'+c.id+'">✎ Editar</button></div>';
-    return '<div class="nv-card'+(isEditing?" nv-card-editing":"")+(isShipCardWide(c)?" nv-card-wide":"")+'" data-cid="'+c.id+'">'+
-      '<div class="nv-card-head">'+
-        '<span class="nv-card-dh" title="Arrastar para reordenar">⠿</span>'+
-        '<div class="nv-card-title'+(isEditing?" nv-editable":"")+'"'+(isEditing?' contenteditable="true"':"")+' data-cid="'+c.id+'" data-field="title" spellcheck="false">'+esc(c.title)+'</div>'+
-        toolbar+
-        (isEditing?'<button class="card-del" data-cid="'+c.id+'" title="Excluir cartão">🗑</button>':"")+
-      '</div>'+
-      '<ul>'+c.items.map(function(it,i){
-        var vals=it.vals||[it.v!==undefined?it.v:""];
-        return '<li'+(isEditing?' data-cid="'+c.id+'" data-ri="'+i+'"':"")+'>'+
-          (isEditing?'<span class="row-dh" title="Arrastar para reordenar">⠿</span>':"")+
-          '<b'+(isEditing?' class="nv-editable" contenteditable="true"':"")+' data-cid="'+c.id+'" data-i="'+i+'" data-field="k" spellcheck="false">'+esc(it.k)+'</b>'+
-          vals.map(function(val,vi){return '<span class="v'+(isEditing?" nv-editable":"")+'"'+(isEditing?' contenteditable="true"':"")+' data-cid="'+c.id+'" data-i="'+i+'" data-vi="'+vi+'" data-field="val" spellcheck="false">'+esc(val)+'</span>';}).join("")+
-          (isEditing?'<button class="item-del" data-cid="'+c.id+'" data-i="'+i+'" title="Remover item">✕</button>':"")+
-        '</li>';
-      }).join("")+'</ul>'+
-      (isEditing?'<div class="nv-card-rowbtns"><button class="additem" data-cid="'+c.id+'">+ item</button><button class="nv-addcolbtn addcol" data-cid="'+c.id+'">+ coluna</button>'+((c.items[0]&&(c.items[0].vals||[]).length>1)?'<button class="nv-addcolbtn delcol" data-cid="'+c.id+'" title="Excluir última coluna">✕ coluna</button>':'')+'</div>':"")+
-    '</div>';
-  }
-  function renderShipCards(key){
+    function renderShipCards(key){
     var s=horasShips[key];
     var grid=document.getElementById("horas_"+key+"_grid");
     if(!grid)return;
-    var lockedOut=!!GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!==s.cardEditingId;
-    function cardHtml(c){return shipCardHtml(c,s.cardEditingId,s.cardDirty);}
-    renderMasonryGrid(grid,s.cards,cardHtml,isShipCardWide);
+    var lockedOut=!!GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="card:"+s.cardSt.editingId;
+    renderMasonryGrid(grid,s.cards,function(c){return cardHtmlGeneric(c,s.cardSt,lockedOut);},isCardWide);
     grid.insertAdjacentHTML("beforeend",'<button class="nv-addcard" id="horas_'+key+'_addcard"'+(lockedOut?" disabled":"")+'>+ Novo cartão</button>');
     bindMasonryCardDrag(grid,function(){return s.cards;},function(v){s.cards=v;},function(){horasSaveShip(s);},s.cardsKey,function(){renderShipCards(key);},"Reordenar cartões — "+s.title,function(){return GLOBAL_EDIT_LOCK;});
-    bindItemDragGeneric(grid,function(cid){return s.cards.find(function(c){return c.id===cid;});},function(v){s.cardDirty=v;},function(){renderShipCards(key);});
+    bindItemDragGeneric(grid,function(cid){return s.cards.find(function(c){return c.id===cid;});},function(v){s.cardSt.dirty=v;},function(){renderShipCards(key);});
   }
   function findShipCard(s,cid){return s.cards.find(function(c){return c.id===cid;});}
   function bindShipCardGrid(key){
     var s=horasShips[key];
-    var grid=document.getElementById("horas_"+key+"_grid");
-    grid.addEventListener("input",function(e){
-      var el=e.target;
-      if(!el.dataset||el.dataset.cid!==s.cardEditingId||!el.dataset.field)return;
-      var c=findShipCard(s,el.dataset.cid);
-      if(!c)return;
-      if(el.dataset.field==="title")c.title=el.textContent;
-      else if(el.dataset.field==="val"){var it=c.items[+el.dataset.i];if(it){if(!it.vals)it.vals=[it.v!==undefined?it.v:""];it.vals[+el.dataset.vi]=el.textContent;}}
-      else{var it2=c.items[+el.dataset.i];if(it2)it2[el.dataset.field]=el.textContent;}
-      s.cardDirty=true;
-      var sb=grid.querySelector('.card-save[data-cid="'+el.dataset.cid+'"]');
-      if(sb)sb.disabled=false;
-    });
-    grid.addEventListener("focusout",function(e){
-      var el=e.target;
-      if(!el.dataset||el.dataset.cid!==s.cardEditingId||!el.dataset.field)return;
-      var c=findShipCard(s,el.dataset.cid);
-      if(!c)return;
-      if(el.dataset.field==="title"){c.title=el.textContent.trim();el.textContent=c.title;}
-      else if(el.dataset.field==="val"){var it=c.items[+el.dataset.i];if(it){if(!it.vals)it.vals=[it.v!==undefined?it.v:""];var v=el.textContent.trim();it.vals[+el.dataset.vi]=v;el.textContent=v;}}
-      else{var it2=c.items[+el.dataset.i];if(it2){it2[el.dataset.field]=el.textContent.trim();el.textContent=it2[el.dataset.field];}}
-    });
-    grid.addEventListener("keydown",function(e){
-      if(e.key==="Enter"&&e.target.hasAttribute&&e.target.hasAttribute("contenteditable")){e.preventDefault();e.target.blur();}
-    });
-    grid.addEventListener("click",function(e){
-      var editBtn=e.target.closest&&e.target.closest(".card-edit");
-      if(editBtn){
-        var cid=editBtn.dataset.cid;
-        if(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!==cid){toast("Finalize a edição em andamento antes de iniciar outra.","info");return;}
-        GLOBAL_EDIT_LOCK=cid;s.cardEditingId=cid;s.cardDirty=false;
-        var c=findShipCard(s,cid);
-        s.cardSnapshot=c?JSON.parse(JSON.stringify(c)):null;
-        renderHorasShip(key);renderShipCards(key);
-        return;
-      }
-      var saveBtn=e.target.closest&&e.target.closest(".card-save");
-      if(saveBtn){
-        if(!s.cardDirty)return;
-        var preCard=s.cardSnapshot,cidSv=saveBtn.dataset.cid;
-        horasSaveShip(s);
-        pushKV("horasPush",s.cardsKey,s.cards).then(function(){toast("✓ Cartão salvo","ok");});
-        s.cardEditingId=null;s.cardSnapshot=null;s.cardDirty=false;GLOBAL_EDIT_LOCK=null;
-        if(preCard&&preCard.__new){
-          pushUndo("Adicionar cartão — "+s.title,async function(){s.cards=s.cards.filter(function(c){return c.id!==cidSv;});horasSaveShip(s);await pushKV("horasPush",s.cardsKey,s.cards);renderHorasShip(key);renderShipCards(key);});
-        }else if(preCard){
-          pushUndo("Editar cartão — "+s.title,async function(){var idx=s.cards.findIndex(function(c){return c.id===cidSv;});if(idx>-1)s.cards[idx]=JSON.parse(JSON.stringify(preCard));horasSaveShip(s);await pushKV("horasPush",s.cardsKey,s.cards);renderHorasShip(key);renderShipCards(key);});
-        }
-        renderHorasShip(key);renderShipCards(key);
-        return;
-      }
-      var cancelBtn=e.target.closest&&e.target.closest(".card-cancel");
-      if(cancelBtn){
-        var cid2=cancelBtn.dataset.cid;
-        if(s.cardSnapshot&&s.cardSnapshot.__new){s.cards=s.cards.filter(function(c){return c.id!==cid2;});}
-        else if(s.cardSnapshot){var idx=s.cards.findIndex(function(c){return c.id===cid2;});if(idx>-1)s.cards[idx]=s.cardSnapshot;}
-        s.cardEditingId=null;s.cardSnapshot=null;s.cardDirty=false;GLOBAL_EDIT_LOCK=null;
-        renderHorasShip(key);renderShipCards(key);
-        return;
-      }
-      var delCard=e.target.closest&&e.target.closest(".card-del");
-      if(delCard){
-        if(delCard.dataset.cid!==s.cardEditingId)return;
-        if(!confirm("Excluir este cartão e todas as suas informações?"))return;
-        var wasNew=s.cardSnapshot&&s.cardSnapshot.__new;
-        var delIdx=s.cards.findIndex(function(c){return c.id===delCard.dataset.cid;});
-        var delCardObj=s.cards[delIdx];
-        s.cards=s.cards.filter(function(c){return c.id!==delCard.dataset.cid;});
-        s.cardEditingId=null;s.cardSnapshot=null;s.cardDirty=false;GLOBAL_EDIT_LOCK=null;
-        horasSaveShip(s);
-        if(!wasNew){
-          pushKV("horasPush",s.cardsKey,s.cards).then(function(){toast("🗑 Cartão excluído","ok");});
-          pushUndo("Excluir cartão — "+s.title,async function(){s.cards.splice(delIdx,0,delCardObj);horasSaveShip(s);await pushKV("horasPush",s.cardsKey,s.cards);renderHorasShip(key);renderShipCards(key);});
-        }
-        renderHorasShip(key);renderShipCards(key);
-        return;
-      }
-      var delItem=e.target.closest&&e.target.closest(".item-del");
-      if(delItem){
-        if(delItem.dataset.cid!==s.cardEditingId)return;
-        var c2=findShipCard(s,delItem.dataset.cid);
-        if(c2){c2.items.splice(+delItem.dataset.i,1);s.cardDirty=true;renderShipCards(key);}
-        return;
-      }
-      var addItem=e.target.closest&&e.target.closest(".additem");
-      if(addItem){
-        if(addItem.dataset.cid!==s.cardEditingId)return;
-        var c3=findShipCard(s,addItem.dataset.cid);
-        if(c3){
-          var ncols=(c3.items[0]&&(c3.items[0].vals||[c3.items[0].v]).length)||1;
-          c3.items.push({k:"",vals:new Array(ncols).fill("")});
-          s.cardDirty=true;renderShipCards(key);
-        }
-        return;
-      }
-      var addCol=e.target.closest&&e.target.closest(".addcol");
-      if(addCol){
-        if(addCol.dataset.cid!==s.cardEditingId)return;
-        var c5=findShipCard(s,addCol.dataset.cid);
-        if(c5){c5.items.forEach(function(it){if(!it.vals)it.vals=[it.v!==undefined?it.v:""];it.vals.push("");});s.cardDirty=true;renderShipCards(key);}
-        return;
-      }
-      var delCol=e.target.closest&&e.target.closest(".delcol");
-      if(delCol){
-        if(delCol.dataset.cid!==s.cardEditingId)return;
-        var c6=findShipCard(s,delCol.dataset.cid);
-        if(c6){
-          var lastIdx=((c6.items[0]&&c6.items[0].vals)||[]).length-1;
-          if(lastIdx<1)return;
-          var hasData=c6.items.some(function(it){var v=(it.vals||[])[lastIdx];return v&&v!=="—";});
-          if(hasData&&!confirm("Esta coluna contém informações preenchidas. Deseja realmente excluí-la?"))return;
-          c6.items.forEach(function(it){if(it.vals&&it.vals.length>1)it.vals.pop();});
-          s.cardDirty=true;renderShipCards(key);
-        }
-        return;
-      }
-      if(e.target.id==="horas_"+key+"_addcard"){
-        if(GLOBAL_EDIT_LOCK){toast("Finalize a edição em andamento antes de criar um novo cartão.","info");return;}
-        var numCols=computeNumCols(grid);
-        var nc={id:genUid("card"),title:"",items:[{k:"",vals:[""]}],col:pickLeastPopulatedCol(s.cards,numCols)};
-        s.cards.push(nc);
-        GLOBAL_EDIT_LOCK=nc.id;s.cardEditingId=nc.id;s.cardDirty=true;
-        s.cardSnapshot={__new:true};
-        renderHorasShip(key);renderShipCards(key);
-        return;
-      }
-    });
+    wireCardsGrid({gridId:"horas_"+key+"_grid",addcardId:"horas_"+key+"_addcard",st:s.cardSt,
+      getCards:function(){return s.cards;},setCards:function(v){s.cards=v;},
+      save:function(){horasSaveShip(s);},pushTag:"horasPush",key:function(){return s.cardsKey;},
+      label:"cart\u00E3o \u2014 "+s.title,render:function(){renderHorasShip(key);renderShipCards(key);}});
   }
   renderHoras=function(){HORAS_SHIP_LIST.forEach(function(sk){renderHorasShip(sk.key);renderShipCards(sk.key);});};
   function horasBindShip(key){
@@ -5036,7 +4725,7 @@ setTimeout(hideSplash,20000);
   }
   var pessoalRows=[],pessoalCols=pessoalColsDefault(),pessoalFerias=[],pessoalCards=[],pessoalBound=false;
   var pessoalEditing=false,pessoalDirty=false,pessoalSnapshot=null,pessoalColsSnapshot=null;
-  var pessoalCardEditingId=null,pessoalCardDirty=false,pessoalCardSnapshot=null;
+  var pessoalCardSt={editingId:null,dirty:false,snapshot:null};
   // Ordenação da tabela (só ativa fora do modo de edição, pra não conflitar com o drag de linhas).
   // Cada coluna filtrável liga/desliga independentemente (botão seta = ativa/inverte, botão x = limpa
   // só aquela coluna, as demais ativas continuam). Hierarquia de Posto/Graduação usada como critério
@@ -5187,189 +4876,23 @@ setTimeout(hideSplash,20000);
   }
 
   /* ── Cartões (mesmo sistema genérico usado em Navios/CLG/Horas) ── */
-  function isPessoalWide(c){return((c.items[0]&&(c.items[0].vals||[]).length)||1)>=4;}
   function pessoalFindCard(cid){return pessoalCards.find(function(c){return c.id===cid;});}
   function renderPessoalCards(){
     var grid=document.getElementById("pessoal_grid");
     if(!grid)return;
     var lockedOut=!!GLOBAL_EDIT_LOCK;
-    function cardHtml(c){
-      var isEditing=pessoalCardEditingId===c.id;
-      var disableEdit=lockedOut&&!isEditing;
-      var toolbar=isEditing?
-        '<div class="nv-card-toolbar">'+
-          '<button class="nv-savebtn nv-card-save" data-cid="'+c.id+'"'+(pessoalCardDirty?"":" disabled")+'>✓ Salvar</button>'+
-          '<button class="nv-cancelbtn nv-card-cancel" data-cid="'+c.id+'">Cancelar</button>'+
-        '</div>'
-        :
-        '<div class="nv-card-toolbar">'+
-          '<button class="nv-editbtn nv-card-edit" data-cid="'+c.id+'"'+(disableEdit?" disabled":"")+'>✎ Editar</button>'+
-        '</div>';
-      return '<div class="nv-card'+(isEditing?" nv-card-editing":"")+(isPessoalWide(c)?" nv-card-wide":"")+'" data-cid="'+c.id+'">'+
-        '<div class="nv-card-head">'+
-          '<span class="nv-card-dh'+(lockedOut?" nv-dh-disabled":"")+'" title="Arrastar para reordenar">⠿</span>'+
-          '<div class="nv-card-title'+(isEditing?" nv-editable":"")+'"'+(isEditing?' contenteditable="true"':"")+' data-cid="'+c.id+'" data-field="title" spellcheck="false">'+esc(c.title)+'</div>'+
-          toolbar+
-          (isEditing?'<button class="nv-card-del" data-cid="'+c.id+'" title="Excluir cartão">🗑</button>':"")+
-        '</div>'+
-        '<ul>'+c.items.map(function(it,i){
-          var vals=it.vals||[it.v!==undefined?it.v:""];
-          return '<li'+(isEditing?' data-cid="'+c.id+'" data-ri="'+i+'"':"")+'>'+
-            (isEditing?'<span class="row-dh" title="Arrastar para reordenar">⠿</span>':"")+
-            '<b'+(isEditing?' class="nv-editable" contenteditable="true"':"")+' data-cid="'+c.id+'" data-i="'+i+'" data-field="k" spellcheck="false">'+esc(it.k)+'</b>'+
-            vals.map(function(val,vi){
-              return '<span class="v'+(isEditing?" nv-editable":"")+'"'+(isEditing?' contenteditable="true"':"")+' data-cid="'+c.id+'" data-i="'+i+'" data-vi="'+vi+'" data-field="val" spellcheck="false">'+esc(val)+'</span>';
-            }).join("")+
-            (isEditing?'<button class="nv-item-del" data-cid="'+c.id+'" data-i="'+i+'" title="Remover item">✕</button>':"")+
-          '</li>';
-        }).join("")+'</ul>'+
-        (isEditing?'<div class="nv-card-rowbtns"><button class="nv-additem" data-cid="'+c.id+'">+ item</button><button class="nv-addcolbtn nv-addcol" data-cid="'+c.id+'">+ coluna</button>'+((c.items[0]&&(c.items[0].vals||[]).length>1)?'<button class="nv-addcolbtn nv-delcol" data-cid="'+c.id+'" title="Excluir última coluna">✕ coluna</button>':'')+'</div>':"")+
-      '</div>';
-    }
-    renderMasonryGrid(grid,pessoalCards,cardHtml,isPessoalWide);
+    renderMasonryGrid(grid,pessoalCards,function(c){return cardHtmlGeneric(c,pessoalCardSt,lockedOut);},isCardWide);
     grid.insertAdjacentHTML("beforeend",'<button class="nv-addcard" id="pessoal_addcard"'+(lockedOut?" disabled":"")+'>+ Novo cartão</button>');
     bindPessoalCardDrag();
     bindPessoalItemDrag();
   }
-  function bindPessoalItemDrag(){bindItemDragGeneric(document.getElementById("pessoal_grid"),pessoalFindCard,function(v){pessoalCardDirty=v;},renderPessoalCards);}
+  function bindPessoalItemDrag(){bindItemDragGeneric(document.getElementById("pessoal_grid"),pessoalFindCard,function(v){pessoalCardSt.dirty=v;},renderPessoalCards);}
   function bindPessoalCardDrag(){bindMasonryCardDrag(document.getElementById("pessoal_grid"),function(){return pessoalCards;},function(v){pessoalCards=v;},pessoalSaveCards,PESSOAL_CARDS_KEY,renderPessoalCards,"Reordenar cartões Pessoal",function(){return!!GLOBAL_EDIT_LOCK;});}
   function wirePessoalCardsUI(){
-    var grid=document.getElementById("pessoal_grid");
-    if(!grid||grid._cardsBound)return;
-    grid._cardsBound=true;
-    grid.addEventListener("input",function(e){
-      var el=e.target;
-      if(!el.dataset||el.dataset.cid!==pessoalCardEditingId||!el.dataset.field)return;
-      var c=pessoalFindCard(el.dataset.cid);
-      if(!c)return;
-      if(el.dataset.field==="title")c.title=el.textContent;
-      else if(el.dataset.field==="val"){var it=c.items[+el.dataset.i];if(it){if(!it.vals)it.vals=[it.v!==undefined?it.v:""];it.vals[+el.dataset.vi]=el.textContent;}}
-      else{var it2=c.items[+el.dataset.i];if(it2)it2[el.dataset.field]=el.textContent;}
-      pessoalCardDirty=true;
-      var sb=grid.querySelector('.nv-card-save[data-cid="'+el.dataset.cid+'"]');
-      if(sb)sb.disabled=false;
-    });
-    grid.addEventListener("focusout",function(e){
-      var el=e.target;
-      if(!el.dataset||el.dataset.cid!==pessoalCardEditingId||!el.dataset.field)return;
-      var c=pessoalFindCard(el.dataset.cid);
-      if(!c)return;
-      if(el.dataset.field==="title"){c.title=el.textContent.trim();el.textContent=c.title;}
-      else if(el.dataset.field==="val"){var it=c.items[+el.dataset.i];if(it){if(!it.vals)it.vals=[it.v!==undefined?it.v:""];var v=el.textContent.trim();it.vals[+el.dataset.vi]=v;el.textContent=v;}}
-      else{var it2=c.items[+el.dataset.i];if(it2){it2[el.dataset.field]=el.textContent.trim();el.textContent=it2[el.dataset.field];}}
-    });
-    grid.addEventListener("keydown",function(e){
-      if(e.key==="Enter"&&e.target.hasAttribute&&e.target.hasAttribute("contenteditable")){e.preventDefault();e.target.blur();}
-    });
-    grid.addEventListener("click",function(e){
-      var editBtn=e.target.closest&&e.target.closest(".nv-card-edit");
-      if(editBtn){
-        var cid=editBtn.dataset.cid;
-        if(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="card:"+cid){toast("Finalize a edição em andamento antes de iniciar outra.","info");return;}
-        GLOBAL_EDIT_LOCK="card:"+cid;pessoalCardEditingId=cid;pessoalCardDirty=false;
-        var c=pessoalFindCard(cid);
-        pessoalCardSnapshot=c?JSON.parse(JSON.stringify(c)):null;
-        renderPessoalTable();renderPessoalCards();
-        return;
-      }
-      var saveBtn=e.target.closest&&e.target.closest(".nv-card-save");
-      if(saveBtn){
-        if(!pessoalCardDirty)return;
-        var preCard=pessoalCardSnapshot,cidSv=saveBtn.dataset.cid;
-        pessoalSaveCards();
-        pushKV("pessoalPush",PESSOAL_CARDS_KEY,pessoalCards).then(function(){toast("✓ Cartão salvo","ok");});
-        pessoalCardEditingId=null;pessoalCardSnapshot=null;pessoalCardDirty=false;GLOBAL_EDIT_LOCK=null;
-        if(preCard&&preCard.__new){
-          pushUndo("Adicionar cartão Pessoal",async function(){pessoalCards=pessoalCards.filter(function(c){return c.id!==cidSv;});pessoalSaveCards();await pushKV("pessoalPush",PESSOAL_CARDS_KEY,pessoalCards);renderPessoalTable();renderPessoalCards();});
-        }else if(preCard){
-          pushUndo("Editar cartão Pessoal",async function(){var idx=pessoalCards.findIndex(function(c){return c.id===cidSv;});if(idx>-1)pessoalCards[idx]=JSON.parse(JSON.stringify(preCard));pessoalSaveCards();await pushKV("pessoalPush",PESSOAL_CARDS_KEY,pessoalCards);renderPessoalTable();renderPessoalCards();});
-        }
-        renderPessoalTable();renderPessoalCards();
-        return;
-      }
-      var cancelBtn=e.target.closest&&e.target.closest(".nv-card-cancel");
-      if(cancelBtn){
-        var cid2=cancelBtn.dataset.cid;
-        if(pessoalCardSnapshot&&pessoalCardSnapshot.__new){
-          pessoalCards=pessoalCards.filter(function(c){return c.id!==cid2;});
-        }else if(pessoalCardSnapshot){
-          var idx=pessoalCards.findIndex(function(c){return c.id===cid2;});
-          if(idx>-1)pessoalCards[idx]=pessoalCardSnapshot;
-        }
-        pessoalCardEditingId=null;pessoalCardSnapshot=null;pessoalCardDirty=false;GLOBAL_EDIT_LOCK=null;
-        renderPessoalTable();renderPessoalCards();
-        return;
-      }
-      var delCard=e.target.closest&&e.target.closest(".nv-card-del");
-      if(delCard){
-        if(delCard.dataset.cid!==pessoalCardEditingId)return;
-        if(!confirm("Excluir este cartão e todas as suas informações?"))return;
-        var wasNew=pessoalCardSnapshot&&pessoalCardSnapshot.__new;
-        var delIdx=pessoalCards.findIndex(function(c){return c.id===delCard.dataset.cid;});
-        var delCardObj=pessoalCards[delIdx];
-        pessoalCards=pessoalCards.filter(function(c){return c.id!==delCard.dataset.cid;});
-        pessoalCardEditingId=null;pessoalCardSnapshot=null;pessoalCardDirty=false;GLOBAL_EDIT_LOCK=null;
-        pessoalSaveCards();
-        if(!wasNew){
-          pushKV("pessoalPush",PESSOAL_CARDS_KEY,pessoalCards).then(function(){toast("🗑 Cartão excluído","ok");});
-          pushUndo("Excluir cartão Pessoal",async function(){pessoalCards.splice(delIdx,0,delCardObj);pessoalSaveCards();await pushKV("pessoalPush",PESSOAL_CARDS_KEY,pessoalCards);renderPessoalTable();renderPessoalCards();});
-        }
-        renderPessoalTable();renderPessoalCards();
-        return;
-      }
-      var delItem=e.target.closest&&e.target.closest(".nv-item-del");
-      if(delItem){
-        if(delItem.dataset.cid!==pessoalCardEditingId)return;
-        var c2=pessoalFindCard(delItem.dataset.cid);
-        if(c2){c2.items.splice(+delItem.dataset.i,1);pessoalCardDirty=true;renderPessoalCards();}
-        return;
-      }
-      var addItem=e.target.closest&&e.target.closest(".nv-additem");
-      if(addItem){
-        if(addItem.dataset.cid!==pessoalCardEditingId)return;
-        var c3=pessoalFindCard(addItem.dataset.cid);
-        if(c3){
-          var ncols=(c3.items[0]&&(c3.items[0].vals||[c3.items[0].v]).length)||1;
-          c3.items.push({k:"",vals:new Array(ncols).fill("")});
-          pessoalCardDirty=true;renderPessoalCards();
-        }
-        return;
-      }
-      var addCol=e.target.closest&&e.target.closest(".nv-addcol");
-      if(addCol){
-        if(addCol.dataset.cid!==pessoalCardEditingId)return;
-        var c5=pessoalFindCard(addCol.dataset.cid);
-        if(c5){
-          c5.items.forEach(function(it){if(!it.vals)it.vals=[it.v!==undefined?it.v:""];it.vals.push("");});
-          pessoalCardDirty=true;renderPessoalCards();
-        }
-        return;
-      }
-      var delCol=e.target.closest&&e.target.closest(".nv-delcol");
-      if(delCol){
-        if(delCol.dataset.cid!==pessoalCardEditingId)return;
-        var c6=pessoalFindCard(delCol.dataset.cid);
-        if(c6){
-          var lastIdx=((c6.items[0]&&c6.items[0].vals)||[]).length-1;
-          if(lastIdx<1)return;
-          var hasData=c6.items.some(function(it){var v=(it.vals||[])[lastIdx];return v&&v!=="—";});
-          if(hasData&&!confirm("Esta coluna contém informações preenchidas. Deseja realmente excluí-la?"))return;
-          c6.items.forEach(function(it){if(it.vals&&it.vals.length>1)it.vals.pop();});
-          pessoalCardDirty=true;renderPessoalCards();
-        }
-        return;
-      }
-      if(e.target.id==="pessoal_addcard"){
-        if(GLOBAL_EDIT_LOCK){toast("Finalize a edição em andamento antes de criar um novo cartão.","info");return;}
-        var numColsP=computeNumCols(grid);
-        var nc={id:genUid("card"),title:"",items:[{k:"",vals:[""]}],col:pickLeastPopulatedCol(pessoalCards,numColsP)};
-        pessoalCards.push(nc);
-        GLOBAL_EDIT_LOCK="card:"+nc.id;pessoalCardEditingId=nc.id;pessoalCardDirty=true;
-        pessoalCardSnapshot={__new:true};
-        renderPessoalTable();renderPessoalCards();
-        return;
-      }
-    });
+    wireCardsGrid({gridId:"pessoal_grid",addcardId:"pessoal_addcard",st:pessoalCardSt,
+      getCards:function(){return pessoalCards;},setCards:function(v){pessoalCards=v;},
+      save:pessoalSaveCards,pushTag:"pessoalPush",key:function(){return PESSOAL_CARDS_KEY;},
+      label:"cart\u00E3o Pessoal",render:function(){renderPessoalTable();renderPessoalCards();}});
   }
 
   /* ── Controle de Férias: calendário corrido de um ciclo (DEZ a NOV), um quadrado por dia ── */

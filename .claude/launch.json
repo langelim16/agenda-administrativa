@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "static3",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8761", "--directory", "/Users/lucasangelim/Documents/agenda-administrativa"],
+      "port": 8761
+    }
+  ]
+}
