@@ -415,6 +415,38 @@ tr.row-warn{background:color-mix(in srgb,var(--c-amber) 10%,transparent)}
 tr.row-bad{background:color-mix(in srgb,var(--c-red) 9%,transparent)}
 tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .dt-table-row{display:flex;gap:16px;flex-wrap:wrap}
+.drawer-bg{position:fixed;inset:0;background:rgba(38,42,46,.5);backdrop-filter:blur(4px);display:none;justify-content:flex-end;z-index:750}
+.drawer-bg.open{display:flex}
+.drawer{background:var(--surface);border-left:1.5px solid var(--border);width:420px;max-width:92vw;height:100%;overflow-y:auto;box-shadow:var(--sh-lg);transform:translateX(100%);transition:transform .25s ease}
+.drawer-bg.open .drawer{transform:translateX(0)}
+.drawer-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--surface);z-index:1}
+.drawer-body{padding:14px 18px}
+.drawer-fld{margin-bottom:10px;font-size:12px}
+.drawer-fld b{display:block;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.drawer-hist{margin-top:18px;border-top:1px solid var(--border);padding-top:12px}
+.drawer-hist-item{font-size:11px;padding:7px 0;border-bottom:1px dashed var(--border)}
+.drawer-hist-item b{color:var(--text2)}
+.dt-table tbody tr.clickable-row{cursor:pointer}
+.dt-table tbody tr.clickable-row:hover{background:color-mix(in srgb,var(--c-blue) 6%,transparent)}
+.stats-grid{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.stats-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px;flex:1;min-width:240px}
+.stats-card h4{margin:0 0 8px;font-size:12px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.gantt-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:14px}
+.gantt-row{display:flex;align-items:center;border-bottom:1px solid var(--border);min-width:820px}
+.gantt-row:last-child{border-bottom:none}
+.gantt-label{width:160px;flex:none;font-size:11px;font-weight:600;padding:6px 8px;color:var(--text2)}
+.gantt-months{display:flex;flex:1}
+.gantt-cell{flex:1;height:30px;border-left:1px solid var(--border);position:relative;display:flex;align-items:center;justify-content:center;gap:2px}
+.gantt-dot{width:9px;height:9px;border-radius:50%;cursor:pointer}
+.gantt-hdr{display:flex;min-width:820px}
+.gantt-hdr .gantt-label{visibility:hidden}
+.gantt-hdr .gantt-cell{height:auto;padding:5px 0;font-size:9px;color:var(--text3);text-transform:uppercase}
+.imp-preview{width:100%;border-collapse:collapse;font-size:11px;margin-top:10px}
+.imp-preview th,.imp-preview td{border:1px solid var(--border);padding:4px 6px;text-align:left;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.imp-preview th{background:var(--c-100)}
+.imp-map-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:12px}
+.imp-map-row span{width:160px;flex:none;color:var(--text2)}
+.imp-map-row select{flex:1}
 .dt-table-row>div{flex:1;min-width:260px}
 .nv-edit-actions{display:flex;gap:8px}
 .nv-edit-actions[hidden]{display:none}
@@ -1366,7 +1398,11 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
   <select id="ppss_f_navio"><option value="">Todos os navios</option></select>
   <select id="ppss_f_tipo"><option value="">Programadas + Correntes</option><option value="Programada">Programadas</option><option value="Corrente">Correntes</option></select>
   <input id="ppss_f_q" placeholder="🔍 Pesquisar pedido, descrição, OMPS, DS, mensagem...">
+  <button class="nv-editbtn" id="ppss_import_btn">⬆ Importar planilha</button>
 </div>
+
+<div class="dt-section-head"><h3 class="dt-table-title">Linha do tempo — pedidos por navio e mês (referência: MSG OMPS/NAV)</h3></div>
+<div class="gantt-wrap" id="ppss_gantt"></div>
 
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Pedidos de Serviço</h3><span class="last-edit" id="ppss_tbl_lastedit"></span></div>
@@ -1386,6 +1422,9 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
     <tbody id="ppss_tbl_tbody"></tbody>
   </table>
 </div>
+
+<div class="dt-section-head" style="margin-top:18px"><h3 class="dt-table-title">Dashboard estatístico</h3></div>
+<div class="stats-grid" id="ppss_stats"></div>
 
 <div class="dt-section-head" style="margin-top:18px"><h3 class="dt-table-title">Cartões</h3></div>
 <div class="nv-grid" id="ppss_grid"></div>
@@ -1418,6 +1457,7 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
 <div class="flt-bar">
   <select id="gar_f_sit"><option value="">Todas as situações</option><option value="P">P</option><option value="PO">PO</option><option value="IM">IM</option></select>
   <input id="gar_f_q" placeholder="🔍 Pesquisar placa, modelo, NIV, observação...">
+  <button class="nv-editbtn" id="gar_import_btn">⬆ Importar planilha</button>
 </div>
 
 <div class="dt-section-head">
@@ -1439,11 +1479,36 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
   </table>
 </div>
 
+<div class="dt-section-head" style="margin-top:18px"><h3 class="dt-table-title">Dashboard estatístico</h3></div>
+<div class="stats-grid" id="gar_stats"></div>
+
 <div class="dt-section-head" style="margin-top:18px"><h3 class="dt-table-title">Cartões</h3></div>
 <div class="nv-grid" id="gar_grid"></div>
 
 <div class="foot" id="gar_hdr_foot">Garagem</div>
 </div>
+
+<!-- painel lateral de detalhes (genérico, usado por PPSS/Garagem) -->
+<div class="drawer-bg" id="detailDrawerBg">
+  <div class="drawer">
+    <div class="drawer-head"><h3 id="detailDrawerTitle">Detalhes</h3><button class="mx" id="detailDrawerClose">✕</button></div>
+    <div class="drawer-body" id="detailDrawerBody"></div>
+  </div>
+</div>
+
+<!-- importador de planilha (genérico, usado por PPSS/Garagem) -->
+<div class="mbg" id="impBg"><div class="modal wide"><div class="mh"><h3 id="impTitle">Importar planilha</h3><button class="mx" id="impClose">✕</button></div>
+  <div class="mbody" style="padding:16px 18px">
+    <div class="fld full"><label>Arquivo CSV</label><input type="file" id="impFile" accept=".csv,.txt"></div>
+    <div class="fld full"><label>Ou cole o conteúdo CSV aqui</label><textarea id="impPaste" rows="4" placeholder="Cole aqui o conteúdo exportado como CSV..."></textarea></div>
+    <div id="impMapWrap" style="margin-top:10px"></div>
+    <div id="impPreviewWrap"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+      <button class="nv-cancelbtn" id="impCancel">Cancelar</button>
+      <button class="bsave" id="impConfirm" disabled>Confirmar importação</button>
+    </div>
+  </div>
+</div></div>
 
 <!-- modais -->
 <div class="mbg" id="ftbg"><div class="modal"><div class="mh"><h3>Inserir período — selecione o tipo</h3><button class="mx" id="ft_close">✕</button></div><div class="mbody" id="ft_list" style="display:flex;flex-direction:column;gap:8px;padding:6px 0"></div></div></div>
@@ -2028,6 +2093,7 @@ function wireCardsGrid(o){
       var preCard=st.snapshot,cidSv=saveBtn.dataset.cid;
       var savedCard=find(cidSv);if(savedCard)savedCard.updatedAt=new Date().toISOString();
       o.save();
+      auditPushOne("card:"+o.label,cidSv,preCard&&preCard.__new?"criado":"editado");
       push().then(function(){toast("\u2713 Cart\u00E3o salvo","ok");});
       st.editingId=null;st.snapshot=null;st.dirty=false;GLOBAL_EDIT_LOCK=null;
       if(preCard&&preCard.__new){
@@ -2057,6 +2123,7 @@ function wireCardsGrid(o){
       o.setCards(arr3.filter(function(c){return c.id!==delCard.dataset.cid;}));
       st.editingId=null;st.snapshot=null;st.dirty=false;GLOBAL_EDIT_LOCK=null;
       o.save();
+      auditPushOne("card:"+o.label,delCard.dataset.cid,"excluído");
       if(!wasNew){
         push().then(function(){toast("\uD83D\uDDD1 Cart\u00E3o exclu\u00EDdo","ok");});
         pushUndo("Excluir "+o.label,async function(){o.getCards().splice(delIdx,0,delCardObj);o.save();await push();o.render();});
@@ -2128,6 +2195,166 @@ function fmtLastEdit(iso){
   return "Última edição em "+p(d.getHours())+":"+p(d.getMinutes())+" do dia "+p(d.getDate())+"/"+p(d.getMonth()+1)+"/"+d.getFullYear()+".";
 }
 function paintLastEdit(elId,id){var el=document.getElementById(elId);if(el)el.textContent=fmtLastEdit(lastEdits[id]);}
+
+/* ── Trilha de auditoria — 1 chave no Supabase (aa_audit_v1) compartilhada por todo o app.
+   Alimentada automaticamente pelo bindDataTable (diff campo a campo no save) e pelo
+   wireCardsGrid (criação/edição/exclusão de cartão). Capada em 1000 entradas (mais recentes). ── */
+var AUDIT_KEY="aa_audit_v1";
+var auditLog=[];
+async function loadAudit(){auditLog=(await gtj(AUDIT_KEY))||[];}
+function auditPush(entries){
+  if(!entries.length)return;
+  auditLog=auditLog.concat(entries);
+  if(auditLog.length>1000)auditLog=auditLog.slice(auditLog.length-1000);
+  svs(AUDIT_KEY,auditLog);
+}
+function auditDiffRows(scope,before,after){
+  var entries=[],ts=new Date().toISOString();
+  var beforeMap={};(before||[]).forEach(function(r){beforeMap[r.id]=r;});
+  var afterIds={};
+  (after||[]).forEach(function(r){
+    afterIds[r.id]=true;
+    var b=beforeMap[r.id];
+    if(!b){entries.push({ts:ts,scope:scope,rowId:r.id,action:"criado",field:null,before:null,after:null});return;}
+    Object.keys(r).forEach(function(k){
+      if(k==="id")return;
+      var bv=b[k]!==undefined?b[k]:"",av=r[k]!==undefined?r[k]:"";
+      if(JSON.stringify(bv)!==JSON.stringify(av))entries.push({ts:ts,scope:scope,rowId:r.id,action:"editado",field:k,before:bv,after:av});
+    });
+  });
+  (before||[]).forEach(function(r){if(!afterIds[r.id])entries.push({ts:ts,scope:scope,rowId:r.id,action:"excluído",field:null,before:null,after:null});});
+  auditPush(entries);
+}
+function auditPushOne(scope,rowId,action){auditPush([{ts:new Date().toISOString(),scope:scope,rowId:rowId,action:action,field:null,before:null,after:null}]);}
+function auditHistoryFor(rowId){return auditLog.filter(function(e){return e.rowId===rowId;}).sort(function(a,b){return b.ts.localeCompare(a.ts);});}
+function fmtAuditTs(iso){var d=new Date(iso);function p(n){return String(n).padStart(2,"0");}return p(d.getDate())+"/"+p(d.getMonth()+1)+" "+p(d.getHours())+":"+p(d.getMinutes());}
+function fmtAuditVal(v){if(v===null||v===undefined||v==="")return"—";return typeof v==="object"?JSON.stringify(v):String(v);}
+
+/* ── Painel lateral de detalhes (drawer) — genérico para qualquer linha de tabela.
+   cols: [{key,title}] na ordem de exibição. row: objeto da linha. scope: prefixo usado na auditoria. ── */
+function openDetailDrawer(scope,row,cols){
+  var bg=document.getElementById("detailDrawerBg");
+  if(!bg)return;
+  var fields=cols.map(function(c){
+    return '<div class="drawer-fld"><b>'+esc(c.title)+'</b>'+esc(fmtAuditVal(row[c.key]))+'</div>';
+  }).join("");
+  var hist=auditHistoryFor(row.id);
+  var histHtml=hist.length?hist.map(function(h){
+    var lbl=cols.find(function(c){return c.key===h.field;});
+    var what=h.field?('<b>'+esc(lbl?lbl.title:h.field)+'</b>: '+esc(fmtAuditVal(h.before))+' → '+esc(fmtAuditVal(h.after))):('<b>Registro '+esc(h.action)+'</b>');
+    return '<div class="drawer-hist-item">'+fmtAuditTs(h.ts)+' — '+what+'</div>';
+  }).join(""):'<div class="drawer-hist-item" style="font-style:italic;color:var(--text3)">Sem histórico registrado ainda.</div>';
+  document.getElementById("detailDrawerTitle").textContent=row.navio||row.placa||row.modelo||row.meio||row.nome||("Item "+row.id);
+  document.getElementById("detailDrawerBody").innerHTML=fields+'<div class="drawer-hist"><h4 style="margin:0 0 8px;font-size:11px;color:var(--text2);text-transform:uppercase">Histórico de alterações</h4>'+histHtml+'</div>';
+  bg.classList.add("open");
+}
+function closeDetailDrawer(){var bg=document.getElementById("detailDrawerBg");if(bg)bg.classList.remove("open");}
+
+/* ── Gráficos SVG leves (sem dependência) ── */
+var CHART_PALETTE=["var(--c-blue)","var(--c-teal)","var(--c-amber)","var(--c-red)","var(--c-gold)","var(--c-sky)"];
+function svgBarChart(pairs){
+  if(!pairs.length)return '<div style="font-size:11px;color:var(--text3);font-style:italic;padding:8px 0">Sem dados.</div>';
+  var max=Math.max.apply(null,pairs.map(function(p){return p.v;}))||1;
+  return '<div>'+pairs.map(function(p,i){
+    var pct=Math.round(p.v/max*100);
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11px">'+
+      '<span style="width:120px;flex:none;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.k)+'</span>'+
+      '<div style="flex:1;background:var(--c-100);border-radius:99px;height:14px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+CHART_PALETTE[i%CHART_PALETTE.length]+'"></div></div>'+
+      '<b style="width:28px;text-align:right">'+p.v+'</b>'+
+    '</div>';
+  }).join("")+'</div>';
+}
+function svgDonutChart(pairs){
+  var total=pairs.reduce(function(a,p){return a+p.v;},0);
+  if(!total)return '<div style="font-size:11px;color:var(--text3);font-style:italic;padding:8px 0">Sem dados.</div>';
+  var r=42,cx=50,cy=50,circ=2*Math.PI*r,off=0;
+  var segs=pairs.map(function(p,i){
+    var frac=p.v/total,len=frac*circ;
+    var seg='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+CHART_PALETTE[i%CHART_PALETTE.length]+'" stroke-width="14" stroke-dasharray="'+len+' '+(circ-len)+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90 '+cx+' '+cy+')"></circle>';
+    off+=len;
+    return seg;
+  }).join("");
+  var legend=pairs.map(function(p,i){return '<div style="display:flex;align-items:center;gap:6px;font-size:11px;margin-top:4px"><span style="width:9px;height:9px;border-radius:50%;background:'+CHART_PALETTE[i%CHART_PALETTE.length]+';flex:none"></span>'+esc(p.k)+' ('+p.v+')</div>';}).join("");
+  return '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><svg viewBox="0 0 100 100" width="110" height="110">'+segs+'</svg><div>'+legend+'</div></div>';
+}
+
+/* ── Importador de planilha (CSV) com confirmação — genérico.
+   cols: [{key,title}] do destino. keyFields: campos usados para casar linha existente x nova
+   (ex.: ["navio","numero"]). applyFn(rows): recebe as linhas mapeadas prontas para aplicar. ── */
+function parseCsv(text){
+  var lines=text.split(/\r?\n/).filter(function(l){return l.trim()!=="";});
+  if(!lines.length)return{headers:[],rows:[]};
+  function splitLine(l){
+    var sep=l.indexOf(";")>l.indexOf(",")?";":",";
+    return l.split(sep).map(function(c){return c.replace(/^"|"$/g,"").trim();});
+  }
+  var headers=splitLine(lines[0]);
+  var rows=lines.slice(1).map(splitLine);
+  return{headers:headers,rows:rows};
+}
+function normHdr(s){return String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");}
+function openImporter(o){
+  var bg=document.getElementById("impBg");
+  if(!bg)return;
+  document.getElementById("impTitle").textContent="Importar planilha — "+o.label;
+  document.getElementById("impFile").value="";
+  document.getElementById("impPaste").value="";
+  document.getElementById("impMapWrap").innerHTML="";
+  document.getElementById("impPreviewWrap").innerHTML="";
+  document.getElementById("impConfirm").disabled=true;
+  var parsed=null;
+  function process(text){
+    parsed=parseCsv(text);
+    if(!parsed.headers.length){toast("Não foi possível ler a planilha (CSV vazio).","info");return;}
+    var mapWrap=document.getElementById("impMapWrap");
+    mapWrap.innerHTML=o.cols.map(function(c){
+      var guess=parsed.headers.findIndex(function(h){return normHdr(h)===normHdr(c.title)||normHdr(h)===normHdr(c.key);});
+      return '<div class="imp-map-row"><span>'+esc(c.title)+'</span><select data-key="'+c.key+'"><option value="">— ignorar —</option>'+
+        parsed.headers.map(function(h,i){return '<option value="'+i+'"'+(i===guess?" selected":"")+'>'+esc(h)+'</option>';}).join("")+
+      '</select></div>';
+    }).join("");
+    renderPreview();
+    mapWrap.querySelectorAll("select").forEach(function(sel){sel.onchange=renderPreview;});
+    document.getElementById("impConfirm").disabled=false;
+  }
+  function currentMap(){
+    var map={};
+    document.getElementById("impMapWrap").querySelectorAll("select").forEach(function(sel){if(sel.value!=="")map[sel.dataset.key]=+sel.value;});
+    return map;
+  }
+  function renderPreview(){
+    if(!parsed)return;
+    var map=currentMap();
+    var cols=o.cols.filter(function(c){return map[c.key]!==undefined;});
+    var prevRows=parsed.rows.slice(0,15);
+    document.getElementById("impPreviewWrap").innerHTML='<div style="font-size:11px;color:var(--text3);margin:8px 0">Pré-visualização ('+parsed.rows.length+' linha(s) detectada(s)):</div>'+
+      '<div style="overflow-x:auto"><table class="imp-preview"><thead><tr>'+cols.map(function(c){return '<th>'+esc(c.title)+'</th>';}).join("")+'</tr></thead><tbody>'+
+      prevRows.map(function(r){return '<tr>'+cols.map(function(c){return '<td>'+esc(r[map[c.key]]||"")+'</td>';}).join("")+'</tr>';}).join("")+
+      '</tbody></table></div>';
+  }
+  document.getElementById("impFile").onchange=function(e){
+    var f=e.target.files[0];if(!f)return;
+    var reader=new FileReader();
+    reader.onload=function(){process(reader.result);};
+    reader.readAsText(f,"utf-8");
+  };
+  document.getElementById("impPaste").oninput=function(e){if(e.target.value.trim())process(e.target.value);};
+  document.getElementById("impConfirm").onclick=function(){
+    if(!parsed)return;
+    var map=currentMap();
+    var mappedRows=parsed.rows.map(function(r){
+      var obj={};
+      o.cols.forEach(function(c){if(map[c.key]!==undefined)obj[c.key]=(r[map[c.key]]||"").trim();});
+      return obj;
+    }).filter(function(o2){return Object.values(o2).some(function(v){return v;});});
+    var res=o.applyFn(mappedRows);
+    toast("✓ Importação concluída: "+res.updated+" atualizada(s), "+res.added+" nova(s)","ok");
+    closeImporter();
+  };
+  bg.classList.add("open");
+}
+function closeImporter(){var bg=document.getElementById("impBg");if(bg)bg.classList.remove("open");}
+
 function bindDataTable(cfg){
   var getArr=cfg.getArr,setArr=cfg.setArr,onSaveKey=cfg.onSaveKey,onSaveDataFn=cfg.onSaveDataFn;
   var getEditing=cfg.getEditing,setEditing=cfg.setEditing,getDirty=cfg.getDirty,setDirty=cfg.setDirty;
@@ -2236,6 +2463,7 @@ function bindDataTable(cfg){
     await pushKV(pushLabel,onSaveKey,getArr());
     setSnap(null);setTitlesSnap(null);setEditing(false);setDirty(false);setLock(null);
     if(preTbl)pushUndo(undoLabel,async function(){setArr(JSON.parse(JSON.stringify(preTbl)));if(preTitles)setTitles(cloneCols(preTitles));onSaveDataFn();if(titlesKey){saveTitlesFn();await pushKV(pushLabel,titlesKey,getTitles());}await pushKV(pushLabel,onSaveKey,getArr());renderFn();afterRender();});
+    if(preTbl)auditDiffRows(cfg.prefix,preTbl,getArr());
     touchLastEdit(cfg.prefix);paintLastEdit(cfg.prefix+"_lastedit",cfg.prefix);
     toast("✓ Salvo","ok");
     renderFn();afterRender();
@@ -3931,6 +4159,7 @@ setTimeout(hideSplash,12000);
     try{updCache();}catch(e){}
     await loadAll();
     await loadLastEdits();
+    await loadAudit();
     // Carrega a tabela de Pessoal já no boot — é a fonte única de militares usada por outras abas
     // (ex: dropdown de responsável da Agenda), não só quando o usuário abre a aba Pessoal.
     if(typeof pessoalInit==="function")await pessoalInit();
@@ -4153,6 +4382,7 @@ setTimeout(hideSplash,12000);
       await pushKV("navPush",NAVIOS_COLS_KEY,navCols);
       navTableSnapshot=null;navColsSnapshot=null;navTableEditing=false;navTableDirty=false;GLOBAL_EDIT_LOCK=null;
       if(preTbl)pushUndo("Editar tabela CONDEF",async function(){navShips=JSON.parse(JSON.stringify(preTbl));if(preCols)navCols=cloneCols(preCols);navSaveShips();navSaveCols();await pushKV("navPush",NAVIOS_KEY,navShips);await pushKV("navPush",NAVIOS_COLS_KEY,navCols);renderNavios();renderNaviosCards();});
+      if(preTbl)auditDiffRows("navios_table",preTbl,navShips);
       touchLastEdit("navios_table");
       toast("✓ Embarcações salvas","ok");
       renderNavios();renderNaviosCards();
@@ -4190,6 +4420,11 @@ setTimeout(hideSplash,12000);
   });
   switchAppView("agenda");
 })();
+document.getElementById("detailDrawerClose").onclick=closeDetailDrawer;
+document.getElementById("detailDrawerBg").onclick=function(e){if(e.target.id==="detailDrawerBg")closeDetailDrawer();};
+document.getElementById("impClose").onclick=closeImporter;
+document.getElementById("impCancel").onclick=closeImporter;
+document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")closeImporter();};
 
 /* ═══════════════════════════════════════════════════════════
    ABA: CLG — tabelas T1/T2 + cartões
@@ -4501,14 +4736,64 @@ setTimeout(hideSplash,12000);
     var rows=editing?ppssRows:ppssRows.filter(ppssMatch);
     var colspan=ppssCols.length+1;
     tb.innerHTML=rows.map(function(r){
-      var cls=ppssRowCls(r);
-      return '<tr'+(cls?' class="'+cls+'"':'')+(editing?' data-rid="'+r.id+'"':'')+'>'+
+      var cls=ppssRowCls(r)+(editing?"":" clickable-row");
+      return '<tr'+(cls.trim()?' class="'+cls.trim()+'"':'')+' data-rid="'+r.id+'">'+
         ppssCols.map(function(col){return colTd(r,col,editing,"dt-cell","dt-cell-ro");}).join("")+
         '<td class="dt-actions dt-actions-col">'+(editing?'<span class="row-dh" title="Arrastar para reordenar">⠿</span><button class="nv-delrow" data-id="'+r.id+'" title="Excluir">🗑</button>':'')+'</td>'+
       '</tr>';
     }).join("")+(editing?'<tr class="dt-addrow-tr"><td colspan="'+colspan+'"><button class="nv-addrow" id="ppss_tbl_addrow">+ Adicionar pedido</button></td></tr>':(rows.length?'':'<tr><td colspan="'+colspan+'" style="text-align:center;color:var(--text3);font-style:italic">Nenhum pedido encontrado com os filtros atuais.</td></tr>'));
     ppssUpdToolbar(editing,ppssDirty);
     if(editing)bindRowDragGeneric(tb,function(){return ppssRows;},renderPpssTable,function(){ppssDirty=true;});
+    else tb.querySelectorAll("tr.clickable-row").forEach(function(tr){
+      tr.onclick=function(){var r=ppssRows.find(function(x){return x.id===tr.dataset.rid;});if(r)openDetailDrawer("ppss_tbl",r,ppssCols);};
+    });
+  }
+  /* Extrai mês/ano de um DTG (data-time-group naval, ex.: "R291858Z/JAN/2026") — usado na linha do tempo. */
+  var DTG_MONTHS={JAN:0,FEV:1,MAR:2,ABR:3,MAI:4,JUN:5,JUL:6,AGO:7,SET:8,OUT:9,NOV:10,DEZ:11};
+  function parseDTG(str){
+    var m=/([A-Z]{3})\/(\d{4})/.exec(String(str||"").toUpperCase());
+    if(!m||DTG_MONTHS[m[1]]===undefined)return null;
+    return{month:DTG_MONTHS[m[1]],year:+m[2]};
+  }
+  function ppssSituColor(r){
+    if(r.situacao==="Concluído")return"var(--c-teal)";
+    if(r.situacao==="Cancelado")return"var(--text3)";
+    if(!r.orcamento)return"var(--c-amber)";
+    return"var(--c-blue)";
+  }
+  function renderPpssGantt(){
+    var el=document.getElementById("ppss_gantt");
+    if(!el)return;
+    var MESES=["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
+    var year=new Date().getFullYear();
+    var hdr='<div class="gantt-hdr"><div class="gantt-label"></div><div class="gantt-months">'+MESES.map(function(m){return '<div class="gantt-cell">'+m+'</div>';}).join("")+'</div></div>';
+    var rows=PPSS_NAVIOS.map(function(nav){
+      var pedidos=ppssRows.filter(function(r){return r.navio===nav;});
+      var cells=MESES.map(function(_,mi){
+        var hits=pedidos.filter(function(r){
+          var d=parseDTG(r.msgOmps)||parseDTG(r.msgNav);
+          return d&&d.year===year&&d.month===mi;
+        });
+        return '<div class="gantt-cell">'+hits.slice(0,4).map(function(r){
+          return '<span class="gantt-dot" style="background:'+ppssSituColor(r)+'" title="'+esc(r.descricao)+' ('+esc(r.situacao||"sem situação")+')" data-rid="'+r.id+'"></span>';
+        }).join("")+'</div>';
+      }).join("");
+      return '<div class="gantt-row"><div class="gantt-label">'+esc(nav)+'</div><div class="gantt-months">'+cells+'</div></div>';
+    }).join("");
+    el.innerHTML=hdr+(rows||'<div style="padding:12px;font-size:11px;color:var(--text3);font-style:italic">Sem pedidos com data de mensagem identificável em '+year+'.</div>');
+    el.querySelectorAll(".gantt-dot[data-rid]").forEach(function(dot){
+      dot.onclick=function(){var r=ppssRows.find(function(x){return x.id===dot.dataset.rid;});if(r)openDetailDrawer("ppss_tbl",r,ppssCols);};
+    });
+  }
+  function renderPpssStats(){
+    var el=document.getElementById("ppss_stats");
+    if(!el)return;
+    var porNavio=PPSS_NAVIOS.map(function(n){return{k:n,v:ppssRows.filter(function(r){return r.navio===n;}).length};});
+    var porSitu=["Em andamento","Concluído","Aguardando orçamento","Cancelado"].map(function(s){return{k:s,v:ppssRows.filter(function(r){return(r.situacao||"Em andamento")===s||(!r.situacao&&s==="Em andamento");}).length};}).filter(function(p){return p.v;});
+    var porTipo=[{k:"Programada",v:ppssRows.filter(function(r){return r.tipo==="Programada";}).length},{k:"Corrente",v:ppssRows.filter(function(r){return r.tipo==="Corrente";}).length}];
+    el.innerHTML='<div class="stats-card"><h4>Pedidos por navio</h4>'+svgBarChart(porNavio)+'</div>'+
+      '<div class="stats-card"><h4>Distribuição por situação</h4>'+svgDonutChart(porSitu)+'</div>'+
+      '<div class="stats-card"><h4>Programada × Corrente</h4>'+svgDonutChart(porTipo)+'</div>';
   }
   function ppssFindCard(cid){return ppssCards.find(function(c){return c.id===cid;});}
   function renderPpssCards(){
@@ -4520,7 +4805,7 @@ setTimeout(hideSplash,12000);
     bindMasonryCardDrag(grid,function(){return ppssCards;},function(v){ppssCards=v;},ppssSaveCards,PPSS_CARDS_KEY,renderPpssCards,"Reordenar cartões PPSS",function(){return!!GLOBAL_EDIT_LOCK;});
     bindItemDragGeneric(grid,ppssFindCard,function(v){ppssCardSt.dirty=v;},renderPpssCards);
   }
-  renderPpss=function(){renderPpssKpis();renderPpssTable();renderPpssCards();};
+  renderPpss=function(){renderPpssKpis();renderPpssTable();renderPpssGantt();renderPpssStats();renderPpssCards();};
   ppssInit=async function(){
     if(ppssBound){return;}
     ppssBound=true;
@@ -4547,13 +4832,35 @@ setTimeout(hideSplash,12000);
       saveTitlesFn:ppssSaveCols,titlesKey:PPSS_COLS_KEY,
       getTitlesSnap:function(){return ppssColsSnapshot;},setTitlesSnap:function(v){ppssColsSnapshot=v;},
       fixedKeys:PPSS_FIXED_KEYS,getLock:function(){return GLOBAL_EDIT_LOCK;},setLock:function(v){GLOBAL_EDIT_LOCK=v;},who:"ppss",
-      renderFn:renderPpssTable,afterRender:function(){renderPpssKpis();renderPpssCards();},updateToolbar:function(){ppssUpdToolbar(true,true);},
+      renderFn:renderPpssTable,afterRender:function(){renderPpssKpis();renderPpssGantt();renderPpssStats();renderPpssCards();},updateToolbar:function(){ppssUpdToolbar(true,true);},
       pushLabel:"ppssPush",undoLabel:"Editar pedidos PPSS",focusKey:"descricao"
     });
     wireCardsGrid({gridId:"ppss_grid",addcardId:"ppss_addcard",st:ppssCardSt,
       getCards:function(){return ppssCards;},setCards:function(v){ppssCards=v;},
       save:ppssSaveCards,pushTag:"ppssPush",key:function(){return PPSS_CARDS_KEY;},
       label:"cartão PPSS",render:renderPpss});
+    var impBtn=document.getElementById("ppss_import_btn");
+    if(impBtn)impBtn.onclick=function(){
+      if(GLOBAL_EDIT_LOCK){toast("Finalize a edição em andamento antes de importar.","info");return;}
+      openImporter({
+        label:"PPSS",cols:PPSS_FIXED,
+        applyFn:function(mapped){
+          var preTbl=JSON.parse(JSON.stringify(ppssRows));
+          var updated=0,added=0;
+          mapped.forEach(function(m){
+            var existing=ppssRows.find(function(r){return r.navio===m.navio&&r.numero===m.numero&&m.navio&&m.numero;});
+            if(existing){Object.assign(existing,m);updated++;}
+            else{var nr={id:genUid("ps")};PPSS_FIXED.forEach(function(c){nr[c.key]="";});Object.assign(nr,m);ppssRows.push(nr);added++;}
+          });
+          ppssSaveRows();
+          pushKV("ppssPush",PPSS_KEY,ppssRows);
+          auditDiffRows("ppss_tbl",preTbl,ppssRows);
+          touchLastEdit("ppss_tbl");paintLastEdit("ppss_tbl_lastedit","ppss_tbl");
+          renderPpss();
+          return{updated:updated,added:added};
+        }
+      });
+    };
   };
 })();
 
@@ -4654,14 +4961,30 @@ setTimeout(hideSplash,12000);
     var rows=editing?vtrRows:vtrRows.filter(garMatch);
     var colspan=vtrCols.length+1;
     tb.innerHTML=rows.map(function(r){
-      var cls=garRowCls(r);
-      return '<tr'+(cls?' class="'+cls+'"':'')+(editing?' data-rid="'+r.id+'"':'')+'>'+
+      var cls=garRowCls(r)+(editing?"":" clickable-row");
+      return '<tr'+(cls.trim()?' class="'+cls.trim()+'"':'')+' data-rid="'+r.id+'">'+
         vtrCols.map(function(col){return colTd(r,col,editing,"dt-cell","dt-cell-ro");}).join("")+
         '<td class="dt-actions dt-actions-col">'+(editing?'<span class="row-dh" title="Arrastar para reordenar">⠿</span><button class="nv-delrow" data-id="'+r.id+'" title="Excluir">🗑</button>':'')+'</td>'+
       '</tr>';
     }).join("")+(editing?'<tr class="dt-addrow-tr"><td colspan="'+colspan+'"><button class="nv-addrow" id="vtr_tbl_addrow">+ Adicionar viatura</button></td></tr>':(rows.length?'':'<tr><td colspan="'+colspan+'" style="text-align:center;color:var(--text3);font-style:italic">Nenhuma viatura encontrada com os filtros atuais.</td></tr>'));
     garUpdToolbar(editing,vtrDirty);
     if(editing)bindRowDragGeneric(tb,function(){return vtrRows;},renderGarTable,function(){vtrDirty=true;});
+    else tb.querySelectorAll("tr.clickable-row").forEach(function(tr){
+      tr.onclick=function(){var r=vtrRows.find(function(x){return x.id===tr.dataset.rid;});if(r)openDetailDrawer("vtr_tbl",r,vtrCols);};
+    });
+  }
+  function renderGarStats(){
+    var el=document.getElementById("gar_stats");
+    if(!el)return;
+    var frota=vtrRows.filter(function(r){return r.existencia!=="0";});
+    var porSit=["P","PO","IM"].map(function(s){return{k:s,v:frota.filter(function(r){return r.sit===s;}).length};}).filter(function(p){return p.v;});
+    var porTipo={};frota.forEach(function(r){var t=r.tipo||"—";porTipo[t]=(porTipo[t]||0)+1;});
+    var tipoArr=Object.keys(porTipo).sort(function(a,b){return porTipo[b]-porTipo[a];}).slice(0,8).map(function(t){return{k:"Tipo "+t,v:porTipo[t]};});
+    var porDot={};frota.forEach(function(r){var d=r.dotacao||"—";porDot[d]=(porDot[d]||0)+1;});
+    var dotArr=Object.keys(porDot).map(function(d){return{k:d,v:porDot[d]};});
+    el.innerHTML='<div class="stats-card"><h4>Situação da frota</h4>'+svgDonutChart(porSit)+'</div>'+
+      '<div class="stats-card"><h4>Viaturas por tipo</h4>'+svgBarChart(tipoArr)+'</div>'+
+      '<div class="stats-card"><h4>Dotação × Extra</h4>'+svgDonutChart(dotArr)+'</div>';
   }
   function garFindCard(cid){return vtrCards.find(function(c){return c.id===cid;});}
   function renderGarCards(){
@@ -4673,7 +4996,7 @@ setTimeout(hideSplash,12000);
     bindMasonryCardDrag(grid,function(){return vtrCards;},function(v){vtrCards=v;},vtrSaveCards,VTR_CARDS_KEY,renderGarCards,"Reordenar cartões Garagem",function(){return!!GLOBAL_EDIT_LOCK;});
     bindItemDragGeneric(grid,garFindCard,function(v){garCardSt.dirty=v;},renderGarCards);
   }
-  renderGaragem=function(){renderGarKpis();renderGarTable();renderGarCards();};
+  renderGaragem=function(){renderGarKpis();renderGarTable();renderGarStats();renderGarCards();};
   garInit=async function(){
     if(garBound){return;}
     garBound=true;
@@ -4697,13 +5020,35 @@ setTimeout(hideSplash,12000);
       saveTitlesFn:vtrSaveCols,titlesKey:VTR_COLS_KEY,
       getTitlesSnap:function(){return vtrColsSnapshot;},setTitlesSnap:function(v){vtrColsSnapshot=v;},
       fixedKeys:VTR_FIXED_KEYS,getLock:function(){return GLOBAL_EDIT_LOCK;},setLock:function(v){GLOBAL_EDIT_LOCK=v;},who:"vtr",
-      renderFn:renderGarTable,afterRender:function(){renderGarKpis();renderGarCards();},updateToolbar:function(){garUpdToolbar(true,true);},
+      renderFn:renderGarTable,afterRender:function(){renderGarKpis();renderGarStats();renderGarCards();},updateToolbar:function(){garUpdToolbar(true,true);},
       pushLabel:"garPush",undoLabel:"Editar viaturas",focusKey:"modelo"
     });
     wireCardsGrid({gridId:"gar_grid",addcardId:"gar_addcard",st:garCardSt,
       getCards:function(){return vtrCards;},setCards:function(v){vtrCards=v;},
       save:vtrSaveCards,pushTag:"garPush",key:function(){return VTR_CARDS_KEY;},
       label:"cartão Garagem",render:renderGaragem});
+    var impBtn=document.getElementById("gar_import_btn");
+    if(impBtn)impBtn.onclick=function(){
+      if(GLOBAL_EDIT_LOCK){toast("Finalize a edição em andamento antes de importar.","info");return;}
+      openImporter({
+        label:"Garagem",cols:VTR_FIXED,
+        applyFn:function(mapped){
+          var preTbl=JSON.parse(JSON.stringify(vtrRows));
+          var updated=0,added=0;
+          mapped.forEach(function(m){
+            var existing=m.placa&&vtrRows.find(function(r){return r.placa&&r.placa.toUpperCase()===m.placa.toUpperCase();});
+            if(existing){Object.assign(existing,m);updated++;}
+            else{var nr={id:genUid("vt")};VTR_FIXED.forEach(function(c){nr[c.key]="";});Object.assign(nr,m);vtrRows.push(nr);added++;}
+          });
+          vtrSaveRows();
+          pushKV("garPush",VTR_KEY,vtrRows);
+          auditDiffRows("vtr_tbl",preTbl,vtrRows);
+          touchLastEdit("vtr_tbl");paintLastEdit("vtr_tbl_lastedit","vtr_tbl");
+          renderGaragem();
+          return{updated:updated,added:added};
+        }
+      });
+    };
   };
 })();
 /* MODULE_HORAS_PLACEHOLDER */
