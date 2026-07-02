@@ -373,6 +373,7 @@
 [data-theme="dark"]{--bg:#0b1118;--bg-base:#000000;--surface:#141d2b;--border:#1e293b;--border2:#2d3f55;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--c-sky:#1e3a5f;--c-amber2:#3d2a00;--c-teal2:#053330;--c-red2:#3a0a0a;--c-purple2:#1e1433;--c-100:#1e293b;--c-50:#141d2b;--c-200:#1e293b;}
 *{box-sizing:border-box;margin:0;padding:0}
 body{
+  font-family:'Josefin Sans',sans-serif;
   background-color:var(--bg-base);
   background-image:
     radial-gradient(ellipse 28% 24% at 8% 10%, color-mix(in srgb,var(--header-bg) 40%,transparent) 0%, transparent 100%),
@@ -1036,7 +1037,7 @@ body{padding-left:64px}
 <link id="gfont-Abril-Fatface" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abril+Fatface:wght@300;400;500;600;700&amp;display=swap">
 <link id="gfont-Josefin-Sans" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700&amp;display=swap">
 </head>
-<body id="artifacts-component-root-html" style="font-family: 'Josefin Sans', sans-serif">
+<body id="artifacts-component-root-html">
 <nav class="appnav" id="appnav">
   <button class="nav-item" data-view="config" title="Configurações da OM"><span class="nav-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2.5v2.6M12 18.9v2.6M4.2 6.3l2.1 1.5M17.7 16.2l2.1 1.5M2.5 12h2.6M18.9 12h2.6M4.2 17.7l2.1-1.5M17.7 7.8l2.1-1.5"></path></svg></span><span class="nav-lbl">CONFIG OM</span></button>
   <button class="nav-item active" data-view="agenda" title="Agenda Administrativa"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="18" rx="2"></rect><path d="M9 3.5V2.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"></path><line x1="8.5" y1="9" x2="15.5" y2="9"></line><line x1="8.5" y1="12.5" x2="15.5" y2="12.5"></line><line x1="8.5" y1="16" x2="13" y2="16"></line></svg></span><span class="nav-lbl">Agenda</span></button>
@@ -1047,16 +1048,16 @@ body{padding-left:64px}
 </nav>
 <div id="toast-container"></div>
 <div id="splash" class="splash"><div class="splash-inner"><div class="splash-crest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" width="220" height="220"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,0.95)"/><stop offset="100%" stop-color="rgba(255,255,255,0.65)"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="3.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g filter="url(#glow)" fill="none" stroke="url(#ag)" stroke-linecap="round" stroke-linejoin="round"><circle cx="110" cy="55" r="18" stroke-width="7"/><line x1="110" y1="73" x2="110" y2="175" stroke-width="7"/><line x1="74" y1="95" x2="146" y2="95" stroke-width="7"/><path d="M74 175 Q54 155 52 130" stroke-width="7"/><path d="M146 175 Q166 155 168 130" stroke-width="7"/><path d="M52 130 Q60 148 74 155" stroke-width="7"/><path d="M168 130 Q160 148 146 155" stroke-width="7"/><path d="M74 155 Q92 170 110 175 Q128 170 146 155" stroke-width="7"/><circle cx="110" cy="55" r="5" fill="url(#ag)" stroke="none"/></g><g fill="rgba(255,255,255,0.18)"><circle cx="110" cy="55" r="10"/></g></svg></div><div class="splash-welcome">Bem-vindo à</div><div class="splash-title">Agenda Administrativa</div><div class="splash-sub">Carregando ambiente…</div><div class="splash-bar-wrap"><div class="splash-bar"><div class="splash-bar-fill" id="splashFill"></div></div><div class="splash-pct" id="splashPct">0%</div></div></div></div>
-<div class="wrap" id="viewAgenda" style="font-family: 'Josefin Sans', sans-serif">
+<div class="wrap" id="viewAgenda">
 <header>
   <div class="brand">
     <div class="crest" id="crestEl" style="background: none;"><span id="crestContent"><span>AA</span></span></div>
-    <div><h1 id="agenda_hdr_title" style="font-size: 25px; font-family: 'Josefin Sans', sans-serif; text-align: center">Agenda Administrativa</h1><div class="sub" id="appSub" style="font-size: 14px; font-family: 'Josefin Sans', sans-serif; opacity: 1; line-height: 1; letter-spacing: 8px; text-align: left">Logística · CHN-4</div></div>
+    <div><h1 id="agenda_hdr_title" style="font-size: 25px; text-align: center">Agenda Administrativa</h1><div class="sub" id="appSub" style="font-size: 14px; opacity: 1; line-height: 1; letter-spacing: 8px; text-align: left">Logística · CHN-4</div></div>
   </div>
-  <div class="hright" style="font-family: 'Josefin Sans', sans-serif">
+  <div class="hright">
     <span class="synctag" id="backend_tag" title="Estado de gravação" style="background-color: rgba(247, 247, 247, 0.94); opacity: 0.8">⏳ verificando…</span>
     <button class="hbtn theme-toggle-btn" id="themebtn">🌙 Noturno</button>
-    <select class="yearsel" id="yearsel" style="font-family: 'Josefin Sans', sans-serif; font-size: 12px"><option value="2026" selected="">2026</option></select>
+    <select class="yearsel" id="yearsel" style="font-size: 12px"><option value="2026" selected="">2026</option></select>
     <button class="hbtn add-year" id="addyearbtn">+ Ano</button><button class="hbtn" id="delyearbtn" title="Excluir ano selecionado" style="background:rgba(168,85,75,.25);border-color:rgba(168,85,75,.5)">✕ Ano</button>
   </div>
 </header>
@@ -1067,13 +1068,13 @@ body{padding-left:64px}
 </div>
 <div class="legend" id="legend"><span class="li"><span class="li-dot" style="background:var(--c-blue)"></span>Tarefas da Divisão</span><span class="li"><span class="li-dot" style="background:var(--c-amber)"></span>Subsídios das Unidades Subordinadas</span><span class="li"><span class="li-dot" style="background:var(--c-teal)"></span>Concluída</span><span style="margin-left:auto;font-size:10px;color:var(--text3)">Hoje: <b style="color:var(--text2)">19/06/2026</b></span></div>
 <div class="spot-section">
-  <div class="spot-head"><span style="font-size:17px">⚡</span><h2 style="font-family: 'Josefin Sans', sans-serif">Demandas do dia</h2><span class="sh-count" id="spotCount" style="font-family: 'Josefin Sans', sans-serif">0 ativas</span><button class="spot-add" id="spotAddBtn">+ Nova demanda</button></div>
+  <div class="spot-head"><span style="font-size:17px">⚡</span><h2>Demandas do dia</h2><span class="sh-count" id="spotCount">0 ativas</span><button class="spot-add" id="spotAddBtn">+ Nova demanda</button></div>
   <div class="spot-body" id="spotBody"><div class="spot-empty">Nenhuma demanda do dia.</div></div>
 </div>
-<div class="tabs" id="tabs" style="font-family: 'Josefin Sans', sans-serif"><button class="tab" data-m="1">JAN</button><button class="tab" data-m="2">FEV</button><button class="tab" data-m="3">MAR</button><button class="tab" data-m="4">ABR</button><button class="tab" data-m="5">MAI</button><button class="tab active" data-m="6">JUN</button><button class="tab" data-m="7">JUL</button><button class="tab" data-m="8">AGO</button><button class="tab" data-m="9">SET</button><button class="tab" data-m="10">OUT</button><button class="tab" data-m="11">NOV</button><button class="tab" data-m="12">DEZ</button></div>
-<div class="kpis" id="kpis" style="font-family: 'Josefin Sans', sans-serif"><div class="kpi k-purple" data-k="all" style="font-family: 'Josefin Sans', sans-serif"><div class="kpi-n">25</div><div class="kpi-t">Tarefas</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:100%"></div></div></div></div><div class="kpi k-red" data-k="venc" style="font-family: 'Josefin Sans', sans-serif"><div class="kpi-n">16</div><div class="kpi-t">Vencidas</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:64%"></div></div></div></div><div class="kpi k-amber" data-k="prox" style="font-family: 'Josefin Sans', sans-serif"><div class="kpi-n">3</div><div class="kpi-t">Vencem ≤7d</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:12%"></div></div></div></div><div class="kpi k-blue" data-k="fut" style="font-family: 'Josefin Sans', sans-serif"><div class="kpi-n">1</div><div class="kpi-t">A vencer</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:4%"></div></div></div></div><div class="kpi k-teal" data-k="ok" style="font-family: 'Josefin Sans', sans-serif"><div class="kpi-n">3</div><div class="kpi-t">Concluídas 12%</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:12%"></div></div></div></div><div class="kpi k-grey" data-k="nav"><div class="kpi-n">17</div><div class="kpi-t">Subsídios pend.</div></div></div>
+<div class="tabs" id="tabs"><button class="tab" data-m="1">JAN</button><button class="tab" data-m="2">FEV</button><button class="tab" data-m="3">MAR</button><button class="tab" data-m="4">ABR</button><button class="tab" data-m="5">MAI</button><button class="tab active" data-m="6">JUN</button><button class="tab" data-m="7">JUL</button><button class="tab" data-m="8">AGO</button><button class="tab" data-m="9">SET</button><button class="tab" data-m="10">OUT</button><button class="tab" data-m="11">NOV</button><button class="tab" data-m="12">DEZ</button></div>
+<div class="kpis" id="kpis"><div class="kpi k-purple" data-k="all"><div class="kpi-n">25</div><div class="kpi-t">Tarefas</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:100%"></div></div></div></div><div class="kpi k-red" data-k="venc"><div class="kpi-n">16</div><div class="kpi-t">Vencidas</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:64%"></div></div></div></div><div class="kpi k-amber" data-k="prox"><div class="kpi-n">3</div><div class="kpi-t">Vencem ≤7d</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:12%"></div></div></div></div><div class="kpi k-blue" data-k="fut"><div class="kpi-n">1</div><div class="kpi-t">A vencer</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:4%"></div></div></div></div><div class="kpi k-teal" data-k="ok"><div class="kpi-n">3</div><div class="kpi-t">Concluídas 12%</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:12%"></div></div></div></div><div class="kpi k-grey" data-k="nav"><div class="kpi-n">17</div><div class="kpi-t">Subsídios pend.</div></div></div>
 <div class="seg" id="seg"><button class="segbtn all active">Todas <span class="seg-cc">25</span></button><button class="segbtn div"><span class="seg-sw" style="background:var(--c-blue)"></span>Tarefas da Divisão <span class="seg-cc">19</span></button><button class="segbtn nav"><span class="seg-sw" style="background:var(--c-amber)"></span>Subsídios das Unidades Subordinadas <span class="seg-cc">6</span></button></div>
-<div class="recline" id="recline" style="font-family: 'Josefin Sans', sans-serif"><span class="rec-lbl">Recorrência:</span><button class="recbtn active" data-r="ALL">Todos</button><button class="recbtn" data-r="MENSAL">Mensal</button><button class="recbtn" data-r="ANUAL">Anual</button><button class="recbtn" data-r="SEMANAL">Semanal</button><button class="recbtn" data-r="DIVERSO">Prazos Diversos</button></div>
+<div class="recline" id="recline"><span class="rec-lbl">Recorrência:</span><button class="recbtn active" data-r="ALL">Todos</button><button class="recbtn" data-r="MENSAL">Mensal</button><button class="recbtn" data-r="ANUAL">Anual</button><button class="recbtn" data-r="SEMANAL">Semanal</button><button class="recbtn" data-r="DIVERSO">Prazos Diversos</button></div>
 <div class="toolbar">
   <div class="search-wrap" id="qWrap"><span class="icon">🔍</span><input id="q" placeholder="Buscar… (atalho: /)"><button type="button" class="qclear" id="qClear" title="Limpar busca">✕</button></div>
   <select class="tselect" id="f_assunto"><option value="">Assunto</option><option>CIGEE</option><option>CLG</option><option>DIVERSOS</option><option>EMBARCAÇÕES</option><option>PROGEM</option></select>
@@ -1094,14 +1095,14 @@ body{padding-left:64px}
   <input type="file" id="importfile" accept=".json" style="display:none">
 </div>
 <div id="iobar" class="iobar" style="display:none"></div>
-<div class="scope" id="scope" style="font-family: 'Josefin Sans', sans-serif"><b>Junho de 2026</b>  — 25 de 25 tarefas</div>
+<div class="scope" id="scope"><b>Junho de 2026</b>  — 25 de 25 tarefas</div>
 <div class="view-toggle" id="viewtog"><button class="vtbtn active" data-v="lista">☰ Lista</button><button class="vtbtn" data-v="cal">📅 Calendário</button><button class="vtbtn" data-v="tl">📊 Timeline 30d</button><button class="vtbtn" data-v="hm-mes">🌡 HeatMap Mensal</button><button class="vtbtn" data-v="hm-ano">🌡 HeatMap Anual</button></div>
-<div id="body" style="font-family: 'Josefin Sans', sans-serif"></div>
+<div id="body"></div>
 <div class="cachebar" data-prefix="ag_" title="Uso de armazenamento desta aba (limite 1 MB)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div>
 <div class="foot">Agenda Administrativa · <b id="totrec">37</b> tarefas · <b id="foot_years">2026</b> · <span class="kbd">/ buscar</span> <span class="kbd">N inserir</span> <span class="kbd">Ctrl+Z desfazer</span> <span class="kbd">Ctrl+Y refazer</span></div>
 </div>
 
-<div class="wrap" id="viewNavios" style="display:none;font-family: 'Josefin Sans', sans-serif">
+<div class="wrap" id="viewNavios" style="display:none;">
 <header>
   <div class="brand">
     <div class="crest" id="nv_hdr_crest" style="background:none"><span style="font-size:22px">⚓</span></div>
@@ -1148,7 +1149,7 @@ body{padding-left:64px}
 <div class="foot" id="nv_hdr_foot">Controle de CONDEF · dados transcritos do quadro físico SN-27.2 — versão inicial, sujeita a ajustes</div>
 </div>
 
-<div class="wrap" id="viewCLG" style="display:none;font-family: 'Josefin Sans', sans-serif">
+<div class="wrap" id="viewCLG" style="display:none;">
 <header>
   <div class="brand">
     <div class="crest" id="clg_hdr_crest" style="background:none"><span style="font-size:22px">⛽</span></div>
@@ -1210,7 +1211,7 @@ body{padding-left:64px}
 <div class="foot" id="clg_hdr_foot">Controle de CLG · dados transcritos do quadro físico — versão inicial, sujeita a ajustes</div>
 </div>
 
-<div class="wrap" id="viewHoras" style="display:none;font-family: 'Josefin Sans', sans-serif">
+<div class="wrap" id="viewHoras" style="display:none;">
 <header>
   <div class="brand">
     <div class="crest" id="horas_hdr_crest" style="background:none"><span style="font-size:22px">🔧</span></div>
@@ -1234,7 +1235,7 @@ body{padding-left:64px}
 <div class="foot">Motores · Horas de Funcionamento · dados transcritos do controle físico — versão inicial, sujeita a ajustes</div>
 </div>
 
-<div class="wrap" id="viewPessoal" style="display:none;font-family: 'Josefin Sans', sans-serif">
+<div class="wrap" id="viewPessoal" style="display:none;">
 <header>
   <div class="brand">
     <div class="crest" id="pessoal_hdr_crest" style="background:none"><span style="font-size:22px">AA</span></div>
@@ -1352,7 +1353,7 @@ Etapa 2"></textarea></div></div></div><div class="mfoot"><button class="brestore
 
 <div class="mbg" id="rbg"><div class="modal wide"><div class="mh noprint"><h3>Passagem de Função</h3><button class="mx" id="r_close">✕</button></div><div class="mbody"><div class="report" id="reportBody"></div></div><div class="mfoot noprint"><button class="bcancel left" id="r_close2">Fechar</button><button class="bsave" id="r_print">🖨 Imprimir</button></div></div></div>
 
-<div class="wrap" id="viewConfigOM" style="display:none;font-family: 'Josefin Sans', sans-serif">
+<div class="wrap" id="viewConfigOM" style="display:none;">
 <header>
   <div class="brand">
     <div class="crest" style="background:none"><span style="font-size:22px">⚙</span></div>
@@ -1401,6 +1402,9 @@ var GLOBAL_EDIT_LOCK=null;
 /* Cada chave (ag_*, aa_*) é seu próprio documento em agenda_data/{chave} — não compete por espaço
    com as demais (limite de 1 MiB por documento, não por app) e cada gravação só toca o que mudou.
    agenda/main (modelo antigo, doc único) fica intocado como backup. */
+/* ═══════════════════════════════════════════════════════════
+   BACKEND & SYNC — Supabase (svs/gts/gtj, sentinela _meta, startRT)
+   ═══════════════════════════════════════════════════════════ */
 var bk="local", dc=null, rtActive=false;
 var docUpdateTimes={}, flushTimers={};
 
@@ -1543,6 +1547,9 @@ function startRT(){
   poll();
 }
 
+/* ═══════════════════════════════════════════════════════════
+   ABA: AGENDA — constantes, estado, calendário, tarefas, modais
+   ═══════════════════════════════════════════════════════════ */
 /* ── CONSTANTES ── */
 var TODAY=(function(){var d=new Date();d.setHours(0,0,0,0);return d;})();
 var CUR_YEAR=TODAY.getFullYear();
@@ -1832,6 +1839,9 @@ function reorderByIds(arr,ids){var byId={};arr.forEach(function(x){byId[x.id]=x;
 function cloneCols(cols){return cols.map(function(c){return Object.assign({},c);});}
 /* ── Tabela genérica completa: edição de célula, título/coluna (add/del/reorder/resize),
    reordenar linha, inserir/excluir linha, com undo. Usado por CLG, e pelas tabelas de Horas. ── */
+/* ═══════════════════════════════════════════════════════════
+   UTILITÁRIOS GENÉRICOS — tabelas (bindDataTable), cartões (cardHtmlGeneric/wireCardsGrid), drag
+   ═══════════════════════════════════════════════════════════ */
 /* ══════════ SISTEMA GENÉRICO DE CARTÕES (layout + handlers únicos para todas as abas) ══════════
    Para uma aba nova: criar var <aba>CardSt={editingId:null,dirty:false,snapshot:null};
    renderizar com renderMasonryGrid(grid,cards,function(c){return cardHtmlGeneric(c,st,lockedOut);},isCardWide)
@@ -3408,6 +3418,9 @@ document.getElementById("m_del").onclick=function(){
 };
 document.getElementById("m_restore").onclick=async function(){if(cMode){setForm({tarefa:"",cat:"DIVISAO",kind:"MENSAL",divisao:cfg.divisoes[0]||"",assunto:"",resp:"",destino:"",atraves:"",ref:"",msg:"",dayrule:{t:"dom",n:5},month:curMonth,day:15,dates:[{y:curYear,m:curMonth,d:15}],weekday:5});return;}var base=allBase().find(function(x){return String(x.id)===String(eId);});if(isUsr(base))return;if(eScope==="one"&&eInstKey){var prevI=ovInstEdit[eInstKey];delete ovInstEdit[eInstKey];await svs(K.ie,ovInstEdit);if(prevI)pushUndo("Restaurar ocorrência",async function(){ovInstEdit[eInstKey]=prevI;await svs(K.ie,ovInstEdit);});toast("Ocorrência restaurada","info");closeM("mbg");renderAll();}else{var prev=ovEdit[eId];delete ovEdit[eId];await svs(K.ed,ovEdit);if(prev)pushUndo("Restaurar",async function(){ovEdit[eId]=prev;await svs(K.ed,ovEdit);});toast("Restaurado","info");closeM("mbg");renderAll();}};
 
+/* ═══════════════════════════════════════════════════════════
+   ABA: CONFIG OM — configurações, cabeçalhos (TABS), paleta, brasão
+   ═══════════════════════════════════════════════════════════ */
 /* ── CONFIG OM ── */
 var selHC="#2f3a44";
 function buildSwatches(){var cont=document.getElementById("colorSwatches");cont.innerHTML=HPRE.map(function(c){return'<div class="cswatch'+(cfg.headerColor===c?" sel":"")+'" style="background:'+c+'" data-c="'+c+'"></div>';}).join("");cont.querySelectorAll(".cswatch").forEach(function(sw){sw.onclick=function(){selHC=sw.dataset.c;cont.querySelectorAll(".cswatch").forEach(function(s){s.classList.remove("sel");});sw.classList.add("sel");document.getElementById("c_color_custom").value=sw.dataset.c;document.getElementById("c_color_hex").textContent=sw.dataset.c;document.getElementById("c_crest_prev").style.background=sw.dataset.c;};});}
@@ -3794,6 +3807,9 @@ setTimeout(hideSplash,20000);
   }
 })();
 
+/* ═══════════════════════════════════════════════════════════
+   ABA: NAVIOS — tabela CONDEF + cartões
+   ═══════════════════════════════════════════════════════════ */
 /* ── MÓDULO: CONTROLE DE NAVIOS/EMBARCAÇÕES ── */
 (function(){
   var NAVIOS_SEED=[
@@ -4074,6 +4090,9 @@ setTimeout(hideSplash,20000);
   switchAppView("agenda");
 })();
 
+/* ═══════════════════════════════════════════════════════════
+   ABA: CLG — tabelas T1/T2 + cartões
+   ═══════════════════════════════════════════════════════════ */
 /* ── MÓDULO: CONTROLE DE CLG ── */
 (function(){
   var CLG_T1_SEED=[
@@ -4266,8 +4285,11 @@ setTimeout(hideSplash,20000);
   };
 })();
 /* MODULE_HORAS_PLACEHOLDER */
+/* ═══════════════════════════════════════════════════════════
+   ABA: HORAS MOTORES — tabelas por embarcação + manutenção + cartões
+   ═══════════════════════════════════════════════════════════ */
 (function(){
-  var HORAS_SHIPS_SEED=[{"key": "nsampaio", "title": "NHO G. Sampaio", "rows": [{"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "RUSTON", "modelo": "6 R K C M", "numSerie": "1H9564", "horasOperacao": "40.644,00", "horasManutencao": "35.960", "horasProxRevisao": "315,00", "horasUltrapassadas": "NA", "tipoProxRevisao": "REV.", "dataUltimaManutencao": "2021", "tipoRevisaoUltima": "REV. 30.000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "RUSTON", "modelo": "6 R K C M", "numSerie": "1H9563", "horasOperacao": "34.857,00", "horasManutencao": "31.990", "horasProxRevisao": "2.132", "horasUltrapassadas": "NA", "tipoProxRevisao": "REV.5.000hs", "dataUltimaManutencao": "2022", "tipoRevisaoUltima": "REV. 30.000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "CATERPILLAR", "modelo": "3 3 0 6 B", "numSerie": "85Z13908", "horasOperacao": "13.642,00", "horasManutencao": "9.496", "horasProxRevisao": "-2.146,00", "horasUltrapassadas": "2.146,00", "tipoProxRevisao": "REV.", "dataUltimaManutencao": "2022", "tipoRevisaoUltima": "REV. 6.000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2025", "pmRelacionado": "PMA2026"}, {"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "CATERPILLAR", "modelo": "3 3 0 6 B", "numSerie": "85Z13909", "horasOperacao": "12.837,00", "horasManutencao": "8.770", "horasProxRevisao": "-2.067,00", "horasUltrapassadas": "2.067,00", "tipoProxRevisao": "REV.", "dataUltimaManutencao": "2022", "tipoRevisaoUltima": "REV. 6.000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2025", "pmRelacionado": "PMA2026"}, {"meio": "NHO G. Sampaio", "indicativo": "H-37", "classe": "Amorim do Vale", "tipoMotor": "DGE", "bordo": "NA", "fabricante": "PETTEN", "modelo": "A C 1", "numSerie": "NA", "horasOperacao": "NA", "horasManutencao": "NA", "horasProxRevisao": "NA", "horasUltrapassadas": "NA", "tipoProxRevisao": "NA", "dataUltimaManutencao": "NA", "tipoRevisaoUltima": "NA", "dataProxRevisao": "NA", "situacao": "BAIXA", "projetos": "-", "ano": "-", "pmRelacionado": "-"}]}, {"key": "castelo", "title": "NHiBTenCastelo", "rows": [{"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "VOLVO PENTA", "modelo": "D16C-CMH", "numSerie": "1016041115", "horasOperacao": "14848", "horasManutencao": "10531", "horasProxRevisao": "-2054", "horasUltrapassadas": "2054", "tipoProxRevisao": "1000H", "dataUltimaManutencao": "MAI2024", "tipoRevisaoUltima": "500H", "dataProxRevisao": "JUN2026", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "VOLVO PENTA", "modelo": "D16C-CMH", "numSerie": "1016041114", "horasOperacao": "14822", "horasManutencao": "10490", "horasProxRevisao": "-2069", "horasUltrapassadas": "2069", "tipoProxRevisao": "1000H", "dataUltimaManutencao": "MAI2024", "tipoRevisaoUltima": "500H", "dataProxRevisao": "JUN2026", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "MTU", "modelo": "6R099TB50B", "numSerie": "1009103891", "horasOperacao": "10073", "horasManutencao": "10065", "horasProxRevisao": "1592", "horasUltrapassadas": "-1592", "tipoProxRevisao": "1600H", "dataUltimaManutencao": "FEV2026", "tipoRevisaoUltima": "3200H", "dataProxRevisao": "MAI2028", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "MTU", "modelo": "6R099TB50B", "numSerie": "1009103890", "horasOperacao": "9283", "horasManutencao": "9277", "horasProxRevisao": "1594", "horasUltrapassadas": "-1594", "tipoProxRevisao": "1600H", "dataUltimaManutencao": "FEV2026", "tipoRevisaoUltima": "3200H", "dataProxRevisao": "MAI2028", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "NHiBTenCastelo", "indicativo": "H-19", "classe": "Comandante Varella", "tipoMotor": "DGE", "bordo": "BE", "fabricante": "MTU", "modelo": "6R099TB50B", "numSerie": "1009103889", "horasOperacao": "10426", "horasManutencao": "4125", "horasProxRevisao": "-3101", "horasUltrapassadas": "3101", "tipoProxRevisao": "3200H", "dataUltimaManutencao": "MAI2024", "tipoRevisaoUltima": "1600H", "dataProxRevisao": "MAI2028", "situacao": "O", "projetos": "", "ano": "2026", "pmRelacionado": "PDR 2026"}]}, {"key": "tocantins", "title": "AvHoFlu Rio Tocantins", "rows": [{"meio": "AvHoFlu Rio Tocantins", "indicativo": "H-12", "classe": "Rio Tocantins", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "MTU", "modelo": "6R 199 TB60", "numSerie": "1112195421", "horasOperacao": "12.000", "horasManutencao": "11.005", "horasProxRevisao": "1.005", "horasUltrapassadas": "-", "tipoProxRevisao": "W6", "dataUltimaManutencao": "2025", "tipoRevisaoUltima": "W6", "dataProxRevisao": "2028", "situacao": "O", "projetos": "-", "ano": "2028", "pmRelacionado": "PMG"}, {"meio": "AvHoFlu Rio Tocantins", "indicativo": "H-12", "classe": "Rio Tocantins", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "MTU", "modelo": "6R 199 TB60", "numSerie": "1112195423", "horasOperacao": "12.000", "horasManutencao": "11.005", "horasProxRevisao": "1.005", "horasUltrapassadas": "-", "tipoProxRevisao": "W6", "dataUltimaManutencao": "2025", "tipoRevisaoUltima": "W6", "dataProxRevisao": "2028", "situacao": "O", "projetos": "-", "ano": "2028", "pmRelacionado": "PMG"}, {"meio": "AvHoFlu Rio Tocantins", "indicativo": "H-12", "classe": "Rio Tocantins", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "MWM", "modelo": "D-229-6", "numSerie": "C1N211153", "horasOperacao": "20.485", "horasManutencao": "20.135", "horasProxRevisao": "2.071", "horasUltrapassadas": "-", "tipoProxRevisao": "W5", "dataUltimaManutencao": "2026", "tipoRevisaoUltima": "W5", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PMA"}, {"meio": "AvHoFlu Rio Tocantins", "indicativo": "H-12", "classe": "Rio Tocantins", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "MWM", "modelo": "D-229-6", "numSerie": "C1N211035", "horasOperacao": "18.784", "horasManutencao": "14.855", "horasProxRevisao": "5.650", "horasUltrapassadas": "-", "tipoProxRevisao": "W5", "dataUltimaManutencao": "2023", "tipoRevisaoUltima": "W5", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PMA"}]}, {"key": "xingu", "title": "AvHoFlu Rio Xingu", "rows": [{"meio": "AvHoFlu Rio Xingu", "indicativo": "H-13", "classe": "Rio Tocantins", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "MTU", "modelo": "6R 199 TB60", "numSerie": "1203235653", "horasOperacao": "22.810", "horasManutencao": "9.209", "horasProxRevisao": "-", "horasUltrapassadas": "7.601", "tipoProxRevisao": "REV. 6.000H (GERAL)", "dataUltimaManutencao": "2019", "tipoRevisaoUltima": "REV. 6000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "AvHoFlu Rio Xingu", "indicativo": "H-13", "classe": "Rio Tocantins", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "MTU", "modelo": "6R 199 TB60", "numSerie": "1203235652", "horasOperacao": "22.617", "horasManutencao": "18.299", "horasProxRevisao": "-", "horasUltrapassadas": "1.318", "tipoProxRevisao": "REV. 3.000H", "dataUltimaManutencao": "2023", "tipoRevisaoUltima": "REV. 6000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "AvHoFlu Rio Xingu", "indicativo": "H-13", "classe": "Rio Tocantins", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "MWM", "modelo": "229-6", "numSerie": "C1N211309", "horasOperacao": "12.661", "horasManutencao": "5.769", "horasProxRevisao": "-", "horasUltrapassadas": "2.892", "tipoProxRevisao": "REV. 4.000H (GERAL)", "dataUltimaManutencao": "2019", "tipoRevisaoUltima": "REV. 4000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PDR 2026"}, {"meio": "AvHoFlu Rio Xingu", "indicativo": "H-13", "classe": "Rio Tocantins", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "MWM", "modelo": "229-6", "numSerie": "C1N211155", "horasOperacao": "12.661", "horasManutencao": "5.769", "horasProxRevisao": "-", "horasUltrapassadas": "2.892", "tipoProxRevisao": "REV. 4.000H (GERAL)", "dataUltimaManutencao": "2019", "tipoRevisaoUltima": "REV. 4000hs", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "2026", "pmRelacionado": "PDR 2026"}]}, {"key": "vega", "title": "AvB Vega", "rows": [{"meio": "AvB Vega", "indicativo": "CHN-4-01", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BE-30359485", "horasOperacao": "2.109", "horasManutencao": "831,0", "horasProxRevisao": "222", "horasUltrapassadas": "-", "tipoProxRevisao": "1500h(INTERMEDIARIA)", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Vega", "indicativo": "CHN-4-01", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BB-30359503", "horasOperacao": "2.125", "horasManutencao": "895,0", "horasProxRevisao": "270", "horasUltrapassadas": "-", "tipoProxRevisao": "1500h(INTERMEDIARIA)", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Vega", "indicativo": "CHN-4-01", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "4700003", "horasOperacao": "2.966", "horasManutencao": "1.182,0", "horasProxRevisao": "716", "horasUltrapassadas": "-", "tipoProxRevisao": "2500h(INTERMEDIARIA)", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "5.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Vega", "indicativo": "CHN-4-01", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "4700006", "horasOperacao": "2.607", "horasManutencao": "674,0", "horasProxRevisao": "567", "horasUltrapassadas": "-", "tipoProxRevisao": "2500h(INTERMEDIARIA)", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "5.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}]}, {"key": "denebola", "title": "AvB Denébola", "rows": [{"meio": "AvB Denébola", "indicativo": "CHN-4-02", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BE-80856784", "horasOperacao": "4.591", "horasManutencao": "-", "horasProxRevisao": "-1.425", "horasUltrapassadas": "1.425", "tipoProxRevisao": "6.000h(OVERHAUL)", "dataUltimaManutencao": "JUL2019", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "OR", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Denébola", "indicativo": "CHN-4-02", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BB-80356785", "horasOperacao": "4.591", "horasManutencao": "-", "horasProxRevisao": "-1.425", "horasUltrapassadas": "1.425", "tipoProxRevisao": "6.000h(OVERHAUL)", "dataUltimaManutencao": "JUL2019", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "OR", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Denébola", "indicativo": "CHN-4-02", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "4500170", "horasOperacao": "6.745", "horasManutencao": "-", "horasProxRevisao": "605", "horasUltrapassadas": "-", "tipoProxRevisao": "2.500(INTERMEDIÁRIA)", "dataUltimaManutencao": "OUT2022", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Denébola", "indicativo": "CHN-4-02", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "4500172", "horasOperacao": "7.284", "horasManutencao": "-", "horasProxRevisao": "-2.284", "horasUltrapassadas": "2.284", "tipoProxRevisao": "5.000(OVERHAUL)", "dataUltimaManutencao": "JUL2019", "tipoRevisaoUltima": "6.000h(OVERHAUL)", "dataProxRevisao": "2026", "situacao": "O", "projetos": "-", "ano": "-", "pmRelacionado": "-"}]}, {"key": "regulus", "title": "AvB Régulus", "rows": [{"meio": "AvB Régulus", "indicativo": "CHN-4-03", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BB", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BE-30358437", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "-", "dataUltimaManutencao": "IM desde 2012", "tipoRevisaoUltima": "-", "dataProxRevisao": "-", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Régulus", "indicativo": "CHN-4-03", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCP", "bordo": "BE", "fabricante": "CUMMIS", "modelo": "NT855M", "numSerie": "BB-30358438", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "-", "dataUltimaManutencao": "IM desde 2012", "tipoRevisaoUltima": "-", "dataProxRevisao": "-", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Régulus", "indicativo": "CHN-4-03", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "INEXISTENTE", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "-", "dataUltimaManutencao": "IM desde 2012", "tipoRevisaoUltima": "-", "dataProxRevisao": "-", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Régulus", "indicativo": "CHN-4-03", "classe": "Aviso Balizador Classe Achernar", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "LISTER PETTER", "modelo": "CRK3A001", "numSerie": "INEXISTENTE", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "-", "dataUltimaManutencao": "IM desde 2012", "tipoRevisaoUltima": "-", "dataProxRevisao": "-", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}]}, {"key": "boto", "title": "AvB Boto", "rows": [{"meio": "AvB Boto", "indicativo": "CHN-4-04", "classe": "Classe Makandra", "tipoMotor": "MCP", "bordo": "1", "fabricante": "CATERPILLAR", "modelo": "3412 DT", "numSerie": "60MO2001", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "ASD", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "Geral", "dataProxRevisao": "ASD", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Boto", "indicativo": "CHN-4-04", "classe": "Classe Makandra", "tipoMotor": "MCA", "bordo": "BB", "fabricante": "MWM", "modelo": "D229-3", "numSerie": "22903032920", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "ASD", "dataUltimaManutencao": "JUL2022", "tipoRevisaoUltima": "Geral", "dataProxRevisao": "ASD", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}, {"meio": "AvB Boto", "indicativo": "CHN-4-04", "classe": "Classe Makandra", "tipoMotor": "MCA", "bordo": "BE", "fabricante": "MWM", "modelo": "D229-3", "numSerie": "22903056957", "horasOperacao": "0", "horasManutencao": "-", "horasProxRevisao": "-", "horasUltrapassadas": "-", "tipoProxRevisao": "ASD", "dataUltimaManutencao": "2014", "tipoRevisaoUltima": "Parcial", "dataProxRevisao": "ASD", "situacao": "I", "projetos": "-", "ano": "-", "pmRelacionado": "-"}]}];
+    var HORAS_SHIP_LIST=[{"key": "nsampaio", "title": "NHO G. Sampaio"}, {"key": "castelo", "title": "NHiBTenCastelo"}, {"key": "tocantins", "title": "AvHoFlu Rio Tocantins"}, {"key": "xingu", "title": "AvHoFlu Rio Xingu"}, {"key": "vega", "title": "AvB Vega"}, {"key": "denebola", "title": "AvB Denébola"}, {"key": "regulus", "title": "AvB Régulus"}, {"key": "boto", "title": "AvB Boto"}];
   var HORAS_FIXED=[
     {key:"meio",title:"Meio"},
     {key:"indicativo",title:"Indicativo"},
@@ -4334,11 +4356,10 @@ setTimeout(hideSplash,20000);
     rows.forEach(function(r){if(r.cronograma===undefined)r.cronograma="";});
     return cols;
   }
-  var HORAS_SHIP_LIST=HORAS_SHIPS_SEED.map(function(s){return{key:s.key,title:s.title};});
   var horasShips={};
-  HORAS_SHIPS_SEED.forEach(function(s){
+  HORAS_SHIP_LIST.forEach(function(s){
     horasShips[s.key]={
-      key:s.key,title:s.title,seedRows:s.rows,
+      key:s.key,title:s.title,
       rows:[],cols:horasColsDefault(),
       editing:false,dirty:false,snapshot:null,colsSnapshot:null,
       rowsKey:"aa_horas_"+s.key+"_v1",colsKey:"aa_horas_"+s.key+"_cols_v1",
@@ -4374,7 +4395,7 @@ setTimeout(hideSplash,20000);
     var r=null,c=null,cd=null;
     try{r=await gtj(s.rowsKey);}catch(e){}
     if(!r||!r.length){try{r=JSON.parse(localStorage.getItem(s.rowsKey));}catch(e){}}
-    s.rows=(r&&r.length)?r:s.seedRows.map(function(row){var o=Object.assign({},row);o.id=genUid("hr");return o;});
+    s.rows=(r&&r.length)?r:[];
     try{c=await gtj(s.colsKey);}catch(e){}
     if(!c||!c.length){try{c=JSON.parse(localStorage.getItem(s.colsKey));}catch(e){}}
     s.cols=horasReconcileCols(migrateCols(c,HORAS_FIXED,s.rows),s.rows);
@@ -4549,6 +4570,9 @@ setTimeout(hideSplash,20000);
   };
 })();
 
+/* ═══════════════════════════════════════════════════════════
+   ABA: PESSOAL — tabela de militares, férias/afastamentos, ordenação, cartões
+   ═══════════════════════════════════════════════════════════ */
 /* ── MÓDULO: PESSOAL (militares + controle de férias) ── */
 (function(){
   var PESSOAL_KEY="aa_pessoal_v1",PESSOAL_COLS_KEY="aa_pessoal_cols_v1",PESSOAL_CYCLES_KEY="aa_pessoal_cycles_v1",PESSOAL_CARDS_KEY="aa_pessoal_cards_v1";
