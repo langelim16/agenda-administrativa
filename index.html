@@ -5042,8 +5042,11 @@ setTimeout(hideSplash,20000);
   // só aquela coluna, as demais ativas continuam). Hierarquia de Posto/Graduação usada como critério
   // de ORDENAÇÃO PRIMÁRIA da própria coluna Posto/Grad — não é ordem alfabética.
   var POSTO_RANK=["AE","VA","CA","CMG","CF","CC","CT","1T","2T","SO","1°SG","2°SG","3°SG","CB","MN"];
+  // Normaliza símbolo de grau ("°" ou o "º" que teclados/autocorretor costumam inserir no lugar) e
+  // espaços internos (ex.: "3° SG" ou "3ºSG" → "3°SG") antes de comparar com POSTO_RANK — sem isso,
+  // qualquer Sargento gravado com "º" nunca batia com a lista e caía sempre por último na ordenação.
   function postoRank(v){
-    var s=String(v||"").split("-")[0].trim().toUpperCase();
+    var s=String(v||"").split("-")[0].trim().toUpperCase().replace(/[°º]/g,"°").replace(/\s+/g,"");
     var idx=POSTO_RANK.indexOf(s);
     return idx<0?POSTO_RANK.length:idx;
   }
@@ -5461,7 +5464,7 @@ setTimeout(hideSplash,20000);
       return f.categoria==="ferias"?f.tipo==="gozo":true;
     });
     if(!entry)return{label:"Disponível",periodo:"-"};
-    var label=entry.categoria==="ferias"?"Férias gozadas":catLabel(entry.categoria,entry.tipo);
+    var label=entry.categoria==="ferias"?"Férias":catLabel(entry.categoria,entry.tipo);
     var periodo=entry.inicio.split("-").reverse().join("/")+" a "+entry.fim.split("-").reverse().join("/");
     return{label:label,periodo:periodo};
   }
