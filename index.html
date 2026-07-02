@@ -5052,7 +5052,16 @@ setTimeout(hideSplash,20000);
   }
   // Critério secundário de todo agrupamento por texto: antiguidade (coluna oculta, 1=mais antigo).
   // Sem antiguidade atribuída, o militar vai para o fim do grupo.
-  function antiguidadeVal(r){var n=parseInt(r.antiguidade,10);return isNaN(n)?Infinity:n;}
+  function antiguidadeVal(r){var n=parseInt(r.antiguidade,10);return isNaN(n)?null:n;}
+  // Compara por antiguidade tratando "sem valor" à parte — Infinity-Infinity dá NaN em JS, e um
+  // comparador de sort() que retorna NaN produz ordem imprevisível. Sem antiguidade vai sempre pro fim.
+  function cmpAntiguidade(a,b){
+    var av=antiguidadeVal(a),bv=antiguidadeVal(b);
+    if(av==null&&bv==null)return 0;
+    if(av==null)return 1;
+    if(bv==null)return-1;
+    return av-bv;
+  }
   var PESSOAL_SORTABLE=["posto","divisao","feriasDisponiveis","feriasGozadas","disponibilidade"];
   var PESSOAL_NUMERIC_SORT=["feriasDisponiveis","feriasGozadas"];
   var pessoalSort={}; // {<key>:{active:true,dir:"asc"|"desc"}, ...} — populado sob demanda ao clicar
@@ -5069,10 +5078,10 @@ setTimeout(hideSplash,20000);
       var key=activeKeys[i],dir=pessoalSort[key].dir==="desc"?-1:1;
       var d=pessoalLevelCompare(a,b,key,dir);
       if(d!==0)return d;
-      var ad=antiguidadeVal(a)-antiguidadeVal(b);
+      var ad=cmpAntiguidade(a,b);
       if(ad!==0)return ad;
     }
-    return antiguidadeVal(a)-antiguidadeVal(b); // sem filtro ativo: ordem natural = antiguidade
+    return cmpAntiguidade(a,b); // sem filtro ativo: ordem natural = antiguidade
   }
   function pessoalSortedRows(){return pessoalRows.slice().sort(pessoalCompare);}
   var feriasFormState={categoria:"ferias",subtipo:"previsao",editId:null},feriasEditTipo=null,feriasEditSub=null;
