@@ -404,6 +404,11 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
 .dt-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
 .dt-section-head .dt-table-title{margin:0;text-align:left}
 .dt-section-head .nv-toolbar{margin-bottom:0}
+.dt-title-wrap{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px}
+.last-edit{font-style:italic;color:var(--text3);font-size:11px;font-weight:400;text-transform:none;letter-spacing:0}
+.card-lastedit{display:block;margin:-4px 0 8px;text-align:left}
+.dt-table-row{display:flex;gap:16px;flex-wrap:wrap}
+.dt-table-row>div{flex:1;min-width:260px}
 .nv-edit-actions{display:flex;gap:8px}
 .nv-edit-actions[hidden]{display:none}
 .nv-editbtn,.nv-savebtn,.nv-cancelbtn{font-size:12px;font-weight:600;padding:7px 13px;border-radius:var(--r-md);border:1.5px solid var(--border);cursor:pointer;background:var(--surface);color:var(--text2);box-shadow:var(--sh-xs)}
@@ -478,6 +483,7 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
 td.dt-cell[data-key="previsaoFerias"],td[data-key="previsaoFerias"]{white-space:pre-line;text-align:left;line-height:1.5}
 .pessoal-tbl-sm{font-size:11px}
 .pessoal-tbl-sm th{font-size:9px}
+#pessoal_tbl_wrap{max-height:460px;overflow-y:auto}
 td.dt-select-cell{padding:2px 4px}
 td.dt-select-cell select{width:100%;background:var(--c-50);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:11px;padding:3px 4px;font-family:inherit}
 td.dt-select-cell select:disabled{background:transparent;border:none;color:var(--text);-webkit-appearance:none;appearance:none}
@@ -1129,6 +1135,7 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
 </div>
 
 <div class="nv-toolbar" id="nv_table_toolbar">
+  <span class="last-edit" id="nv_table_lastedit"></span>
   <button class="nv-editbtn" id="nv_table_edit">✎ Editar tabela</button>
   <span class="nv-edit-actions" id="nv_table_edit_actions" hidden>
     <button class="dt-colbtn" id="nv_table_addcol">+ coluna</button>
@@ -1168,7 +1175,7 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
 </header>
 
 <div class="dt-section-head">
-  <h3 class="dt-table-title">Estoque de ODM nos Meios</h3>
+  <div class="dt-title-wrap"><h3 class="dt-table-title">Estoque de ODM nos Meios</h3><span class="last-edit" id="clg_t1_lastedit"></span></div>
   <div class="nv-toolbar" id="clg_t1_toolbar">
     <button class="nv-editbtn" id="clg_t1_edit">✎ Editar</button>
     <span class="nv-edit-actions" id="clg_t1_edit_actions" hidden>
@@ -1189,7 +1196,7 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
 </div>
 
 <div class="dt-section-head">
-  <h3 class="dt-table-title">Abastecimento dos Meios</h3>
+  <div class="dt-title-wrap"><h3 class="dt-table-title">Abastecimento de ODM dos Meios</h3><span class="last-edit" id="clg_t2_lastedit"></span></div>
   <div class="nv-toolbar" id="clg_t2_toolbar">
     <button class="nv-editbtn" id="clg_t2_edit">✎ Editar</button>
     <span class="nv-edit-actions" id="clg_t2_edit_actions" hidden>
@@ -1207,6 +1214,45 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
     </tr></thead>
     <tbody id="clg_t2_tbody"></tbody>
   </table>
+</div>
+
+<div class="dt-table-row">
+  <div>
+    <div class="dt-section-head">
+      <div class="dt-title-wrap"><h3 class="dt-table-title">Estoque de Gasolina, Lubrificantes e Graxas - Navios</h3><span class="last-edit" id="clg_t3nav_lastedit"></span></div>
+      <div class="nv-toolbar" id="clg_t3nav_toolbar">
+        <button class="nv-editbtn" id="clg_t3nav_edit">✎ Editar</button>
+        <span class="nv-edit-actions" id="clg_t3nav_edit_actions" hidden>
+          <button class="nv-savebtn" id="clg_t3nav_save" disabled>✓ Salvar</button>
+          <button class="nv-cancelbtn" id="clg_t3nav_cancel">Cancelar</button>
+        </span>
+      </div>
+    </div>
+    <div class="dt-table-wrap">
+      <table class="dt-table" id="clg_t3nav_table">
+        <thead id="clg_t3nav_thead"><tr><th>Meio</th><th>Gasolina</th><th>Lubrificantes</th><th>Graxas</th><th class="dt-actions-col">Ações</th></tr></thead>
+        <tbody id="clg_t3nav_tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div>
+    <div class="dt-section-head">
+      <div class="dt-title-wrap"><h3 class="dt-table-title">Estoque de Gasolina, Lubrificantes e Graxas - Embarcações</h3><span class="last-edit" id="clg_t3emb_lastedit"></span></div>
+      <div class="nv-toolbar" id="clg_t3emb_toolbar">
+        <button class="nv-editbtn" id="clg_t3emb_edit">✎ Editar</button>
+        <span class="nv-edit-actions" id="clg_t3emb_edit_actions" hidden>
+          <button class="nv-savebtn" id="clg_t3emb_save" disabled>✓ Salvar</button>
+          <button class="nv-cancelbtn" id="clg_t3emb_cancel">Cancelar</button>
+        </span>
+      </div>
+    </div>
+    <div class="dt-table-wrap">
+      <table class="dt-table" id="clg_t3emb_table">
+        <thead id="clg_t3emb_thead"><tr><th>Meio</th><th>Gasolina</th><th>Lubrificantes</th><th>Graxas</th><th class="dt-actions-col">Ações</th></tr></thead>
+        <tbody id="clg_t3emb_tbody"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <div class="nv-grid" id="clg_grid"></div>
@@ -1252,7 +1298,7 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
 </header>
 
 <div class="dt-section-head">
-  <h3 class="dt-table-title">Militares do Departamento</h3>
+  <div class="dt-title-wrap"><h3 class="dt-table-title">Militares do Departamento</h3><span class="last-edit" id="pessoal_tbl_lastedit"></span></div>
   <div class="nv-toolbar" id="pessoal_tbl_toolbar">
     <button class="nv-editbtn" id="pessoal_tbl_edit">✎ Editar</button>
     <span class="nv-edit-actions" id="pessoal_tbl_edit_actions" hidden>
@@ -1263,7 +1309,7 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
     </span>
   </div>
 </div>
-<div class="dt-table-wrap">
+<div class="dt-table-wrap" id="pessoal_tbl_wrap">
   <table class="dt-table pessoal-tbl-sm" id="pessoal_tbl_table">
     <thead id="pessoal_tbl_thead"><tr></tr></thead>
     <tbody id="pessoal_tbl_tbody"></tbody>
@@ -1810,6 +1856,7 @@ function cardHtmlGeneric(c,st,lockedOut){
       toolbar+
       (isEditing?'<button class="card-del" data-cid="'+c.id+'" title="Excluir cart\u00E3o">\uD83D\uDDD1</button>':"")+
     '</div>'+
+    (c.updatedAt?'<span class="last-edit card-lastedit">'+fmtLastEdit(c.updatedAt)+'</span>':"")+
     '<ul>'+c.items.map(function(it,i){
       var vals=it.vals||[it.v!==undefined?it.v:""];
       return '<li'+(isEditing?' data-cid="'+c.id+'" data-ri="'+i+'"':"")+'>'+
@@ -1870,6 +1917,7 @@ function wireCardsGrid(o){
     if(saveBtn){
       if(!st.dirty)return;
       var preCard=st.snapshot,cidSv=saveBtn.dataset.cid;
+      var savedCard=find(cidSv);if(savedCard)savedCard.updatedAt=new Date().toISOString();
       o.save();
       push().then(function(){toast("\u2713 Cart\u00E3o salvo","ok");});
       st.editingId=null;st.snapshot=null;st.dirty=false;GLOBAL_EDIT_LOCK=null;
@@ -1958,6 +2006,19 @@ function wireCardsGrid(o){
     }
   });
 }
+/* ── Registro de última edição — 1 chave no Supabase (aa_lastedit_v1) compartilhada por
+   toda tabela/cartão do app. id = prefixo da tabela (ex: "clg_t1") ou id do cartão. ── */
+var LASTEDIT_KEY="aa_lastedit_v1";
+var lastEdits={};
+async function loadLastEdits(){lastEdits=(await gtj(LASTEDIT_KEY))||{};}
+function touchLastEdit(id){lastEdits[id]=new Date().toISOString();svs(LASTEDIT_KEY,lastEdits);}
+function fmtLastEdit(iso){
+  if(!iso)return"";
+  var d=new Date(iso);
+  function p(n){return String(n).padStart(2,"0");}
+  return "Última edição em "+p(d.getHours())+":"+p(d.getMinutes())+" do dia "+p(d.getDate())+"/"+p(d.getMonth()+1)+"/"+d.getFullYear()+".";
+}
+function paintLastEdit(elId,id){var el=document.getElementById(elId);if(el)el.textContent=fmtLastEdit(lastEdits[id]);}
 function bindDataTable(cfg){
   var getArr=cfg.getArr,setArr=cfg.setArr,onSaveKey=cfg.onSaveKey,onSaveDataFn=cfg.onSaveDataFn;
   var getEditing=cfg.getEditing,setEditing=cfg.setEditing,getDirty=cfg.getDirty,setDirty=cfg.setDirty;
@@ -2033,13 +2094,15 @@ function bindDataTable(cfg){
       },30);
     }
   });
-  document.getElementById(cfg.prefix+"_addcol").onclick=function(){
+  var addcolEl=document.getElementById(cfg.prefix+"_addcol");
+  if(addcolEl)addcolEl.onclick=function(){
     if(!getEditing())return;
     addTableColumn(getTitles(),getArr());
     setDirty(true);
     renderFn();
   };
-  document.getElementById(cfg.prefix+"_delcol").onclick=function(){
+  var delcolEl=document.getElementById(cfg.prefix+"_delcol");
+  if(delcolEl)delcolEl.onclick=function(){
     if(!getEditing())return;
     if(delTableColumnWithConfirm(getTitles(),getArr(),fixedKeys)){setDirty(true);renderFn();}
   };
@@ -2060,14 +2123,15 @@ function bindDataTable(cfg){
     if(!getDirty())return;
     var preTbl=getSnap(),preTitles=getTitlesSnap();
     onSaveDataFn();
-    saveTitlesFn();
+    if(titlesKey){saveTitlesFn();await pushKV(pushLabel,titlesKey,getTitles());}
     await pushKV(pushLabel,onSaveKey,getArr());
-    await pushKV(pushLabel,titlesKey,getTitles());
     setSnap(null);setTitlesSnap(null);setEditing(false);setDirty(false);setLock(null);
-    if(preTbl)pushUndo(undoLabel,async function(){setArr(JSON.parse(JSON.stringify(preTbl)));if(preTitles)setTitles(cloneCols(preTitles));onSaveDataFn();saveTitlesFn();await pushKV(pushLabel,onSaveKey,getArr());await pushKV(pushLabel,titlesKey,getTitles());renderFn();afterRender();});
+    if(preTbl)pushUndo(undoLabel,async function(){setArr(JSON.parse(JSON.stringify(preTbl)));if(preTitles)setTitles(cloneCols(preTitles));onSaveDataFn();if(titlesKey){saveTitlesFn();await pushKV(pushLabel,titlesKey,getTitles());}await pushKV(pushLabel,onSaveKey,getArr());renderFn();afterRender();});
+    touchLastEdit(cfg.prefix);paintLastEdit(cfg.prefix+"_lastedit",cfg.prefix);
     toast("✓ Salvo","ok");
     renderFn();afterRender();
   };
+  paintLastEdit(cfg.prefix+"_lastedit",cfg.prefix);
 }
 function reorderByIndex(arr,idxStrs){return idxStrs.map(function(s){return arr[+s];}).filter(Boolean);}
 /* ── Masonry real (mural de post-its): colunas são divs de verdade, então um cartão pode ser
@@ -3755,6 +3819,7 @@ setTimeout(hideSplash,12000);
     if(tag0){tag0.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";tag0.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
     try{updCache();}catch(e){}
     await loadAll();
+    await loadLastEdits();
     // Carrega a tabela de Pessoal já no boot — é a fonte única de militares usada por outras abas
     // (ex: dropdown de responsável da Agenda), não só quando o usuário abre a aba Pessoal.
     if(typeof pessoalInit==="function")await pessoalInit();
@@ -3862,6 +3927,7 @@ setTimeout(hideSplash,12000);
     var editBtn=document.getElementById("nv_table_edit");
     var actions=document.getElementById("nv_table_edit_actions");
     var saveBtn=document.getElementById("nv_table_save");
+    paintLastEdit("nv_table_lastedit","navios_table");
     if(!editBtn)return;
     if(navTableEditing){
       editBtn.hidden=true;actions.hidden=false;
@@ -3976,6 +4042,7 @@ setTimeout(hideSplash,12000);
       await pushKV("navPush",NAVIOS_COLS_KEY,navCols);
       navTableSnapshot=null;navColsSnapshot=null;navTableEditing=false;navTableDirty=false;GLOBAL_EDIT_LOCK=null;
       if(preTbl)pushUndo("Editar tabela CONDEF",async function(){navShips=JSON.parse(JSON.stringify(preTbl));if(preCols)navCols=cloneCols(preCols);navSaveShips();navSaveCols();await pushKV("navPush",NAVIOS_KEY,navShips);await pushKV("navPush",NAVIOS_COLS_KEY,navCols);renderNavios();renderNaviosCards();});
+      touchLastEdit("navios_table");
       toast("✓ Embarcações salvas","ok");
       renderNavios();renderNaviosCards();
     };
@@ -4027,6 +4094,17 @@ setTimeout(hideSplash,12000);
   var clgT1Editing=false,clgT1Dirty=false,clgT1Snapshot=null,clgT1ColsSnapshot=null;
   var clgT2Editing=false,clgT2Dirty=false,clgT2Snapshot=null,clgT2ColsSnapshot=null;
   var clgCardSt={editingId:null,dirty:false,snapshot:null};
+  /* ── Estoque de Gasolina/Lubrificantes/Graxas: roster fixo de meios (identidade estrutural,
+     igual ao HORAS_SHIP_LIST) — os valores de estoque em si vêm do Supabase, nunca hardcoded. ── */
+  var CLG_T3_FIXED=[{key:"meio",title:"Meio"},{key:"gasolina",title:"Gasolina"},{key:"lubrificantes",title:"Lubrificantes"},{key:"graxas",title:"Graxas"}];
+  var CLG_T3_FIXED_KEYS=CLG_T3_FIXED.map(function(c){return c.key;});
+  var CLG_T3_NAV_ROSTER=["NHO G. Sampaio","NHiBTenCastelo","AvHoFlu Rio Tocantins","AvHoFlu Rio Xingu"];
+  var CLG_T3_EMB_ROSTER=["AvB Vega","AvB Denébola"];
+  var CLG_T3NAV_KEY="aa_clg_t3nav_v1",CLG_T3EMB_KEY="aa_clg_t3emb_v1";
+  var clgT3Nav=[],clgT3Emb=[];
+  var clgT3NavEditing=false,clgT3NavDirty=false,clgT3NavSnapshot=null;
+  var clgT3EmbEditing=false,clgT3EmbDirty=false,clgT3EmbSnapshot=null;
+  function clgT3SeedFor(roster){return roster.map(function(meio){return{id:genUid("t3"),meio:meio,gasolina:"",lubrificantes:"",graxas:""};});}
   async function clgLoad(){
     var t1=null,t2=null,c=null,t1c=null,t2c=null;
     try{t1=await gtj(CLG_T1_KEY);}catch(e){}
@@ -4045,13 +4123,20 @@ setTimeout(hideSplash,12000);
     if(!c||!c.length){try{c=JSON.parse(localStorage.getItem(CLG_CARDS_KEY));}catch(e){}}
     clgCards=(c&&c.length)?c:[];
     clgCards.forEach(function(cd){cd.items=cd.items.map(function(it){return it.vals?it:{k:it.k,vals:[it.v!==undefined?it.v:""]};});});
-    clgSaveT1();clgSaveT2();clgSaveCards();clgSaveT1Cols();clgSaveT2Cols();
+    var t3n=null,t3e=null;
+    try{t3n=await gtj(CLG_T3NAV_KEY);}catch(e){}
+    clgT3Nav=(t3n&&t3n.length)?t3n:clgT3SeedFor(CLG_T3_NAV_ROSTER);
+    try{t3e=await gtj(CLG_T3EMB_KEY);}catch(e){}
+    clgT3Emb=(t3e&&t3e.length)?t3e:clgT3SeedFor(CLG_T3_EMB_ROSTER);
+    clgSaveT1();clgSaveT2();clgSaveCards();clgSaveT1Cols();clgSaveT2Cols();clgSaveT3Nav();clgSaveT3Emb();
   }
   function clgSaveT1(){try{localStorage.setItem(CLG_T1_KEY,JSON.stringify(clgT1));}catch(e){}}
   function clgSaveT2(){try{localStorage.setItem(CLG_T2_KEY,JSON.stringify(clgT2));}catch(e){}}
   function clgSaveT1Cols(){try{localStorage.setItem(CLG_T1_COLS_KEY,JSON.stringify(clgT1Cols));}catch(e){}}
   function clgSaveT2Cols(){try{localStorage.setItem(CLG_T2_COLS_KEY,JSON.stringify(clgT2Cols));}catch(e){}}
   function clgSaveCards(){try{localStorage.setItem(CLG_CARDS_KEY,JSON.stringify(clgCards));}catch(e){}}
+  function clgSaveT3Nav(){try{localStorage.setItem(CLG_T3NAV_KEY,JSON.stringify(clgT3Nav));}catch(e){}}
+  function clgSaveT3Emb(){try{localStorage.setItem(CLG_T3EMB_KEY,JSON.stringify(clgT3Emb));}catch(e){}}
   function clgUpdateToolbar(prefix,editing,dirty,lockedByOther){
     var editBtn=document.getElementById(prefix+"_edit");
     var actions=document.getElementById(prefix+"_edit_actions");
@@ -4067,8 +4152,8 @@ setTimeout(hideSplash,12000);
   }
   function clgFindRow(arr,id){return arr.find(function(r){return r.id===id;});}
   function clgFindCard(cid){return clgCards.find(function(c){return c.id===cid;});}
-  clgGetState=function(){return{t1:JSON.parse(JSON.stringify(clgT1)),t2:JSON.parse(JSON.stringify(clgT2)),cards:JSON.parse(JSON.stringify(clgCards)),t1c:cloneCols(clgT1Cols),t2c:cloneCols(clgT2Cols)};};
-  clgSetState=async function(s){clgT1=s.t1;clgT2=s.t2;clgCards=s.cards;clgT1Cols=s.t1c||clgT1ColsDefault();clgT2Cols=s.t2c||clgT2ColsDefault();clgSaveT1();clgSaveT2();clgSaveCards();clgSaveT1Cols();clgSaveT2Cols();await pushKV("clgPush",CLG_T1_KEY,clgT1);await pushKV("clgPush",CLG_T2_KEY,clgT2);await pushKV("clgPush",CLG_CARDS_KEY,clgCards);await pushKV("clgPush",CLG_T1_COLS_KEY,clgT1Cols);await pushKV("clgPush",CLG_T2_COLS_KEY,clgT2Cols);};
+  clgGetState=function(){return{t1:JSON.parse(JSON.stringify(clgT1)),t2:JSON.parse(JSON.stringify(clgT2)),cards:JSON.parse(JSON.stringify(clgCards)),t1c:cloneCols(clgT1Cols),t2c:cloneCols(clgT2Cols),t3n:JSON.parse(JSON.stringify(clgT3Nav)),t3e:JSON.parse(JSON.stringify(clgT3Emb))};};
+  clgSetState=async function(s){clgT1=s.t1;clgT2=s.t2;clgCards=s.cards;clgT1Cols=s.t1c||clgT1ColsDefault();clgT2Cols=s.t2c||clgT2ColsDefault();clgT3Nav=s.t3n||clgT3SeedFor(CLG_T3_NAV_ROSTER);clgT3Emb=s.t3e||clgT3SeedFor(CLG_T3_EMB_ROSTER);clgSaveT1();clgSaveT2();clgSaveCards();clgSaveT1Cols();clgSaveT2Cols();clgSaveT3Nav();clgSaveT3Emb();await pushKV("clgPush",CLG_T1_KEY,clgT1);await pushKV("clgPush",CLG_T2_KEY,clgT2);await pushKV("clgPush",CLG_CARDS_KEY,clgCards);await pushKV("clgPush",CLG_T1_COLS_KEY,clgT1Cols);await pushKV("clgPush",CLG_T2_COLS_KEY,clgT2Cols);await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);};
   function renderClgT1(){
     var tb=document.getElementById("clg_t1_tbody");
     if(!tb)return;
@@ -4107,7 +4192,22 @@ setTimeout(hideSplash,12000);
     if(delcol2)delcol2.disabled=!hasExtraCol(clgT2Cols,CLG_T2_FIXED_KEYS);
     if(editing)bindRowDragGeneric(tb,function(){return clgT2;},renderClgT2,function(){clgT2Dirty=true;});
   }
-  renderClgTables=function(){renderClgT1();renderClgT2();};
+  function renderClgT3(prefix,arr,editing,dirty,who){
+    var tb=document.getElementById(prefix+"_tbody");
+    if(!tb)return;
+    var table=document.getElementById(prefix+"_table");
+    if(table)table.classList.toggle("dt-editing",editing);
+    tb.innerHTML=arr.map(function(r){
+      return '<tr'+(editing?' data-rid="'+r.id+'"':'')+'>'+
+        CLG_T3_FIXED.map(function(col){return colTd(r,col,editing,"dt-cell","dt-cell-ro");}).join("")+
+        '<td class="dt-actions dt-actions-col"></td>'+
+      '</tr>';
+    }).join("");
+    clgUpdateToolbar(prefix,editing,dirty,GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!==who);
+  }
+  function renderClgT3Nav(){renderClgT3("clg_t3nav",clgT3Nav,clgT3NavEditing,clgT3NavDirty,"t3nav");}
+  function renderClgT3Emb(){renderClgT3("clg_t3emb",clgT3Emb,clgT3EmbEditing,clgT3EmbDirty,"t3emb");}
+  renderClgTables=function(){renderClgT1();renderClgT2();renderClgT3Nav();renderClgT3Emb();};
   renderClgCards=function(){
     var grid=document.getElementById("clg_grid");
     if(!grid)return;
@@ -4156,6 +4256,32 @@ setTimeout(hideSplash,12000);
       fixedKeys:CLG_T2_FIXED_KEYS,getLock:function(){return GLOBAL_EDIT_LOCK;},setLock:function(v){GLOBAL_EDIT_LOCK=v;},who:"t2",
       renderFn:renderClgT2,afterRender:renderClgCards,updateToolbar:function(){clgUpdateToolbar("clg_t2",true,true,false);},
       pushLabel:"clgPush",undoLabel:"Editar tabela CLG"
+    });
+    bindDataTable({
+      prefix:"clg_t3nav",
+      getArr:function(){return clgT3Nav;},setArr:function(v){clgT3Nav=v;},
+      onSaveKey:CLG_T3NAV_KEY,onSaveDataFn:clgSaveT3Nav,
+      getEditing:function(){return clgT3NavEditing;},setEditing:function(v){clgT3NavEditing=v;},
+      getDirty:function(){return clgT3NavDirty;},setDirty:function(v){clgT3NavDirty=v;},
+      getSnap:function(){return clgT3NavSnapshot;},setSnap:function(v){clgT3NavSnapshot=v;},
+      getTitles:function(){return CLG_T3_FIXED;},setTitles:function(){},saveTitlesFn:function(){},titlesKey:null,
+      getTitlesSnap:function(){return null;},setTitlesSnap:function(){},
+      fixedKeys:CLG_T3_FIXED_KEYS,getLock:function(){return GLOBAL_EDIT_LOCK;},setLock:function(v){GLOBAL_EDIT_LOCK=v;},who:"t3nav",
+      renderFn:renderClgT3Nav,afterRender:function(){},updateToolbar:function(){clgUpdateToolbar("clg_t3nav",true,true,false);},
+      pushLabel:"clgPush",undoLabel:"Editar estoque de ODM \u2014 Navios"
+    });
+    bindDataTable({
+      prefix:"clg_t3emb",
+      getArr:function(){return clgT3Emb;},setArr:function(v){clgT3Emb=v;},
+      onSaveKey:CLG_T3EMB_KEY,onSaveDataFn:clgSaveT3Emb,
+      getEditing:function(){return clgT3EmbEditing;},setEditing:function(v){clgT3EmbEditing=v;},
+      getDirty:function(){return clgT3EmbDirty;},setDirty:function(v){clgT3EmbDirty=v;},
+      getSnap:function(){return clgT3EmbSnapshot;},setSnap:function(v){clgT3EmbSnapshot=v;},
+      getTitles:function(){return CLG_T3_FIXED;},setTitles:function(){},saveTitlesFn:function(){},titlesKey:null,
+      getTitlesSnap:function(){return null;},setTitlesSnap:function(){},
+      fixedKeys:CLG_T3_FIXED_KEYS,getLock:function(){return GLOBAL_EDIT_LOCK;},setLock:function(v){GLOBAL_EDIT_LOCK=v;},who:"t3emb",
+      renderFn:renderClgT3Emb,afterRender:function(){},updateToolbar:function(){clgUpdateToolbar("clg_t3emb",true,true,false);},
+      pushLabel:"clgPush",undoLabel:"Editar estoque de ODM \u2014 Embarca\u00E7\u00F5es"
     });
     wireCardsGrid({gridId:"clg_grid",addcardId:"clg_addcard",st:clgCardSt,
       getCards:function(){return clgCards;},setCards:function(v){clgCards=v;},
@@ -4251,7 +4377,7 @@ setTimeout(hideSplash,12000);
     var prefix="horas_"+s.key;
     return ''+
     '<div class="dt-section-head">'+
-      '<h3 class="dt-table-title">'+esc(s.title)+'</h3>'+
+      '<div class="dt-title-wrap"><h3 class="dt-table-title">'+esc(s.title)+'</h3><span class="last-edit" id="'+prefix+'_lastedit"></span></div>'+
       '<div class="nv-toolbar" id="'+prefix+'_toolbar">'+
         '<button class="nv-editbtn" id="'+prefix+'_edit">✎ Editar</button>'+
         '<span class="nv-edit-actions" id="'+prefix+'_edit_actions" hidden>'+
