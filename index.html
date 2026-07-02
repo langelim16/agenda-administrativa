@@ -1063,7 +1063,7 @@ body{padding-left:64px}
 </header>
 <div class="profilebar">
   <span class="plbl">Perfil de gerência</span>
-  <select id="profilesel"><option value="ALL">Logística — todas as divisões</option><option value="Divisão de Meios">Divisão de Meios</option><option value="Divisão de Administração">Divisão de Administração</option><option value="Divisão de Finanças">Divisão de Finanças</option></select>
+  <select id="profilesel"></select>
   <span class="phint" id="phint">Visão consolidada</span>
 </div>
 <div class="legend" id="legend"><span class="li"><span class="li-dot" style="background:var(--c-blue)"></span>Tarefas da Divisão</span><span class="li"><span class="li-dot" style="background:var(--c-amber)"></span>Subsídios das Unidades Subordinadas</span><span class="li"><span class="li-dot" style="background:var(--c-teal)"></span>Concluída</span><span style="margin-left:auto;font-size:10px;color:var(--text3)">Hoje: <b style="color:var(--text2)">19/06/2026</b></span></div>
@@ -1560,67 +1560,12 @@ var KL={MENSAL:"Mensal",SEMANAL:"Semanal",ANUAL:"Anual",DIVERSO:"Diverso",ESPORA
 var WD=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
 var SIT={venc:{l:"Vencida",c:"pill-venc",dot:"dot-red"},prox:{l:"Vence ≤7d",c:"pill-prox",dot:"dot-amber"},fut:{l:"A vencer",c:"pill-fut",dot:"dot-blue"},ok:{l:"Concluída",c:"pill-ok",dot:"dot-teal"},sem:{l:"Sem prazo",c:"pill-sem",dot:"dot-grey"}};
 var HPRE=["#2f3a44","#2b3a30","#3a3340","#4a3330","#2c3e44","#33363b","#3a4654","#2f3d34","#4a3a4a","#5a4a36"];
-var CFG0={om:"CHN-4",departamento:"Logística",divisoes:["Divisão de Meios"],subunidades:["NHoGSampaio","NhiBTenCastelo","AvHoFluRioTocantins","AvHoFluRioXingu"],labelProprio:"Tarefas da Divisão",labelSubsidio:"Subsídios das Unidades Subordinadas",headerColor:"#2f3a44",crestType:"text",crestText:"AA",crestImg:"",palette:{danger:"#a8554b",warning:"#977b43",success:"#557a66"},tiposResposta:["Mensagem Naval (MSG)","E-mail (Zimbra)","Ofício","Sistema SINGRA","Sistema Quantum Log","Zimbra"]};
-var K={st:"ag_status",sh:"ag_ships",ed:"ag_edits",us:"ag_user",dn:"ag_done",hi:"ag_hist",np:"ag_nup",cf:"ag_config",pf:"ag_profile",sp:"ag_spots",sb:"ag_subsids",sub:"ag_subtasks",tsh:"ag_tships",ord:"ag_order",op:"ag_op",th:"ag_theme",ob:"ag_obs",fn:"ag_func",yrs:"ag_years",ie:"ag_instedit"};
+var CFG0={om:"",departamento:"",divisoes:[],subunidades:[],labelProprio:"Tarefas da Divisão",labelSubsidio:"Subsídios das Unidades Subordinadas",headerColor:"#2f3a44",crestType:"text",crestText:"AA",crestImg:"",palette:{danger:"#a8554b",warning:"#977b43",success:"#557a66"},tiposResposta:[]};
+var K={base:"ag_base",st:"ag_status",sh:"ag_ships",ed:"ag_edits",us:"ag_user",dn:"ag_done",hi:"ag_hist",np:"ag_nup",cf:"ag_config",pf:"ag_profile",sp:"ag_spots",sb:"ag_subsids",sub:"ag_subtasks",tsh:"ag_tships",ord:"ag_order",op:"ag_op",th:"ag_theme",ob:"ag_obs",fn:"ag_func",yrs:"ag_years",ie:"ag_instedit"};
 
-/* ── DADOS ── */
-var MT=[
-{id:"m0",kind:"MENSAL",tarefa:"MAPA MENSAL DE CLG MEIOS SUBORDINADOS",ref:"R101224Z/MAR/2020 NNN Nº 40-02I",assunto:"CLG",destino:"CHN-4",resp:"NAVIOS",respcat:"NAVIOS",atraves:"MSG",dayrule:{t:"lastbiz_prev"},msg:""},
-{id:"m1",kind:"MENSAL",tarefa:"CONTROLE DE HORAS DE FUNCIONAMENTO DOS MOTORES (MCP/MCA)",ref:"R231944Z/SET/2024",assunto:"PROGEM",destino:"CHN-4",resp:"NAVIOS",respcat:"NAVIOS",atraves:"EMAIL",dayrule:{t:"dom",n:4},msg:""},
-{id:"m2",kind:"MENSAL",tarefa:"ENVIAR MSG DE CLG ADMINISTRATIVO",ref:"R051540Z/MAR/2020",assunto:"CLG",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"MSG",dayrule:{t:"bizday",n:5},msg:""},
-{id:"m3",kind:"MENSAL",tarefa:"ENVIAR SUBSÍDIOS DE CLG OPERATIVO DOS MEIOS",ref:"R242040Z/OUT/2024",assunto:"CLG",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"MSG",dayrule:{t:"bizday",n:5},msg:""},
-{id:"m4",kind:"MENSAL",tarefa:"Envio do Anexo B ao SUBCOMACO ou COMACO - ATUALIZAÇÃO e ACEITE dos estoques físicos no SINGRA CLG.",ref:"NORDINAVNORTE 40-02J",assunto:"CLG",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"SINGRA",dayrule:{t:"dom",n:3},msg:""},
-{id:"m5",kind:"MENSAL",tarefa:"CONTROLE DE CONSUMO E ESTOQUE DE CLG",ref:"R212240Z/MAI/2024",assunto:"CLG",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"EMAIL",dayrule:{t:"bizday",n:4},msg:""},
-{id:"m6",kind:"MENSAL",tarefa:"MAPA DE CONTROLE DE EMBARCAÇÕES",ref:"R291840Z/MAI/2024",assunto:"DIVERSOS",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"EMAIL",dayrule:{t:"dom",n:5},msg:""},
-{id:"m7",kind:"MENSAL",tarefa:"MAPA MENSAL E DIÁRIO DO CONSUMO DE ENERGIA",ref:"R011744Z/ABR/2024",assunto:"CIGEE",destino:"CHN-4",resp:"NAVIOS",respcat:"NAVIOS",atraves:"MSG",dayrule:{t:"dom",n:5},msg:""},
-{id:"m8",kind:"MENSAL",tarefa:"CICEMAR - Medidas para Redução do Consumo de Energia Elétrica",ref:"R092140Z/FEV/2023",assunto:"CIGEE",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"MSG",dayrule:{t:"dom",n:10},msg:""},
-{id:"m9",kind:"MENSAL",tarefa:"ATUALIZAÇÃO DO SISTEMA QUANTUM-LOG",ref:"R-131440Z/JUN/2024",assunto:"EMBARCAÇÕES",destino:"QUANTUM LOG",resp:"MILITARES das EMB DE APOIO",respcat:"DIVISAO",atraves:"SISTEMA QUANTUM LOG",dayrule:{t:"dom",n:10},msg:""},
-{id:"m10",kind:"MENSAL",tarefa:"MAPA MENSAL DE ENERGIA ELÉTRICA",ref:"NORDNAVNORTE Nº 40-14A",assunto:"CIGEE",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"EMAIL",dayrule:{t:"dom",n:10},msg:""},
-{id:"m11",kind:"MENSAL",tarefa:"ATUALIZAÇÃO DA ATA DO CONSELHO DE GESTÃO",ref:"CONTROLE INTERNO",assunto:"DIVERSOS",destino:"43",resp:"CHN4-43",respcat:"DIVISAO",atraves:"ZIMBRA",dayrule:{t:"dom",n:10},msg:""},
-{id:"m12",kind:"MENSAL",tarefa:"ENVIAR PARA OS NAVIOS MSG CERTIFICAÇÃO DE CONSUMO DE ENERGIA ELÉTRICA",ref:"INTERNO",assunto:"CIGEE",destino:"NAVIOS",resp:"CHN4-43",respcat:"DIVISAO",atraves:"MSG",dayrule:{t:"dom",n:10},msg:""},
-{id:"m13",kind:"MENSAL",tarefa:"CONTROLE DE HORAS DE FUNCIONAMENTO DOS MOTORES (MCP/MCA)",ref:"NORDNAVNORTE 40-05C",assunto:"DIVERSOS",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"EMAIL",dayrule:{t:"dom",n:10},msg:""},
-{id:"m14",kind:"MENSAL",tarefa:"ENVIAR CERTIFICAÇÃO DE CONSUMO DE ENERGIA DOS MEIOS",ref:"INTERNO",assunto:"CIGEE",destino:"NAVIOS",resp:"CHN4-43",respcat:"DIVISAO",atraves:"MSG",dayrule:{t:"dom",n:10},msg:""},
-{id:"m15",kind:"MENSAL",tarefa:"RECEBER CERTIFICAÇÃO DE CONSUMO DE ENERGIA DOS MEIOS",ref:"INTERNO",assunto:"CIGEE",destino:"CHN-4",resp:"NAVIOS",respcat:"NAVIOS",atraves:"MSG",dayrule:{t:"dom",n:15},msg:""},
-{id:"m16",kind:"MENSAL",tarefa:"ENVIAR ATA DA REUNIÃO DA COMISSÃO INTERNA DE CONSERVAÇÃO DE ENERGIA (CIGEE)",ref:"NORDNAVNORTE Nº 40-14A",assunto:"CIGEE",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"EMAIL",dayrule:{t:"dom",n:20},msg:""},
-{id:"m17",kind:"MENSAL",tarefa:"RECEBER DEMANDA CLG ADMINISTRATIVO DOS MEIOS",ref:"R251404Z/OUT/2024",assunto:"CLG",destino:"CHN-4",resp:"NAVIOS",respcat:"NAVIOS",atraves:"MSG",dayrule:{t:"lastdom"},msg:""},
-{id:"m18",kind:"MENSAL",tarefa:"ENVIAR SUBSÍDIOS METAS NÃO ATENDIDAS PROGEM",ref:"R191942Z/JAN/2024",assunto:"PROGEM",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"EMAIL",dayrule:null,msg:""},
-{id:"m19",kind:"MENSAL",tarefa:"SITREP de horas de Funcionamento",ref:"R221521Z/AGO/2024",assunto:"PROGEM",destino:"DIM",resp:"CHN4-43",respcat:"DIVISAO",atraves:"EMAIL",dayrule:null,msg:""},
-{id:"m20",kind:"MENSAL",tarefa:"RECEBER SITREP MENSAL DO POSE",ref:"R121616Z/MAI/2026",assunto:"PROGEM",destino:"CHN-4",resp:"NAVIOS",respcat:"NAVIOS",atraves:"MSG",dayrule:{t:"dom",n:15},msg:""},
-{id:"a0",kind:"ANUAL",tarefa:"PREVISÃO DE ABERTURA BALSA SALVA-VIDAS NO ANO A e A+1",ref:"NNN Nº 40-03G",assunto:"—",destino:"CHN-4",resp:"NAVIOS e AVISOS",respcat:"NAVIOS",atraves:"EMAIL",month:1,day:7,msg:""},
-{id:"a1",kind:"ANUAL",tarefa:"RESERVA OPERATIVA (ROP)",ref:"NORDINAVNORTE 40-02J",assunto:"—",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"OFÍCIO",month:1,day:31,msg:""},
-{id:"a2",kind:"ANUAL",tarefa:"MAPA ANUAL DE CONSUMO DE ENERGIA",ref:"NNN Nº 40-14A",assunto:"—",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"EMAIL",month:1,day:20,msg:""},
-{id:"a3",kind:"ANUAL",tarefa:"Indicar representante de CIGEE para CIGEE da BNVC.",ref:"NORDNAVNORTE Nº 40-14A",assunto:"—",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"MSG",month:4,day:10,msg:""},
-{id:"a4",kind:"ANUAL",tarefa:"SUBSÍDIO PARA REVISÃO DO TEMBA",ref:"NORDINAVNORTE Nº 40-09C",assunto:"—",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"MSG",month:8,day:30,msg:""},
-{id:"a5",kind:"ANUAL",tarefa:"Informar necessidade de CLG para o ano A+2 ao COMACO",ref:"NORDINAVNORTE 40-02J",assunto:"—",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"OFÍCIO",month:9,day:15,msg:""},
-{id:"a6",kind:"ANUAL",tarefa:"Informar disponibilidade para remanejamento, suplementação e conversão de CLG.",ref:"NNN Nº 40-02J",assunto:"—",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"MSG",month:10,day:10,msg:""},
-{id:"a7",kind:"ANUAL",tarefa:"Informar recebimento integral do saldo de QLR ou justificativas impeditivas.",ref:"NNN Nº 40-02J",assunto:"—",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"MSG",month:12,day:10,msg:""},
-{id:"a8",kind:"ANUAL",tarefa:"Encaminhar ao Com4ºDN o PGEE para o ano A+1.",ref:"NORDNAVNORTE Nº 40-14A",assunto:"—",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"OFÍCIO",month:12,day:10,msg:""},
-{id:"w0",kind:"SEMANAL",tarefa:"Capacidade Embarcadas",ref:"R202014Z/MAR/2026",assunto:"PROGEM",destino:"COM4ºDN",resp:"CHN4-43",respcat:"DIVISAO",atraves:"MSG",weekday:5,msg:""}
-];
-var MO=[
-{id:"o0",kind:"DIVERSO",tarefa:"Cronograma de Manutenções no Exterior 2026 — Receber PPSS dos NAV",ref:"R102200Z/FEV/2026",assunto:"PROGEM",destino:"CHN-4",resp:"NAVIOS",respcat:"NAVIOS",atraves:"MSG",date:{y:2026,m:2,d:10},msg:""},
-{id:"o1",kind:"DIVERSO",tarefa:"Cronograma de Manutenções no Exterior 2026 — MSG dos ComImSup à BHMN",ref:"R061340Z/JAN/2026",assunto:"PROGEM",destino:"BASHID",resp:"CHN4-43",respcat:"DIVISAO",atraves:"MSG",date:{y:2026,m:4,d:17},msg:"R221946Z/ABR/2026"},
-{id:"o11",kind:"DIVERSO",tarefa:"Cadastramento dos Projetos de Abastecimento de Sobressalentes PROGEM 2027",ref:"R-301252Z/OUT/2025",assunto:"PROGEM",destino:"QRTDIS",resp:"CHN4-43",respcat:"DIVISAO",atraves:"MSG",date:{y:2025,m:11,d:4},msg:"R041220Z/NOV/2025"},
-{id:"o14",kind:"DIVERSO",tarefa:"Cadastramento dos Projetos de Abastecimento de Sobressalentes PROGEM 2028.",ref:"R111849Z/NOV/2025",assunto:"PROGEM",destino:"QRTDIS",resp:"CHN4-43",respcat:"DIVISAO",atraves:"MSG",date:{y:2026,m:1,d:16},msg:"R161546Z/JAN/2026"},
-{id:"o15",kind:"DIVERSO",tarefa:"Cadastramento dos Projetos de Abastecimento de Sobressalentes PROGEM 2028.",ref:"R291939Z/JAN/2026",assunto:"PROGEM",destino:"QRTDIS",resp:"CHN4-43",respcat:"DIVISAO",atraves:"MSG",date:{y:2026,m:4,d:30},msg:""},
-{id:"o17",kind:"DIVERSO",tarefa:"Análise dos ProjAbas",ref:"Circular nº03 da DAbM",assunto:"PROGEM",destino:"CHN-4",resp:"CHN4-43",respcat:"DIVISAO",atraves:"",date:{y:2026,m:5,d:15},msg:""}
-];
-document.getElementById("totrec").textContent=MT.length+MO.length;
+/* ── DADOS-BASE — carregados do Supabase (chave ag_base), nunca hardcoded ── */
+var MT=[],MO=[];
 
-var SS=(function(){
-  var s={"m1|2026|6":"CONCLUIDO","m2|2026|6":"CONCLUIDO","m5|2026|6":"CONCLUIDO","o|o0":"CONCLUIDO","o|o1":"CONCLUIDO","o|o11":"CONCLUIDO","o|o14":"CONCLUIDO"};
-  var all=MT.concat(MO);
-  for(var m=1;m<=5;m++){
-    all.forEach(function(t){
-      if(t.kind==="MENSAL")s[t.id+"|2026|"+m]="CONCLUIDO";
-      else if(t.kind==="SEMANAL"){for(var w=0;w<5;w++)s[t.id+"|2026|"+m+"|w"+w]="CONCLUIDO";}
-      else if(t.kind==="ANUAL"&&t.month<=5)s[t.id+"|2026"]="CONCLUIDO";
-      else if(t.kind==="DIVERSO"&&t.date&&t.date.y===2026&&t.date.m<=5)s["o|"+t.id+"|0"]="CONCLUIDO";
-    });
-  }
-  return s;
-})();
-var SSH={"m0|2026|6":{NHoGSampaio:{received:true,datahora:"R301740Z/MAI/2026"},NhiBTenCastelo:{received:true,datahora:"R291810Z/MAI/2026"},AvHoFluRioTocantins:{received:true,datahora:"R021503Z/JUN/2026"}},"m1|2026|6":{NHoGSampaio:{received:true,datahora:"R081644Z/JUN/2026"},NhiBTenCastelo:{received:true,datahora:"R291900Z/MAI/2026"},AvHoFluRioTocantins:{received:true,datahora:"R082015Z/JUN/2026"},AvHoFluRioXingu:{received:true,datahora:"R031300Z/JUN/2026"}}};
 
 /* ── ESTADO ── */
 var navRemoteHook=null; // permite ao módulo de Navios receber atualizações em tempo real do Firebase (ver startRT)
@@ -1634,6 +1579,8 @@ var openPanels=new Set(),histOpen=new Set(),undoStack=[],redoStack=[],spotOpen=n
 
 async function loadAll(){
   if(bk==="supabase")await sbGetDoc();
+  var base=(await gtj(K.base))||{};MT=base.MT||[];MO=base.MO||[];
+  var tr=document.getElementById("totrec");if(tr)tr.textContent=MT.length+MO.length;
   ovStatus=(await gtj(K.st))||{};ovShips=(await gtj(K.sh))||{};ovEdit=(await gtj(K.ed))||{};
   // migrar chaves legadas "o|<id>" → "o|<id>|0" (prazos diversos pré-múltiplos)
   var _migSt=false;Object.keys(ovStatus).forEach(function(k){if(/^o\|[^|]+$/.test(k)){ovStatus[k.replace(/^(o\|[^|]+)$/,"$1|0")]=ovStatus[k];delete ovStatus[k];_migSt=true;}});if(_migSt)svs(K.st,ovStatus);
@@ -1776,17 +1723,17 @@ function buildInst(){
   });
   return inst;
 }
-function statusOf(i){return ovStatus[i.key]!==undefined?ovStatus[i.key]:(SS[i.key]||null);}
+function statusOf(i){return ovStatus[i.key]!==undefined?ovStatus[i.key]:null;}
 function nupOf(i){return ovNup[i.key]||"";}
 function doneAt(i){return ovDone[i.key]||null;}
 function tShips(i){return ovTaskShips[i.key]||ovTaskShips[i.id]||SUBUNITS;}
-function sState(i,n){var k=i.key+":"+n;if(ovShips[k]!==undefined){var s=ovShips[k];return{datahora:s.datahora||"",received:!!(s.datahora&&s.received)};}var sd=(SSH[i.key]||{})[n];if(sd)return sd;return{datahora:"",received:false};}
+function sState(i,n){var k=i.key+":"+n;if(ovShips[k]!==undefined){var s=ovShips[k];return{datahora:s.datahora||"",received:!!(s.datahora&&s.received)};}return{datahora:"",received:false};}
 function shRecv(i){return tShips(i).reduce(function(a,n){return a+(sState(i,n).received?1:0);},0);}
 function subsOf(i){return ovSubsids[i.key]||[];}
 function stksOf(i){return ovSubtasks[i.key]||[];}
 function stkPct(i){var s=stksOf(i);if(!s.length)return null;return Math.round(s.filter(function(x){return x.done;}).length/s.length*100);}
-function isDone(i){var s=statusOf(i);if(s==="PENDENTE")return false;if(i.cat==="NAVIOS")return s==="CONCLUIDO"?true:(tShips(i).length>0&&shRecv(i)===tShips(i).length);if(s==="CONCLUIDO")return ovStatus[i.key]==="CONCLUIDO"||!!nupOf(i)||SS[i.key]==="CONCLUIDO";return false;}
-function canConc(i){if(i.cat==="NAVIOS")return shRecv(i)===tShips(i).length&&tShips(i).length>0;return!!nupOf(i)||SS[i.key]==="CONCLUIDO";}
+function isDone(i){var s=statusOf(i);if(s==="PENDENTE")return false;if(i.cat==="NAVIOS")return s==="CONCLUIDO"?true:(tShips(i).length>0&&shRecv(i)===tShips(i).length);if(s==="CONCLUIDO")return ovStatus[i.key]==="CONCLUIDO"||!!nupOf(i);return false;}
+function canConc(i){if(i.cat==="NAVIOS")return shRecv(i)===tShips(i).length&&tShips(i).length>0;return!!nupOf(i);}
 function daysTo(i){if(!i.deadline)return null;var done=isDone(i),di=doneAt(i);if(done&&di){var dd=new Date(di);dd.setHours(0,0,0,0);return Math.round((i.deadline-dd)/86400000);}return Math.round((i.deadline-TODAY)/86400000);}
 function dlbl(i){var done=isDone(i),d=daysTo(i);if(d===null)return{lbl:"Sem prazo",val:"—",col:"var(--text3)"};if(done){if(d===0)return{lbl:"No prazo",val:"0d",col:"var(--c-teal)"};if(d>0)return{lbl:d+"d antes",val:"+"+d+"d",col:"var(--c-teal)"};return{lbl:Math.abs(d)+"d após",val:d+"d",col:"var(--c-amber)"};}if(d<0)return{lbl:Math.abs(d)+"d em atraso",val:d+"d",col:"var(--c-red)"};if(d===0)return{lbl:"Vence hoje",val:"hoje",col:"var(--c-red)"};if(d<=7)return{lbl:"Faltam "+d+"d",val:"+"+d+"d",col:"var(--c-amber)"};return{lbl:"Faltam "+d+"d",val:"+"+d+"d",col:"var(--text2)"};}
 function sit(i){if(isDone(i))return"ok";if(!i.deadline)return"sem";var d=Math.round((i.deadline-TODAY)/86400000);if(d<0)return"venc";if(d<=7)return"prox";return"fut";}
@@ -3767,7 +3714,7 @@ document.addEventListener("keydown",function(e){
   var pct=document.getElementById("splashPct");
   if(!fill||!pct)return;
   // Keyframes: [time_ms, percent]
-  var kf=[[0,0],[863,18],[1727,32],[2734,47],[3886,59],[5180,68],[6475,76],[7771,83],[8922,89],[9641,95],[10000,100]];
+  var kf=[[0,0],[518,18],[1036,32],[1640,47],[2332,59],[3108,68],[3885,76],[4663,83],[5353,89],[5785,95],[6000,100]];
   var i=1;
   function step(){
     if(i>=kf.length)return;
@@ -3782,8 +3729,8 @@ document.addEventListener("keydown",function(e){
 })();
 function hideSplash(){var sp=document.getElementById("splash");if(sp&&!sp.classList.contains("hide")){sp.classList.add("hide");setTimeout(function(){if(sp.parentNode)sp.remove();},650);}}
 var splashStart=Date.now();
-var SPLASH_MIN_MS=10000;
-setTimeout(hideSplash,20000);
+var SPLASH_MIN_MS=6000;
+setTimeout(hideSplash,12000);
 (async function(){
   try{
     await initBk();
@@ -3812,51 +3759,6 @@ setTimeout(hideSplash,20000);
    ═══════════════════════════════════════════════════════════ */
 /* ── MÓDULO: CONTROLE DE NAVIOS/EMBARCAÇÕES ── */
 (function(){
-  var NAVIOS_SEED=[
-    {tipo:"84514",indicativo:"H-19",nome:"NB Ten. Castelo",msg:"P2214562/MAI/2026",condef:"IM",restricao:"102",previsao:"Entre dique: 02ABR / 30MAR–29MAI",comissao:"PDR 03JUL",periodo:"Docagem 31MAR",diasMar:"",obs:"PDR (4ª) · MAR–MAI (3ª)"},
-    {tipo:"84513",indicativo:"H-37",nome:"NHo G. Sampaio",msg:"P1118232/JUN/2026",condef:"IM",restricao:"439/436/320/384 · 286",previsao:"09JUN2027 / 03JUL",comissao:"ADECON",periodo:"06 a 15JUL",diasMar:"",obs:"PMA · MAI"},
-    {tipo:"84515",indicativo:"H-12",nome:"AvHoFlu Rio Tocantins",msg:"P2602302/ABR/2026",condef:"PO",restricao:"350/351/821",previsao:"31JUL",comissao:"Rio Amazonas VIII",periodo:"22JUN a 24JUL",diasMar:"",obs:"PMG · ABR–JUN"},
-    {tipo:"84516",indicativo:"H-13",nome:"AvHoFlu Rio Xingu",msg:"R1B00192/DEZ/2025",condef:"PO",restricao:"005/659/444",previsao:"30JUN",comissao:"Rio Amazonas VIII",periodo:"29JUL a 30AGO",diasMar:"",obs:"PDR · OUT–DEZ"},
-    {tipo:"AvB",indicativo:"CHN-4-01",nome:"AvB Vega",msg:"R0918562/JUN/2026",condef:"PO",restricao:"200/931",previsao:"31OUT",comissao:"—",periodo:"—",diasMar:"",obs:"—"},
-    {tipo:"AvB",indicativo:"CHN-4-02",nome:"AvB Denébola",msg:"R3120193/MAR/2026",condef:"IM",restricao:"200/383/931",previsao:"30JUN",comissao:"—",periodo:"—",diasMar:"",obs:"—"},
-    {tipo:"AvB",indicativo:"CHN-4-04",nome:"AvB Régulus",msg:"R0221140/JUL/2024",condef:"IM",restricao:"101",previsao:"ASD",comissao:"—",periodo:"—",diasMar:"",obs:"—"},
-    {tipo:"AvB",indicativo:"CHN-4-06",nome:"AvB Boto",msg:"R0221140/JUL/2024",condef:"IM",restricao:"101",previsao:"ASD",comissao:"—",periodo:"—",diasMar:"",obs:"—"},
-    {tipo:"LHAI",indicativo:"CHN-4-05",nome:"LHAI Guajará I",msg:"R3120192/MAR/2026",condef:"IM",restricao:"200",previsao:"30JUN",comissao:"—",periodo:"—",diasMar:"",obs:"—"},
-    {tipo:"LHAI",indicativo:"CHN-4-03",nome:"LHAI Rígel",msg:"R1622242/AGO/2024",condef:"PO",restricao:"—",previsao:"—",comissao:"—",periodo:"—",diasMar:"",obs:"—"},
-    {tipo:"LHAI",indicativo:"CHN-4-07",nome:"LHAI Jarí",msg:"R0221140/JUL/2024",condef:"IM",restricao:"—",previsao:"—",comissao:"—",periodo:"Salinas II · 12 a 26JUN",diasMar:"",obs:"—"}
-  ];
-  var NAVIOS_CARDS_SEED=[
-    {title:"⚙ Docagem / SITREP POSE",items:[
-      {k:"H-37",v:"Fase II"},{k:"H-19",v:"—"},{k:"H-12",v:"Fase II"},{k:"H-13",v:"Fase II"},
-      {k:"NHo G. Sampaio",v:"26 a 28OUT"},{k:"AvHoFlu Rio Tocantins",v:"22 a 24SET"}
-    ]},
-    {title:"💰 Cronograma Financeiro PROGEM",items:[
-      {k:"NHi B Ten Castelo — Tintas",v:"R$ 112.000"},
-      {k:"NHi B Ten Castelo — ND39",v:"R$ 4.088.000"},
-      {k:"NHi B Ten Castelo — ND30",v:"R$ 40.000"},
-      {k:"AvHoFlu Rio Xingu — Tintas",v:"R$ 24.000"},
-      {k:"AvHoFlu Rio Xingu — ND39",v:"R$ 1.270.000"},
-      {k:"AvHoFlu Rio Xingu — ND30",v:"R$ 16.000"}
-    ]},
-    {title:"⏳ Processo de Extensão de Vida Útil",items:[
-      {k:"NHo G. Sampaio",v:"2021 (em processo)"},
-      {k:"NHi B Ten Castelo",v:"2023 (em processo)"},
-      {k:"AvHoFlu Rio Tocantins",v:"2032"},
-      {k:"AvHoFlu Rio Xingu",v:"2033"}
-    ]},
-    {title:"🏦 Saldo Remanescente na BNVC",items:[
-      {k:"NHi B Ten Castelo",v:"R$ 1.233.175,93"},
-      {k:"AvHoFlu Rio Xingu",v:"R$ 781,00"}
-    ]},
-    {title:"📝 Observações Gerais",items:[
-      {k:"ODM",v:"190024045"},
-      {k:"ODR",v:"BR3239766"},
-      {k:"GAS",v:"190009003"},
-      {k:"Escala de prioridade",v:"7–10 Alto · 5–6 Moderado · 1–4 Baixo (reu. 13ABR)"},
-      {k:"SD Petterson — férias",v:"22JUN a 01JUL (PIUÍ)"},
-      {k:"Viaturas",v:"seção a detalhar"}
-    ]}
-  ];
   var NAVIOS_KEY="aa_navios_ships_v1",NAVIOS_CARDS_KEY="aa_navios_cards_v1",NAVIOS_COLS_KEY="aa_navios_cols_v1";
   var NAVIOS_FIXED=[
     {key:"tipo",title:"Tipo"},{key:"indicativo",title:"Indicativo Costado"},{key:"nome",title:"Nome"},
@@ -3887,10 +3789,10 @@ setTimeout(hideSplash,20000);
     var s=null,c=null,nc=null;
     try{s=await gtj(NAVIOS_KEY);}catch(e){}
     if(!s||!s.length){try{s=JSON.parse(localStorage.getItem(NAVIOS_KEY));}catch(e){}}
-    navShips=(s&&s.length)?s:NAVIOS_SEED.map(function(n){var o=Object.assign({},n);o.id=genUid("nv");return o;});
+    navShips=(s&&s.length)?s:[];
     try{c=await gtj(NAVIOS_CARDS_KEY);}catch(e){}
     if(!c||!c.length){try{c=JSON.parse(localStorage.getItem(NAVIOS_CARDS_KEY));}catch(e){}}
-    navCards=(c&&c.length)?c:NAVIOS_CARDS_SEED.map(function(cd){var o=Object.assign({},cd);o.id=genUid("card");o.items=cd.items.map(function(it){return Object.assign({},it);});return o;});
+    navCards=(c&&c.length)?c:[];
     navCards.forEach(function(cd){cd.items=cd.items.map(function(it){return it.vals?it:{k:it.k,vals:[it.v!==undefined?it.v:""]};});});
     try{nc=await gtj(NAVIOS_COLS_KEY);}catch(e){}
     if(!nc||!nc.length){try{nc=JSON.parse(localStorage.getItem(NAVIOS_COLS_KEY));}catch(e){}}
@@ -4095,46 +3997,6 @@ setTimeout(hideSplash,20000);
    ═══════════════════════════════════════════════════════════ */
 /* ── MÓDULO: CONTROLE DE CLG ── */
 (function(){
-  var CLG_T1_SEED=[
-    {meio:"NHoGSampaio",capacidade:"105.000/99.750",estoque:"53.240",rop:"31.500",naoAsp:"20.000"},
-    {meio:"NHiBTenCastelo",capacidade:"81.180/77.121",estoque:"43.500",rop:"24.330",naoAsp:"10.000"},
-    {meio:"AvHoFluRioTocantins",capacidade:"24.286/23.071",estoque:"4.310",rop:"7.286",naoAsp:"2.920"},
-    {meio:"AvHoFluRioXingu",capacidade:"24.286/23.071",estoque:"7.615",rop:"7.286",naoAsp:"2.920"},
-    {meio:"AvBVega",capacidade:"13.200/12.540",estoque:"9.000",rop:"3.960",naoAsp:"500"},
-    {meio:"AvBDenébola",capacidade:"13.200/12.540",estoque:"11.515",rop:"3.960",naoAsp:"500"}
-  ];
-  var CLG_T2_SEED=[];
-  var CLG_CARDS_SEED=[
-    {title:"💧 Saldo QLR",items:[
-      {k:"ODM",v:"Regular 38.000 · Extra —"},
-      {k:"GAS",v:"Regular 300 · Extra 50"},
-      {k:"ODR",v:"Regular 1.118 · Extra —"},
-      {k:"GX",v:"Regular — · Extra —"},
-      {k:"OL",v:"Regular — · Extra —"}
-    ]},
-    {title:"⛽ Média de Consumo",items:[
-      {k:"M37",v:"4.500 L/dia ODM · Atracado 600 L/dia"},
-      {k:"M19",v:"2.000 L/dia ODM · Atracado 200 L/dia"},
-      {k:"M12",v:"1.200 L/dia ODM · Atracado 200 L/dia"},
-      {k:"M13",v:"1.200 L/dia ODM · Atracado 200 L/dia"},
-      {k:"AvB's",v:"300 L/dia ODM · Atracado 120 L/dia"}
-    ]},
-    {title:"💲 Preços de Referência",items:[
-      {k:"Dólar",v:"R$ 5,41"},
-      {k:"ODM",v:"R$ 5,84"},
-      {k:"ODR",v:"R$ 6,22"},
-      {k:"GÁS",v:"R$ 6,25"},
-      {k:"Óleo 15W40 (20L)",v:"R$ 289,27 (14,46/L)"},
-      {k:"Óleo CCD410 (20L)",v:"R$ 424,25"}
-    ]},
-    {title:"⚓ Meios e OM",items:[
-      {k:"Farol Salinópolis",v:"OM 84523 · FRLSLP"},
-      {k:"Aviso Balizador Vega",v:"OM 84517 · AVBVEG"},
-      {k:"Aviso Balizador Denébola",v:"OM 84518 · AVBDEN"},
-      {k:"Aviso Balizador Régulus",v:"OM 84519 · AVBRGS"},
-      {k:"Aviso Balizador Boto",v:"OM 84522 · AVBOTO"}
-    ]}
-  ];
   var CLG_T1_KEY="aa_clg_t1_v1",CLG_T2_KEY="aa_clg_t2_v1",CLG_CARDS_KEY="aa_clg_cards_v1";
   var CLG_T1_COLS_KEY="aa_clg_t1_cols_v1",CLG_T2_COLS_KEY="aa_clg_t2_cols_v1";
   var CLG_T1_FIXED=[{key:"meio",title:"Meio"},{key:"capacidade",title:"Capacidade"},{key:"estoque",title:"Estoque"},{key:"rop",title:"ROP"},{key:"naoAsp",title:"Não Aspirável"}];
@@ -4152,10 +4014,10 @@ setTimeout(hideSplash,20000);
     var t1=null,t2=null,c=null,t1c=null,t2c=null;
     try{t1=await gtj(CLG_T1_KEY);}catch(e){}
     if(!t1||!t1.length){try{t1=JSON.parse(localStorage.getItem(CLG_T1_KEY));}catch(e){}}
-    clgT1=(t1&&t1.length)?t1:CLG_T1_SEED.map(function(r){var o=Object.assign({},r);o.id=genUid("t1");return o;});
+    clgT1=(t1&&t1.length)?t1:[];
     try{t2=await gtj(CLG_T2_KEY);}catch(e){}
     if(!t2){try{t2=JSON.parse(localStorage.getItem(CLG_T2_KEY));}catch(e){}}
-    clgT2=(t2&&t2.length)?t2:CLG_T2_SEED.map(function(r){var o=Object.assign({},r);o.id=genUid("t2");return o;});
+    clgT2=(t2&&t2.length)?t2:[];
     try{t1c=await gtj(CLG_T1_COLS_KEY);}catch(e){}
     if(!t1c||!t1c.length){try{t1c=JSON.parse(localStorage.getItem(CLG_T1_COLS_KEY));}catch(e){}}
     clgT1Cols=migrateCols(t1c,CLG_T1_FIXED,clgT1);
@@ -4164,7 +4026,7 @@ setTimeout(hideSplash,20000);
     clgT2Cols=migrateCols(t2c,CLG_T2_FIXED,clgT2);
     try{c=await gtj(CLG_CARDS_KEY);}catch(e){}
     if(!c||!c.length){try{c=JSON.parse(localStorage.getItem(CLG_CARDS_KEY));}catch(e){}}
-    clgCards=(c&&c.length)?c:CLG_CARDS_SEED.map(function(cd){var o=Object.assign({},cd);o.id=genUid("card");o.items=cd.items.map(function(it){return Object.assign({},it);});return o;});
+    clgCards=(c&&c.length)?c:[];
     clgCards.forEach(function(cd){cd.items=cd.items.map(function(it){return it.vals?it:{k:it.k,vals:[it.v!==undefined?it.v:""]};});});
     clgSaveT1();clgSaveT2();clgSaveCards();clgSaveT1Cols();clgSaveT2Cols();
   }
