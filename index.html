@@ -1401,9 +1401,6 @@ var GLOBAL_EDIT_LOCK=null;
 /* Cada chave (ag_*, aa_*) é seu próprio documento em agenda_data/{chave} — não compete por espaço
    com as demais (limite de 1 MiB por documento, não por app) e cada gravação só toca o que mudou.
    agenda/main (modelo antigo, doc único) fica intocado como backup. */
-var FB_BASE="https://firestore.googleapis.com/v1/projects/agenda-administrativa-alt1/databases/(default)/documents";
-var FB_COLL=FB_BASE+"/agenda_data";
-var FK="AIzaSyDxY236v6WD9K1vGhRp1o9qn63ETkFz3X8";
 var bk="local", dc=null, rtActive=false;
 var docUpdateTimes={}, flushTimers={};
 
@@ -1411,33 +1408,19 @@ var docUpdateTimes={}, flushTimers={};
 var SB_URL="https://jsrnjdjoxhstbfqhxwoi.supabase.co";
 var SB_KEY="sb_publishable_797_trm8U-IVk0jzVeA6IQ_DVsBl9m6";
 var SB_TABLE=SB_URL+"/rest/v1/agenda_data";
-// Override de teste, lido do localStorage (sobrevive a reload, então dá pra setar 1x no console e
-// recarregar): null/ausente = automático (tenta Supabase, senão Firebase, senão local — padrão de
-// produção). "supabase" ou "firebase" força um backend isolado, sem cair pro outro nem em falha
-// (nem o probe do outro roda) — usar só durante validação isolada de migração/teste.
+// Override de teste, lido do localStorage: null/ausente = tenta Supabase, senão local.
+// "local" força modo sem sync (teste isolado).
 // Setar: localStorage.setItem('aa_backend_override','supabase'); depois recarregar a página.
 // Voltar ao normal: localStorage.removeItem('aa_backend_override'); recarregar de novo.
 var BACKEND_OVERRIDE=localStorage.getItem("aa_backend_override")||null;
 function sbHeaders(extra){var h={apikey:SB_KEY,Authorization:"Bearer "+SB_KEY};if(extra)Object.assign(h,extra);return h;}
-function bkSynced(){return bk==="firebase"||bk==="supabase";}
+function bkSynced(){return bk==="supabase";}
 
-function toFV(v){return{stringValue:typeof v==="string"?v:JSON.stringify(v)};}
-function fromFV(f){return(f&&f.stringValue!==undefined)?f.stringValue:null;}
 
-// Supabase é a única fonte de verdade em uso — sem fallback automático pro Firebase: as duas bases
-// não são sincronizadas entre si, então cair de uma pra outra silenciosamente arrisca perder edição
-// feita durante a janela de fallback. Firebase só entra via BACKEND_OVERRIDE manual (debug/migração).
+// Supabase é a única fonte de verdade — se falhar, cai pro modo local (sem sync).
 async function initBk(){
   if(BACKEND_OVERRIDE==="local"){bk="local";return;}
-  if(BACKEND_OVERRIDE==="firebase"){await initBkFirebase();return;}
-  await initBkSupabase(); // se falhar, cai direto pro modo local — nunca pro Firebase sem ser pedido
-}
-async function initBkFirebase(){
-  try{
-    var r=await Promise.race([fetch(FB_COLL+"?key="+FK+"&pageSize=1"),new Promise(function(_,j){setTimeout(function(){j(new Error("timeout"));},5000);})]);
-    if(!r.ok&&r.status!==404)throw new Error("HTTP "+r.status);
-    bk="firebase";
-  }catch(e){console.warn("Firebase indisponível:",e.message);bk="local";}
+  await initBkSupabase();
 }
 async function initBkSupabase(){
   try{
@@ -1447,21 +1430,6 @@ async function initBkSupabase(){
   }catch(e){console.warn("Supabase indisponível:",e.message);bk="local";}
 }
 
-async function getDoc(){
-  if(dc)return dc;
-  dc={};
-  try{
-    var r=await fetch(FB_COLL+"?key="+FK+"&pageSize=300");
-    if(!r.ok)return dc;
-    var j=await r.json();
-    (j.documents||[]).forEach(function(d){
-      var k=d.name.split("/").pop();
-      dc[k]=fromFV(d.fields&&d.fields.value);
-      docUpdateTimes[k]=d.updateTime;
-    });
-  }catch(e){}
-  return dc;
-}
 async function sbGetDoc(){
   if(dc)return dc;
   dc={};
@@ -1474,14 +1442,6 @@ async function sbGetDoc(){
   return dc;
 }
 
-async function flushKey(k){
-  try{
-    var url=FB_COLL+"/"+encodeURIComponent(k)+"?key="+FK+"&updateMask.fieldPaths=value";
-    var r=await fetch(url,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({fields:{value:toFV(dc[k])}})});
-    if(r.ok){var j=await r.json();docUpdateTimes[k]=j.updateTime;}
-    bumpMeta();
-  }catch(e){console.error("flushKey",k,e);}
-}
 async function sbFlushKey(k){
   try{
     var body=[{key:k,value:dc[k],updated_at:new Date().toISOString()}];
@@ -1492,17 +1452,15 @@ async function sbFlushKey(k){
 }
 function schedFlushKey(k){
   clearTimeout(flushTimers[k]);
-  flushTimers[k]=setTimeout(function(){delete flushTimers[k];if(bk==="supabase")sbFlushKey(k);else flushKey(k);},400);
+  flushTimers[k]=setTimeout(function(){delete flushTimers[k];sbFlushKey(k);},400);
 }
 
 async function svs(k,v){
   var val=typeof v==="string"?v:JSON.stringify(v);
-  if(bk==="firebase"){if(!dc)await getDoc();dc[k]=val;schedFlushKey(k);return;}
   if(bk==="supabase"){if(!dc)await sbGetDoc();dc[k]=val;schedFlushKey(k);return;}
   try{await window.storage.set(k,val);}catch(e){}
 }
 async function gts(k){
-  if(bk==="firebase"){var d=await getDoc();return d[k]!==undefined?d[k]:null;}
   if(bk==="supabase"){var d=await sbGetDoc();return d[k]!==undefined?d[k]:null;}
   try{var r=await window.storage.get(k);return(r&&r.value)?r.value:null;}catch(e){return null;}
 }
@@ -1512,16 +1470,7 @@ async function gtj(k){var v=await gts(k);try{return v?JSON.parse(v):null;}catch(
    QUALQUER chave; só faz a listagem completa quando o sentinela indica mudança real. Evita poll cego
    da coleção inteira a cada ciclo (esgotava cota de leitura na Firestore; no Supabase, estouraria o
    limite de egress do free tier do mesmo jeito se reaplicado sem essa otimização). */
-var META_DOC=FB_COLL+"/_meta",lastSeenMetaTs=0,metaBumpTimer=null;
-function bumpMeta(){
-  clearTimeout(metaBumpTimer);
-  metaBumpTimer=setTimeout(function(){
-    var ts=Date.now();
-    fetch(META_DOC+"?key="+FK+"&updateMask.fieldPaths=ts",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({fields:{ts:{integerValue:String(ts)}}})})
-      .then(function(r){if(r.ok)lastSeenMetaTs=ts;}) // já é a própria gravação local: não precisa reler depois
-      .catch(function(){});
-  },300);
-}
+var lastSeenMetaTs=0,metaBumpTimer=null;
 function sbBumpMeta(){
   clearTimeout(metaBumpTimer);
   metaBumpTimer=setTimeout(function(){
@@ -1551,25 +1500,6 @@ function applyDcToState(){
   renderAll();
   if(navRemoteHook)navRemoteHook(dc);
 }
-async function fetchFullAndApply(){
-  try{
-    var r=await fetch(FB_COLL+"?key="+FK+"&pageSize=300");
-    if(!r.ok)return;
-    var j=await r.json();
-    var changed=false;
-    if(!dc)dc={};
-    (j.documents||[]).forEach(function(d){
-      var k=d.name.split("/").pop();
-      if(k==="_meta")return;
-      if(flushTimers[k])return; // gravação local pendente para esta chave: não pisar
-      if(docUpdateTimes[k]===d.updateTime)return;
-      docUpdateTimes[k]=d.updateTime;
-      dc[k]=fromFV(d.fields&&d.fields.value);
-      changed=true;
-    });
-    if(changed)applyDcToState();
-  }catch(e){}
-}
 async function sbFetchFullAndApply(){
   try{
     var r=await fetch(SB_TABLE+"?select=key,value,updated_at",{headers:sbHeaders()});
@@ -1590,19 +1520,13 @@ async function sbFetchFullAndApply(){
   }catch(e){}
 }
 async function checkMetaTs(){
-  if(bk==="supabase"){
-    var r=await fetch(SB_TABLE+"?select=value&key=eq._meta&limit=1",{headers:sbHeaders()});
-    if(!r.ok)return 0;
-    var rows=await r.json();
-    return +((rows[0]&&rows[0].value)||0);
-  }
-  var r=await fetch(META_DOC+"?key="+FK); // 1 leitura, barato
+  var r=await fetch(SB_TABLE+"?select=value&key=eq._meta&limit=1",{headers:sbHeaders()});
   if(!r.ok)return 0;
-  var j=await r.json();
-  return +((j.fields&&j.fields.ts&&j.fields.ts.integerValue)||0);
+  var rows=await r.json();
+  return +((rows[0]&&rows[0].value)||0);
 }
 function startRT(){
-  if(rtActive||(bk!=="firebase"&&bk!=="supabase"))return;
+  if(rtActive||bk!=="supabase")return;
   rtActive=true;
   var VISIBLE_POLL_MS=20000,HIDDEN_POLL_MS=60000; // aba em 2º plano: poll bem mais espaçado
   function poll(){
@@ -1610,7 +1534,7 @@ function startRT(){
       if(!document.hidden){
         try{
           var ts=await checkMetaTs();
-          if(ts>lastSeenMetaTs){lastSeenMetaTs=ts;await(bk==="supabase"?sbFetchFullAndApply():fetchFullAndApply());}
+          if(ts>lastSeenMetaTs){lastSeenMetaTs=ts;await sbFetchFullAndApply();}
         }catch(e){}
       }
       poll();
@@ -1702,7 +1626,6 @@ var spots=[],operador="",theme="light",obsText="",funcText="";
 var openPanels=new Set(),histOpen=new Set(),undoStack=[],redoStack=[],spotOpen=new Set(),crestImgData="";
 
 async function loadAll(){
-  if(bk==="firebase")await getDoc();
   if(bk==="supabase")await sbGetDoc();
   ovStatus=(await gtj(K.st))||{};ovShips=(await gtj(K.sh))||{};ovEdit=(await gtj(K.ed))||{};
   // migrar chaves legadas "o|<id>" → "o|<id>|0" (prazos diversos pré-múltiplos)
@@ -3349,7 +3272,7 @@ document.getElementById("importfile").onchange=function(e){
       profile=d.profile||"ALL";if(cfg.divisoes.indexOf(profile)<0&&profile!=="ALL")profile="ALL";
       var ks=[K.st,K.sh,K.ed,K.us,K.dn,K.hi,K.np,K.sb,K.sub,K.tsh,K.ord,K.sp,K.op,K.th,K.ob,K.fn,K.cf,K.pf,K.yrs];
       var vs=[ovStatus,ovShips,ovEdit,userTasks,ovDone,ovHist,ovNup,ovSubsids,ovSubtasks,ovTaskShips,ovOrder,spots,operador,theme,obsText,funcText,cfg,profile,activeYears];
-      dc=null; /* limpa cache do firebase */
+      dc=null; /* limpa cache do backend */
       for(var ii=0;ii<ks.length;ii++)await svs(ks[ii],vs[ii]);
       pImp=null;e.target.value="";applyTheme();applyHdr();toast("✓ Importado","ok");document.getElementById("iobar").style.display="none";renderAll();
     };
