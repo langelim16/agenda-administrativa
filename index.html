@@ -593,8 +593,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .brand>div:not(.crest){min-width:0}
 .crest{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.13);border:1.5px solid rgba(255,255,255,.22);display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px;flex-shrink:0;overflow:hidden}
 .crest img{width:100%;height:100%;object-fit:cover;border-radius:8px}
-.brand h1{font-weight:700;font-size:16px;letter-spacing:2px;text-transform:uppercase;color:#fff;line-height:1;overflow-wrap:break-word;word-break:break-word}
-.brand .sub{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:3px;overflow-wrap:break-word;word-break:break-word}
+.brand h1{font-weight:700;font-size:25px;text-align:left;letter-spacing:2px;text-transform:uppercase;color:#fff;line-height:1;overflow-wrap:break-word;word-break:break-word}
+.brand .sub{font-size:12px;text-align:left;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:3px;overflow-wrap:break-word;word-break:break-word}
 .hright{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .yearsel{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:var(--r-md);padding:6px 10px;font-size:14px;font-weight:600;outline:none}
 .hbtn{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.85);border-radius:var(--r-md);padding:6px 11px;font-size:12px;white-space:nowrap}
@@ -981,10 +981,16 @@ body{padding-left:64px}
 .btn.redo-btn:hover{background:var(--c-sky)}
 .btn.redo-btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
 .spotcard.has-steps{cursor:pointer}
+body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-select:none!important}
+.task{cursor:grab}.task:active{cursor:grabbing}
 .cachebar{display:flex;align-items:center;gap:10px;max-width:430px;margin:20px auto 0;padding:9px 16px;background:var(--surface);border:1px solid var(--border);border-radius:99px;box-shadow:var(--sh-xs)}
 .cache-ic{font-size:13px;opacity:.65}
 .cache-track{flex:1;height:6px;background:var(--c-100);border-radius:99px;overflow:hidden}
 .cache-fill{height:100%;width:0;border-radius:99px;background:var(--c-teal);transition:width .5s ease,background .4s ease}
+.storrow{display:flex;align-items:center;gap:12px;margin-top:9px}
+.storlbl{width:110px;font-size:11px;font-weight:600;color:var(--text2);text-align:right;flex:none}
+.storrow .cachebar{margin:0;flex:1;max-width:none}
+.stor-hint{font-size:11px;color:var(--text3);margin:6px 0 4px;line-height:1.5}
 .cache-txt{font-size:10px;font-family:var(--mono);font-weight:600;letter-spacing:.5px;white-space:nowrap;color:var(--c-teal)}
 .splash{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#34506f 0%,#41618c 55%,#324863 100%);transition:opacity .55s ease}
 .splash.hide{opacity:0;pointer-events:none}
@@ -1052,7 +1058,7 @@ body{padding-left:64px}
 <header>
   <div class="brand">
     <div class="crest" id="crestEl" style="background: none;"><span id="crestContent"><span>AA</span></span></div>
-    <div><h1 id="agenda_hdr_title" style="font-size: 25px; text-align: center">Agenda Administrativa</h1><div class="sub" id="appSub" style="font-size: 14px; opacity: 1; line-height: 1; letter-spacing: 8px; text-align: left">Logística · CHN-4</div></div>
+    <div><h1 id="agenda_hdr_title">Agenda Administrativa</h1><div class="sub" id="appSub">Logística · CHN-4</div></div>
   </div>
   <div class="hright">
     <span class="synctag" id="backend_tag" title="Estado de gravação" style="background-color: rgba(247, 247, 247, 0.94); opacity: 0.8">⏳ verificando…</span>
@@ -1098,7 +1104,6 @@ body{padding-left:64px}
 <div class="scope" id="scope"><b>Junho de 2026</b>  — 25 de 25 tarefas</div>
 <div class="view-toggle" id="viewtog"><button class="vtbtn active" data-v="lista">☰ Lista</button><button class="vtbtn" data-v="cal">📅 Calendário</button><button class="vtbtn" data-v="tl">📊 Timeline 30d</button><button class="vtbtn" data-v="hm-mes">🌡 HeatMap Mensal</button><button class="vtbtn" data-v="hm-ano">🌡 HeatMap Anual</button></div>
 <div id="body"></div>
-<div class="cachebar" data-prefix="ag_" title="Uso de armazenamento desta aba (limite 1 MB)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div>
 <div class="foot">Agenda Administrativa · <b id="totrec">37</b> tarefas · <b id="foot_years">2026</b> · <span class="kbd">/ buscar</span> <span class="kbd">N inserir</span> <span class="kbd">Ctrl+Z desfazer</span> <span class="kbd">Ctrl+Y refazer</span></div>
 </div>
 
@@ -1106,7 +1111,7 @@ body{padding-left:64px}
 <header>
   <div class="brand">
     <div class="crest" id="nv_hdr_crest" style="background:none"><span style="font-size:22px">⚓</span></div>
-    <div><h1 id="nv_hdr_title" style="font-size:25px;text-align:center">Controle de CONDEF</h1><div class="sub" id="nv_hdr_sub" style="font-size:12px;letter-spacing:1px">SN-27.2 · Seção de Logística</div></div>
+    <div><h1 id="nv_hdr_title">Controle de CONDEF</h1><div class="sub" id="nv_hdr_sub">SN-27.2 · Seção de Logística</div></div>
   </div>
   <div class="hright">
     <span class="synctag" id="nv_synctag" style="color:var(--c-teal)">💾 Somente local</span>
@@ -1145,7 +1150,6 @@ body{padding-left:64px}
 
 <div class="nv-grid" id="nv_grid"></div>
 
-<div class="cachebar" data-prefix="aa_navios_" title="Uso de armazenamento desta aba (limite 1 MB)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div>
 <div class="foot" id="nv_hdr_foot">Controle de CONDEF · dados transcritos do quadro físico SN-27.2 — versão inicial, sujeita a ajustes</div>
 </div>
 
@@ -1153,7 +1157,7 @@ body{padding-left:64px}
 <header>
   <div class="brand">
     <div class="crest" id="clg_hdr_crest" style="background:none"><span style="font-size:22px">⛽</span></div>
-    <div><h1 id="clg_hdr_title" style="font-size:25px;text-align:center">Controle de CLG</h1><div class="sub" id="clg_hdr_sub" style="font-size:12px;letter-spacing:1px">Combustíveis, Lubrificantes e Graxas · Seção de Logística</div></div>
+    <div><h1 id="clg_hdr_title">Controle de CLG</h1><div class="sub" id="clg_hdr_sub">Combustíveis, Lubrificantes e Graxas · Seção de Logística</div></div>
   </div>
   <div class="hright">
     <span class="synctag" id="clg_synctag" style="color:var(--c-teal)">💾 Somente local</span>
@@ -1207,7 +1211,6 @@ body{padding-left:64px}
 
 <div class="nv-grid" id="clg_grid"></div>
 
-<div class="cachebar" data-prefix="aa_clg_" title="Uso de armazenamento desta aba (limite 1 MB)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div>
 <div class="foot" id="clg_hdr_foot">Controle de CLG · dados transcritos do quadro físico — versão inicial, sujeita a ajustes</div>
 </div>
 
@@ -1215,7 +1218,7 @@ body{padding-left:64px}
 <header>
   <div class="brand">
     <div class="crest" id="horas_hdr_crest" style="background:none"><span style="font-size:22px">🔧</span></div>
-    <div><h1 id="horas_hdr_title" style="font-size:25px;text-align:center">Motores</h1><div class="sub" id="horas_hdr_sub" style="font-size:12px;letter-spacing:1px">Horas de Funcionamento · Seção de Logística</div></div>
+    <div><h1 id="horas_hdr_title">Motores</h1><div class="sub" id="horas_hdr_sub">Horas de Funcionamento · Seção de Logística</div></div>
   </div>
   <div class="hright">
     <span class="synctag" id="horas_synctag" style="color:var(--c-teal)">💾 Somente local</span>
@@ -1231,7 +1234,6 @@ body{padding-left:64px}
 
 <div id="horas_tables_container"></div>
 
-<div class="cachebar" data-prefix="aa_horas_" title="Uso de armazenamento desta aba (limite 1 MB)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div>
 <div class="foot">Motores · Horas de Funcionamento · dados transcritos do controle físico — versão inicial, sujeita a ajustes</div>
 </div>
 
@@ -1239,7 +1241,7 @@ body{padding-left:64px}
 <header>
   <div class="brand">
     <div class="crest" id="pessoal_hdr_crest" style="background:none"><span style="font-size:22px">AA</span></div>
-    <div><h1 id="pessoal_hdr_title" style="font-size:25px;text-align:center">Pessoal</h1><div class="sub" id="pessoal_hdr_sub" style="font-size:12px;letter-spacing:1px">Militares do Departamento · Controle de Férias</div></div>
+    <div><h1 id="pessoal_hdr_title">Pessoal</h1><div class="sub" id="pessoal_hdr_sub">Militares do Departamento · Controle de Férias</div></div>
   </div>
   <div class="hright">
     <span class="synctag" id="pessoal_synctag" style="color:var(--c-teal)">💾 Somente local</span>
@@ -1286,7 +1288,6 @@ body{padding-left:64px}
 <div class="dt-section-head" style="margin-top:18px"><h3 class="dt-table-title">Cartões</h3></div>
 <div class="nv-grid" id="pessoal_grid"></div>
 
-<div class="cachebar" data-prefix="aa_pessoal_" title="Uso de armazenamento desta aba (limite 1 MB)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div>
 <div class="foot">Pessoal · Militares do Departamento e Controle de Férias — versão inicial, sujeita a ajustes</div>
 </div>
 
@@ -1357,7 +1358,7 @@ Etapa 2"></textarea></div></div></div><div class="mfoot"><button class="brestore
 <header>
   <div class="brand">
     <div class="crest" style="background:none"><span style="font-size:22px">⚙</span></div>
-    <div><h1 style="font-size:25px;text-align:center">Configurações da OM</h1><div class="sub" style="font-size:12px;letter-spacing:1px">Referência única para Agenda, Navios e CLG</div></div>
+    <div><h1>Configurações da OM</h1><div class="sub">Referência única para Agenda, Navios e CLG</div></div>
   </div>
   <div class="hright">
     <span class="synctag" id="config_synctag" style="color:var(--c-amber)">💾 Somente local</span>
@@ -1379,7 +1380,7 @@ Divisão Administrativa"></textarea></div>
   <div class="fld"><label>Rótulo amarelo</label><input id="c_ls" placeholder="Ex: Subsídio dos meios subordinados"></div>
 </div>
 <div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="bsave" id="c_save">Salvar configurações</button></div>
-<div class="cachebar" data-prefix="*" title="Uso de armazenamento desta aba (limite 1 MB)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div>
+<h3 class="dt-table-title" style="margin-top:24px">Armazenamento no Supabase</h3><div class="stor-hint">Peso dos dados de cada aba. Sem limite rígido no Supabase (500 MB no plano gratuito) — a barra é um alerta de desempenho: dados inchados deixam o sincronismo e o carregamento mais lentos.</div><div class="storrow"><span class="storlbl">Agenda</span><div class="cachebar" data-prefix="ag_" title="Dados da Agenda (tarefas, status, configurações)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Navios</span><div class="cachebar" data-prefix="aa_navios_" title="Dados da aba Navios"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">CLG</span><div class="cachebar" data-prefix="aa_clg_" title="Dados da aba CLG"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Horas Motores</span><div class="cachebar" data-prefix="aa_horas_" title="Dados da aba Horas Motores"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Pessoal</span><div class="cachebar" data-prefix="aa_pessoal_" title="Dados da aba Pessoal (militares e férias)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Total</span><div class="cachebar" data-prefix="*" title="Todos os dados do app no Supabase"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div>
 <div class="foot">Configurações da OM · referência única para Agenda, Navios e CLG</div>
 </div>
 
@@ -2113,6 +2114,7 @@ function enableMasonryReorder(grid,itemSel,handleSel,onCommit,lockGetter){
     var item=handle.closest(itemSel);
     if(!item||!grid.contains(item))return;
     dragEl=item;
+    document.body.classList.add("is-dragging");
     item.classList.add("touch-dragging");
     try{handle.setPointerCapture(e.pointerId);}catch(_){}
     e.preventDefault();
@@ -2140,6 +2142,7 @@ function enableMasonryReorder(grid,itemSel,handleSel,onCommit,lockGetter){
   function end(){
     if(!dragEl)return;
     dragEl.classList.remove("touch-dragging");
+    document.body.classList.remove("is-dragging");
     dragEl=null;
     onCommit();
   }
@@ -2296,7 +2299,7 @@ function enableColReorder(theadEl,getCols,setDirty,rerenderFn){
     var th=handle.closest("th[data-ci]");
     if(!th)return;
     dragTh=th;
-    th.classList.add("touch-dragging");
+    document.body.classList.add("is-dragging");th.classList.add("touch-dragging");
     document.body.classList.add("no-select-dragging");
     try{handle.setPointerCapture(e.pointerId);}catch(_){}
     e.preventDefault();
@@ -2317,7 +2320,7 @@ function enableColReorder(theadEl,getCols,setDirty,rerenderFn){
   });
   function end(){
     if(!dragTh)return;
-    dragTh.classList.remove("touch-dragging");
+    dragTh.classList.remove("touch-dragging");document.body.classList.remove("is-dragging");
     document.body.classList.remove("no-select-dragging");
     var theadRow=dragTh.parentElement;
     dragTh=null;
@@ -2946,14 +2949,21 @@ function renderHeatMapAno(allInst){
   });
 }
 
+/* Trava global de seleção durante qualquer drag (HTML5) — evita selecionar texto no trajeto */
+document.addEventListener("dragstart",function(){document.body.classList.add("is-dragging");});
+document.addEventListener("dragend",function(){document.body.classList.remove("is-dragging");});
+document.addEventListener("drop",function(){document.body.classList.remove("is-dragging");});
 var tdKey=null;
 function bindTDrag(){
   document.querySelectorAll(".task").forEach(function(card){
-    var h=card.querySelector(".task-dh");
-    if(h){h.onmousedown=function(){card.setAttribute("draggable","true");};}
-    card.onmouseup=function(){card.removeAttribute("draggable");};
+    card.setAttribute("draggable","true");
+    // Elementos interativos (inputs, botões, texto editável) não iniciam arrasto
+    card.addEventListener("pointerdown",function(e){
+      if(e.target.closest&&e.target.closest("input,textarea,select,button,a,[contenteditable=\'true\']"))card.setAttribute("draggable","false");
+      else card.setAttribute("draggable","true");
+    });
     card.ondragstart=function(e){if(card.getAttribute("draggable")!=="true"){e.preventDefault();return;}tdKey=card.dataset.key;e.dataTransfer.effectAllowed="move";};
-    card.ondragend=function(){card.removeAttribute("draggable");document.querySelectorAll(".task").forEach(function(c){c.style.borderTop="";});};
+    card.ondragend=function(){document.querySelectorAll(".task").forEach(function(c){c.style.borderTop="";});};
     card.ondragover=function(e){if(!tdKey)return;e.preventDefault();};
     card.ondrop=async function(e){e.preventDefault();if(!tdKey||card.dataset.key===tdKey)return;var all=[...document.querySelectorAll(".task")].map(function(c){return c.dataset.key;});var fi=all.indexOf(tdKey),ti=all.indexOf(card.dataset.key);if(fi<0||ti<0)return;var prev=Object.assign({},ovOrder);var r=[...all];r.splice(fi,1);r.splice(ti,0,tdKey);r.forEach(function(k,idx){ovOrder[k]=idx;});await svs(K.ord,ovOrder);pushUndo("Reordenar",async function(){ovOrder=prev;await svs(K.ord,ovOrder);});tdKey=null;renderAll();};
   });
@@ -3056,6 +3066,7 @@ function enablePointerReorder(container,itemSel,handleSel,getId,onCommit){
     var item=handle.closest(itemSel);
     if(!item||!container.contains(item))return;
     dragEl=item;
+    document.body.classList.add("is-dragging");
     item.classList.add("touch-dragging");
     try{handle.setPointerCapture(e.pointerId);}catch(_){}
     e.preventDefault();
@@ -3075,6 +3086,7 @@ function enablePointerReorder(container,itemSel,handleSel,getId,onCommit){
   function end(){
     if(!dragEl)return;
     dragEl.classList.remove("touch-dragging");
+    document.body.classList.remove("is-dragging");
     dragEl=null;
     var ids=Array.prototype.map.call(container.querySelectorAll(itemSel),getId);
     onCommit(ids);
@@ -3098,12 +3110,12 @@ function bytesFor(prefix){
 function updCache(){
   var bars=document.querySelectorAll(".cachebar[data-prefix]");
   if(!bars.length)return;
-  var LIM=1048576;
+  var LIM=5242880; // teto de desempenho (Supabase não tem limite de 1 MB por chave como o Firestore)
   bars.forEach(function(bar){
     var bytes=bytesFor(bar.dataset.prefix);
     var pct=Math.min(100,bytes/LIM*100);
     var col=pct<60?"var(--c-teal)":pct<85?"var(--c-amber)":"var(--c-red)";
-    var label=(bytes/1024).toFixed(bytes<102400?1:0)+" KB / 1 MB · "+pct.toFixed(0)+"%";
+    var label=(bytes/1024).toFixed(bytes<102400?1:0)+" KB / 5 MB · "+pct.toFixed(0)+"%";
     var fill=bar.querySelector(".cache-fill"),txt=bar.querySelector(".cache-txt");
     if(fill){fill.style.width=pct.toFixed(1)+"%";fill.style.background=col;}
     if(txt){txt.style.color=col;txt.textContent=label;}
