@@ -5078,7 +5078,7 @@ setTimeout(hideSplash,20000);
       var key=activeKeys[i],dir=pessoalSort[key].dir==="desc"?-1:1;
       var d=pessoalLevelCompare(a,b,key,dir);
       if(d!==0)return d;
-      var ad=cmpAntiguidade(a,b);
+      var ad=cmpAntiguidade(a,b)*dir;
       if(ad!==0)return ad;
     }
     return cmpAntiguidade(a,b); // sem filtro ativo: ordem natural = antiguidade
