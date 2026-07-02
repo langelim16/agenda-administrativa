@@ -1358,7 +1358,7 @@ Etapa 2"></textarea></div></div></div><div class="mfoot"><button class="brestore
 <header>
   <div class="brand">
     <div class="crest" style="background:none"><span style="font-size:22px">⚙</span></div>
-    <div><h1>Configurações da OM</h1><div class="sub">Referência única para Agenda, Navios e CLG</div></div>
+    <div><h1>Configurações da OM</h1><div class="sub">Referência única para todas as abas do sistema</div></div>
   </div>
   <div class="hright">
     <span class="synctag" id="config_synctag" style="color:var(--c-amber)">💾 Somente local</span>
@@ -1380,8 +1380,9 @@ Divisão Administrativa"></textarea></div>
   <div class="fld"><label>Rótulo amarelo</label><input id="c_ls" placeholder="Ex: Subsídio dos meios subordinados"></div>
 </div>
 <div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="bsave" id="c_save">Salvar configurações</button></div>
-<h3 class="dt-table-title" style="margin-top:24px">Armazenamento no Supabase</h3><div class="stor-hint">Peso dos dados de cada aba. Sem limite rígido no Supabase (500 MB no plano gratuito) — a barra é um alerta de desempenho: dados inchados deixam o sincronismo e o carregamento mais lentos.</div><div class="storrow"><span class="storlbl">Agenda</span><div class="cachebar" data-prefix="ag_" title="Dados da Agenda (tarefas, status, configurações)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Navios</span><div class="cachebar" data-prefix="aa_navios_" title="Dados da aba Navios"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">CLG</span><div class="cachebar" data-prefix="aa_clg_" title="Dados da aba CLG"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Horas Motores</span><div class="cachebar" data-prefix="aa_horas_" title="Dados da aba Horas Motores"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Pessoal</span><div class="cachebar" data-prefix="aa_pessoal_" title="Dados da aba Pessoal (militares e férias)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Total</span><div class="cachebar" data-prefix="*" title="Todos os dados do app no Supabase"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div>
-<div class="foot">Configurações da OM · referência única para Agenda, Navios e CLG</div>
+<button class="nv-editbtn" id="storToggle" style="margin-top:24px">🗄 Ver armazenamento</button>
+<div id="storPanel" hidden><div class="storrow"><span class="storlbl">Agenda</span><div class="cachebar" data-prefix="ag_" title="Dados da Agenda (tarefas, status, configurações)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Navios</span><div class="cachebar" data-prefix="aa_navios_" title="Dados da aba Navios"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">CLG</span><div class="cachebar" data-prefix="aa_clg_" title="Dados da aba CLG"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Horas Motores</span><div class="cachebar" data-prefix="aa_horas_" title="Dados da aba Horas Motores"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Pessoal</span><div class="cachebar" data-prefix="aa_pessoal_" title="Dados da aba Pessoal (militares e férias)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Total</span><div class="cachebar" data-prefix="*" title="Todos os dados do app"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div></div>
+<div class="foot">Configurações da OM · referência única para todas as abas do sistema</div>
 </div>
 
 <div class="mbg" id="delbg"><div class="modal"><div class="mh"><h3 style="color:var(--c-red)">⚠ Confirmar</h3><button class="mx" id="del_close">✕</button></div><div class="mbody"><p id="del_msg" style="color:var(--text2);font-size:13px;line-height:1.6"></p></div><div class="mfoot"><button class="bcancel" id="del_cancel">Cancelar</button><button class="brestore danger" id="del_confirm">Confirmar</button></div></div></div>
@@ -2956,14 +2957,11 @@ document.addEventListener("drop",function(){document.body.classList.remove("is-d
 var tdKey=null;
 function bindTDrag(){
   document.querySelectorAll(".task").forEach(function(card){
-    card.setAttribute("draggable","true");
-    // Elementos interativos (inputs, botões, texto editável) não iniciam arrasto
-    card.addEventListener("pointerdown",function(e){
-      if(e.target.closest&&e.target.closest("input,textarea,select,button,a,[contenteditable=\'true\']"))card.setAttribute("draggable","false");
-      else card.setAttribute("draggable","true");
-    });
+    var h=card.querySelector(".task-dh");
+    if(h){h.onmousedown=function(){card.setAttribute("draggable","true");};}
+    card.onmouseup=function(){card.removeAttribute("draggable");};
     card.ondragstart=function(e){if(card.getAttribute("draggable")!=="true"){e.preventDefault();return;}tdKey=card.dataset.key;e.dataTransfer.effectAllowed="move";};
-    card.ondragend=function(){document.querySelectorAll(".task").forEach(function(c){c.style.borderTop="";});};
+    card.ondragend=function(){card.removeAttribute("draggable");document.querySelectorAll(".task").forEach(function(c){c.style.borderTop="";});};
     card.ondragover=function(e){if(!tdKey)return;e.preventDefault();};
     card.ondrop=async function(e){e.preventDefault();if(!tdKey||card.dataset.key===tdKey)return;var all=[...document.querySelectorAll(".task")].map(function(c){return c.dataset.key;});var fi=all.indexOf(tdKey),ti=all.indexOf(card.dataset.key);if(fi<0||ti<0)return;var prev=Object.assign({},ovOrder);var r=[...all];r.splice(fi,1);r.splice(ti,0,tdKey);r.forEach(function(k,idx){ovOrder[k]=idx;});await svs(K.ord,ovOrder);pushUndo("Reordenar",async function(){ovOrder=prev;await svs(K.ord,ovOrder);});tdKey=null;renderAll();};
   });
@@ -3107,10 +3105,17 @@ function bytesFor(prefix){
   }
   return bytes;
 }
+var storToggle=document.getElementById("storToggle"),storPanel=document.getElementById("storPanel");
+if(storToggle)storToggle.onclick=function(){
+  var open=storPanel.hidden;
+  storPanel.hidden=!open;
+  storToggle.textContent=(open?"🗄 Ocultar armazenamento":"🗄 Ver armazenamento");
+  if(open)updCache();
+};
 function updCache(){
   var bars=document.querySelectorAll(".cachebar[data-prefix]");
   if(!bars.length)return;
-  var LIM=5242880; // teto de desempenho (Supabase não tem limite de 1 MB por chave como o Firestore)
+  var LIM=5242880; // teto de desempenho
   bars.forEach(function(bar){
     var bytes=bytesFor(bar.dataset.prefix);
     var pct=Math.min(100,bytes/LIM*100);
