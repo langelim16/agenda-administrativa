@@ -407,6 +407,13 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
 .dt-title-wrap{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px}
 .last-edit{font-style:italic;color:var(--text3);font-size:11px;font-weight:400;text-transform:none;letter-spacing:0}
 .card-lastedit{display:block;margin:-4px 0 8px;text-align:left}
+.flt-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.flt-bar select,.flt-bar input{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-md);color:var(--text);font-size:12px;padding:6px 9px;font-family:inherit}
+.flt-bar input{flex:1;min-width:160px}
+tr.row-ok{background:color-mix(in srgb,var(--c-teal) 9%,transparent)}
+tr.row-warn{background:color-mix(in srgb,var(--c-amber) 10%,transparent)}
+tr.row-bad{background:color-mix(in srgb,var(--c-red) 9%,transparent)}
+tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .dt-table-row{display:flex;gap:16px;flex-wrap:wrap}
 .dt-table-row>div{flex:1;min-width:260px}
 .nv-edit-actions{display:flex;gap:8px}
@@ -1057,6 +1064,8 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
   <button class="nav-item" data-view="clg" title="Controle de CLG"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M6 21V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v15"></path><line x1="5" y1="21" x2="15" y2="21"></line><path d="M14 9h2a2 2 0 0 1 2 2v2.3a1.7 1.7 0 0 0 1.7 1.7"></path><path d="M18 6.5l1.6 1.6a1 1 0 0 1 .4.8V11"></path><line x1="8" y1="6" x2="12" y2="6"></line></svg></span><span class="nav-lbl">CLG</span></button>
   <button class="nav-item" data-view="horas" title="Horas Motores"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></span><span class="nav-lbl">HORAS MOTORES</span></button>
   <button class="nav-item" data-view="pessoal" title="Pessoal"><span class="nav-ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="7.5" r="3.2"></circle><path d="M3.5 19.5c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6"></path><circle cx="17.5" cy="8.5" r="2.4"></circle><path d="M15.3 13.7c2.4.3 4.2 2.4 4.2 5.3"></path></svg></span><span class="nav-lbl">Pessoal</span></button>
+ <button class="nav-item" data-view="ppss" title="Controle de PPSS"><span class="nav-ic" style="font-size:20px">🛠</span><span class="nav-lbl">PPSS</span></button>
+ <button class="nav-item" data-view="garagem" title="Garagem — Controle de Viaturas"><span class="nav-ic" style="font-size:20px">🚛</span><span class="nav-lbl">GARAGEM</span></button>
 </nav>
 <div id="toast-container"></div>
 <div id="splash" class="splash"><div class="splash-inner"><div class="splash-crest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" width="220" height="220"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,0.95)"/><stop offset="100%" stop-color="rgba(255,255,255,0.65)"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="3.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g filter="url(#glow)" fill="none" stroke="url(#ag)" stroke-linecap="round" stroke-linejoin="round"><circle cx="110" cy="55" r="18" stroke-width="7"/><line x1="110" y1="73" x2="110" y2="175" stroke-width="7"/><line x1="74" y1="95" x2="146" y2="95" stroke-width="7"/><path d="M74 175 Q54 155 52 130" stroke-width="7"/><path d="M146 175 Q166 155 168 130" stroke-width="7"/><path d="M52 130 Q60 148 74 155" stroke-width="7"/><path d="M168 130 Q160 148 146 155" stroke-width="7"/><path d="M74 155 Q92 170 110 175 Q128 170 146 155" stroke-width="7"/><circle cx="110" cy="55" r="5" fill="url(#ag)" stroke="none"/></g><g fill="rgba(255,255,255,0.18)"><circle cx="110" cy="55" r="10"/></g></svg></div><div class="splash-welcome">Bem-vindo à</div><div class="splash-title">Agenda Administrativa</div><div class="splash-sub">Carregando ambiente…</div><div class="splash-bar-wrap"><div class="splash-bar"><div class="splash-bar-fill" id="splashFill"></div></div><div class="splash-pct" id="splashPct">0%</div></div></div></div>
@@ -1337,6 +1346,105 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
 <div class="foot">Pessoal · Militares do Departamento e Controle de Férias — versão inicial, sujeita a ajustes</div>
 </div>
 
+<div class="wrap" id="viewPpss" style="display:none;">
+<header>
+  <div class="brand">
+    <div class="crest" id="ppss_hdr_crest" style="background:none"><span style="font-size:22px">🛠</span></div>
+    <div><h1 id="ppss_hdr_title">Controle de PPSS</h1><div class="sub" id="ppss_hdr_sub">Pedidos de Serviço dos Meios · Seção de Logística</div></div>
+  </div>
+  <div class="hright">
+    <span class="synctag" id="ppss_synctag" style="color:var(--c-teal)">💾 Somente local</span>
+    <button class="btn undo-btn" disabled>↩ Desfazer</button>
+    <button class="btn redo-btn" disabled>↪ Refazer</button>
+    <button class="hbtn theme-toggle-btn">🌙 Noturno</button>
+  </div>
+</header>
+
+<div class="kpis" id="ppss_kpis"></div>
+
+<div class="flt-bar">
+  <select id="ppss_f_navio"><option value="">Todos os navios</option></select>
+  <select id="ppss_f_tipo"><option value="">Programadas + Correntes</option><option value="Programada">Programadas</option><option value="Corrente">Correntes</option></select>
+  <input id="ppss_f_q" placeholder="🔍 Pesquisar pedido, descrição, OMPS, DS, mensagem...">
+</div>
+
+<div class="dt-section-head">
+  <div class="dt-title-wrap"><h3 class="dt-table-title">Pedidos de Serviço</h3><span class="last-edit" id="ppss_tbl_lastedit"></span></div>
+  <div class="nv-toolbar" id="ppss_tbl_toolbar">
+    <button class="nv-editbtn" id="ppss_tbl_edit">✎ Editar</button>
+    <span class="nv-edit-actions" id="ppss_tbl_edit_actions" hidden>
+      <button class="dt-colbtn" id="ppss_tbl_addcol">+ coluna</button>
+      <button class="dt-colbtn" id="ppss_tbl_delcol">✕ coluna</button>
+      <button class="nv-savebtn" id="ppss_tbl_save" disabled>✓ Salvar</button>
+      <button class="nv-cancelbtn" id="ppss_tbl_cancel">Cancelar</button>
+    </span>
+  </div>
+</div>
+<div class="dt-table-wrap" id="ppss_tbl_wrap" style="max-height:560px;overflow-y:auto">
+  <table class="dt-table pessoal-tbl-sm" id="ppss_tbl_table">
+    <thead id="ppss_tbl_thead"><tr></tr></thead>
+    <tbody id="ppss_tbl_tbody"></tbody>
+  </table>
+</div>
+
+<div class="dt-section-head" style="margin-top:18px"><h3 class="dt-table-title">Cartões</h3></div>
+<div class="nv-grid" id="ppss_grid"></div>
+
+<div class="foot" id="ppss_hdr_foot">Controle de PPSS</div>
+</div>
+
+<div class="wrap" id="viewGaragem" style="display:none;">
+<header>
+  <div class="brand">
+    <div class="crest" id="gar_hdr_crest" style="background:none"><span style="font-size:22px">🚛</span></div>
+    <div><h1 id="gar_hdr_title">Garagem</h1><div class="sub" id="gar_hdr_sub">Mapa de Controle de Viaturas · Seção de Logística</div></div>
+  </div>
+  <div class="hright">
+    <span class="synctag" id="gar_synctag" style="color:var(--c-teal)">💾 Somente local</span>
+    <button class="btn undo-btn" disabled>↩ Desfazer</button>
+    <button class="btn redo-btn" disabled>↪ Refazer</button>
+    <button class="hbtn theme-toggle-btn">🌙 Noturno</button>
+  </div>
+</header>
+
+<div class="kpis" id="gar_kpis"></div>
+
+<div class="tl-legend-top">
+  <span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-blue)"></span>"P" — Pronta para operar</span>
+  <span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-teal)"></span>"PO" — Operando com restrição</span>
+  <span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-red)"></span>"IM" — Impossibilitada de manobrar</span>
+</div>
+
+<div class="flt-bar">
+  <select id="gar_f_sit"><option value="">Todas as situações</option><option value="P">P</option><option value="PO">PO</option><option value="IM">IM</option></select>
+  <input id="gar_f_q" placeholder="🔍 Pesquisar placa, modelo, NIV, observação...">
+</div>
+
+<div class="dt-section-head">
+  <div class="dt-title-wrap"><h3 class="dt-table-title">Viaturas</h3><span class="last-edit" id="vtr_tbl_lastedit"></span></div>
+  <div class="nv-toolbar" id="vtr_tbl_toolbar">
+    <button class="nv-editbtn" id="vtr_tbl_edit">✎ Editar</button>
+    <span class="nv-edit-actions" id="vtr_tbl_edit_actions" hidden>
+      <button class="dt-colbtn" id="vtr_tbl_addcol">+ coluna</button>
+      <button class="dt-colbtn" id="vtr_tbl_delcol">✕ coluna</button>
+      <button class="nv-savebtn" id="vtr_tbl_save" disabled>✓ Salvar</button>
+      <button class="nv-cancelbtn" id="vtr_tbl_cancel">Cancelar</button>
+    </span>
+  </div>
+</div>
+<div class="dt-table-wrap">
+  <table class="dt-table pessoal-tbl-sm" id="vtr_tbl_table">
+    <thead id="vtr_tbl_thead"><tr></tr></thead>
+    <tbody id="vtr_tbl_tbody"></tbody>
+  </table>
+</div>
+
+<div class="dt-section-head" style="margin-top:18px"><h3 class="dt-table-title">Cartões</h3></div>
+<div class="nv-grid" id="gar_grid"></div>
+
+<div class="foot" id="gar_hdr_foot">Garagem</div>
+</div>
+
 <!-- modais -->
 <div class="mbg" id="ftbg"><div class="modal"><div class="mh"><h3>Inserir período — selecione o tipo</h3><button class="mx" id="ft_close">✕</button></div><div class="mbody" id="ft_list" style="display:flex;flex-direction:column;gap:8px;padding:6px 0"></div></div></div>
 
@@ -1427,7 +1535,7 @@ Divisão Administrativa"></textarea></div>
 </div>
 <div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="bsave" id="c_save">Salvar configurações</button></div>
 <button class="nv-editbtn" id="storToggle" style="margin-top:24px">🗄 Ver armazenamento</button>
-<div id="storPanel" hidden><div class="storrow"><span class="storlbl">Agenda</span><div class="cachebar" data-prefix="ag_" title="Dados da Agenda (tarefas, status, configurações)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Navios</span><div class="cachebar" data-prefix="aa_navios_" title="Dados da aba Navios"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">CLG</span><div class="cachebar" data-prefix="aa_clg_" title="Dados da aba CLG"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Horas Motores</span><div class="cachebar" data-prefix="aa_horas_" title="Dados da aba Horas Motores"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Pessoal</span><div class="cachebar" data-prefix="aa_pessoal_" title="Dados da aba Pessoal (militares e férias)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Total</span><div class="cachebar" data-prefix="*" title="Todos os dados do app"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div></div>
+<div id="storPanel" hidden><div class="storrow"><span class="storlbl">Agenda</span><div class="cachebar" data-prefix="ag_" title="Dados da Agenda (tarefas, status, configurações)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Navios</span><div class="cachebar" data-prefix="aa_navios_" title="Dados da aba Navios"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">CLG</span><div class="cachebar" data-prefix="aa_clg_" title="Dados da aba CLG"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Horas Motores</span><div class="cachebar" data-prefix="aa_horas_" title="Dados da aba Horas Motores"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Pessoal</span><div class="cachebar" data-prefix="aa_pessoal_" title="Dados da aba Pessoal (militares e férias)"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">PPSS</span><div class="cachebar" data-prefix="aa_ppss_" title="Dados da aba PPSS"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Garagem</span><div class="cachebar" data-prefix="aa_vtr_" title="Dados da aba Garagem"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div><div class="storrow"><span class="storlbl">Total</span><div class="cachebar" data-prefix="*" title="Todos os dados do app"><span class="cache-ic">🗄</span><div class="cache-track"><div class="cache-fill"></div></div><span class="cache-txt">—</span></div></div></div>
 <div class="foot">Configurações da OM · referência única para todas as abas do sistema</div>
 </div>
 
@@ -1441,6 +1549,7 @@ Divisão Administrativa"></textarea></div>
 var clgInit,renderClgTables,renderClgCards,appSwitchTab;
 var clgGetState,clgSetState,navGetState,navSetState,horasGetState,horasSetState,horasInit,renderHoras;
 var pessoalInit,renderPessoal,pessoalGetState,pessoalSetState;
+var ppssInit,renderPpss,garInit,renderGaragem;
 // Cadeado de edição compartilhado por TODAS as abas (Navios/CLG/Horas/Pessoal): enquanto qualquer
 // tabela ou cartão estiver em edição não salva, nenhuma outra seção do app pode iniciar edição —
 // evita sobreposição de dados entre abas. Cada módulo só troca seu cadeado local por este.
@@ -3469,7 +3578,9 @@ var TABS=[
   {id:"navios",label:"Navios",title:"nv_hdr_title",sub:"nv_hdr_sub",crest:"nv_hdr_crest",foot:"nv_hdr_foot",dTitle:"Controle de CONDEF",dSub:"SN-27.2 · Seção de Logística"},
   {id:"clg",label:"CLG",title:"clg_hdr_title",sub:"clg_hdr_sub",crest:"clg_hdr_crest",foot:"clg_hdr_foot",dTitle:"Controle de CLG",dSub:"Combustíveis, Lubrificantes e Graxas · Seção de Logística"},
   {id:"horas",label:"Horas Motores",title:"horas_hdr_title",sub:"horas_hdr_sub",crest:"horas_hdr_crest",dTitle:"Horas Motores",dSub:"Horas de Funcionamento · Seção de Logística"},
-  {id:"pessoal",label:"Pessoal",title:"pessoal_hdr_title",sub:"pessoal_hdr_sub",crest:"pessoal_hdr_crest",dTitle:"Pessoal",dSub:"Militares do Departamento · Controle de Férias"}
+  {id:"pessoal",label:"Pessoal",title:"pessoal_hdr_title",sub:"pessoal_hdr_sub",crest:"pessoal_hdr_crest",dTitle:"Pessoal",dSub:"Militares do Departamento · Controle de Férias"},
+  {id:"ppss",label:"PPSS",title:"ppss_hdr_title",sub:"ppss_hdr_sub",crest:"ppss_hdr_crest",foot:"ppss_hdr_foot",dTitle:"Controle de PPSS",dSub:"Pedidos de Serviço dos Meios · Seção de Logística"},
+  {id:"garagem",label:"Garagem",title:"gar_hdr_title",sub:"gar_hdr_sub",crest:"gar_hdr_crest",foot:"gar_hdr_foot",dTitle:"Garagem",dSub:"Mapa de Controle de Viaturas · Seção de Logística"}
 ];
 function defaultTabHeader(tab){
   var t=TABS.find(function(x){return x.id===tab;});
@@ -4053,7 +4164,7 @@ setTimeout(hideSplash,12000);
   }
   var APPVIEW_KEY="aa_appview";
   function switchAppView(view){
-    var va=document.getElementById("viewAgenda"),vn=document.getElementById("viewNavios"),vc=document.getElementById("viewCLG"),vo=document.getElementById("viewConfigOM"),vh=document.getElementById("viewHoras"),vp=document.getElementById("viewPessoal");
+    var va=document.getElementById("viewAgenda"),vn=document.getElementById("viewNavios"),vc=document.getElementById("viewCLG"),vo=document.getElementById("viewConfigOM"),vh=document.getElementById("viewHoras"),vp=document.getElementById("viewPessoal"),vpp=document.getElementById("viewPpss"),vg=document.getElementById("viewGaragem");
     if(!va||!vn)return;
     va.style.display=view==="agenda"?"":"none";
     vn.style.display=view==="navios"?"":"none";
@@ -4061,12 +4172,16 @@ setTimeout(hideSplash,12000);
     if(vo)vo.style.display=view==="config"?"":"none";
     if(vh)vh.style.display=view==="horas"?"":"none";
     if(vp)vp.style.display=view==="pessoal"?"":"none";
+    if(vpp)vpp.style.display=view==="ppss"?"":"none";
+    if(vg)vg.style.display=view==="garagem"?"":"none";
     document.querySelectorAll(".nav-item").forEach(function(b){b.classList.toggle("active",b.dataset.view===view);});
     try{localStorage.setItem(APPVIEW_KEY,view);}catch(e){}
     if(view==="navios"){navInit().then(function(){renderNavios();renderNaviosCards();});}
     if(view==="clg"&&typeof clgInit==="function"){clgInit().then(function(){renderClgTables();renderClgCards();});}
     if(view==="horas"&&typeof horasInit==="function"){horasInit().then(renderHoras);}
     if(view==="pessoal"&&typeof pessoalInit==="function"){pessoalInit().then(renderPessoal);}
+    if(view==="ppss"&&typeof ppssInit==="function"){ppssInit().then(renderPpss);}
+    if(view==="garagem"&&typeof garInit==="function"){garInit().then(renderGaragem);}
     if(view==="config"&&typeof fillConfigOMForm==="function")fillConfigOMForm();
   }
   appSwitchTab=switchAppView;
@@ -4287,6 +4402,308 @@ setTimeout(hideSplash,12000);
       getCards:function(){return clgCards;},setCards:function(v){clgCards=v;},
       save:clgSaveCards,pushTag:"clgPush",key:function(){return CLG_CARDS_KEY;},
       label:"cart\u00E3o CLG",render:function(){renderClgTables();renderClgCards();}});
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   ABA: PPSS — pedidos de serviço dos meios (Programadas + Correntes)
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  var PPSS_KEY="aa_ppss_v1",PPSS_COLS_KEY="aa_ppss_cols_v1",PPSS_CARDS_KEY="aa_ppss_cards_v1";
+  var PPSS_NAVIOS=["NHoGSampaio","NHiBTenCastelo","AvHoFluRioTocantins","AvHoFluRioXingu"];
+  var PPSS_FIXED=[
+    {key:"navio",title:"Navio",type:"choice",options:PPSS_NAVIOS},
+    {key:"tipo",title:"Tipo",type:"choice",options:["Programada","Corrente"]},
+    {key:"numero",title:"Nº"},
+    {key:"descricao",title:"Descrição"},
+    {key:"omps",title:"OMPS"},
+    {key:"ds",title:"DS"},
+    {key:"orcamento",title:"Orçamento FR-170"},
+    {key:"aditamentos",title:"Aditamentos"},
+    {key:"faltaIndicar",title:"Falta Indicar"},
+    {key:"altEscopo",title:"Alt. Escopo"},
+    {key:"msgOmps",title:"MSG OMPS"},
+    {key:"msgNav",title:"MSG NAV"},
+    {key:"situacao",title:"Situação",type:"choice",options:["Em andamento","Concluído","Aguardando orçamento","Cancelado"]}
+  ];
+  var PPSS_FIXED_KEYS=PPSS_FIXED.map(function(c){return c.key;});
+  function ppssColsDefault(){return PPSS_FIXED.map(function(c){var o={key:c.key,title:c.title};if(c.type)o.type=c.type;if(c.options)o.options=c.options;return o;});}
+  var ppssRows=[],ppssCols=ppssColsDefault(),ppssCards=[],ppssBound=false;
+  var ppssEditing=false,ppssDirty=false,ppssSnapshot=null,ppssColsSnapshot=null;
+  var ppssCardSt={editingId:null,dirty:false,snapshot:null};
+  var ppssFlt={navio:"",tipo:"",kpi:"",q:""};
+  async function ppssLoad(){
+    var r=null,c=null,cd=null;
+    try{r=await gtj(PPSS_KEY);}catch(e){}
+    ppssRows=(r&&r.length)?r:[];
+    try{c=await gtj(PPSS_COLS_KEY);}catch(e){}
+    ppssCols=migrateCols(c,PPSS_FIXED,ppssRows);
+    ppssCols.forEach(function(col){var f=PPSS_FIXED.find(function(x){return x.key===col.key;});if(f&&f.options){col.type=f.type;col.options=f.options;}});
+    try{cd=await gtj(PPSS_CARDS_KEY);}catch(e){}
+    ppssCards=(cd&&cd.length)?cd:[];
+    ppssCards.forEach(function(card){card.items=card.items.map(function(it){return it.vals?it:{k:it.k,vals:[it.v!==undefined?it.v:""]};});});
+  }
+  function ppssSaveRows(){try{localStorage.setItem(PPSS_KEY,JSON.stringify(ppssRows));}catch(e){}}
+  function ppssSaveCols(){try{localStorage.setItem(PPSS_COLS_KEY,JSON.stringify(ppssCols));}catch(e){}}
+  function ppssSaveCards(){try{localStorage.setItem(PPSS_CARDS_KEY,JSON.stringify(ppssCards));}catch(e){}}
+  function ppssMoney(v){var m=String(v||"").replace(/[^\d,.-]/g,"").replace(/\./g,"").replace(",",".");var n=parseFloat(m);return isNaN(n)?0:n;}
+  function ppssMatch(r){
+    if(ppssFlt.navio&&r.navio!==ppssFlt.navio)return false;
+    if(ppssFlt.tipo&&r.tipo!==ppssFlt.tipo)return false;
+    if(ppssFlt.kpi==="conc"&&r.situacao!=="Concluído")return false;
+    if(ppssFlt.kpi==="semorc"&&r.orcamento)return false;
+    if(ppssFlt.kpi==="prog"&&r.tipo!=="Programada")return false;
+    if(ppssFlt.kpi==="corr"&&r.tipo!=="Corrente")return false;
+    if(ppssFlt.q){
+      var q=ppssFlt.q.toLowerCase();
+      var hit=ppssCols.some(function(c){return String(r[c.key]||"").toLowerCase().indexOf(q)>=0;});
+      if(!hit)return false;
+    }
+    return true;
+  }
+  function ppssRowCls(r){
+    if(r.situacao==="Concluído")return"row-ok";
+    if(r.situacao==="Cancelado")return"row-bad";
+    if(!r.orcamento)return"row-warn";
+    return"";
+  }
+  function renderPpssKpis(){
+    var el=document.getElementById("ppss_kpis");
+    if(!el)return;
+    var tot=ppssRows.length;
+    var prog=ppssRows.filter(function(r){return r.tipo==="Programada";}).length;
+    var corr=ppssRows.filter(function(r){return r.tipo==="Corrente";}).length;
+    var conc=ppssRows.filter(function(r){return r.situacao==="Concluído";}).length;
+    var semorc=ppssRows.filter(function(r){return!r.orcamento;}).length;
+    var valor=ppssRows.reduce(function(a,r){return a+ppssMoney(r.orcamento);},0);
+    var vfmt=valor>=1e6?("R$ "+(valor/1e6).toFixed(1).replace(".",",")+" mi"):("R$ "+Math.round(valor/1000)+" mil");
+    function kpi(k,cls,n,t){return '<div class="kpi '+cls+(ppssFlt.kpi===k&&k?" active":"")+'" data-k="'+k+'"><div class="kpi-n">'+n+'</div><div class="kpi-t">'+t+'</div></div>';}
+    el.innerHTML=kpi("","k-purple",tot,"Pedidos")+kpi("prog","k-blue",prog,"Programadas")+kpi("corr","k-teal",corr,"Correntes")+kpi("conc","k-teal",conc,"Concluídos")+kpi("semorc","k-amber",semorc,"Sem orçamento")+'<div class="kpi k-gold"><div class="kpi-n" style="font-size:19px;padding-top:6px">'+vfmt+'</div><div class="kpi-t">Orçado no ano</div></div>';
+    el.querySelectorAll(".kpi[data-k]").forEach(function(b){
+      b.onclick=function(){var k=b.dataset.k;ppssFlt.kpi=(ppssFlt.kpi===k?"":k);renderPpss();};
+    });
+  }
+  function ppssUpdToolbar(editing,dirty){
+    var eb=document.getElementById("ppss_tbl_edit"),ac=document.getElementById("ppss_tbl_edit_actions"),sb=document.getElementById("ppss_tbl_save");
+    if(!eb)return;
+    if(editing){eb.hidden=true;ac.hidden=false;sb.disabled=!dirty;}
+    else{eb.hidden=false;ac.hidden=true;eb.disabled=!!(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="ppss");}
+    var dc=document.getElementById("ppss_tbl_delcol");
+    if(dc)dc.disabled=!hasExtraCol(ppssCols,PPSS_FIXED_KEYS);
+  }
+  function renderPpssTable(){
+    var tb=document.getElementById("ppss_tbl_tbody");
+    if(!tb)return;
+    var editing=ppssEditing;
+    var table=document.getElementById("ppss_tbl_table");
+    if(table)table.classList.toggle("dt-editing",editing);
+    renderThead(document.getElementById("ppss_tbl_thead"),ppssCols,editing,"dt-actions-col");
+    var rows=editing?ppssRows:ppssRows.filter(ppssMatch);
+    var colspan=ppssCols.length+1;
+    tb.innerHTML=rows.map(function(r){
+      var cls=ppssRowCls(r);
+      return '<tr'+(cls?' class="'+cls+'"':'')+(editing?' data-rid="'+r.id+'"':'')+'>'+
+        ppssCols.map(function(col){return colTd(r,col,editing,"dt-cell","dt-cell-ro");}).join("")+
+        '<td class="dt-actions dt-actions-col">'+(editing?'<span class="row-dh" title="Arrastar para reordenar">⠿</span><button class="nv-delrow" data-id="'+r.id+'" title="Excluir">🗑</button>':'')+'</td>'+
+      '</tr>';
+    }).join("")+(editing?'<tr class="dt-addrow-tr"><td colspan="'+colspan+'"><button class="nv-addrow" id="ppss_tbl_addrow">+ Adicionar pedido</button></td></tr>':(rows.length?'':'<tr><td colspan="'+colspan+'" style="text-align:center;color:var(--text3);font-style:italic">Nenhum pedido encontrado com os filtros atuais.</td></tr>'));
+    ppssUpdToolbar(editing,ppssDirty);
+    if(editing)bindRowDragGeneric(tb,function(){return ppssRows;},renderPpssTable,function(){ppssDirty=true;});
+  }
+  function ppssFindCard(cid){return ppssCards.find(function(c){return c.id===cid;});}
+  function renderPpssCards(){
+    var grid=document.getElementById("ppss_grid");
+    if(!grid)return;
+    var lockedOut=!!GLOBAL_EDIT_LOCK;
+    renderMasonryGrid(grid,ppssCards,function(c){return cardHtmlGeneric(c,ppssCardSt,lockedOut);},isCardWide);
+    grid.insertAdjacentHTML("beforeend",'<button class="nv-addcard" id="ppss_addcard"'+(lockedOut?" disabled":"")+'>+ Novo cartão</button>');
+    bindMasonryCardDrag(grid,function(){return ppssCards;},function(v){ppssCards=v;},ppssSaveCards,PPSS_CARDS_KEY,renderPpssCards,"Reordenar cartões PPSS",function(){return!!GLOBAL_EDIT_LOCK;});
+    bindItemDragGeneric(grid,ppssFindCard,function(v){ppssCardSt.dirty=v;},renderPpssCards);
+  }
+  renderPpss=function(){renderPpssKpis();renderPpssTable();renderPpssCards();};
+  ppssInit=async function(){
+    if(ppssBound){return;}
+    ppssBound=true;
+    await ppssLoad();
+    var tag=document.getElementById("ppss_synctag");
+    if(tag){tag.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";tag.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
+    var selNav=document.getElementById("ppss_f_navio");
+    if(selNav)selNav.innerHTML='<option value="">Todos os navios</option>'+PPSS_NAVIOS.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join("");
+    if(selNav)selNav.onchange=function(){ppssFlt.navio=selNav.value;renderPpssTable();};
+    var selTipo=document.getElementById("ppss_f_tipo");
+    if(selTipo)selTipo.onchange=function(){ppssFlt.tipo=selTipo.value;renderPpssTable();};
+    var q=document.getElementById("ppss_f_q");
+    if(q)q.oninput=function(){ppssFlt.q=q.value.trim();renderPpssTable();};
+    bindDataTable({
+      prefix:"ppss_tbl",
+      getArr:function(){return ppssRows;},setArr:function(v){ppssRows=v;},
+      onSaveKey:PPSS_KEY,onSaveDataFn:ppssSaveRows,
+      getEditing:function(){return ppssEditing;},setEditing:function(v){ppssEditing=v;},
+      getDirty:function(){return ppssDirty;},setDirty:function(v){ppssDirty=v;},
+      getSnap:function(){return ppssSnapshot;},setSnap:function(v){ppssSnapshot=v;},
+      newRowFn:function(){return{id:genUid("ps"),navio:"",tipo:"",numero:"",descricao:"",omps:"",ds:"",orcamento:"",aditamentos:"",faltaIndicar:"",altEscopo:"",msgOmps:"",msgNav:"",situacao:""};},
+      addRowBtnId:"ppss_tbl_addrow",
+      getTitles:function(){return ppssCols;},setTitles:function(v){ppssCols=v;},
+      saveTitlesFn:ppssSaveCols,titlesKey:PPSS_COLS_KEY,
+      getTitlesSnap:function(){return ppssColsSnapshot;},setTitlesSnap:function(v){ppssColsSnapshot=v;},
+      fixedKeys:PPSS_FIXED_KEYS,getLock:function(){return GLOBAL_EDIT_LOCK;},setLock:function(v){GLOBAL_EDIT_LOCK=v;},who:"ppss",
+      renderFn:renderPpssTable,afterRender:function(){renderPpssKpis();renderPpssCards();},updateToolbar:function(){ppssUpdToolbar(true,true);},
+      pushLabel:"ppssPush",undoLabel:"Editar pedidos PPSS",focusKey:"descricao"
+    });
+    wireCardsGrid({gridId:"ppss_grid",addcardId:"ppss_addcard",st:ppssCardSt,
+      getCards:function(){return ppssCards;},setCards:function(v){ppssCards=v;},
+      save:ppssSaveCards,pushTag:"ppssPush",key:function(){return PPSS_CARDS_KEY;},
+      label:"cartão PPSS",render:renderPpss});
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   ABA: GARAGEM — mapa de controle de viaturas (VTR)
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  var VTR_KEY="aa_vtr_v1",VTR_COLS_KEY="aa_vtr_cols_v1",VTR_CARDS_KEY="aa_vtr_cards_v1";
+  var VTR_FIXED=[
+    {key:"om",title:"OM"},
+    {key:"tipo",title:"Tipo"},
+    {key:"dotacao",title:"Dotação"},
+    {key:"existencia",title:"Existência"},
+    {key:"niv",title:"NIV"},
+    {key:"modelo",title:"Modelo / Fabricante"},
+    {key:"ano",title:"Ano"},
+    {key:"placa",title:"Placa"},
+    {key:"sit",title:"SIT",type:"choice",options:["P","PO","IM"]},
+    {key:"prioridade",title:"Prioridade"},
+    {key:"seguroValor",title:"Seguro (R$)"},
+    {key:"seguroVenc",title:"Venc. Seguro"},
+    {key:"manutPrev",title:"Manut. Preventiva"},
+    {key:"manutP",title:"Manut. p/ P"},
+    {key:"manutPO",title:"Manut. p/ PO"},
+    {key:"manutExtras",title:"Manut. Extras"},
+    {key:"obs",title:"Observações"}
+  ];
+  var VTR_FIXED_KEYS=VTR_FIXED.map(function(c){return c.key;});
+  var vtrRows=[],vtrCols=[],vtrCards=[],garBound=false;
+  var vtrEditing=false,vtrDirty=false,vtrSnapshot=null,vtrColsSnapshot=null;
+  var garCardSt={editingId:null,dirty:false,snapshot:null};
+  var garFlt={sit:"",kpi:"",q:""};
+  async function garLoad(){
+    var r=null,c=null,cd=null;
+    try{r=await gtj(VTR_KEY);}catch(e){}
+    vtrRows=(r&&r.length)?r:[];
+    try{c=await gtj(VTR_COLS_KEY);}catch(e){}
+    vtrCols=migrateCols(c,VTR_FIXED,vtrRows);
+    vtrCols.forEach(function(col){var f=VTR_FIXED.find(function(x){return x.key===col.key;});if(f&&f.options){col.type=f.type;col.options=f.options;}});
+    try{cd=await gtj(VTR_CARDS_KEY);}catch(e){}
+    vtrCards=(cd&&cd.length)?cd:[];
+    vtrCards.forEach(function(card){card.items=card.items.map(function(it){return it.vals?it:{k:it.k,vals:[it.v!==undefined?it.v:""]};});});
+  }
+  function vtrSaveRows(){try{localStorage.setItem(VTR_KEY,JSON.stringify(vtrRows));}catch(e){}}
+  function vtrSaveCols(){try{localStorage.setItem(VTR_COLS_KEY,JSON.stringify(vtrCols));}catch(e){}}
+  function vtrSaveCards(){try{localStorage.setItem(VTR_CARDS_KEY,JSON.stringify(vtrCards));}catch(e){}}
+  function garMatch(r){
+    if(garFlt.sit&&r.sit!==garFlt.sit)return false;
+    if(garFlt.kpi==="disp"&&r.sit!=="P"&&r.sit!=="PO")return false;
+    if(garFlt.kpi==="im"&&r.sit!=="IM")return false;
+    if(garFlt.kpi==="po"&&r.sit!=="PO")return false;
+    if(garFlt.kpi==="extra"&&r.dotacao!=="EXTRA")return false;
+    if(garFlt.kpi==="falta"&&r.existencia!=="0")return false;
+    if(garFlt.q){
+      var q=garFlt.q.toLowerCase();
+      var hit=vtrCols.some(function(c){return String(r[c.key]||"").toLowerCase().indexOf(q)>=0;});
+      if(!hit)return false;
+    }
+    return true;
+  }
+  function garRowCls(r){
+    if(r.sit==="IM")return"row-bad";
+    if(r.sit==="PO")return"row-ok";
+    if(r.sit==="P")return"row-info";
+    return"";
+  }
+  function renderGarKpis(){
+    var el=document.getElementById("gar_kpis");
+    if(!el)return;
+    var frota=vtrRows.filter(function(r){return r.existencia!=="0";});
+    var tot=frota.length;
+    var disp=frota.filter(function(r){return r.sit==="P"||r.sit==="PO";}).length;
+    var po=frota.filter(function(r){return r.sit==="PO";}).length;
+    var im=frota.filter(function(r){return r.sit==="IM";}).length;
+    var extra=frota.filter(function(r){return r.dotacao==="EXTRA";}).length;
+    var falta=vtrRows.filter(function(r){return r.existencia==="0";}).length;
+    function kpi(k,cls,n,t){return '<div class="kpi '+cls+(garFlt.kpi===k&&k?" active":"")+'" data-k="'+k+'"><div class="kpi-n">'+n+'</div><div class="kpi-t">'+t+'</div></div>';}
+    el.innerHTML=kpi("","k-purple",tot,"Viaturas")+kpi("disp","k-teal",disp,"Disponíveis")+kpi("po","k-gold",po,"Com restrição")+kpi("im","k-red",im,"Impossibilitadas")+kpi("extra","k-blue",extra,"Fora de dotação")+kpi("falta","k-amber",falta,"Dotação a preencher");
+    el.querySelectorAll(".kpi[data-k]").forEach(function(b){
+      b.onclick=function(){var k=b.dataset.k;garFlt.kpi=(garFlt.kpi===k?"":k);renderGaragem();};
+    });
+  }
+  function garUpdToolbar(editing,dirty){
+    var eb=document.getElementById("vtr_tbl_edit"),ac=document.getElementById("vtr_tbl_edit_actions"),sb=document.getElementById("vtr_tbl_save");
+    if(!eb)return;
+    if(editing){eb.hidden=true;ac.hidden=false;sb.disabled=!dirty;}
+    else{eb.hidden=false;ac.hidden=true;eb.disabled=!!(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="vtr");}
+    var dc=document.getElementById("vtr_tbl_delcol");
+    if(dc)dc.disabled=!hasExtraCol(vtrCols,VTR_FIXED_KEYS);
+  }
+  function renderGarTable(){
+    var tb=document.getElementById("vtr_tbl_tbody");
+    if(!tb)return;
+    var editing=vtrEditing;
+    var table=document.getElementById("vtr_tbl_table");
+    if(table)table.classList.toggle("dt-editing",editing);
+    renderThead(document.getElementById("vtr_tbl_thead"),vtrCols,editing,"dt-actions-col");
+    var rows=editing?vtrRows:vtrRows.filter(garMatch);
+    var colspan=vtrCols.length+1;
+    tb.innerHTML=rows.map(function(r){
+      var cls=garRowCls(r);
+      return '<tr'+(cls?' class="'+cls+'"':'')+(editing?' data-rid="'+r.id+'"':'')+'>'+
+        vtrCols.map(function(col){return colTd(r,col,editing,"dt-cell","dt-cell-ro");}).join("")+
+        '<td class="dt-actions dt-actions-col">'+(editing?'<span class="row-dh" title="Arrastar para reordenar">⠿</span><button class="nv-delrow" data-id="'+r.id+'" title="Excluir">🗑</button>':'')+'</td>'+
+      '</tr>';
+    }).join("")+(editing?'<tr class="dt-addrow-tr"><td colspan="'+colspan+'"><button class="nv-addrow" id="vtr_tbl_addrow">+ Adicionar viatura</button></td></tr>':(rows.length?'':'<tr><td colspan="'+colspan+'" style="text-align:center;color:var(--text3);font-style:italic">Nenhuma viatura encontrada com os filtros atuais.</td></tr>'));
+    garUpdToolbar(editing,vtrDirty);
+    if(editing)bindRowDragGeneric(tb,function(){return vtrRows;},renderGarTable,function(){vtrDirty=true;});
+  }
+  function garFindCard(cid){return vtrCards.find(function(c){return c.id===cid;});}
+  function renderGarCards(){
+    var grid=document.getElementById("gar_grid");
+    if(!grid)return;
+    var lockedOut=!!GLOBAL_EDIT_LOCK;
+    renderMasonryGrid(grid,vtrCards,function(c){return cardHtmlGeneric(c,garCardSt,lockedOut);},isCardWide);
+    grid.insertAdjacentHTML("beforeend",'<button class="nv-addcard" id="gar_addcard"'+(lockedOut?" disabled":"")+'>+ Novo cartão</button>');
+    bindMasonryCardDrag(grid,function(){return vtrCards;},function(v){vtrCards=v;},vtrSaveCards,VTR_CARDS_KEY,renderGarCards,"Reordenar cartões Garagem",function(){return!!GLOBAL_EDIT_LOCK;});
+    bindItemDragGeneric(grid,garFindCard,function(v){garCardSt.dirty=v;},renderGarCards);
+  }
+  renderGaragem=function(){renderGarKpis();renderGarTable();renderGarCards();};
+  garInit=async function(){
+    if(garBound){return;}
+    garBound=true;
+    await garLoad();
+    var tag=document.getElementById("gar_synctag");
+    if(tag){tag.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";tag.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
+    var selSit=document.getElementById("gar_f_sit");
+    if(selSit)selSit.onchange=function(){garFlt.sit=selSit.value;renderGarTable();};
+    var q=document.getElementById("gar_f_q");
+    if(q)q.oninput=function(){garFlt.q=q.value.trim();renderGarTable();};
+    bindDataTable({
+      prefix:"vtr_tbl",
+      getArr:function(){return vtrRows;},setArr:function(v){vtrRows=v;},
+      onSaveKey:VTR_KEY,onSaveDataFn:vtrSaveRows,
+      getEditing:function(){return vtrEditing;},setEditing:function(v){vtrEditing=v;},
+      getDirty:function(){return vtrDirty;},setDirty:function(v){vtrDirty=v;},
+      getSnap:function(){return vtrSnapshot;},setSnap:function(v){vtrSnapshot=v;},
+      newRowFn:function(){return{id:genUid("vt"),om:"CHN-4",tipo:"",dotacao:"",existencia:"1",niv:"",modelo:"",ano:"",placa:"",sit:"",prioridade:"",seguroValor:"",seguroVenc:"",manutPrev:"",manutP:"",manutPO:"",manutExtras:"",obs:""};},
+      addRowBtnId:"vtr_tbl_addrow",
+      getTitles:function(){return vtrCols;},setTitles:function(v){vtrCols=v;},
+      saveTitlesFn:vtrSaveCols,titlesKey:VTR_COLS_KEY,
+      getTitlesSnap:function(){return vtrColsSnapshot;},setTitlesSnap:function(v){vtrColsSnapshot=v;},
+      fixedKeys:VTR_FIXED_KEYS,getLock:function(){return GLOBAL_EDIT_LOCK;},setLock:function(v){GLOBAL_EDIT_LOCK=v;},who:"vtr",
+      renderFn:renderGarTable,afterRender:function(){renderGarKpis();renderGarCards();},updateToolbar:function(){garUpdToolbar(true,true);},
+      pushLabel:"garPush",undoLabel:"Editar viaturas",focusKey:"modelo"
+    });
+    wireCardsGrid({gridId:"gar_grid",addcardId:"gar_addcard",st:garCardSt,
+      getCards:function(){return vtrCards;},setCards:function(v){vtrCards=v;},
+      save:vtrSaveCards,pushTag:"garPush",key:function(){return VTR_CARDS_KEY;},
+      label:"cartão Garagem",render:renderGaragem});
   };
 })();
 /* MODULE_HORAS_PLACEHOLDER */
