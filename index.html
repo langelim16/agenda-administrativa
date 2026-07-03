@@ -431,22 +431,35 @@ tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .stats-grid{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
 .stats-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px;flex:1;min-width:240px}
 .stats-card h4{margin:0 0 8px;font-size:12px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-.gantt-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:14px}
-.gantt-row{display:flex;align-items:center;border-bottom:1px solid var(--border);min-width:820px}
-.gantt-row:last-child{border-bottom:none}
-.gantt-label{width:160px;flex:none;font-size:11px;font-weight:600;padding:6px 8px;color:var(--text2)}
-.gantt-months{display:flex;flex:1}
-.gantt-cell{flex:1;height:30px;border-left:1px solid var(--border);position:relative;display:flex;align-items:center;justify-content:center;gap:2px}
-.gantt-dot{width:9px;height:9px;border-radius:50%;cursor:pointer}
-.gantt-hdr{display:flex;min-width:820px}
-.gantt-hdr .gantt-label{visibility:hidden}
-.gantt-hdr .gantt-cell{height:auto;padding:5px 0;font-size:9px;color:var(--text3);text-transform:uppercase}
 .imp-preview{width:100%;border-collapse:collapse;font-size:11px;margin-top:10px}
 .imp-preview th,.imp-preview td{border:1px solid var(--border);padding:4px 6px;text-align:left;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
 .imp-preview th{background:var(--c-100)}
 .imp-map-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:12px}
 .imp-map-row span{width:160px;flex:none;color:var(--text2)}
 .imp-map-row select{flex:1}
+.ovw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-bottom:14px}
+.ovw-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:12px;cursor:pointer;transition:box-shadow .15s}
+.ovw-card:hover{box-shadow:0 0 0 2px var(--c-blue) inset}
+.ovw-card h5{margin:0 0 6px;font-size:12px;font-weight:700;color:var(--text)}
+.ovw-card .ovw-big{font-size:22px;font-weight:800;line-height:1.1}
+.ovw-card .ovw-sub{font-size:10px;color:var(--text3);margin-top:4px;line-height:1.5}
+.sit-badge{display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;letter-spacing:.5px;padding:2px 8px;border-radius:99px;color:#fff}
+.pbar{background:var(--c-100);border-radius:99px;height:9px;overflow:hidden;flex:1}
+.pbar>div{height:100%;border-radius:99px}
+.eng-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed var(--border);font-size:11px}
+.eng-item:last-child{border-bottom:none}
+.eng-name{width:230px;flex:none;font-weight:600;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eng-val{width:170px;flex:none;text-align:right;font-family:var(--mono);font-size:10px}
+.ps-item{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:10px 12px;margin-bottom:8px;cursor:pointer;display:flex;gap:12px;align-items:center;flex-wrap:wrap;transition:box-shadow .15s}
+.ps-item:hover{box-shadow:0 0 0 2px var(--c-blue) inset}
+.ps-main{flex:1;min-width:220px}
+.ps-num{font-size:10px;color:var(--text3);letter-spacing:.4px}
+.ps-desc{font-size:12.5px;font-weight:600;color:var(--text);margin:2px 0}
+.ps-meta{font-size:10px;color:var(--text3)}
+.ps-chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip-btn{font-size:9.5px;padding:4px 9px;border-radius:99px;border:1.5px solid var(--border);background:var(--c-100);color:var(--text2);cursor:pointer;font-weight:700}
+.chip-btn.active{color:#fff}
+.sec-toggle{margin:4px 0 12px}
 .dt-table-row>div{flex:1;min-width:260px}
 .nv-edit-actions{display:flex;gap:8px}
 .nv-edit-actions[hidden]{display:none}
@@ -1319,6 +1332,10 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
   <button class="btn primary" id="horas_add_maint">+ Inserir manutenção</button>
 </div>
 
+<div class="kpis" id="horas_kpis"></div>
+<div class="dt-section-head"><h3 class="dt-table-title">Situação dos motores — próximas revisões</h3></div>
+<div class="stats-card" id="horas_dash" style="margin-bottom:18px;flex:none"></div>
+
 <div id="horas_tables_container"></div>
 
 <div class="foot">Motores · Horas de Funcionamento · dados transcritos do controle físico — versão inicial, sujeita a ajustes</div>
@@ -1401,9 +1418,15 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
   <button class="nv-editbtn" id="ppss_import_btn">⬆ Importar planilha</button>
 </div>
 
-<div class="dt-section-head"><h3 class="dt-table-title">Linha do tempo — pedidos por navio e mês (referência: MSG OMPS/NAV)</h3></div>
-<div class="gantt-wrap" id="ppss_gantt"></div>
+<div class="dt-section-head"><h3 class="dt-table-title">Manutenções Correntes — acompanhamento (micro)</h3></div>
+<div id="ppss_worklist"></div>
 
+<div class="dt-section-head" style="margin-top:20px"><h3 class="dt-table-title">Manutenções Programadas — visão geral por navio (macro)</h3></div>
+<div class="ovw-grid" id="ppss_macro"></div>
+<div class="stats-grid" id="ppss_stats"></div>
+
+<button class="nv-editbtn sec-toggle" id="ppss_tbl_toggle">📋 Ver / editar tabela completa</button>
+<div id="ppss_tbl_section" hidden>
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Pedidos de Serviço</h3><span class="last-edit" id="ppss_tbl_lastedit"></span></div>
   <div class="nv-toolbar" id="ppss_tbl_toolbar">
@@ -1422,9 +1445,7 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
     <tbody id="ppss_tbl_tbody"></tbody>
   </table>
 </div>
-
-<div class="dt-section-head" style="margin-top:18px"><h3 class="dt-table-title">Dashboard estatístico</h3></div>
-<div class="stats-grid" id="ppss_stats"></div>
+</div>
 
 <div class="dt-section-head" style="margin-top:18px"><h3 class="dt-table-title">Cartões</h3></div>
 <div class="nv-grid" id="ppss_grid"></div>
@@ -1460,6 +1481,11 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
   <button class="nv-editbtn" id="gar_import_btn">⬆ Importar planilha</button>
 </div>
 
+<div class="dt-section-head"><h3 class="dt-table-title">Frota</h3></div>
+<div class="ovw-grid" id="gar_fleet"></div>
+
+<button class="nv-editbtn sec-toggle" id="vtr_tbl_toggle">📋 Ver / editar tabela completa</button>
+<div id="vtr_tbl_section" hidden>
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Viaturas</h3><span class="last-edit" id="vtr_tbl_lastedit"></span></div>
   <div class="nv-toolbar" id="vtr_tbl_toolbar">
@@ -1478,8 +1504,9 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
     <tbody id="vtr_tbl_tbody"></tbody>
   </table>
 </div>
+</div>
 
-<div class="dt-section-head" style="margin-top:18px"><h3 class="dt-table-title">Dashboard estatístico</h3></div>
+<div class="dt-section-head" style="margin-top:18px"><h3 class="dt-table-title">Indicadores</h3></div>
 <div class="stats-grid" id="gar_stats"></div>
 
 <div class="dt-section-head" style="margin-top:18px"><h3 class="dt-table-title">Cartões</h3></div>
@@ -2251,6 +2278,17 @@ function openDetailDrawer(scope,row,cols){
 function closeDetailDrawer(){var bg=document.getElementById("detailDrawerBg");if(bg)bg.classList.remove("open");}
 
 /* ── Gráficos SVG leves (sem dependência) ── */
+function moneyVal(v){var m=String(v||"").replace(/[^\d,.-]/g,"").replace(/\./g,"").replace(",",".");var n=parseFloat(m);return isNaN(n)?0:n;}
+function fmtBRL(n){
+  if(n>=1e6)return "R$ "+(n/1e6).toFixed(2).replace(".",",")+" mi";
+  if(n>=1e3)return "R$ "+Math.round(n/1e3)+" mil";
+  return "R$ "+Math.round(n);
+}
+function bindCollapse(btnId,secId,showLbl,hideLbl){
+  var b=document.getElementById(btnId),sec=document.getElementById(secId);
+  if(!b||!sec)return;
+  b.onclick=function(){sec.hidden=!sec.hidden;b.textContent=sec.hidden?showLbl:hideLbl;};
+}
 var CHART_PALETTE=["var(--c-blue)","var(--c-teal)","var(--c-amber)","var(--c-red)","var(--c-gold)","var(--c-sky)"];
 function svgBarChart(pairs){
   if(!pairs.length)return '<div style="font-size:11px;color:var(--text3);font-style:italic;padding:8px 0">Sem dados.</div>';
@@ -4748,52 +4786,100 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       tr.onclick=function(){var r=ppssRows.find(function(x){return x.id===tr.dataset.rid;});if(r)openDetailDrawer("ppss_tbl",r,ppssCols);};
     });
   }
-  /* Extrai mês/ano de um DTG (data-time-group naval, ex.: "R291858Z/JAN/2026") — usado na linha do tempo. */
-  var DTG_MONTHS={JAN:0,FEV:1,MAR:2,ABR:3,MAI:4,JUN:5,JUL:6,AGO:7,SET:8,OUT:9,NOV:10,DEZ:11};
-  function parseDTG(str){
-    var m=/([A-Z]{3})\/(\d{4})/.exec(String(str||"").toUpperCase());
-    if(!m||DTG_MONTHS[m[1]]===undefined)return null;
-    return{month:DTG_MONTHS[m[1]],year:+m[2]};
-  }
   function ppssSituColor(r){
     if(r.situacao==="Concluído")return"var(--c-teal)";
     if(r.situacao==="Cancelado")return"var(--text3)";
-    if(!r.orcamento)return"var(--c-amber)";
+    if(r.situacao==="Aguardando orçamento"||!r.orcamento)return"var(--c-amber)";
     return"var(--c-blue)";
   }
-  function renderPpssGantt(){
-    var el=document.getElementById("ppss_gantt");
+  var PPSS_SITUS=["Em andamento","Aguardando orçamento","Concluído","Cancelado"];
+  function ppssQuickStatus(id,val){
+    if(GLOBAL_EDIT_LOCK){toast("Finalize a edição em andamento antes de alterar situações.","info");return;}
+    var r=ppssRows.find(function(x){return x.id===id;});
+    if(!r||r.situacao===val)return;
+    var pre=JSON.parse(JSON.stringify(ppssRows));
+    r.situacao=val;
+    ppssSaveRows();
+    pushKV("ppssPush",PPSS_KEY,ppssRows).then(function(){toast("✓ Situação atualizada","ok");});
+    auditDiffRows("ppss_tbl",pre,ppssRows);
+    touchLastEdit("ppss_tbl");paintLastEdit("ppss_tbl_lastedit","ppss_tbl");
+    renderPpss();
+  }
+  function ppssSituRank(r){
+    var v=r.situacao||"Em andamento";
+    if(v==="Em andamento")return 0;
+    if(v==="Aguardando orçamento")return 1;
+    if(v==="Concluído")return 2;
+    return 3;
+  }
+  function renderPpssWorklist(){
+    var el=document.getElementById("ppss_worklist");
     if(!el)return;
-    var MESES=["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
-    var year=new Date().getFullYear();
-    var hdr='<div class="gantt-hdr"><div class="gantt-label"></div><div class="gantt-months">'+MESES.map(function(m){return '<div class="gantt-cell">'+m+'</div>';}).join("")+'</div></div>';
-    var rows=PPSS_NAVIOS.map(function(nav){
-      var pedidos=ppssRows.filter(function(r){return r.navio===nav;});
-      var cells=MESES.map(function(_,mi){
-        var hits=pedidos.filter(function(r){
-          var d=parseDTG(r.msgOmps)||parseDTG(r.msgNav);
-          return d&&d.year===year&&d.month===mi;
-        });
-        return '<div class="gantt-cell">'+hits.slice(0,4).map(function(r){
-          return '<span class="gantt-dot" style="background:'+ppssSituColor(r)+'" title="'+esc(r.descricao)+' ('+esc(r.situacao||"sem situação")+')" data-rid="'+r.id+'"></span>';
-        }).join("")+'</div>';
+    var itens=ppssRows.filter(function(r){return r.tipo==="Corrente";});
+    if(ppssFlt.navio)itens=itens.filter(function(r){return r.navio===ppssFlt.navio;});
+    if(ppssFlt.q){var q=ppssFlt.q.toLowerCase();itens=itens.filter(function(r){return ppssCols.some(function(c){return String(r[c.key]||"").toLowerCase().indexOf(q)>=0;});});}
+    itens=itens.slice().sort(function(a,b){return ppssSituRank(a)-ppssSituRank(b)||String(a.navio).localeCompare(String(b.navio));});
+    if(!itens.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);font-style:italic;padding:8px 0">Nenhuma manutenção corrente com os filtros atuais.</div>';return;}
+    el.innerHTML=itens.map(function(r){
+      var chips=PPSS_SITUS.map(function(st){
+        var active=(r.situacao||"Em andamento")===st;
+        var col=st==="Concluído"?"var(--c-teal)":st==="Cancelado"?"var(--text3)":st==="Aguardando orçamento"?"var(--c-amber)":"var(--c-blue)";
+        return '<button class="chip-btn'+(active?" active":"")+'"'+(active?' style="background:'+col+';border-color:'+col+'"':'')+' data-rid="'+r.id+'" data-st="'+esc(st)+'">'+esc(st)+'</button>';
       }).join("");
-      return '<div class="gantt-row"><div class="gantt-label">'+esc(nav)+'</div><div class="gantt-months">'+cells+'</div></div>';
+      var orc=r.orcamento?("Orçamento: "+esc(r.orcamento)):"Sem orçamento";
+      return '<div class="ps-item" data-rid="'+r.id+'">'+
+        '<span class="sit-badge" style="background:'+ppssSituColor(r)+'">'+esc(r.navio||"—")+'</span>'+
+        '<div class="ps-main">'+
+          '<div class="ps-num">Pedido '+esc(r.numero||"s/n")+' · '+esc(r.omps||"—")+(r.ds?" · DS "+esc(r.ds):"")+'</div>'+
+          '<div class="ps-desc">'+esc(r.descricao||"—")+'</div>'+
+          '<div class="ps-meta">'+orc+(r.msgOmps?" · MSG OMPS: "+esc(r.msgOmps):"")+'</div>'+
+        '</div>'+
+        '<div class="ps-chips">'+chips+'</div>'+
+      '</div>';
     }).join("");
-    el.innerHTML=hdr+(rows||'<div style="padding:12px;font-size:11px;color:var(--text3);font-style:italic">Sem pedidos com data de mensagem identificável em '+year+'.</div>');
-    el.querySelectorAll(".gantt-dot[data-rid]").forEach(function(dot){
-      dot.onclick=function(){var r=ppssRows.find(function(x){return x.id===dot.dataset.rid;});if(r)openDetailDrawer("ppss_tbl",r,ppssCols);};
+    el.querySelectorAll(".chip-btn").forEach(function(b){
+      b.onclick=function(e){e.stopPropagation();ppssQuickStatus(b.dataset.rid,b.dataset.st);};
+    });
+    el.querySelectorAll(".ps-item").forEach(function(item){
+      item.onclick=function(){var r=ppssRows.find(function(x){return x.id===item.dataset.rid;});if(r)openDetailDrawer("ppss_tbl",r,ppssCols);};
+    });
+  }
+  function renderPpssMacro(){
+    var el=document.getElementById("ppss_macro");
+    if(!el)return;
+    el.innerHTML=PPSS_NAVIOS.map(function(nav){
+      var peds=ppssRows.filter(function(r){return r.navio===nav&&r.tipo==="Programada";});
+      var valor=peds.reduce(function(a,r){return a+moneyVal(r.orcamento);},0);
+      var com=peds.filter(function(r){return r.orcamento;}).length;
+      var conc=peds.filter(function(r){return r.situacao==="Concluído";}).length;
+      var pct=peds.length?Math.round(com/peds.length*100):0;
+      return '<div class="ovw-card" data-nav="'+esc(nav)+'">'+
+        '<h5>'+esc(nav)+'</h5>'+
+        '<div class="ovw-big">'+peds.length+' <span style="font-size:11px;font-weight:600;color:var(--text3)">pedidos</span></div>'+
+        '<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><div class="pbar"><div style="width:'+pct+'%;background:var(--c-teal)"></div></div><span style="font-size:10px;color:var(--text3)">'+pct+'% orçado</span></div>'+
+        '<div class="ovw-sub">'+fmtBRL(valor)+' orçados · '+conc+' concluído(s) · '+(peds.length-com)+' sem orçamento</div>'+
+      '</div>';
+    }).join("");
+    el.querySelectorAll(".ovw-card").forEach(function(card){
+      card.onclick=function(){
+        ppssFlt.navio=card.dataset.nav;ppssFlt.tipo="Programada";ppssFlt.kpi="";
+        var sn=document.getElementById("ppss_f_navio"),stp=document.getElementById("ppss_f_tipo");
+        if(sn)sn.value=ppssFlt.navio;if(stp)stp.value="Programada";
+        var sec=document.getElementById("ppss_tbl_section"),tg=document.getElementById("ppss_tbl_toggle");
+        if(sec&&sec.hidden){sec.hidden=false;if(tg)tg.textContent="📁 Ocultar tabela completa";}
+        renderPpssTable();
+        if(sec)sec.scrollIntoView({behavior:"smooth",block:"start"});
+      };
     });
   }
   function renderPpssStats(){
     var el=document.getElementById("ppss_stats");
     if(!el)return;
-    var porNavio=PPSS_NAVIOS.map(function(n){return{k:n,v:ppssRows.filter(function(r){return r.navio===n;}).length};});
-    var porSitu=["Em andamento","Concluído","Aguardando orçamento","Cancelado"].map(function(s){return{k:s,v:ppssRows.filter(function(r){return(r.situacao||"Em andamento")===s||(!r.situacao&&s==="Em andamento");}).length};}).filter(function(p){return p.v;});
-    var porTipo=[{k:"Programada",v:ppssRows.filter(function(r){return r.tipo==="Programada";}).length},{k:"Corrente",v:ppssRows.filter(function(r){return r.tipo==="Corrente";}).length}];
-    el.innerHTML='<div class="stats-card"><h4>Pedidos por navio</h4>'+svgBarChart(porNavio)+'</div>'+
-      '<div class="stats-card"><h4>Distribuição por situação</h4>'+svgDonutChart(porSitu)+'</div>'+
-      '<div class="stats-card"><h4>Programada × Corrente</h4>'+svgDonutChart(porTipo)+'</div>';
+    var porNavio=PPSS_NAVIOS.map(function(n){return{k:n,v:Math.round(ppssRows.filter(function(r){return r.navio===n&&r.tipo==="Programada";}).reduce(function(a,r){return a+moneyVal(r.orcamento);},0)/1000)};});
+    var corr=ppssRows.filter(function(r){return r.tipo==="Corrente";});
+    var porSitu=PPSS_SITUS.map(function(st){return{k:st,v:corr.filter(function(r){return(r.situacao||"Em andamento")===st;}).length};}).filter(function(p){return p.v;});
+    el.innerHTML='<div class="stats-card"><h4>Valor orçado — Programadas (R$ mil, por navio)</h4>'+svgBarChart(porNavio)+'</div>'+
+      '<div class="stats-card"><h4>Correntes por situação</h4>'+svgDonutChart(porSitu)+'</div>';
   }
   function ppssFindCard(cid){return ppssCards.find(function(c){return c.id===cid;});}
   function renderPpssCards(){
@@ -4805,7 +4891,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     bindMasonryCardDrag(grid,function(){return ppssCards;},function(v){ppssCards=v;},ppssSaveCards,PPSS_CARDS_KEY,renderPpssCards,"Reordenar cartões PPSS",function(){return!!GLOBAL_EDIT_LOCK;});
     bindItemDragGeneric(grid,ppssFindCard,function(v){ppssCardSt.dirty=v;},renderPpssCards);
   }
-  renderPpss=function(){renderPpssKpis();renderPpssTable();renderPpssGantt();renderPpssStats();renderPpssCards();};
+  renderPpss=function(){renderPpssKpis();renderPpssWorklist();renderPpssMacro();renderPpssStats();renderPpssTable();renderPpssCards();};
   ppssInit=async function(){
     if(ppssBound){return;}
     ppssBound=true;
@@ -4814,11 +4900,12 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(tag){tag.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";tag.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
     var selNav=document.getElementById("ppss_f_navio");
     if(selNav)selNav.innerHTML='<option value="">Todos os navios</option>'+PPSS_NAVIOS.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join("");
-    if(selNav)selNav.onchange=function(){ppssFlt.navio=selNav.value;renderPpssTable();};
+    if(selNav)selNav.onchange=function(){ppssFlt.navio=selNav.value;renderPpssTable();renderPpssWorklist();};
     var selTipo=document.getElementById("ppss_f_tipo");
     if(selTipo)selTipo.onchange=function(){ppssFlt.tipo=selTipo.value;renderPpssTable();};
     var q=document.getElementById("ppss_f_q");
-    if(q)q.oninput=function(){ppssFlt.q=q.value.trim();renderPpssTable();};
+    if(q)q.oninput=function(){ppssFlt.q=q.value.trim();renderPpssTable();renderPpssWorklist();};
+    bindCollapse("ppss_tbl_toggle","ppss_tbl_section","📋 Ver / editar tabela completa","📁 Ocultar tabela completa");
     bindDataTable({
       prefix:"ppss_tbl",
       getArr:function(){return ppssRows;},setArr:function(v){ppssRows=v;},
@@ -4832,7 +4919,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       saveTitlesFn:ppssSaveCols,titlesKey:PPSS_COLS_KEY,
       getTitlesSnap:function(){return ppssColsSnapshot;},setTitlesSnap:function(v){ppssColsSnapshot=v;},
       fixedKeys:PPSS_FIXED_KEYS,getLock:function(){return GLOBAL_EDIT_LOCK;},setLock:function(v){GLOBAL_EDIT_LOCK=v;},who:"ppss",
-      renderFn:renderPpssTable,afterRender:function(){renderPpssKpis();renderPpssGantt();renderPpssStats();renderPpssCards();},updateToolbar:function(){ppssUpdToolbar(true,true);},
+      renderFn:renderPpssTable,afterRender:function(){renderPpssKpis();renderPpssWorklist();renderPpssMacro();renderPpssStats();renderPpssCards();},updateToolbar:function(){ppssUpdToolbar(true,true);},
       pushLabel:"ppssPush",undoLabel:"Editar pedidos PPSS",focusKey:"descricao"
     });
     wireCardsGrid({gridId:"ppss_grid",addcardId:"ppss_addcard",st:ppssCardSt,
@@ -4973,18 +5060,36 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       tr.onclick=function(){var r=vtrRows.find(function(x){return x.id===tr.dataset.rid;});if(r)openDetailDrawer("vtr_tbl",r,vtrCols);};
     });
   }
+  function garManutTotal(r){return moneyVal(r.manutPrev)+moneyVal(r.manutP)+moneyVal(r.manutPO)+moneyVal(r.manutExtras);}
+  function garSitColor(sit){return sit==="IM"?"var(--c-red)":sit==="PO"?"var(--c-teal)":sit==="P"?"var(--c-blue)":"var(--text3)";}
+  function renderGarFleet(){
+    var el=document.getElementById("gar_fleet");
+    if(!el)return;
+    var frota=vtrRows.filter(function(r){return r.existencia!=="0"&&garMatch(r);});
+    if(!frota.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);font-style:italic;grid-column:1/-1">Nenhuma viatura com os filtros atuais.</div>';return;}
+    el.innerHTML=frota.map(function(r){
+      var custo=garManutTotal(r);
+      return '<div class="ovw-card" data-rid="'+r.id+'">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><h5 style="margin:0">'+esc(r.placa||"Sem placa")+'</h5><span class="sit-badge" style="background:'+garSitColor(r.sit)+'">'+esc(r.sit||"?")+'</span></div>'+
+        '<div style="font-size:11px;font-weight:600;color:var(--text2)">'+esc(r.modelo||"—")+'</div>'+
+        '<div class="ovw-sub">Ano '+esc(r.ano||"—")+' · Tipo '+esc(r.tipo||"—")+' · Prioridade '+esc(r.prioridade||"—")+'</div>'+
+        '<div class="ovw-sub">Manutenção necessária: <b>'+fmtBRL(custo)+'</b>'+(r.seguroValor?' · Seguro '+esc(r.seguroValor):"")+'</div>'+
+        (r.obs?'<div class="ovw-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(r.obs)+'">'+esc(r.obs)+'</div>':"")+
+      '</div>';
+    }).join("");
+    el.querySelectorAll(".ovw-card").forEach(function(card){
+      card.onclick=function(){var r=vtrRows.find(function(x){return x.id===card.dataset.rid;});if(r)openDetailDrawer("vtr_tbl",r,vtrCols);};
+    });
+  }
   function renderGarStats(){
     var el=document.getElementById("gar_stats");
     if(!el)return;
     var frota=vtrRows.filter(function(r){return r.existencia!=="0";});
     var porSit=["P","PO","IM"].map(function(s){return{k:s,v:frota.filter(function(r){return r.sit===s;}).length};}).filter(function(p){return p.v;});
-    var porTipo={};frota.forEach(function(r){var t=r.tipo||"—";porTipo[t]=(porTipo[t]||0)+1;});
-    var tipoArr=Object.keys(porTipo).sort(function(a,b){return porTipo[b]-porTipo[a];}).slice(0,8).map(function(t){return{k:"Tipo "+t,v:porTipo[t]};});
-    var porDot={};frota.forEach(function(r){var d=r.dotacao||"—";porDot[d]=(porDot[d]||0)+1;});
-    var dotArr=Object.keys(porDot).map(function(d){return{k:d,v:porDot[d]};});
-    el.innerHTML='<div class="stats-card"><h4>Situação da frota</h4>'+svgDonutChart(porSit)+'</div>'+
-      '<div class="stats-card"><h4>Viaturas por tipo</h4>'+svgBarChart(tipoArr)+'</div>'+
-      '<div class="stats-card"><h4>Dotação × Extra</h4>'+svgDonutChart(dotArr)+'</div>';
+    var custos=frota.map(function(r){return{k:r.placa||r.modelo||"?",v:Math.round(garManutTotal(r)/1000)};}).filter(function(p){return p.v;}).sort(function(a,b){return b.v-a.v;}).slice(0,8);
+    var totalCusto=frota.reduce(function(a,r){return a+garManutTotal(r);},0);
+    el.innerHTML='<div class="stats-card"><h4>Custo de manutenção necessária (R$ mil) — total '+fmtBRL(totalCusto)+'</h4>'+svgBarChart(custos)+'</div>'+
+      '<div class="stats-card"><h4>Situação da frota</h4>'+svgDonutChart(porSit)+'</div>';
   }
   function garFindCard(cid){return vtrCards.find(function(c){return c.id===cid;});}
   function renderGarCards(){
@@ -4996,7 +5101,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     bindMasonryCardDrag(grid,function(){return vtrCards;},function(v){vtrCards=v;},vtrSaveCards,VTR_CARDS_KEY,renderGarCards,"Reordenar cartões Garagem",function(){return!!GLOBAL_EDIT_LOCK;});
     bindItemDragGeneric(grid,garFindCard,function(v){garCardSt.dirty=v;},renderGarCards);
   }
-  renderGaragem=function(){renderGarKpis();renderGarTable();renderGarStats();renderGarCards();};
+  renderGaragem=function(){renderGarKpis();renderGarFleet();renderGarStats();renderGarTable();renderGarCards();};
   garInit=async function(){
     if(garBound){return;}
     garBound=true;
@@ -5004,9 +5109,10 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var tag=document.getElementById("gar_synctag");
     if(tag){tag.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";tag.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
     var selSit=document.getElementById("gar_f_sit");
-    if(selSit)selSit.onchange=function(){garFlt.sit=selSit.value;renderGarTable();};
+    if(selSit)selSit.onchange=function(){garFlt.sit=selSit.value;renderGarTable();renderGarFleet();};
     var q=document.getElementById("gar_f_q");
-    if(q)q.oninput=function(){garFlt.q=q.value.trim();renderGarTable();};
+    if(q)q.oninput=function(){garFlt.q=q.value.trim();renderGarTable();renderGarFleet();};
+    bindCollapse("vtr_tbl_toggle","vtr_tbl_section","\ud83d\udccb Ver / editar tabela completa","\ud83d\udcc1 Ocultar tabela completa");
     bindDataTable({
       prefix:"vtr_tbl",
       getArr:function(){return vtrRows;},setArr:function(v){vtrRows=v;},
@@ -5020,7 +5126,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       saveTitlesFn:vtrSaveCols,titlesKey:VTR_COLS_KEY,
       getTitlesSnap:function(){return vtrColsSnapshot;},setTitlesSnap:function(v){vtrColsSnapshot=v;},
       fixedKeys:VTR_FIXED_KEYS,getLock:function(){return GLOBAL_EDIT_LOCK;},setLock:function(v){GLOBAL_EDIT_LOCK=v;},who:"vtr",
-      renderFn:renderGarTable,afterRender:function(){renderGarKpis();renderGarStats();renderGarCards();},updateToolbar:function(){garUpdToolbar(true,true);},
+      renderFn:renderGarTable,afterRender:function(){renderGarKpis();renderGarFleet();renderGarStats();renderGarCards();},updateToolbar:function(){garUpdToolbar(true,true);},
       pushLabel:"garPush",undoLabel:"Editar viaturas",focusKey:"modelo"
     });
     wireCardsGrid({gridId:"gar_grid",addcardId:"gar_addcard",st:garCardSt,
@@ -5141,6 +5247,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     '<div class="dt-section-head">'+
       '<div class="dt-title-wrap"><h3 class="dt-table-title">'+esc(s.title)+'</h3><span class="last-edit" id="'+prefix+'_lastedit"></span></div>'+
       '<div class="nv-toolbar" id="'+prefix+'_toolbar">'+
+        '<button class="dt-colbtn" id="'+prefix+'_toggle">▸ Detalhes</button>'+
         '<button class="nv-editbtn" id="'+prefix+'_edit">✎ Editar</button>'+
         '<span class="nv-edit-actions" id="'+prefix+'_edit_actions" hidden>'+
           '<button class="dt-colbtn" id="'+prefix+'_addcol">+ coluna</button>'+
@@ -5150,13 +5257,15 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         '</span>'+
       '</div>'+
     '</div>'+
+    '<div id="'+prefix+'_body" hidden>'+
     '<div class="dt-table-wrap">'+
       '<table class="dt-table" id="'+prefix+'_table">'+
         '<thead id="'+prefix+'_thead"><tr></tr></thead>'+
         '<tbody id="'+prefix+'_tbody"></tbody>'+
       '</table>'+
     '</div>'+
-    '<div class="nv-grid" id="'+prefix+'_grid"></div>';
+    '<div class="nv-grid" id="'+prefix+'_grid"></div>'+
+    '</div>';
   }
   async function horasLoadShip(s){
     var r=null,c=null,cd=null;
@@ -5244,7 +5353,40 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       save:function(){horasSaveShip(s);},pushTag:"horasPush",key:function(){return s.cardsKey;},
       label:"cart\u00E3o \u2014 "+s.title,render:function(){renderHorasShip(key);renderShipCards(key);}});
   }
-  renderHoras=function(){HORAS_SHIP_LIST.forEach(function(sk){renderHorasShip(sk.key);renderShipCards(sk.key);});};
+  renderHoras=function(){HORAS_SHIP_LIST.forEach(function(sk){renderHorasShip(sk.key);renderShipCards(sk.key);});renderHorasDash();};
+  /* Dashboard: classifica cada motor pela proximidade da próxima revisão (dados já computados por horasRecalcRow). */
+  function horasEngines(){
+    var out=[];
+    HORAS_SHIP_LIST.forEach(function(sk){
+      var s=horasShips[sk.key];
+      (s.rows||[]).forEach(function(r){
+        var op=horasParseNum(r.horasOperacao),man=horasParseNum(r.horasManutencao),crono=horasParseNum(r.cronograma);
+        if(isNaN(op)||isNaN(man)||isNaN(crono)||crono<=0)return;
+        var delta=(man+crono)-op;
+        var usado=Math.max(0,op-man);
+        var pct=Math.min(100,Math.round(usado/crono*100));
+        var estado=delta<=0?"ultra":(delta<=crono*0.1?"critico":(delta<=crono*0.25?"atencao":"ok"));
+        out.push({label:s.title+" — "+(r.tipoMotor||r.meio||"Motor")+(r.bordo?" "+r.bordo:""),delta:delta,crono:crono,pct:pct,estado:estado});
+      });
+    });
+    return out.sort(function(a,b){return a.delta-b.delta;});
+  }
+  function renderHorasDash(){
+    var kEl=document.getElementById("horas_kpis"),dEl=document.getElementById("horas_dash");
+    if(!kEl||!dEl)return;
+    var eng=horasEngines();
+    var ultra=eng.filter(function(e){return e.estado==="ultra";}).length;
+    var alerta=eng.filter(function(e){return e.estado==="critico"||e.estado==="atencao";}).length;
+    var ok=eng.filter(function(e){return e.estado==="ok";}).length;
+    function kpi(cls,n,t){return '<div class="kpi '+cls+'"><div class="kpi-n">'+n+'</div><div class="kpi-t">'+t+'</div></div>';}
+    kEl.innerHTML=kpi("k-purple",eng.length,"Motores monitorados")+kpi("k-teal",ok,"Em dia")+kpi("k-amber",alerta,"Atenção (≤25%)")+kpi("k-red",ultra,"Revisão ultrapassada");
+    if(!eng.length){dEl.innerHTML='<div style="font-size:11px;color:var(--text3);font-style:italic">Nenhum motor com Operação/Manutenção/Cronograma preenchidos.</div>';return;}
+    var cor={ultra:"var(--c-red)",critico:"var(--c-red)",atencao:"var(--c-amber)",ok:"var(--c-teal)"};
+    dEl.innerHTML=eng.map(function(e){
+      var txt=e.delta<=0?("ultrapassou "+horasFmtNum(-e.delta)+"h"):("restam "+horasFmtNum(e.delta)+"h de "+horasFmtNum(e.crono)+"h");
+      return '<div class="eng-item"><span class="eng-name" title="'+esc(e.label)+'">'+esc(e.label)+'</span><div class="pbar"><div style="width:'+e.pct+'%;background:'+cor[e.estado]+'"></div></div><span class="eng-val" style="color:'+cor[e.estado]+'">'+txt+'</span></div>';
+    }).join("");
+  }
   function horasBindShip(key){
     var s=horasShips[key];
     bindDataTable({
@@ -5331,6 +5473,13 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       await horasLoadShip(horasShips[HORAS_SHIP_LIST[i].key]);
     }
     HORAS_SHIP_LIST.forEach(function(sk){horasBindShip(sk.key);bindShipCardGrid(sk.key);});
+    HORAS_SHIP_LIST.forEach(function(sk){
+      var p="horas_"+sk.key;
+      var tg=document.getElementById(p+"_toggle"),body=document.getElementById(p+"_body");
+      if(tg&&body)tg.onclick=function(){body.hidden=!body.hidden;tg.textContent=body.hidden?"▸ Detalhes":"▾ Ocultar";};
+      var eb=document.getElementById(p+"_edit");
+      if(eb&&body){var orig=eb.onclick;eb.onclick=function(){body.hidden=false;if(tg)tg.textContent="▾ Ocultar";if(orig)orig.apply(this,arguments);};}
+    });
     horasBindMaintModal();
     var tag=document.getElementById("horas_synctag");
     if(tag){tag.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";tag.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
