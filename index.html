@@ -440,6 +440,8 @@ tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .ovw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-bottom:14px}
 .ovw-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:12px;cursor:pointer;transition:box-shadow .15s}
 .ovw-card:hover{box-shadow:0 0 0 2px var(--c-blue) inset}
+.fleet-led{position:absolute;top:11px;left:11px;width:11px;height:11px;border-radius:50%;cursor:pointer;box-shadow:0 0 0 2px var(--surface),0 0 5px rgba(0,0,0,.35)}
+.fleet-led:hover{transform:scale(1.15)}
 .ovw-card h5{margin:0 0 6px;font-size:12px;font-weight:700;color:var(--text)}
 .ovw-card .ovw-big{font-size:22px;font-weight:800;line-height:1.1}
 .ovw-card .ovw-sub{font-size:10px;color:var(--text3);margin-top:4px;line-height:1.5}
@@ -5062,6 +5064,32 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
   }
   function garManutTotal(r){return moneyVal(r.manutPrev)+moneyVal(r.manutP)+moneyVal(r.manutPO)+moneyVal(r.manutExtras);}
   function garSitColor(sit){return sit==="IM"?"var(--c-red)":sit==="PO"?"var(--c-teal)":sit==="P"?"var(--c-blue)":"var(--text3)";}
+  /* ── LED de disponibilidade (emprestada a navios × fainas administrativas): estado próprio,
+     independente da SIT de manutenção — ciclo Disponível → Saída prevista → Em uso ao clicar. ── */
+  var VTR_USO_CYCLE=["disponivel","saida_prevista","em_uso"];
+  var VTR_USO_META={
+    disponivel:{cor:"var(--c-teal)",lbl:"Disponível"},
+    saida_prevista:{cor:"var(--c-amber)",lbl:"Saída prevista"},
+    em_uso:{cor:"var(--c-red)",lbl:"Em uso"}
+  };
+  function garLedHtml(r){
+    var st=VTR_USO_META[r.usoStatus]?r.usoStatus:"disponivel";
+    var m=VTR_USO_META[st];
+    return '<span class="fleet-led" data-rid="'+r.id+'" title="'+esc(m.lbl)+' — clique para alterar" style="background:'+m.cor+'"></span>';
+  }
+  function garCycleUso(id){
+    if(GLOBAL_EDIT_LOCK){toast("Finalize a edição em andamento antes de alterar o status.","info");return;}
+    var r=vtrRows.find(function(x){return x.id===id;});
+    if(!r)return;
+    var cur=VTR_USO_CYCLE.indexOf(r.usoStatus)+1;
+    var pre=JSON.parse(JSON.stringify(vtrRows));
+    r.usoStatus=VTR_USO_CYCLE[cur%VTR_USO_CYCLE.length];
+    vtrSaveRows();
+    pushKV("garPush",VTR_KEY,vtrRows).then(function(){toast("✓ "+VTR_USO_META[r.usoStatus].lbl,"ok");});
+    auditDiffRows("vtr_tbl",pre,vtrRows);
+    touchLastEdit("vtr_tbl");paintLastEdit("vtr_tbl_lastedit","vtr_tbl");
+    renderGarFleet();
+  }
   function renderGarFleet(){
     var el=document.getElementById("gar_fleet");
     if(!el)return;
@@ -5069,14 +5097,18 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(!frota.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);font-style:italic;grid-column:1/-1">Nenhuma viatura com os filtros atuais.</div>';return;}
     el.innerHTML=frota.map(function(r){
       var custo=garManutTotal(r);
-      return '<div class="ovw-card" data-rid="'+r.id+'">'+
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><h5 style="margin:0">'+esc(r.placa||"Sem placa")+'</h5><span class="sit-badge" style="background:'+garSitColor(r.sit)+'">'+esc(r.sit||"?")+'</span></div>'+
+      return '<div class="ovw-card" data-rid="'+r.id+'" style="position:relative">'+
+        garLedHtml(r)+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;padding-left:16px"><h5 style="margin:0">'+esc(r.placa||"Sem placa")+'</h5><span class="sit-badge" style="background:'+garSitColor(r.sit)+'">'+esc(r.sit||"?")+'</span></div>'+
         '<div style="font-size:11px;font-weight:600;color:var(--text2)">'+esc(r.modelo||"—")+'</div>'+
         '<div class="ovw-sub">Ano '+esc(r.ano||"—")+' · Tipo '+esc(r.tipo||"—")+' · Prioridade '+esc(r.prioridade||"—")+'</div>'+
         '<div class="ovw-sub">Manutenção necessária: <b>'+fmtBRL(custo)+'</b>'+(r.seguroValor?' · Seguro '+esc(r.seguroValor):"")+'</div>'+
         (r.obs?'<div class="ovw-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(r.obs)+'">'+esc(r.obs)+'</div>':"")+
       '</div>';
     }).join("");
+    el.querySelectorAll(".fleet-led").forEach(function(led){
+      led.onclick=function(e){e.stopPropagation();garCycleUso(led.dataset.rid);};
+    });
     el.querySelectorAll(".ovw-card").forEach(function(card){
       card.onclick=function(){var r=vtrRows.find(function(x){return x.id===card.dataset.rid;});if(r)openDetailDrawer("vtr_tbl",r,vtrCols);};
     });
