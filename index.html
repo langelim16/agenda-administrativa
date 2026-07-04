@@ -1484,7 +1484,7 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
   <button class="nv-editbtn" id="gar_import_btn">⬆ Importar planilha</button>
 </div>
 
-<div class="dt-section-head"><h3 class="dt-table-title">Frota</h3></div>
+<div class="dt-section-head"><h3 class="dt-table-title">Frota</h3><button class="nv-editbtn" id="uso_open_btn">+ Uso da viatura</button></div>
 <div class="ovw-grid" id="gar_fleet"></div>
 
 <button class="nv-editbtn sec-toggle" id="vtr_tbl_toggle">📋 Ver / editar tabela completa</button>
@@ -1525,6 +1525,25 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
     <div class="drawer-body" id="detailDrawerBody"></div>
   </div>
 </div>
+
+<!-- registro de uso da viatura (Garagem) -->
+<div class="mbg" id="usoBg"><div class="modal"><div class="mh"><h3>+ Uso da viatura</h3><button class="mx" id="uso_close">✕</button></div>
+  <div class="mbody" style="padding:16px 18px">
+    <div class="fld full"><label>Motivo de uso</label><select id="uso_motivo">
+      <option value="navio">Empréstimo para Navio</option>
+      <option value="om">Empréstimo outra OM</option>
+      <option value="comissao">Comissão</option>
+      <option value="rotina">Uso de rotina pela OM</option>
+    </select></div>
+    <div class="fld full"><label>Viatura</label><select id="uso_viatura"></select></div>
+    <div id="uso_fields_dynamic"></div>
+    <datalist id="uso_militares_dl"></datalist>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+      <button class="nv-cancelbtn" id="uso_cancel">Cancelar</button>
+      <button class="bsave" id="uso_confirm">Registrar uso</button>
+    </div>
+  </div>
+</div></div>
 
 <!-- importador de planilha (genérico, usado por PPSS/Garagem) -->
 <div class="mbg" id="impBg"><div class="modal wide"><div class="mh"><h3 id="impTitle">Importar planilha</h3><button class="mx" id="impClose">✕</button></div>
@@ -4997,11 +5016,12 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
   function vtrSaveRows(){try{localStorage.setItem(VTR_KEY,JSON.stringify(vtrRows));}catch(e){}}
   function vtrSaveCols(){try{localStorage.setItem(VTR_COLS_KEY,JSON.stringify(vtrCols));}catch(e){}}
   function vtrSaveCards(){try{localStorage.setItem(VTR_CARDS_KEY,JSON.stringify(vtrCards));}catch(e){}}
+  function garIsLivre(r){return(r.usoStatus||"disponivel")!=="em_uso";}
   function garMatch(r){
     if(garFlt.sit&&r.sit!==garFlt.sit)return false;
-    if(garFlt.kpi==="disp"&&r.sit!=="P"&&r.sit!=="PO")return false;
-    if(garFlt.kpi==="im"&&r.sit!=="IM")return false;
-    if(garFlt.kpi==="po"&&r.sit!=="PO")return false;
+    if(garFlt.kpi==="pronto"&&r.sit!=="P"&&r.sit!=="PO")return false;
+    if(garFlt.kpi==="imposs"&&r.sit!=="IM")return false;
+    if(garFlt.kpi==="livre"&&!garIsLivre(r))return false;
     if(garFlt.kpi==="extra"&&r.dotacao!=="EXTRA")return false;
     if(garFlt.kpi==="falta"&&r.existencia!=="0")return false;
     if(garFlt.q){
@@ -5022,13 +5042,13 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(!el)return;
     var frota=vtrRows.filter(function(r){return r.existencia!=="0";});
     var tot=frota.length;
-    var disp=frota.filter(function(r){return r.sit==="P"||r.sit==="PO";}).length;
-    var po=frota.filter(function(r){return r.sit==="PO";}).length;
-    var im=frota.filter(function(r){return r.sit==="IM";}).length;
+    var pronto=frota.filter(function(r){return r.sit==="P"||r.sit==="PO";}).length;
+    var imposs=frota.filter(function(r){return r.sit==="IM";}).length;
+    var livre=frota.filter(garIsLivre).length;
     var extra=frota.filter(function(r){return r.dotacao==="EXTRA";}).length;
     var falta=vtrRows.filter(function(r){return r.existencia==="0";}).length;
     function kpi(k,cls,n,t){return '<div class="kpi '+cls+(garFlt.kpi===k&&k?" active":"")+'" data-k="'+k+'"><div class="kpi-n">'+n+'</div><div class="kpi-t">'+t+'</div></div>';}
-    el.innerHTML=kpi("","k-purple",tot,"Viaturas")+kpi("disp","k-teal",disp,"Disponíveis")+kpi("po","k-gold",po,"Com restrição")+kpi("im","k-red",im,"Impossibilitadas")+kpi("extra","k-blue",extra,"Fora de dotação")+kpi("falta","k-amber",falta,"Dotação a preencher");
+    el.innerHTML=kpi("","k-purple",tot,"Viaturas")+kpi("pronto","k-teal",pronto,"Prontas para operar")+kpi("imposs","k-red",imposs,"Impossibilitadas")+kpi("livre","k-gold",livre,"Disponíveis")+kpi("extra","k-blue",extra,"Fora de dotação")+kpi("falta","k-amber",falta,"Dotação a preencher");
     el.querySelectorAll(".kpi[data-k]").forEach(function(b){
       b.onclick=function(){var k=b.dataset.k;garFlt.kpi=(garFlt.kpi===k?"":k);renderGaragem();};
     });
@@ -5090,6 +5110,77 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     auditDiffRows("vtr_tbl",pre,vtrRows);
     touchLastEdit("vtr_tbl");paintLastEdit("vtr_tbl_lastedit","vtr_tbl");
     renderGarFleet();
+  }
+  /* ── Registro de uso da viatura — preenche a coluna Observações automaticamente e
+     marca a viatura como "Em uso" (LED vermelho) ao confirmar. ── */
+  var GAR_NAVIOS_LIST=["NHoGSampaio","NHiBTenCastelo","AvHoFluRioTocantins","AvHoFluRioXingu"];
+  function usoLivres(){return vtrRows.filter(function(r){return r.existencia!=="0"&&(r.sit==="P"||r.sit==="PO")&&garIsLivre(r);});}
+  function usoFieldsHtml(motivo){
+    if(motivo==="navio")return''+
+      '<div class="fld"><label>Início</label><input type="time" id="uso_h1"></div>'+
+      '<div class="fld"><label>Fim</label><input type="time" id="uso_h2"></div>'+
+      '<div class="fld full"><label>Navio solicitante</label><select id="uso_navio">'+GAR_NAVIOS_LIST.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join("")+'</select></div>'+
+      '<div class="fld full"><label>Militar solicitante</label><input id="uso_militar" list="uso_militares_dl"></div>'+
+      '<div class="fld full"><label>Motorista designado</label><input id="uso_motorista" list="uso_militares_dl"></div>';
+    if(motivo==="om")return''+
+      '<div class="fld"><label>Data</label><input type="date" id="uso_data"></div>'+
+      '<div class="fld"><label>Início</label><input type="time" id="uso_h1"></div>'+
+      '<div class="fld"><label>Fim</label><input type="time" id="uso_h2"></div>'+
+      '<div class="fld full"><label>OM solicitante</label><input id="uso_om"></div>'+
+      '<div class="fld full"><label>Militar solicitante</label><input id="uso_militar" list="uso_militares_dl"></div>'+
+      '<div class="fld full"><label>Motorista designado</label><input id="uso_motorista" list="uso_militares_dl"></div>';
+    if(motivo==="comissao")return''+
+      '<div class="fld"><label>Data</label><input type="date" id="uso_data"></div>'+
+      '<div class="fld"><label>Início</label><input type="time" id="uso_h1"></div>'+
+      '<div class="fld"><label>Fim</label><input type="time" id="uso_h2"></div>'+
+      '<div class="fld full"><label>Destino da comissão</label><input id="uso_destino"></div>'+
+      '<div class="fld full"><label>Militar/Divisão solicitante</label><input id="uso_militar" list="uso_militares_dl"></div>'+
+      '<div class="fld full"><label>Motorista designado</label><input id="uso_motorista" list="uso_militares_dl"></div>';
+    return''+ // rotina
+      '<div class="fld"><label>Início</label><input type="time" id="uso_h1"></div>'+
+      '<div class="fld"><label>Fim</label><input type="time" id="uso_h2"></div>'+
+      '<div class="fld full"><label>Motorista escalado (rancho CeIMBe)</label><input id="uso_motorista" list="uso_militares_dl"></div>';
+  }
+  function usoSummary(motivo,g){
+    function per(){return g("uso_h1")+"–"+g("uso_h2");}
+    function perD(){return g("uso_data")+" "+per();}
+    if(motivo==="navio")return"Empréstimo p/ Navio "+g("uso_navio")+" ("+per()+") — Sol.: "+g("uso_militar")+" — Motorista: "+g("uso_motorista");
+    if(motivo==="om")return"Empréstimo outra OM ("+g("uso_om")+", "+perD()+") — Sol.: "+g("uso_militar")+" — Motorista: "+g("uso_motorista");
+    if(motivo==="comissao")return"Comissão em "+g("uso_destino")+" ("+perD()+") — Sol.: "+g("uso_militar")+" — Motorista: "+g("uso_motorista");
+    return"Uso de rotina — rancho CeIMBe ("+per()+") — Motorista: "+g("uso_motorista");
+  }
+  function openUsoModal(){
+    var bg=document.getElementById("usoBg");
+    if(!bg)return;
+    var dl=document.getElementById("uso_militares_dl");
+    if(dl&&typeof pessoalGetState==="function")dl.innerHTML=pessoalGetState().rows.map(function(r){return r.nome?'<option value="'+esc(r.nome)+'">':"";}).join("");
+    var vSel=document.getElementById("uso_viatura");
+    var livres=usoLivres();
+    vSel.innerHTML=livres.length?livres.map(function(r){return '<option value="'+r.id+'">'+esc(r.placa||r.modelo)+" — "+esc(r.modelo||"")+'</option>';}).join(""):'<option value="">— nenhuma viatura disponível —</option>';
+    var motivoSel=document.getElementById("uso_motivo");
+    function refreshFields(){document.getElementById("uso_fields_dynamic").innerHTML=usoFieldsHtml(motivoSel.value);}
+    motivoSel.onchange=refreshFields;
+    motivoSel.value="navio";refreshFields();
+    bg.classList.add("open");
+  }
+  function closeUsoModal(){var bg=document.getElementById("usoBg");if(bg)bg.classList.remove("open");}
+  function confirmUso(){
+    var vId=document.getElementById("uso_viatura").value;
+    if(!vId){toast("Selecione uma viatura disponível.","info");return;}
+    if(GLOBAL_EDIT_LOCK){toast("Finalize a edição em andamento antes de registrar o uso.","info");return;}
+    var r=vtrRows.find(function(x){return x.id===vId;});
+    if(!r)return;
+    var motivo=document.getElementById("uso_motivo").value;
+    function g(id){var el=document.getElementById(id);return el?el.value.trim():"";}
+    var pre=JSON.parse(JSON.stringify(vtrRows));
+    r.obs=usoSummary(motivo,g);
+    r.usoStatus="em_uso";
+    vtrSaveRows();
+    pushKV("garPush",VTR_KEY,vtrRows).then(function(){toast("✓ Uso registrado","ok");});
+    auditDiffRows("vtr_tbl",pre,vtrRows);
+    touchLastEdit("vtr_tbl");paintLastEdit("vtr_tbl_lastedit","vtr_tbl");
+    renderGaragem();
+    closeUsoModal();
   }
   function renderGarFleet(){
     var el=document.getElementById("gar_fleet");
@@ -5188,6 +5279,15 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         }
       });
     };
+    var usoBtn=document.getElementById("uso_open_btn");
+    if(usoBtn)usoBtn.onclick=openUsoModal;
+    var usoClose=document.getElementById("uso_close"),usoCancel=document.getElementById("uso_cancel");
+    if(usoClose)usoClose.onclick=closeUsoModal;
+    if(usoCancel)usoCancel.onclick=closeUsoModal;
+    var usoBg=document.getElementById("usoBg");
+    if(usoBg)usoBg.onclick=function(e){if(e.target.id==="usoBg")closeUsoModal();};
+    var usoConfirm=document.getElementById("uso_confirm");
+    if(usoConfirm)usoConfirm.onclick=confirmUso;
   };
 })();
 /* MODULE_HORAS_PLACEHOLDER */
