@@ -628,6 +628,8 @@ tr[draggable="true"]{opacity:.5}
 .nv-card li b{color:var(--text2);font-weight:600;flex:1;cursor:default;border-radius:var(--r-sm)}
 .nv-card li span.v{color:var(--text3);text-align:right;flex:1;cursor:default;border-radius:var(--r-sm)}
 .nv-card li b.nv-editable,.nv-card li span.v.nv-editable{cursor:text}
+.col-del-card{background:none;border:none;color:var(--text3);font-size:10px;line-height:1;padding:1px 3px;border-radius:4px;cursor:pointer;vertical-align:middle}
+.col-del-card:hover{background:var(--c-red2);color:var(--c-red)}
 .nv-card li b.nv-editable:empty:before{content:"Nome do item";color:var(--text3);font-weight:400}
 .nv-card li span.v.nv-editable:empty:before{content:"Valor";color:var(--text3)}
 .nv-card li b:focus,.nv-card li span.v:focus{outline:2px solid var(--c-blue);outline-offset:2px;color:var(--text)}
@@ -640,6 +642,8 @@ tr[draggable="true"]{opacity:.5}
 .dt-th-edit{cursor:text}
 .dt-th-edit:focus{outline:2px solid var(--c-blue);outline-offset:-2px;background:var(--c-sky)}
 .th-inner{display:flex;align-items:center;gap:4px;justify-content:center}
+.col-del{background:none;border:none;color:var(--text3);font-size:11px;line-height:1;padding:2px 3px;border-radius:4px;cursor:pointer;flex:none}
+.col-del:hover{background:var(--c-red2);color:var(--c-red)}
 .th-inner .row-dh{flex-shrink:0}
 .th-inner .dt-th-edit{flex:1;min-width:0;text-align:left}
 .dt-table th[data-ci],.nv-table th[data-ci]{position:relative}
@@ -1447,7 +1451,6 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
   <button class="nv-editbtn" id="nv_table_edit">✎ Editar tabela</button>
   <span class="nv-edit-actions" id="nv_table_edit_actions" hidden>
     <button class="dt-colbtn" id="nv_table_addcol">+ coluna</button>
-    <button class="dt-colbtn" id="nv_table_delcol">✕ coluna</button>
     <button class="nv-savebtn" id="nv_table_save" disabled>✓ Salvar</button>
     <button class="nv-cancelbtn" id="nv_table_cancel">Cancelar</button>
   </span>
@@ -1488,7 +1491,6 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
     <button class="nv-editbtn" id="clg_t1_edit">✎ Editar</button>
     <span class="nv-edit-actions" id="clg_t1_edit_actions" hidden>
       <button class="dt-colbtn" id="clg_t1_addcol">+ coluna</button>
-      <button class="dt-colbtn" id="clg_t1_delcol">✕ coluna</button>
       <button class="nv-savebtn" id="clg_t1_save" disabled>✓ Salvar</button>
       <button class="nv-cancelbtn" id="clg_t1_cancel">Cancelar</button>
     </span>
@@ -1509,7 +1511,6 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
     <button class="nv-editbtn" id="clg_t2_edit">✎ Editar</button>
     <span class="nv-edit-actions" id="clg_t2_edit_actions" hidden>
       <button class="dt-colbtn" id="clg_t2_addcol">+ coluna</button>
-      <button class="dt-colbtn" id="clg_t2_delcol">✕ coluna</button>
       <button class="nv-savebtn" id="clg_t2_save" disabled>✓ Salvar</button>
       <button class="nv-cancelbtn" id="clg_t2_cancel">Cancelar</button>
     </span>
@@ -1616,7 +1617,6 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
     <button class="nv-editbtn" id="pessoal_tbl_edit">✎ Editar</button>
     <span class="nv-edit-actions" id="pessoal_tbl_edit_actions" hidden>
       <button class="dt-colbtn" id="pessoal_tbl_addcol">+ coluna</button>
-      <button class="dt-colbtn" id="pessoal_tbl_delcol">✕ coluna</button>
       <button class="nv-savebtn" id="pessoal_tbl_save" disabled>✓ Salvar</button>
       <button class="nv-cancelbtn" id="pessoal_tbl_cancel">Cancelar</button>
     </span>
@@ -1688,7 +1688,6 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
     <button class="nv-editbtn" id="ppss_tbl_edit">✎ Editar</button>
     <span class="nv-edit-actions" id="ppss_tbl_edit_actions" hidden>
       <button class="dt-colbtn" id="ppss_tbl_addcol">+ coluna</button>
-      <button class="dt-colbtn" id="ppss_tbl_delcol">✕ coluna</button>
       <button class="nv-savebtn" id="ppss_tbl_save" disabled>✓ Salvar</button>
       <button class="nv-cancelbtn" id="ppss_tbl_cancel">Cancelar</button>
     </span>
@@ -1747,7 +1746,6 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
     <button class="nv-editbtn" id="vtr_tbl_edit">✎ Editar</button>
     <span class="nv-edit-actions" id="vtr_tbl_edit_actions" hidden>
       <button class="dt-colbtn" id="vtr_tbl_addcol">+ coluna</button>
-      <button class="dt-colbtn" id="vtr_tbl_delcol">✕ coluna</button>
       <button class="nv-savebtn" id="vtr_tbl_save" disabled>✓ Salvar</button>
       <button class="nv-cancelbtn" id="vtr_tbl_cancel">Cancelar</button>
     </span>
@@ -2345,12 +2343,13 @@ function cardHtmlGeneric(c,st,lockedOut){
         (isEditing?'<span class="row-dh" title="Arrastar para reordenar">\u283F</span>':"")+
         '<b'+(isEditing?' class="nv-editable" contenteditable="true"':"")+' data-cid="'+c.id+'" data-i="'+i+'" data-field="k" spellcheck="false">'+esc(it.k)+'</b>'+
         vals.map(function(val,vi){
-          return '<span class="v'+(isEditing?" nv-editable":"")+'"'+(isEditing?' contenteditable="true"':"")+' data-cid="'+c.id+'" data-i="'+i+'" data-vi="'+vi+'" data-field="val" spellcheck="false">'+esc(val)+'</span>';
+          return '<span class="v'+(isEditing?" nv-editable":"")+'"'+(isEditing?' contenteditable="true"':"")+' data-cid="'+c.id+'" data-i="'+i+'" data-vi="'+vi+'" data-field="val" spellcheck="false">'+esc(val)+'</span>'+
+            (isEditing&&i===0&&vals.length>1?'<button class="col-del-card" data-cid="'+c.id+'" data-vi="'+vi+'" title="Excluir esta coluna">\u2715</button>':"");
         }).join("")+
         (isEditing?'<button class="item-del" data-cid="'+c.id+'" data-i="'+i+'" title="Remover item">\u2715</button>':"")+
       '</li>';
     }).join("")+'</ul>'+
-    (isEditing?'<div class="nv-card-rowbtns"><button class="additem" data-cid="'+c.id+'">+ item</button><button class="nv-addcolbtn addcol" data-cid="'+c.id+'">+ coluna</button>'+((c.items[0]&&(c.items[0].vals||[]).length>1)?'<button class="nv-addcolbtn delcol" data-cid="'+c.id+'" title="Excluir \u00FAltima coluna">\u2715 coluna</button>':'')+'</div>':"")+
+    (isEditing?'<div class="nv-card-rowbtns"><button class="additem" data-cid="'+c.id+'">+ item</button><button class="nv-addcolbtn addcol" data-cid="'+c.id+'">+ coluna</button></div>':"")+
   '</div>';
 }
 function wireCardsGrid(o){
@@ -2464,16 +2463,16 @@ function wireCardsGrid(o){
       if(c5){c5.items.forEach(function(it){if(!it.vals)it.vals=[it.v!==undefined?it.v:""];it.vals.push("");});st.dirty=true;o.render();}
       return;
     }
-    var delCol=e.target.closest&&e.target.closest(".delcol");
+    var delCol=e.target.closest&&e.target.closest(".col-del-card");
     if(delCol){
       if(delCol.dataset.cid!==st.editingId)return;
       var c6=find(delCol.dataset.cid);
       if(c6){
-        var lastIdx=((c6.items[0]&&c6.items[0].vals)||[]).length-1;
-        if(lastIdx<1)return;
-        var hasData=c6.items.some(function(it){var v=(it.vals||[])[lastIdx];return v&&v!=="\u2014";});
+        var vi=+delCol.dataset.vi;
+        if(((c6.items[0]&&c6.items[0].vals)||[]).length<2)return;
+        var hasData=c6.items.some(function(it){var v=(it.vals||[])[vi];return v&&v!=="\u2014";});
         if(hasData&&!confirm("Esta coluna cont\u00E9m informa\u00E7\u00F5es preenchidas. Deseja realmente exclu\u00ED-la?"))return;
-        c6.items.forEach(function(it){if(it.vals&&it.vals.length>1)it.vals.pop();});
+        c6.items.forEach(function(it){if(it.vals&&it.vals.length>vi)it.vals.splice(vi,1);});
         st.dirty=true;o.render();
       }
       return;
@@ -2687,7 +2686,7 @@ function bindDataTable(cfg){
   var tbody=document.getElementById(cfg.prefix+"_tbody");
   var thead=document.getElementById(cfg.prefix+"_thead");
   function findRow(id){return getArr().find(function(r){return r.id===id;});}
-  bindTheadEdit(thead,getTitles,function(v){setDirty(v);updateToolbar();},function(){renderFn();});
+  bindTheadEdit(thead,getTitles,function(v){setDirty(v);updateToolbar();},function(){renderFn();},getArr,fixedKeys);
   tbody.addEventListener("input",function(e){
     var td=e.target.closest&&e.target.closest(".dt-cell");
     if(!td||!getEditing())return;
@@ -2755,11 +2754,6 @@ function bindDataTable(cfg){
     addTableColumn(getTitles(),getArr());
     setDirty(true);
     renderFn();
-  };
-  var delcolEl=document.getElementById(cfg.prefix+"_delcol");
-  if(delcolEl)delcolEl.onclick=function(){
-    if(!getEditing())return;
-    if(delTableColumnWithConfirm(getTitles(),getArr(),fixedKeys)){setDirty(true);renderFn();}
   };
   document.getElementById(cfg.prefix+"_edit").onclick=function(){
     if(getLock()&&getLock()!==who){toast("Finalize a edição em andamento antes de iniciar outra.","info");return;}
@@ -2944,20 +2938,35 @@ function colWidthStyle(col){
   if(!col.width)return"";
   return ' style="width:'+col.width+'px;max-width:'+col.width+'px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"';
 }
-function renderThead(theadEl,cols,editing,actionsCls,noReorder){
+function renderThead(theadEl,cols,editing,actionsCls,noReorder,fixedKeys){
   if(!theadEl)return;
   theadEl.innerHTML='<tr>'+cols.map(function(col,i){
     var wStyle=colWidthStyle(col);
     if(!editing)return '<th'+wStyle+'>'+esc(col.title)+'</th>';
+    var canDel=!fixedKeys||fixedKeys.indexOf(col.key)<0;
     return '<th data-ci="'+i+'"'+wStyle+'><span class="th-inner">'+
       (noReorder?'':'<span class="row-dh" title="Arrastar para reordenar">⠿</span>')+
       '<span contenteditable="true" class="dt-th-edit" data-ci="'+i+'" spellcheck="false">'+esc(col.title)+'</span>'+
+      (canDel?'<button class="col-del" data-ci="'+i+'" title="Excluir esta coluna">✕</button>':'')+
     '</span><span class="col-resize" data-ci="'+i+'" title="Arrastar para ajustar largura"></span></th>';
   }).join("")+'<th class="'+actionsCls+'">Ações</th></tr>';
 }
-function bindTheadEdit(theadEl,getCols,setDirty,rerenderFn){
+function bindTheadEdit(theadEl,getCols,setDirty,rerenderFn,getArr,fixedKeys){
   if(!theadEl||theadEl._theadEditBound)return;
   theadEl._theadEditBound=true;
+  theadEl.addEventListener("click",function(e){
+    var btn=e.target.closest&&e.target.closest(".col-del");
+    if(!btn||!getArr)return;
+    var idx=+btn.dataset.ci,cols=getCols(),col=cols[idx];
+    if(!col||(fixedKeys&&fixedKeys.indexOf(col.key)>=0))return;
+    var rows=getArr();
+    var hasData=rows.some(function(r){return r[col.key];});
+    if(hasData&&!confirm("Esta coluna contém informações preenchidas. Deseja realmente excluí-la?"))return;
+    cols.splice(idx,1);
+    rows.forEach(function(r){delete r[col.key];});
+    setDirty(true);
+    rerenderFn();
+  });
   theadEl.addEventListener("input",function(e){
     var th=e.target.closest&&e.target.closest(".dt-th-edit");
     if(!th)return;
@@ -3098,18 +3107,6 @@ function addTableColumn(cols,rows){
   cols.push({key:key,title:"Nova coluna"});
   rows.forEach(function(r){r[key]="";});
 }
-function delTableColumnWithConfirm(cols,rows,fixedKeys){
-  var idx=-1;
-  for(var i=cols.length-1;i>=0;i--){if(fixedKeys.indexOf(cols[i].key)<0){idx=i;break;}}
-  if(idx<0)return false;
-  var key=cols[idx].key;
-  var hasData=rows.some(function(r){return r[key];});
-  if(hasData&&!confirm("Esta coluna contém informações preenchidas. Deseja realmente excluí-la?"))return false;
-  cols.splice(idx,1);
-  rows.forEach(function(r){delete r[key];});
-  return true;
-}
-function hasExtraCol(cols,fixedKeys){return cols.some(function(c){return fixedKeys.indexOf(c.key)<0;});}
 function tgCls(a){return["CLG","PROGEM","CIGEE","EMBARCAÇÕES","DIVERSOS"].indexOf(a)>=0?"t-"+a:"t-def";}
 function isEd(t){return!!ovEdit[t.id];}
 function isUsr(t){return String(t.id).indexOf("u")===0;}
@@ -4561,7 +4558,7 @@ setTimeout(hideSplash,12000);
     var editing=navTableEditing;
     var table=document.querySelector(".nv-table");
     if(table)table.classList.toggle("nv-editing",editing);
-    renderThead(document.getElementById("nv_thead"),navCols,editing,"nv-actions-col");
+    renderThead(document.getElementById("nv_thead"),navCols,editing,"nv-actions-col",false,NAVIOS_FIXED_KEYS);
     var colspan=navCols.length+1;
     tb.innerHTML=navShips.map(function(n){
       var bg=NAV_ROWBG[n.rowColor];
@@ -4572,8 +4569,6 @@ setTimeout(hideSplash,12000);
     }).join("")+(editing?'<tr class="nv-addrow-tr"><td colspan="'+colspan+'"><button class="nv-addrow" id="nv_addrow">+ Adicionar embarcação</button></td></tr>':'');
     navUpdateTableToolbar();
     navUpdateSyncTag();
-    var delcol=document.getElementById("nv_table_delcol");
-    if(delcol)delcol.disabled=!hasExtraCol(navCols,NAVIOS_FIXED_KEYS);
     if(editing)bindRowDragGeneric(tb,function(){return navShips;},renderNavios,function(){navTableDirty=true;});
   }
   function navUpdateSyncTag(){
@@ -4617,7 +4612,7 @@ setTimeout(hideSplash,12000);
     await navLoad();
     navUpdateSyncTag();
     var tbody=document.getElementById("nv_tbody");
-    bindTheadEdit(document.getElementById("nv_thead"),function(){return navCols;},function(v){navTableDirty=v;navUpdateTableToolbar();},renderNavios);
+    bindTheadEdit(document.getElementById("nv_thead"),function(){return navCols;},function(v){navTableDirty=v;navUpdateTableToolbar();},renderNavios,function(){return navShips;},NAVIOS_FIXED_KEYS);
     tbody.addEventListener("input",function(e){
       var td=e.target.closest&&e.target.closest(".nv-cell");
       if(!td||!navTableEditing)return;
@@ -4675,10 +4670,6 @@ setTimeout(hideSplash,12000);
       if(!navTableEditing)return;
       addTableColumn(navCols,navShips);
       navTableDirty=true;renderNavios();
-    };
-    document.getElementById("nv_table_delcol").onclick=function(){
-      if(!navTableEditing)return;
-      if(delTableColumnWithConfirm(navCols,navShips,NAVIOS_FIXED_KEYS)){navTableDirty=true;renderNavios();}
     };
     document.getElementById("nv_table_edit").onclick=function(){
       if(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="table"){toast("Finalize a edição em andamento antes de iniciar outra.","info");return;}
@@ -4829,7 +4820,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var editing=clgT1Editing;
     var table=document.getElementById("clg_t1_table");
     if(table)table.classList.toggle("dt-editing",editing);
-    renderThead(document.getElementById("clg_t1_thead"),clgT1Cols,editing,"dt-actions-col");
+    renderThead(document.getElementById("clg_t1_thead"),clgT1Cols,editing,"dt-actions-col",false,CLG_T1_FIXED_KEYS);
     var colspan=clgT1Cols.length+1;
     tb.innerHTML=clgT1.map(function(r){
       return '<tr'+(editing?' data-rid="'+r.id+'"':'')+'>'+
@@ -4838,8 +4829,6 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       '</tr>';
     }).join("")+(editing?'<tr class="dt-addrow-tr"><td colspan="'+colspan+'"><button class="nv-addrow" id="clg_t1_addrow">+ Adicionar meio</button></td></tr>':'');
     clgUpdateToolbar("clg_t1",editing,clgT1Dirty,GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="t1");
-    var delcol=document.getElementById("clg_t1_delcol");
-    if(delcol)delcol.disabled=!hasExtraCol(clgT1Cols,CLG_T1_FIXED_KEYS);
     if(editing)bindRowDragGeneric(tb,function(){return clgT1;},renderClgT1,function(){clgT1Dirty=true;});
   }
   function renderClgT2(){
@@ -4848,7 +4837,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var editing=clgT2Editing;
     var table=document.getElementById("clg_t2_table");
     if(table)table.classList.toggle("dt-editing",editing);
-    renderThead(document.getElementById("clg_t2_thead"),clgT2Cols,editing,"dt-actions-col");
+    renderThead(document.getElementById("clg_t2_thead"),clgT2Cols,editing,"dt-actions-col",false,CLG_T2_FIXED_KEYS);
     var colspan=clgT2Cols.length+1;
     tb.innerHTML=clgT2.map(function(r){
       return '<tr'+(editing?' data-rid="'+r.id+'"':'')+'>'+
@@ -4857,8 +4846,6 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       '</tr>';
     }).join("")+(editing?'<tr class="dt-addrow-tr"><td colspan="'+colspan+'"><button class="nv-addrow" id="clg_t2_addrow">+ Adicionar abastecimento</button></td></tr>':(clgT2.length?'':'<tr><td colspan="'+colspan+'" style="text-align:center;color:var(--text3);font-style:italic">Nenhum abastecimento programado.</td></tr>'));
     clgUpdateToolbar("clg_t2",editing,clgT2Dirty,GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="t2");
-    var delcol2=document.getElementById("clg_t2_delcol");
-    if(delcol2)delcol2.disabled=!hasExtraCol(clgT2Cols,CLG_T2_FIXED_KEYS);
     if(editing)bindRowDragGeneric(tb,function(){return clgT2;},renderClgT2,function(){clgT2Dirty=true;});
   }
   function renderClgT3(prefix,arr,editing,dirty,who){
@@ -5042,8 +5029,6 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(!eb)return;
     if(editing){eb.hidden=true;ac.hidden=false;sb.disabled=!dirty;}
     else{eb.hidden=false;ac.hidden=true;eb.disabled=!!(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="ppss");}
-    var dc=document.getElementById("ppss_tbl_delcol");
-    if(dc)dc.disabled=!hasExtraCol(ppssCols,PPSS_FIXED_KEYS);
   }
   function renderPpssTable(){
     var tb=document.getElementById("ppss_tbl_tbody");
@@ -5051,7 +5036,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var editing=ppssEditing;
     var table=document.getElementById("ppss_tbl_table");
     if(table)table.classList.toggle("dt-editing",editing);
-    renderThead(document.getElementById("ppss_tbl_thead"),ppssCols,editing,"dt-actions-col");
+    renderThead(document.getElementById("ppss_tbl_thead"),ppssCols,editing,"dt-actions-col",false,PPSS_FIXED_KEYS);
     var rows=editing?ppssRows:ppssRows.filter(ppssMatch);
     var colspan=ppssCols.length+1;
     tb.innerHTML=rows.map(function(r){
@@ -5317,8 +5302,6 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(!eb)return;
     if(editing){eb.hidden=true;ac.hidden=false;sb.disabled=!dirty;}
     else{eb.hidden=false;ac.hidden=true;eb.disabled=!!(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="vtr");}
-    var dc=document.getElementById("vtr_tbl_delcol");
-    if(dc)dc.disabled=!hasExtraCol(vtrCols,VTR_FIXED_KEYS);
   }
   function renderGarTable(){
     var tb=document.getElementById("vtr_tbl_tbody");
@@ -5326,7 +5309,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var editing=vtrEditing;
     var table=document.getElementById("vtr_tbl_table");
     if(table)table.classList.toggle("dt-editing",editing);
-    renderThead(document.getElementById("vtr_tbl_thead"),vtrCols,editing,"dt-actions-col");
+    renderThead(document.getElementById("vtr_tbl_thead"),vtrCols,editing,"dt-actions-col",false,VTR_FIXED_KEYS);
     var rows=editing?vtrRows:vtrRows.filter(garMatch);
     var colspan=vtrCols.length+1;
     tb.innerHTML=rows.map(function(r){
@@ -5652,7 +5635,6 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         '<button class="nv-editbtn" id="'+prefix+'_edit">✎ Editar</button>'+
         '<span class="nv-edit-actions" id="'+prefix+'_edit_actions" hidden>'+
           '<button class="dt-colbtn" id="'+prefix+'_addcol">+ coluna</button>'+
-          '<button class="dt-colbtn" id="'+prefix+'_delcol">✕ coluna</button>'+
           '<button class="nv-savebtn" id="'+prefix+'_save" disabled>✓ Salvar</button>'+
           '<button class="nv-cancelbtn" id="'+prefix+'_cancel">Cancelar</button>'+
         '</span>'+
@@ -5714,8 +5696,6 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(!editBtn)return;
     if(s.editing){editBtn.hidden=true;actions.hidden=false;saveBtn.disabled=!s.dirty;}
     else{editBtn.hidden=false;actions.hidden=true;editBtn.disabled=!!(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!==key);}
-    var delcol=document.getElementById(prefix+"_delcol");
-    if(delcol)delcol.disabled=s.cols.length<1;
   }
   function renderHorasShip(key){
     var s=horasShips[key];
@@ -5725,7 +5705,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var editing=s.editing;
     var table=document.getElementById(prefix+"_table");
     if(table)table.classList.toggle("dt-editing",editing);
-    renderThead(document.getElementById(prefix+"_thead"),s.cols,editing,"dt-actions-col");
+    renderThead(document.getElementById(prefix+"_thead"),s.cols,editing,"dt-actions-col",false,[]);
     var colspan=s.cols.length+1;
     tb.innerHTML=s.rows.map(function(r){
       return '<tr'+(editing?' data-rid="'+r.id+'"':'')+'>'+
@@ -6130,7 +6110,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(table)table.classList.toggle("dt-editing",editing);
     var viewCols=pessoalVisibleCols(editing);
     // Ordenação só é aplicada fora do modo de edição — em edição a ordem das linhas é a de arrastar/soltar.
-    if(editing)renderThead(document.getElementById("pessoal_tbl_thead"),viewCols,editing,"dt-actions-col");
+    if(editing)renderThead(document.getElementById("pessoal_tbl_thead"),viewCols,editing,"dt-actions-col",false,[]);
     else renderPessoalTheadView();
     var colspan=viewCols.length+1;
     var displayRows=editing?pessoalRows:pessoalSortedRows();
@@ -6145,8 +6125,6 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       if(editing){eb.hidden=true;actions.hidden=false;sb.disabled=!pessoalDirty;}
       else{eb.hidden=false;actions.hidden=true;eb.disabled=!!(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="tbl");}
     }
-    var delcol=document.getElementById("pessoal_tbl_delcol");
-    if(delcol)delcol.disabled=pessoalCols.length<1;
     if(editing)bindRowDragGeneric(tb,function(){return pessoalRows;},renderPessoalTable,function(){pessoalDirty=true;});
   }
 
