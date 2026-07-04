@@ -5100,8 +5100,8 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       var custo=garManutTotal(r);
       return '<div class="ovw-card" data-rid="'+r.id+'" style="position:relative">'+
         garLedHtml(r)+
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;padding-left:16px"><h5 style="margin:0">'+esc(r.placa||"Sem placa")+'</h5><span class="sit-badge" style="background:'+garSitColor(r.sit)+'">'+esc(r.sit||"?")+'</span></div>'+
-        '<div style="font-size:11px;font-weight:600;color:var(--text2)">'+esc(r.modelo||"—")+'</div>'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;padding-left:22px"><h5 style="margin:0">'+esc(r.modelo||"—")+'</h5><span class="sit-badge" style="background:'+garSitColor(r.sit)+'">'+esc(r.sit||"?")+'</span></div>'+
+        '<div style="font-size:11px;font-weight:600;color:var(--text2)">'+esc(r.placa||"Sem placa")+'</div>'+
         '<div class="ovw-sub">Ano '+esc(r.ano||"—")+' · Tipo '+esc(r.tipo||"—")+' · Prioridade '+esc(r.prioridade||"—")+'</div>'+
         '<div class="ovw-sub">Manutenção necessária: <b>'+fmtBRL(custo)+'</b>'+(r.seguroValor?' · Seguro '+esc(r.seguroValor):"")+'</div>'+
         (r.obs?'<div class="ovw-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(r.obs)+'">'+esc(r.obs)+'</div>':"")+
