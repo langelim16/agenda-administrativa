@@ -5629,7 +5629,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var prefix="horas_"+s.key;
     return ''+
     '<div class="dt-section-head">'+
-      '<div class="dt-title-wrap"><h3 class="dt-table-title">'+esc(s.title)+'</h3><span class="last-edit" id="'+prefix+'_lastedit"></span></div>'+
+      '<div class="dt-title-wrap"><h3 class="dt-table-title">'+esc(s.title)+'</h3>'+((s.key==="regulus"||s.key==="boto")?'<span class="last-edit">Embarcação em processo de LVAD.</span>':'')+'<span class="last-edit" id="'+prefix+'_lastedit"></span></div>'+
       '<div class="nv-toolbar" id="'+prefix+'_toolbar">'+
         '<button class="dt-colbtn" id="'+prefix+'_toggle">▸ Detalhes</button>'+
         '<button class="nv-editbtn" id="'+prefix+'_edit">✎ Editar</button>'+
