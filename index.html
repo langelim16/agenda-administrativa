@@ -1529,14 +1529,21 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
 <!-- registro de uso da viatura (Garagem) -->
 <div class="mbg" id="usoBg"><div class="modal"><div class="mh"><h3>+ Uso da viatura</h3><button class="mx" id="uso_close">✕</button></div>
   <div class="mbody" style="padding:16px 18px">
-    <div class="fld full"><label>Motivo de uso</label><select id="uso_motivo">
-      <option value="navio">Empréstimo para Navio</option>
-      <option value="om">Empréstimo outra OM</option>
-      <option value="comissao">Comissão</option>
-      <option value="rotina">Uso de rotina pela OM</option>
+    <div class="fld full"><label>Ação</label><select id="uso_acao">
+      <option value="tornar_disponivel">Tornar Disponível</option>
+      <option value="previsao">Registrar previsão de uso</option>
+      <option value="em_uso" selected>Em uso</option>
     </select></div>
     <div class="fld full"><label>Viatura</label><select id="uso_viatura"></select></div>
-    <div id="uso_fields_dynamic"></div>
+    <div id="uso_motivo_wrap">
+      <div class="fld full"><label>Motivo de uso</label><select id="uso_motivo">
+        <option value="navio">Empréstimo para Navio</option>
+        <option value="om">Empréstimo outra OM</option>
+        <option value="comissao">Comissão</option>
+        <option value="rotina">Uso de rotina pela OM</option>
+      </select></div>
+      <div id="uso_fields_dynamic"></div>
+    </div>
     <datalist id="uso_militares_dl"></datalist>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
       <button class="nv-cancelbtn" id="uso_cancel">Cancelar</button>
@@ -5115,6 +5122,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
      marca a viatura como "Em uso" (LED vermelho) ao confirmar. ── */
   var GAR_NAVIOS_LIST=["NHoGSampaio","NHiBTenCastelo","AvHoFluRioTocantins","AvHoFluRioXingu"];
   function usoLivres(){return vtrRows.filter(function(r){return r.existencia!=="0"&&(r.sit==="P"||r.sit==="PO")&&garIsLivre(r);});}
+  function usoOcupadas(){return vtrRows.filter(function(r){return r.existencia!=="0"&&!garIsLivre(r);});}
   function usoFieldsHtml(motivo){
     if(motivo==="navio")return''+
       '<div class="fld"><label>Início</label><input type="time" id="uso_h1"></div>'+
@@ -5141,42 +5149,50 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       '<div class="fld"><label>Fim</label><input type="time" id="uso_h2"></div>'+
       '<div class="fld full"><label>Motorista escalado (rancho CeIMBe)</label><input id="uso_motorista" list="uso_militares_dl"></div>';
   }
-  function usoSummary(motivo,g){
-    function per(){return g("uso_h1")+"–"+g("uso_h2");}
-    function perD(){return g("uso_data")+" "+per();}
-    if(motivo==="navio")return"Empréstimo p/ Navio "+g("uso_navio")+" ("+per()+") — Sol.: "+g("uso_militar")+" — Motorista: "+g("uso_motorista");
-    if(motivo==="om")return"Empréstimo outra OM ("+g("uso_om")+", "+perD()+") — Sol.: "+g("uso_militar")+" — Motorista: "+g("uso_motorista");
-    if(motivo==="comissao")return"Comissão em "+g("uso_destino")+" ("+perD()+") — Sol.: "+g("uso_militar")+" — Motorista: "+g("uso_motorista");
-    return"Uso de rotina — rancho CeIMBe ("+per()+") — Motorista: "+g("uso_motorista");
+  /* Identifica o Navio/OM/Divisão do pedido, conforme o motivo, para compor o texto de Observações. */
+  function usoQuem(motivo,g){
+    if(motivo==="navio")return g("uso_navio");
+    if(motivo==="om")return g("uso_om");
+    if(motivo==="comissao")return g("uso_militar");
+    return"Rotina (rancho CeIMBe)";
+  }
+  function usoSummary(acao,motivo,g){
+    if(acao==="tornar_disponivel")return"Disponível";
+    var quem=usoQuem(motivo,g);
+    return(acao==="previsao"?"Previsão de Uso pelo Navio/OM/Divisão ":"Em uso pelo Navio/OM/Divisão ")+quem;
   }
   function openUsoModal(){
     var bg=document.getElementById("usoBg");
     if(!bg)return;
     var dl=document.getElementById("uso_militares_dl");
     if(dl&&typeof pessoalGetState==="function")dl.innerHTML=pessoalGetState().rows.map(function(r){return r.nome?'<option value="'+esc(r.nome)+'">':"";}).join("");
-    var vSel=document.getElementById("uso_viatura");
-    var livres=usoLivres();
-    vSel.innerHTML=livres.length?livres.map(function(r){return '<option value="'+r.id+'">'+esc(r.placa||r.modelo)+" — "+esc(r.modelo||"")+'</option>';}).join(""):'<option value="">— nenhuma viatura disponível —</option>';
-    var motivoSel=document.getElementById("uso_motivo");
+    var acaoSel=document.getElementById("uso_acao"),vSel=document.getElementById("uso_viatura"),motivoSel=document.getElementById("uso_motivo"),motivoWrap=document.getElementById("uso_motivo_wrap");
+    function refreshViaturas(){
+      var lista=acaoSel.value==="tornar_disponivel"?usoOcupadas():usoLivres();
+      vSel.innerHTML=lista.length?lista.map(function(r){return '<option value="'+r.id+'">'+esc(r.placa||r.modelo)+" — "+esc(r.modelo||"")+'</option>';}).join(""):'<option value="">— nenhuma viatura nessa condição —</option>';
+    }
     function refreshFields(){document.getElementById("uso_fields_dynamic").innerHTML=usoFieldsHtml(motivoSel.value);}
+    function refreshAll(){motivoWrap.hidden=acaoSel.value==="tornar_disponivel";refreshViaturas();if(!motivoWrap.hidden)refreshFields();}
+    acaoSel.onchange=refreshAll;
     motivoSel.onchange=refreshFields;
-    motivoSel.value="navio";refreshFields();
+    acaoSel.value="em_uso";motivoSel.value="navio";refreshAll();
     bg.classList.add("open");
   }
   function closeUsoModal(){var bg=document.getElementById("usoBg");if(bg)bg.classList.remove("open");}
   function confirmUso(){
     var vId=document.getElementById("uso_viatura").value;
-    if(!vId){toast("Selecione uma viatura disponível.","info");return;}
+    if(!vId){toast("Selecione uma viatura.","info");return;}
     if(GLOBAL_EDIT_LOCK){toast("Finalize a edição em andamento antes de registrar o uso.","info");return;}
     var r=vtrRows.find(function(x){return x.id===vId;});
     if(!r)return;
+    var acao=document.getElementById("uso_acao").value;
     var motivo=document.getElementById("uso_motivo").value;
     function g(id){var el=document.getElementById(id);return el?el.value.trim():"";}
     var pre=JSON.parse(JSON.stringify(vtrRows));
-    r.obs=usoSummary(motivo,g);
-    r.usoStatus="em_uso";
+    r.obs=usoSummary(acao,motivo,g);
+    r.usoStatus=acao==="tornar_disponivel"?"disponivel":(acao==="previsao"?"saida_prevista":"em_uso");
     vtrSaveRows();
-    pushKV("garPush",VTR_KEY,vtrRows).then(function(){toast("✓ Uso registrado","ok");});
+    pushKV("garPush",VTR_KEY,vtrRows).then(function(){toast("✓ "+VTR_USO_META[r.usoStatus].lbl,"ok");});
     auditDiffRows("vtr_tbl",pre,vtrRows);
     touchLastEdit("vtr_tbl");paintLastEdit("vtr_tbl_lastedit","vtr_tbl");
     renderGaragem();
