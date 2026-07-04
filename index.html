@@ -440,8 +440,9 @@ tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .ovw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-bottom:14px}
 .ovw-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:12px;cursor:pointer;transition:box-shadow .15s}
 .ovw-card:hover{box-shadow:0 0 0 2px var(--c-blue) inset}
-.fleet-led{position:absolute;top:11px;left:11px;width:11px;height:11px;border-radius:50%;cursor:pointer;box-shadow:0 0 0 2px var(--surface),0 0 5px rgba(0,0,0,.35)}
-.fleet-led:hover{transform:scale(1.15)}
+.fleet-led{position:absolute;top:11px;left:11px;width:12px;height:12px;border-radius:50%;cursor:pointer;background:radial-gradient(circle at 35% 30%,#fff,var(--led-c) 55%,var(--led-c) 100%);box-shadow:0 0 0 2px var(--surface),0 0 4px 1px var(--led-c),0 0 10px 3px var(--led-c),0 0 18px 6px var(--led-c);animation:ledGlow 2s ease-in-out infinite}
+.fleet-led:hover{transform:scale(1.2)}
+@keyframes ledGlow{0%,100%{box-shadow:0 0 0 2px var(--surface),0 0 4px 1px var(--led-c),0 0 10px 3px var(--led-c),0 0 18px 6px var(--led-c)}50%{box-shadow:0 0 0 2px var(--surface),0 0 6px 2px var(--led-c),0 0 14px 5px var(--led-c),0 0 26px 9px var(--led-c)}}
 .ovw-card h5{margin:0 0 6px;font-size:12px;font-weight:700;color:var(--text)}
 .ovw-card .ovw-big{font-size:22px;font-weight:800;line-height:1.1}
 .ovw-card .ovw-sub{font-size:10px;color:var(--text3);margin-top:4px;line-height:1.5}
@@ -5068,14 +5069,14 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
      independente da SIT de manutenção — ciclo Disponível → Saída prevista → Em uso ao clicar. ── */
   var VTR_USO_CYCLE=["disponivel","saida_prevista","em_uso"];
   var VTR_USO_META={
-    disponivel:{cor:"var(--c-teal)",lbl:"Disponível"},
-    saida_prevista:{cor:"var(--c-amber)",lbl:"Saída prevista"},
-    em_uso:{cor:"var(--c-red)",lbl:"Em uso"}
+    disponivel:{cor:"#2bff5e",lbl:"Disponível"},
+    saida_prevista:{cor:"#ffe600",lbl:"Saída prevista"},
+    em_uso:{cor:"#ff2626",lbl:"Em uso"}
   };
   function garLedHtml(r){
     var st=VTR_USO_META[r.usoStatus]?r.usoStatus:"disponivel";
     var m=VTR_USO_META[st];
-    return '<span class="fleet-led" data-rid="'+r.id+'" title="'+esc(m.lbl)+' — clique para alterar" style="background:'+m.cor+'"></span>';
+    return '<span class="fleet-led" data-rid="'+r.id+'" title="'+esc(m.lbl)+' — clique para alterar" style="--led-c:'+m.cor+'"></span>';
   }
   function garCycleUso(id){
     if(GLOBAL_EDIT_LOCK){toast("Finalize a edição em andamento antes de alterar o status.","info");return;}
