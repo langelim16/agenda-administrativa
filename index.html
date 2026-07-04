@@ -1588,6 +1588,7 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
 
 <div class="kpis" id="horas_kpis"></div>
 <div class="dt-section-head"><h3 class="dt-table-title">Situação dos motores — próximas revisões</h3></div>
+<div class="tl-legend-top" id="horas_legend"></div>
 <div class="stats-card" id="horas_dash" style="margin-bottom:18px;flex:none"></div>
 
 <div id="horas_tables_container"></div>
@@ -5755,6 +5756,9 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
   }
   renderHoras=function(){HORAS_SHIP_LIST.forEach(function(sk){renderHorasShip(sk.key);renderShipCards(sk.key);});renderHorasDash();};
   /* Dashboard: classifica cada motor pela proximidade da próxima revisão (dados já computados por horasRecalcRow). */
+  var HORAS_ESTADO_COR={ok:"var(--c-teal)",atencao:"var(--c-amber)",critico:"var(--c-gold)",ultra:"var(--c-red)"};
+  var HORAS_ESTADO_LBL={ok:"Em dia (>25% do cronograma restante)",atencao:"Atenção — ≤25% restante",critico:"Crítico — ≤10% restante",ultra:"Revisão ultrapassada"};
+  var horasDashFlt="";
   function horasEngines(){
     var out=[];
     HORAS_SHIP_LIST.forEach(function(sk){
@@ -5772,19 +5776,27 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     return out.sort(function(a,b){return a.delta-b.delta;});
   }
   function renderHorasDash(){
-    var kEl=document.getElementById("horas_kpis"),dEl=document.getElementById("horas_dash");
+    var kEl=document.getElementById("horas_kpis"),dEl=document.getElementById("horas_dash"),lEl=document.getElementById("horas_legend");
     if(!kEl||!dEl)return;
     var eng=horasEngines();
     var ultra=eng.filter(function(e){return e.estado==="ultra";}).length;
-    var alerta=eng.filter(function(e){return e.estado==="critico"||e.estado==="atencao";}).length;
+    var critico=eng.filter(function(e){return e.estado==="critico";}).length;
+    var atencao=eng.filter(function(e){return e.estado==="atencao";}).length;
     var ok=eng.filter(function(e){return e.estado==="ok";}).length;
-    function kpi(cls,n,t){return '<div class="kpi '+cls+'"><div class="kpi-n">'+n+'</div><div class="kpi-t">'+t+'</div></div>';}
-    kEl.innerHTML=kpi("k-purple",eng.length,"Motores monitorados")+kpi("k-teal",ok,"Em dia")+kpi("k-amber",alerta,"Atenção (≤25%)")+kpi("k-red",ultra,"Revisão ultrapassada");
+    function kpi(k,cls,n,t){return '<div class="kpi '+cls+(horasDashFlt===k&&k?" active":"")+'" data-k="'+k+'"><div class="kpi-n">'+n+'</div><div class="kpi-t">'+t+'</div></div>';}
+    kEl.innerHTML=kpi("","k-purple",eng.length,"Motores monitorados")+kpi("ok","k-teal",ok,"Em dia")+kpi("atencao","k-amber",atencao,"Atenção (≤25%)")+kpi("critico","k-gold",critico,"Crítico (≤10%)")+kpi("ultra","k-red",ultra,"Revisão ultrapassada");
+    kEl.querySelectorAll(".kpi[data-k]").forEach(function(b){
+      b.onclick=function(){var k=b.dataset.k;horasDashFlt=(horasDashFlt===k?"":k);renderHorasDash();};
+    });
+    if(lEl)lEl.innerHTML=Object.keys(HORAS_ESTADO_COR).map(function(k){
+      return '<span class="tl-leg-item"><span class="tl-leg-dot" style="background:'+HORAS_ESTADO_COR[k]+'"></span>'+esc(HORAS_ESTADO_LBL[k])+'</span>';
+    }).join("");
     if(!eng.length){dEl.innerHTML='<div style="font-size:11px;color:var(--text3);font-style:italic">Nenhum motor com Operação/Manutenção/Cronograma preenchidos.</div>';return;}
-    var cor={ultra:"var(--c-red)",critico:"var(--c-red)",atencao:"var(--c-amber)",ok:"var(--c-teal)"};
-    dEl.innerHTML=eng.map(function(e){
+    var lista=horasDashFlt?eng.filter(function(e){return e.estado===horasDashFlt;}):eng;
+    if(!lista.length){dEl.innerHTML='<div style="font-size:11px;color:var(--text3);font-style:italic">Nenhum motor nessa situação.</div>';return;}
+    dEl.innerHTML=lista.map(function(e){
       var txt=e.delta<=0?("ultrapassou "+horasFmtNum(-e.delta)+"h"):("restam "+horasFmtNum(e.delta)+"h de "+horasFmtNum(e.crono)+"h");
-      return '<div class="eng-item"><span class="eng-name" title="'+esc(e.label)+'">'+esc(e.label)+'</span><div class="pbar"><div style="width:'+e.pct+'%;background:'+cor[e.estado]+'"></div></div><span class="eng-val" style="color:'+cor[e.estado]+'">'+txt+'</span></div>';
+      return '<div class="eng-item"><span class="eng-name" title="'+esc(e.label)+'">'+esc(e.label)+'</span><div class="pbar"><div style="width:'+e.pct+'%;background:'+HORAS_ESTADO_COR[e.estado]+'"></div></div><span class="eng-val" style="color:'+HORAS_ESTADO_COR[e.estado]+'">'+txt+'</span></div>';
     }).join("");
   }
   function horasBindShip(key){
