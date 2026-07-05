@@ -1358,10 +1358,31 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
   #rbg .modal{background:#fff!important;border:none!important}
 }
 </style>
+<style id="ops-additions">
+/* ── Melhorias de operador (CONDEF/CLG/Horas/Pessoal/Garagem/Dashboard) ── */
+.nv-stdays{font-size:8.5px;color:var(--text3);margin-top:2px;line-height:1.2;font-weight:600}
+.nv-ppss-badge{display:inline-block;font-size:9px;font-weight:700;color:var(--c-blue);background:var(--c-sky);border:1px solid rgba(65,97,140,.25);border-radius:99px;padding:1px 7px;margin-top:3px;cursor:pointer}
+.nv-table:not(.nv-editing) td.nv-restr-link{cursor:pointer}
+.nv-table:not(.nv-editing) td.nv-restr-link:hover{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
+.nv-tl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xs);padding:14px 16px;margin-bottom:14px}
+.nv-tl-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:var(--text2);margin-bottom:10px}
+.nv-tl-legend span{display:inline-flex;align-items:center;gap:5px}
+.nv-tl-dot{width:9px;height:9px;border-radius:3px;display:inline-block;flex:none}
+.nv-tl-months{display:flex;margin-left:150px;font-size:8.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
+.nv-tl-months span{flex:1;text-align:left;border-left:1px solid var(--border);padding-left:3px}
+.nv-tl-row{display:flex;align-items:center;margin-top:6px}
+.nv-tl-name{width:150px;flex:none;font-size:11px;font-weight:600;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px}
+.nv-tl-strip{flex:1;display:flex;height:16px;border-radius:4px;overflow:hidden;background:var(--c-100)}
+.nv-tl-seg{height:100%}
+@media(max-width:700px){.nv-tl-name{width:96px}.nv-tl-months{margin-left:96px}}
+tr.row-crit{background:rgba(233,150,53,.20)}
+.hr-sem{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle;flex:none}
+</style>
 </head>
 <body id="artifacts-component-root-html">
 <nav class="appnav" id="appnav">
   <button class="nav-item" data-view="config" title="Configurações da OM"><span class="nav-ic" style="font-size:26px">⚙</span><span class="nav-lbl">CONFIG OM</span></button>
+  <button class="nav-item" data-view="dashboard" title="Painel Consolidado"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"></rect><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"></rect><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"></rect><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"></rect></svg></span><span class="nav-lbl">Dashboard</span></button>
   <button class="nav-item active" data-view="agenda" title="Agenda Administrativa"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="18" rx="2"></rect><path d="M9 3.5V2.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"></path><line x1="8.5" y1="9" x2="15.5" y2="9"></line><line x1="8.5" y1="12.5" x2="15.5" y2="12.5"></line><line x1="8.5" y1="16" x2="13" y2="16"></line></svg></span><span class="nav-lbl">Agenda</span></button>
   <button class="nav-item" data-view="navios" title="Controle de CONDEF"><span class="nav-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="2"></circle><line x1="12" y1="7.5" x2="12" y2="19"></line><line x1="8" y1="11" x2="16" y2="11"></line><path d="M5 14a7 7 0 0 0 14 0"></path><path d="M5 14l-1.5-1"></path><path d="M19 14l1.5-1"></path></svg></span><span class="nav-lbl">CONDEF</span></button>
   <button class="nav-item" data-view="clg" title="Controle de CLG"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M6 21V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v15"></path><line x1="5" y1="21" x2="15" y2="21"></line><path d="M14 9h2a2 2 0 0 1 2 2v2.3a1.7 1.7 0 0 0 1.7 1.7"></path><path d="M18 6.5l1.6 1.6a1 1 0 0 1 .4.8V11"></path><line x1="8" y1="6" x2="12" y2="6"></line></svg></span><span class="nav-lbl">CLG</span></button>
@@ -1372,6 +1393,48 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
 </nav>
 <div id="toast-container"></div>
 <div id="splash" class="splash"><div class="splash-inner"><div class="splash-crest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" width="220" height="220"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,0.95)"/><stop offset="100%" stop-color="rgba(255,255,255,0.65)"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="3.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g filter="url(#glow)" fill="none" stroke="url(#ag)" stroke-linecap="round" stroke-linejoin="round"><circle cx="110" cy="55" r="18" stroke-width="7"/><line x1="110" y1="73" x2="110" y2="175" stroke-width="7"/><line x1="74" y1="95" x2="146" y2="95" stroke-width="7"/><path d="M74 175 Q54 155 52 130" stroke-width="7"/><path d="M146 175 Q166 155 168 130" stroke-width="7"/><path d="M52 130 Q60 148 74 155" stroke-width="7"/><path d="M168 130 Q160 148 146 155" stroke-width="7"/><path d="M74 155 Q92 170 110 175 Q128 170 146 155" stroke-width="7"/><circle cx="110" cy="55" r="5" fill="url(#ag)" stroke="none"/></g><g fill="rgba(255,255,255,0.18)"><circle cx="110" cy="55" r="10"/></g></svg></div><div class="splash-welcome">Bem-vindo à</div><div class="splash-title">Agenda Administrativa</div><div class="splash-sub">Carregando ambiente…</div><div class="splash-bar-wrap"><div class="splash-bar"><div class="splash-bar-fill" id="splashFill"></div></div><div class="splash-pct" id="splashPct">0%</div></div></div></div>
+<div class="wrap" id="viewDashboard" style="display:none;">
+<header>
+  <div class="brand">
+    <div class="crest" id="dash_hdr_crest" style="background:none"><span style="font-size:22px">📊</span></div>
+    <div><h1>Dashboard</h1><div class="sub">Painel Consolidado · Seção de Logística</div></div>
+  </div>
+  <div class="hright">
+    <button class="hbtn theme-toggle-btn">🌙 Noturno</button>
+    <button class="hbtn" id="dash_refresh_btn">↻ Atualizar</button>
+  </div>
+</header>
+
+<div class="dt-section-head"><h3 class="dt-table-title">Alertas do dia</h3></div>
+<div id="dash_alerts" style="margin-bottom:18px"></div>
+
+<div class="kpis" id="dash_kpis"></div>
+
+<div class="dt-table-row" style="margin-top:14px">
+  <div>
+    <div class="dt-section-head"><h3 class="dt-table-title">CONDEF — meios fora de operação plena</h3></div>
+    <div class="stats-card" id="dash_condef" style="flex:none"></div>
+  </div>
+  <div>
+    <div class="dt-section-head"><h3 class="dt-table-title">Motores — vencidos / próximos de revisão</h3></div>
+    <div class="stats-card" id="dash_horas" style="flex:none"></div>
+  </div>
+</div>
+
+<div class="dt-table-row" style="margin-top:14px">
+  <div>
+    <div class="dt-section-head"><h3 class="dt-table-title">Estoque CLG por meio</h3></div>
+    <div class="stats-card" id="dash_clg" style="flex:none"></div>
+  </div>
+  <div>
+    <div class="dt-section-head"><h3 class="dt-table-title">Militares disponíveis hoje</h3></div>
+    <div class="stats-card" id="dash_pessoal" style="flex:none"></div>
+  </div>
+</div>
+
+<div class="foot">Dashboard · painel somente leitura, consolidando dados das demais abas</div>
+</div>
+
 <div class="wrap" id="viewAgenda">
 <header>
   <div class="brand">
@@ -1466,6 +1529,12 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
   </table>
 </div>
 
+<div class="nv-toolbar" style="margin:2px 0 12px">
+  <button class="nv-editbtn" id="nv_tl_toggle">📈 Mostrar timeline de status (ano)</button>
+  <button class="nv-editbtn" id="nv_oper_btn">📊 Relatório de operacionalidade</button>
+</div>
+<div id="nv_tl_sec" hidden></div>
+
 <div class="nv-grid" id="nv_grid"></div>
 
 <div class="foot" id="nv_hdr_foot">Controle de CONDEF · dados transcritos do quadro físico SN-27.2 — versão inicial, sujeita a ajustes</div>
@@ -1499,11 +1568,20 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
 <div class="dt-table-wrap">
   <table class="dt-table" id="clg_t1_table">
     <thead id="clg_t1_thead"><tr>
-      <th>Meio</th><th>Capacidade</th><th>Estoque</th><th>ROP</th><th>Não<br>Aspirável</th><th class="dt-actions-col">Ações</th>
+      <th>Meio</th><th>Capacidade</th><th>Estoque</th><th>ROP</th><th>Não<br>Aspirável</th><th>Estoque<br>Mínimo</th><th class="dt-actions-col">Ações</th>
     </tr></thead>
     <tbody id="clg_t1_tbody"></tbody>
   </table>
 </div>
+
+<div class="dt-section-head"><h3 class="dt-table-title">Evolução do estoque — últimos 6 meses</h3></div>
+<div class="stats-card" id="clg_chart_card" style="margin-bottom:18px;flex:none">
+  <div class="flt-bar" style="margin-bottom:8px"><select id="clg_chart_meio"><option value="">Todos os meios</option></select></div>
+  <div id="clg_chart"></div>
+</div>
+
+<div class="dt-section-head"><h3 class="dt-table-title">Previsão de duração do estoque por meio</h3></div>
+<div class="stats-grid" id="clg_previsao"></div>
 
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Abastecimento de ODM dos Meios</h3><span class="last-edit" id="clg_t2_lastedit"></span></div>
@@ -1519,7 +1597,7 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
 <div class="dt-table-wrap">
   <table class="dt-table" id="clg_t2_table">
     <thead id="clg_t2_thead"><tr>
-      <th>Meio</th><th>Data</th><th>Quantidade</th><th>Local</th><th class="dt-actions-col">Ações</th>
+      <th>Meio</th><th>Data</th><th>Quantidade</th><th>Local</th><th>Recebeu</th><th class="dt-actions-col">Ações</th>
     </tr></thead>
     <tbody id="clg_t2_tbody"></tbody>
   </table>
@@ -1592,6 +1670,12 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
 <div class="tl-legend-top" id="horas_legend"></div>
 <div class="stats-card" id="horas_dash" style="margin-bottom:18px;flex:none"></div>
 
+<div class="dt-section-head"><h3 class="dt-table-title">Horas acumuladas — tendência por embarcação</h3></div>
+<div class="stats-card" id="horas_chart_card" style="margin-bottom:18px;flex:none">
+  <div class="flt-bar" style="margin-bottom:8px"><select id="horas_chart_ship"></select></div>
+  <div id="horas_chart"></div>
+</div>
+
 <div id="horas_tables_container"></div>
 
 <div class="foot">Motores · Horas de Funcionamento · dados transcritos do controle físico — versão inicial, sujeita a ajustes</div>
@@ -1610,6 +1694,15 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
     <button class="hbtn theme-toggle-btn">🌙 Noturno</button>
   </div>
 </header>
+
+<div class="dt-section-head">
+  <h3 class="dt-table-title">Calendário de disponibilidade — mês atual</h3>
+  <div class="nv-toolbar">
+    <button class="nv-editbtn" id="pessoal_escala_btn">🗓 Gerar escala automática</button>
+  </div>
+</div>
+<div class="stats-card" id="pessoal_disp_cal" style="margin-bottom:14px;flex:none"></div>
+<div id="pessoal_overlap_alert"></div>
 
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Militares do Departamento</h3><span class="last-edit" id="pessoal_tbl_lastedit"></span></div>
@@ -1733,6 +1826,7 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
   <select id="gar_f_sit"><option value="">Todas as situações</option><option value="P">P</option><option value="PO">PO</option><option value="IM">IM</option></select>
   <input id="gar_f_q" placeholder="🔍 Pesquisar placa, modelo, NIV, observação...">
   <button class="nv-editbtn" id="gar_import_btn">⬆ Importar planilha</button>
+  <button class="nv-editbtn" id="gar_report_btn">📋 Relatório mensal</button>
 </div>
 
 <div class="dt-section-head"><h3 class="dt-table-title">Frota</h3><button class="nv-editbtn" id="uso_open_btn">+ Uso da viatura</button></div>
@@ -1921,6 +2015,7 @@ var clgInit,renderClgTables,renderClgCards,appSwitchTab;
 var clgGetState,clgSetState,navGetState,navSetState,horasGetState,horasSetState,horasInit,renderHoras;
 var pessoalInit,renderPessoal,pessoalGetState,pessoalSetState;
 var ppssInit,renderPpss,garInit,renderGaragem;
+var dashInit;
 // Cadeado de edição compartilhado por TODAS as abas (Navios/CLG/Horas/Pessoal): enquanto qualquer
 // tabela ou cartão estiver em edição não salva, nenhuma outra seção do app pode iniciar edição —
 // evita sobreposição de dados entre abas. Cada módulo só troca seu cadeado local por este.
@@ -1945,6 +2040,15 @@ var SB_TABLE=SB_URL+"/rest/v1/agenda_data";
 // Setar: localStorage.setItem('aa_backend_override','supabase'); depois recarregar a página.
 // Voltar ao normal: localStorage.removeItem('aa_backend_override'); recarregar de novo.
 var BACKEND_OVERRIDE=localStorage.getItem("aa_backend_override")||null;
+/* Fora do iframe do artifact não existe window.storage (bridge) — em modo local, persiste no localStorage. */
+if(!window.storage){
+  window.storage={
+    get:async function(k){var v=localStorage.getItem(k);return v==null?null:{key:k,value:v};},
+    set:async function(k,v){localStorage.setItem(k,String(v));},
+    delete:async function(k){localStorage.removeItem(k);},
+    list:async function(prefix){return Object.keys(localStorage).filter(function(k){return!prefix||k.indexOf(prefix)===0;}).map(function(k){return{key:k,value:localStorage.getItem(k)};});}
+  };
+}
 function sbHeaders(extra){var h={apikey:SB_KEY,Authorization:"Bearer "+SB_KEY};if(extra)Object.assign(h,extra);return h;}
 function bkSynced(){return bk==="supabase";}
 
@@ -2309,6 +2413,33 @@ function compressIconFile(file,maxDim,quality){
 /* ── Compartilhado: CLG/Navios usam estes helpers para evitar duplicação de módulo ── */
 var _uidSeq=1;
 function genUid(prefix){return prefix+"_"+Date.now().toString(36)+"_"+(_uidSeq++);}
+/* Datas dd/mm[/aaaa] → Date (helpers compartilhados pelas abas de controle) */
+function parseBRDate(s){
+  var m=String(s||"").trim().match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+  if(!m)return null;
+  var d=+m[1],mo=+m[2]-1,y=m[3]?+m[3]:(new Date()).getFullYear();
+  if(y<100)y+=2000;
+  if(mo<0||mo>11||d<1||d>31)return null;
+  var dt=new Date(y,mo,d);dt.setHours(0,0,0,0);
+  return isNaN(dt.getTime())?null:dt;
+}
+function daysUntil(s){
+  var dt=parseBRDate(s);
+  if(!dt)return null;
+  var t=new Date();t.setHours(0,0,0,0);
+  return Math.round((dt-t)/86400000);
+}
+/* Modal genérico injetado sob demanda (relatórios etc.) — reutiliza classes .mbg/.modal */
+function ensureModal(id,title){
+  var bg=document.getElementById(id);
+  if(bg){bg.querySelector(".mh h3").textContent=title;return bg;}
+  bg=document.createElement("div");bg.className="mbg";bg.id=id;
+  bg.innerHTML='<div class="modal wide"><div class="mh"><h3></h3><button class="mx" data-close="1">✕</button></div><div class="mbody"></div></div>';
+  document.body.appendChild(bg);
+  bg.querySelector(".mh h3").textContent=title;
+  bg.addEventListener("click",function(e){if(e.target===bg||e.target.dataset.close)bg.classList.remove("open");});
+  return bg;
+}
 async function pushKV(label,key,data){try{await svs(key,data);}catch(e){console.error(label,e);}}
 function reorderByIds(arr,ids){var byId={};arr.forEach(function(x){byId[x.id]=x;});return ids.map(function(id){return byId[id];}).filter(Boolean);}
 function cloneCols(cols){return cols.map(function(c){return Object.assign({},c);});}
@@ -2594,6 +2725,39 @@ function svgDonutChart(pairs){
   }).join("");
   var legend=pairs.map(function(p,i){return '<div style="display:flex;align-items:center;gap:6px;font-size:11px;margin-top:4px"><span style="width:9px;height:9px;border-radius:50%;background:'+CHART_PALETTE[i%CHART_PALETTE.length]+';flex:none"></span>'+esc(p.k)+' ('+p.v+')</div>';}).join("");
   return '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><svg viewBox="0 0 100 100" width="110" height="110">'+segs+'</svg><div>'+legend+'</div></div>';
+}
+/* Gráfico de linhas SVG genérico. series: [{name, points:[{t:msEpoch, v:número}]}]. opts.fmtY formata o eixo Y. */
+function svgLineChart(series,opts){
+  opts=opts||{};
+  var pts=[];series.forEach(function(s){(s.points||[]).forEach(function(p){pts.push(p);});});
+  if(!pts.length)return '<div style="font-size:11px;color:var(--text3);font-style:italic;padding:8px 0">Sem dados suficientes ainda.</div>';
+  var minT=Math.min.apply(null,pts.map(function(p){return p.t;})),maxT=Math.max.apply(null,pts.map(function(p){return p.t;}));
+  var minV=Math.min.apply(null,pts.map(function(p){return p.v;})),maxV=Math.max.apply(null,pts.map(function(p){return p.v;}));
+  if(maxT===minT)maxT=minT+86400000;
+  if(maxV===minV)maxV=minV+1;
+  var W=600,H=220,L=56,R=12,T=12,B=26;
+  function X(t){return L+(t-minT)/(maxT-minT)*(W-L-R);}
+  function Y(v){return T+(1-(v-minV)/(maxV-minV))*(H-T-B);}
+  var fmtY=opts.fmtY||function(v){return String(Math.round(v));};
+  function fmtX(t){var d=new Date(t);return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0");}
+  var grid="",gi;
+  for(gi=0;gi<3;gi++){
+    var gv=minV+(maxV-minV)*gi/2,gy=Y(gv);
+    grid+='<line x1="'+L+'" y1="'+gy+'" x2="'+(W-R)+'" y2="'+gy+'" stroke="var(--border)" stroke-width="1"></line>'+
+      '<text x="'+(L-6)+'" y="'+(gy+3)+'" text-anchor="end" font-size="9" fill="var(--text3)">'+esc(fmtY(gv))+'</text>';
+  }
+  grid+='<text x="'+L+'" y="'+(H-8)+'" font-size="9" fill="var(--text3)">'+fmtX(minT)+'</text>'+
+        '<text x="'+(W-R)+'" y="'+(H-8)+'" text-anchor="end" font-size="9" fill="var(--text3)">'+fmtX(maxT)+'</text>';
+  var lines=series.map(function(s,si){
+    var c=CHART_PALETTE[si%CHART_PALETTE.length];
+    var sp=(s.points||[]).slice().sort(function(a,b){return a.t-b.t;});
+    if(!sp.length)return"";
+    var d=sp.map(function(p){return X(p.t).toFixed(1)+","+Y(p.v).toFixed(1);}).join(" ");
+    var dots=sp.map(function(p){return '<circle cx="'+X(p.t).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="2.6" fill="'+c+'"><title>'+esc(s.name)+' — '+fmtX(p.t)+': '+esc(fmtY(p.v))+'</title></circle>';}).join("");
+    return '<polyline points="'+d+'" fill="none" stroke="'+c+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline>'+dots;
+  }).join("");
+  var legend2='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">'+series.map(function(s,si){return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:var(--text2)"><span style="width:10px;height:3px;border-radius:2px;background:'+CHART_PALETTE[si%CHART_PALETTE.length]+'"></span>'+esc(s.name)+'</span>';}).join("")+'</div>';
+  return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">'+grid+lines+'</svg>'+legend2;
 }
 
 /* ── Importador de planilha (CSV) com confirmação — genérico.
@@ -4535,12 +4699,213 @@ setTimeout(hideSplash,12000);
     try{nc=await gtj(NAVIOS_COLS_KEY);}catch(e){}
     if(!nc||!nc.length){try{nc=JSON.parse(localStorage.getItem(NAVIOS_COLS_KEY));}catch(e){}}
     navCols=migrateCols(nc,NAVIOS_FIXED,navShips);
+    var seeded=false;
+    navShips.forEach(function(sh){if(!sh.stHist||!sh.stHist.length){sh.stHist=[{st:sh.condef||"",ts:nowISO()}];seeded=true;}});
+    if(seeded)pushKV("navPush",NAVIOS_KEY,navShips);
+    await navLoadPpss();
     navSaveShips();navSaveCards();navSaveCols();
   }
   function navSaveShips(){try{localStorage.setItem(NAVIOS_KEY,JSON.stringify(navShips));}catch(e){}}
   function navSaveCols(){try{localStorage.setItem(NAVIOS_COLS_KEY,JSON.stringify(navCols));}catch(e){}}
   function navSaveCards(){try{localStorage.setItem(NAVIOS_CARDS_KEY,JSON.stringify(navCards));}catch(e){}}
   var NAV_ROWBG={red:"rgba(168,85,75,.13)",yellow:"rgba(216,178,58,.18)",green:"rgba(85,122,102,.15)"};
+  /* ── Melhorias de operador: alerta de prazo, dias no status, link PPSS, timeline, operacionalidade ── */
+  var NAV_AUTOBG={warn:"rgba(233,150,53,.24)",over:"rgba(168,85,75,.16)"};
+  var NAV_ST_COLORS={IM:"#a8554b",IO:"#d8b23a",P:"#41618c",PO:"#557a66"};
+  var NAV_ST_LABELS={IM:"IM — Impossibilitado de manobrar",IO:"IO — Impossibilitado de operar",P:"P — Pronto",PO:"PO — Operando com restrição"};
+  function navParseDate(s){
+    var m=String(s||"").trim().match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+    if(!m)return null;
+    var d=+m[1],mo=+m[2]-1,y=m[3]?+m[3]:CUR_YEAR;
+    if(y<100)y+=2000;
+    if(mo<0||mo>11||d<1||d>31)return null;
+    var dt=new Date(y,mo,d);dt.setHours(0,0,0,0);
+    return isNaN(dt.getTime())?null:dt;
+  }
+  function navPrevAlert(n){
+    var dt=navParseDate(n.previsao);
+    if(!dt)return"";
+    var diff=Math.round((dt-TODAY)/86400000);
+    if(diff<0)return"over";
+    if(diff<=7)return"warn";
+    return"";
+  }
+  function navTrackStatusChanges(before){
+    var bmap={};(before||[]).forEach(function(s){bmap[s.id]=s;});
+    navShips.forEach(function(s){
+      if(!s.stHist||!s.stHist.length){s.stHist=[{st:s.condef||"",ts:nowISO()}];return;}
+      var b=bmap[s.id];
+      var prev=b?(b.condef||""):(s.stHist[s.stHist.length-1].st||"");
+      if(prev!==(s.condef||""))s.stHist.push({st:s.condef||"",ts:nowISO()});
+    });
+  }
+  function navDaysInStatus(s){
+    var h=s.stHist;
+    if(!h||!h.length)return null;
+    var last=h[h.length-1];
+    if((last.st||"")!==(s.condef||""))return 0;
+    var t0=new Date(last.ts);t0.setHours(0,0,0,0);
+    return Math.max(0,Math.round((TODAY-t0)/86400000));
+  }
+  /* Cache local dos PPSS (mesma chave da aba PPSS) para exibir/gerir vínculos restrição↔PPSS */
+  var navPpssCache=[];
+  async function navLoadPpss(){
+    var p=null;
+    try{p=await gtj("aa_ppss_v1");}catch(e){}
+    if(!p||!p.length){try{p=JSON.parse(localStorage.getItem("aa_ppss_v1"));}catch(e){}}
+    navPpssCache=(p&&p.length)?p:[];
+  }
+  function navPpssById(id){return navPpssCache.find(function(r){return r.id===id;})||null;}
+  function normNm(s){return String(s||"").toLowerCase().normalize("NFD").replace(/[^a-z0-9]/g,"");}
+  function navPaintExtras(){
+    navShips.forEach(function(s){
+      var sel=document.querySelector('#nv_tbody .nv-condef[data-id="'+s.id+'"]');
+      if(sel&&s.condef){
+        var d=navDaysInStatus(s);
+        if(d!==null){var lb=document.createElement("div");lb.className="nv-stdays";lb.textContent="há "+d+(d===1?" dia":" dias");sel.parentNode.appendChild(lb);}
+      }
+      var ptd=document.querySelector('#nv_tbody td[data-id="'+s.id+'"][data-key="previsao"]');
+      var al=navPrevAlert(s);
+      if(ptd&&al){
+        var h=document.createElement("div");h.className="nv-stdays";
+        h.style.color=al==="over"?"var(--c-red)":"#b96a10";
+        h.textContent=al==="over"?"⚠ prazo vencido":"⚠ vence em ≤ 7 dias";
+        ptd.appendChild(h);
+      }
+      var rtd=document.querySelector('#nv_tbody td[data-id="'+s.id+'"][data-key="restricao"]');
+      if(rtd){
+        rtd.classList.add("nv-restr-link");
+        rtd.title="Clique para vincular esta restrição a um PPSS";
+        if(s.ppssLink){
+          var p=navPpssById(s.ppssLink);
+          var b=document.createElement("div");b.className="nv-ppss-badge";
+          b.textContent="🔗 PPSS "+(p?("Nº "+(p.numero||"—")+(p.situacao?" · "+p.situacao:"")):"(não encontrado)");
+          rtd.appendChild(b);
+        }
+      }
+    });
+  }
+  function navEnsureModal(id,title){
+    var bg=document.getElementById(id);
+    if(bg){bg.querySelector(".mh h3").textContent=title;return bg;}
+    bg=document.createElement("div");bg.className="mbg";bg.id=id;
+    bg.innerHTML='<div class="modal wide"><div class="mh"><h3></h3><button class="mx" data-close="1">✕</button></div><div class="mbody"></div></div>';
+    document.body.appendChild(bg);
+    bg.querySelector(".mh h3").textContent=title;
+    bg.addEventListener("click",function(e){if(e.target===bg||e.target.dataset.close)bg.classList.remove("open");});
+    return bg;
+  }
+  function navOpenPpssPicker(ship){
+    var bg=navEnsureModal("nvppssBg","Vincular restrição a um PPSS");
+    var body=bg.querySelector(".mbody");
+    var shipN=normNm(ship.nome);
+    var list=navPpssCache.slice().sort(function(a,b){
+      var am=shipN&&normNm(a.navio).indexOf(shipN)>=0?0:1;
+      var bm=shipN&&normNm(b.navio).indexOf(shipN)>=0?0:1;
+      return am-bm;
+    });
+    var cur=ship.ppssLink||"";
+    var head='<div style="font-size:12px;color:var(--text2);margin-bottom:10px"><b>'+esc(ship.nome||"—")+'</b> — restrição: <i>'+esc(ship.restricao||"—")+'</i></div>';
+    var items=list.length?list.map(function(p){
+      var match=shipN&&normNm(p.navio).indexOf(shipN)>=0;
+      return '<div class="ps-item" data-pid="'+p.id+'" style="'+(p.id===cur?"box-shadow:0 0 0 2px var(--c-blue) inset;":"")+'">'+
+        '<div class="ps-main"><div class="ps-num">'+esc(p.navio||"—")+(match?' <span style="color:var(--c-teal)">• mesmo meio</span>':'')+'</div>'+
+        '<div class="ps-desc">Nº '+esc(p.numero||"—")+' — '+esc(p.descricao||"—")+'</div>'+
+        '<div class="ps-meta">'+esc(p.tipo||"")+(p.situacao?" · "+esc(p.situacao):"")+(p.omps?" · OMPS: "+esc(p.omps):"")+'</div></div>'+
+        (p.id===cur?'<span class="sit-badge" style="background:var(--c-blue)">VINCULADO</span>':'')+
+      '</div>';
+    }).join(""):'<div class="spot-empty">Nenhum PPSS cadastrado na aba PPSS ainda.</div>';
+    var foot='<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">'+
+      (cur?'<button class="nv-editbtn" id="nvppss_detail">Ver detalhes do PPSS</button>':'')+
+      (cur?'<button class="nv-cancelbtn" id="nvppss_unlink">✕ Remover vínculo</button>':'')+
+      '</div>';
+    body.innerHTML=head+'<div style="max-height:46vh;overflow-y:auto">'+items+'</div>'+foot;
+    body.querySelectorAll(".ps-item").forEach(function(el){
+      el.onclick=function(){navSetPpssLink(ship,el.dataset.pid);bg.classList.remove("open");};
+    });
+    var un=document.getElementById("nvppss_unlink");
+    if(un)un.onclick=function(){navSetPpssLink(ship,"");bg.classList.remove("open");};
+    var det=document.getElementById("nvppss_detail");
+    if(det)det.onclick=function(){
+      var p=navPpssById(cur);
+      bg.classList.remove("open");
+      if(p)openDetailDrawer("ppss",p,[{key:"navio",title:"Navio"},{key:"tipo",title:"Tipo"},{key:"numero",title:"Nº"},{key:"descricao",title:"Descrição"},{key:"omps",title:"OMPS"},{key:"ds",title:"DS"},{key:"orcamento",title:"Orçamento FR-170"},{key:"situacao",title:"Situação"}]);
+    };
+    bg.classList.add("open");
+  }
+  async function navSetPpssLink(ship,pid){
+    ship.ppssLink=pid||"";
+    navSaveShips();
+    await pushKV("navPush",NAVIOS_KEY,navShips);
+    auditPushOne("navios_table",ship.id,pid?"vínculo PPSS definido":"vínculo PPSS removido");
+    touchLastEdit("navios_table");
+    toast(pid?"🔗 Restrição vinculada ao PPSS":"Vínculo removido","ok");
+    renderNavios();
+  }
+  function navSegsForYear(s){
+    var y=CUR_YEAR,start=new Date(y,0,1),endYear=new Date(y+1,0,1);
+    var now=new Date(TODAY.getTime()+86400000);
+    var end=now<endYear?now:endYear;
+    var h=(s.stHist||[]).slice().map(function(e){return{st:e.st||"",t:new Date(e.ts)};}).sort(function(a,b){return a.t-b.t;});
+    if(!h.length)return[{st:null,from:start,to:end}];
+    var segs=[];
+    var first=h[0].t;
+    if(first>start)segs.push({st:null,from:start,to:(first<end?first:end)});
+    for(var i=0;i<h.length;i++){
+      var from=h[i].t<start?start:h[i].t;
+      var to=(i+1<h.length)?h[i+1].t:end;
+      if(to<=start||from>=end)continue;
+      if(to>end)to=end;
+      if(from<to)segs.push({st:h[i].st,from:from,to:to});
+    }
+    return segs;
+  }
+  function navRenderTimeline(){
+    var el=document.getElementById("nv_tl_sec");
+    if(!el)return;
+    var y=CUR_YEAR,totalMs=new Date(y+1,0,1)-new Date(y,0,1);
+    var legend='<div class="nv-tl-legend">'+Object.keys(NAV_ST_COLORS).map(function(k){return'<span><span class="nv-tl-dot" style="background:'+NAV_ST_COLORS[k]+'"></span>'+NAV_ST_LABELS[k]+'</span>';}).join("")+'<span><span class="nv-tl-dot" style="background:#c9c9c2"></span>Sem registro</span></div>';
+    var months='<div class="nv-tl-months">'+MONTHS.map(function(m){return"<span>"+m+"</span>";}).join("")+'</div>';
+    var rows=navShips.map(function(s){
+      var segs=navSegsForYear(s);
+      var strip=segs.map(function(g){
+        var w=((g.to-g.from)/totalMs*100).toFixed(2);
+        var c=g.st===null?"#c9c9c2":(NAV_ST_COLORS[g.st]||"#c9c9c2");
+        var lbl=(g.st===null?"Sem registro":(g.st||"—"))+" · "+fmtD(g.from)+" a "+fmtD(new Date(g.to.getTime()-86400000));
+        return '<div class="nv-tl-seg" style="width:'+w+'%;background:'+c+'" title="'+esc(lbl)+'"></div>';
+      }).join("");
+      return '<div class="nv-tl-row"><div class="nv-tl-name" title="'+esc(s.nome||"")+'">'+esc(s.nome||"—")+'</div><div class="nv-tl-strip">'+strip+'</div></div>';
+    }).join("");
+    el.innerHTML='<div class="nv-tl-wrap"><h3 class="dt-table-title">Timeline de status — '+y+'</h3>'+legend+months+rows+
+      '<div style="font-size:10px;color:var(--text3);margin-top:10px;font-style:italic">O histórico é registrado automaticamente a cada mudança de CONDEF salva na tabela. Períodos anteriores ao início do registro aparecem como “Sem registro”.</div></div>';
+  }
+  function navOperReport(){
+    var bg=navEnsureModal("nvoperBg","Relatório de operacionalidade — "+CUR_YEAR);
+    var body=bg.querySelector(".mbody");
+    var rows=navShips.map(function(s){
+      var segs=navSegsForYear(s),acc={IM:0,IO:0,P:0,PO:0,unk:0};
+      segs.forEach(function(g){
+        var days=Math.round((g.to-g.from)/86400000);
+        if(g.st===null||!(g.st in acc))acc.unk+=days;else acc[g.st]+=days;
+      });
+      var known=acc.IM+acc.IO+acc.P+acc.PO;
+      var oper=acc.P+acc.PO;
+      var pct=known?Math.round(oper/known*100):null;
+      return{nome:s.nome||"—",acc:acc,pct:pct};
+    });
+    body.innerHTML='<div class="dt-table-wrap" style="margin-bottom:0"><table class="dt-table" style="min-width:0"><thead><tr><th>Meio</th><th>P</th><th>PO</th><th>IO</th><th>IM</th><th>Sem registro</th><th>% Operacional</th></tr></thead><tbody>'+
+      rows.map(function(r){
+        var cls=r.pct===null?"":(r.pct>=70?"row-ok":(r.pct>=40?"row-warn":"row-bad"));
+        return '<tr class="'+cls+'"><td>'+esc(r.nome)+'</td><td>'+r.acc.P+'</td><td>'+r.acc.PO+'</td><td>'+r.acc.IO+'</td><td>'+r.acc.IM+'</td><td>'+r.acc.unk+'</td><td><b>'+(r.pct===null?"—":r.pct+"%")+'</b></td></tr>';
+      }).join("")+'</tbody></table></div>'+
+      '<div style="font-size:10px;color:var(--text3);margin-top:8px;font-style:italic">Dias contados de 01/01/'+CUR_YEAR+' até hoje, a partir do histórico registrado. “% Operacional” = (P + PO) ÷ dias com registro.</div>'+
+      '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="nv-editbtn" id="nvoper_csv">⬇ Exportar CSV</button></div>';
+    document.getElementById("nvoper_csv").onclick=function(){
+      var csv="Meio;P;PO;IO;IM;Sem registro;% Operacional\n"+rows.map(function(r){return[r.nome,r.acc.P,r.acc.PO,r.acc.IO,r.acc.IM,r.acc.unk,(r.pct===null?"":r.pct+"%")].join(";");}).join("\n");
+      trigDL("operacionalidade_"+CUR_YEAR+".csv","\uFEFF"+csv,"text/csv;charset=utf-8");
+    };
+    bg.classList.add("open");
+  }
   function navColorTd(id,val,editing){
     if(!editing)return '<td class="nv-actions nv-actions-col"></td>';
     var opts=[["","Sem cor"],["red","Vermelha"],["yellow","Amarela"],["green","Verde"]];
@@ -4561,7 +4926,8 @@ setTimeout(hideSplash,12000);
     renderThead(document.getElementById("nv_thead"),navCols,editing,"nv-actions-col",false,NAVIOS_FIXED_KEYS);
     var colspan=navCols.length+1;
     tb.innerHTML=navShips.map(function(n){
-      var bg=NAV_ROWBG[n.rowColor];
+      var auto=navPrevAlert(n);
+      var bg=NAV_ROWBG[n.rowColor]||(auto?NAV_AUTOBG[auto]:"");
       return '<tr'+(bg?' style="--rowbg:'+bg+'"':'')+(editing?' data-rid="'+n.id+'"':'')+'>'+
         navCols.map(function(col){return colTd(n,col,editing,"nv-cell","nv-cell-ro");}).join("")+
         navColorTd(n.id,n.rowColor,editing)+
@@ -4570,6 +4936,7 @@ setTimeout(hideSplash,12000);
     navUpdateTableToolbar();
     navUpdateSyncTag();
     if(editing)bindRowDragGeneric(tb,function(){return navShips;},renderNavios,function(){navTableDirty=true;});
+    if(!editing)navPaintExtras();
   }
   function navUpdateSyncTag(){
     var tag=document.getElementById("nv_synctag");
@@ -4687,6 +5054,7 @@ setTimeout(hideSplash,12000);
     document.getElementById("nv_table_save").onclick=async function(){
       if(!navTableDirty)return;
       var preTbl=navTableSnapshot,preCols=navColsSnapshot;
+      navTrackStatusChanges(preTbl);
       navSaveShips();navSaveCols();
       await pushKV("navPush",NAVIOS_KEY,navShips);
       await pushKV("navPush",NAVIOS_COLS_KEY,navCols);
@@ -4697,6 +5065,20 @@ setTimeout(hideSplash,12000);
       toast("✓ Embarcações salvas","ok");
       renderNavios();renderNaviosCards();
     };
+    tbody.addEventListener("click",function(e){
+      if(navTableEditing)return;
+      var td=e.target.closest&&e.target.closest('td[data-key="restricao"]');
+      if(!td)return;
+      var ship=navFindShip(td.dataset.id);
+      if(ship)navOpenPpssPicker(ship);
+    });
+    document.getElementById("nv_tl_toggle").onclick=function(){
+      var sec=document.getElementById("nv_tl_sec");
+      sec.hidden=!sec.hidden;
+      this.textContent=sec.hidden?"📈 Mostrar timeline de status (ano)":"📈 Ocultar timeline de status";
+      if(!sec.hidden)navRenderTimeline();
+    };
+    document.getElementById("nv_oper_btn").onclick=navOperReport;
     wireCardsGrid({gridId:"nv_grid",addcardId:"nv_addcard",st:navCardSt,
       getCards:function(){return navCards;},setCards:function(v){navCards=v;},
       save:navSaveCards,pushTag:"navPush",key:function(){return NAVIOS_CARDS_KEY;},
@@ -4704,7 +5086,7 @@ setTimeout(hideSplash,12000);
   }
   var APPVIEW_KEY="aa_appview";
   function switchAppView(view){
-    var va=document.getElementById("viewAgenda"),vn=document.getElementById("viewNavios"),vc=document.getElementById("viewCLG"),vo=document.getElementById("viewConfigOM"),vh=document.getElementById("viewHoras"),vp=document.getElementById("viewPessoal"),vpp=document.getElementById("viewPpss"),vg=document.getElementById("viewGaragem");
+    var va=document.getElementById("viewAgenda"),vn=document.getElementById("viewNavios"),vc=document.getElementById("viewCLG"),vo=document.getElementById("viewConfigOM"),vh=document.getElementById("viewHoras"),vp=document.getElementById("viewPessoal"),vpp=document.getElementById("viewPpss"),vg=document.getElementById("viewGaragem"),vd=document.getElementById("viewDashboard");
     if(!va||!vn)return;
     va.style.display=view==="agenda"?"":"none";
     vn.style.display=view==="navios"?"":"none";
@@ -4714,14 +5096,16 @@ setTimeout(hideSplash,12000);
     if(vp)vp.style.display=view==="pessoal"?"":"none";
     if(vpp)vpp.style.display=view==="ppss"?"":"none";
     if(vg)vg.style.display=view==="garagem"?"":"none";
+    if(vd)vd.style.display=view==="dashboard"?"":"none";
     document.querySelectorAll(".nav-item").forEach(function(b){b.classList.toggle("active",b.dataset.view===view);});
     try{localStorage.setItem(APPVIEW_KEY,view);}catch(e){}
-    if(view==="navios"){navInit().then(function(){renderNavios();renderNaviosCards();});}
+    if(view==="navios"){navInit().then(function(){return navLoadPpss();}).then(function(){renderNavios();renderNaviosCards();});}
     if(view==="clg"&&typeof clgInit==="function"){clgInit().then(function(){renderClgTables();renderClgCards();});}
     if(view==="horas"&&typeof horasInit==="function"){horasInit().then(renderHoras);}
     if(view==="pessoal"&&typeof pessoalInit==="function"){pessoalInit().then(renderPessoal);}
     if(view==="ppss"&&typeof ppssInit==="function"){ppssInit().then(renderPpss);}
     if(view==="garagem"&&typeof garInit==="function"){garInit().then(renderGaragem);}
+    if(view==="dashboard"&&typeof dashInit==="function"){dashInit();}
     if(view==="config"&&typeof fillConfigOMForm==="function")fillConfigOMForm();
   }
   appSwitchTab=switchAppView;
@@ -4743,8 +5127,20 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
 (function(){
   var CLG_T1_KEY="aa_clg_t1_v1",CLG_T2_KEY="aa_clg_t2_v1",CLG_CARDS_KEY="aa_clg_cards_v1";
   var CLG_T1_COLS_KEY="aa_clg_t1_cols_v1",CLG_T2_COLS_KEY="aa_clg_t2_cols_v1";
-  var CLG_T1_FIXED=[{key:"meio",title:"Meio"},{key:"capacidade",title:"Capacidade"},{key:"estoque",title:"Estoque"},{key:"rop",title:"ROP"},{key:"naoAsp",title:"Não Aspirável"}];
-  var CLG_T2_FIXED=[{key:"meio",title:"Meio"},{key:"data",title:"Data"},{key:"quantidade",title:"Quantidade"},{key:"local",title:"Local"}];
+  var CLG_T1_FIXED=[{key:"meio",title:"Meio"},{key:"capacidade",title:"Capacidade"},{key:"estoque",title:"Estoque"},{key:"rop",title:"ROP"},{key:"naoAsp",title:"Não Aspirável"},{key:"estoqueMin",title:"Estoque Mínimo"}];
+  var CLG_T2_FIXED=[{key:"meio",title:"Meio"},{key:"data",title:"Data"},{key:"quantidade",title:"Quantidade"},{key:"local",title:"Local"},{key:"recebeu",title:"Recebeu"}];
+  /* Colunas salvas em versões antigas não trazem os campos novos — insere na posição correta. */
+  function clgReconcileCols(cols,rows,need){
+    need.forEach(function(n){
+      if(!cols.some(function(c){return c.key===n[0];})){
+        var idx=cols.map(function(c){return c.key;}).indexOf(n[2]);
+        var col={key:n[0],title:n[1]};
+        if(idx>=0)cols.splice(idx+1,0,col);else cols.push(col);
+      }
+    });
+    rows.forEach(function(r){need.forEach(function(n){if(r[n[0]]===undefined)r[n[0]]="";});});
+    return cols;
+  }
   var CLG_T1_FIXED_KEYS=CLG_T1_FIXED.map(function(c){return c.key;});
   var CLG_T2_FIXED_KEYS=CLG_T2_FIXED.map(function(c){return c.key;});
   function clgT1ColsDefault(){return CLG_T1_FIXED.map(function(c){return{key:c.key,title:c.title};});}
@@ -4775,10 +5171,10 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     clgT2=(t2&&t2.length)?t2:[];
     try{t1c=await gtj(CLG_T1_COLS_KEY);}catch(e){}
     if(!t1c||!t1c.length){try{t1c=JSON.parse(localStorage.getItem(CLG_T1_COLS_KEY));}catch(e){}}
-    clgT1Cols=migrateCols(t1c,CLG_T1_FIXED,clgT1);
+    clgT1Cols=clgReconcileCols(migrateCols(t1c,CLG_T1_FIXED,clgT1),clgT1,[["estoqueMin","Estoque Mínimo","naoAsp"]]);
     try{t2c=await gtj(CLG_T2_COLS_KEY);}catch(e){}
     if(!t2c||!t2c.length){try{t2c=JSON.parse(localStorage.getItem(CLG_T2_COLS_KEY));}catch(e){}}
-    clgT2Cols=migrateCols(t2c,CLG_T2_FIXED,clgT2);
+    clgT2Cols=clgReconcileCols(migrateCols(t2c,CLG_T2_FIXED,clgT2),clgT2,[["recebeu","Recebeu","local"]]);
     try{c=await gtj(CLG_CARDS_KEY);}catch(e){}
     if(!c||!c.length){try{c=JSON.parse(localStorage.getItem(CLG_CARDS_KEY));}catch(e){}}
     clgCards=(c&&c.length)?c:[];
@@ -4810,6 +5206,73 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       editBtn.disabled=!!lockedByOther;
     }
   }
+  /* ── Histórico de estoque (uma leitura por meio/dia, só quando muda) → gráfico de evolução 6 meses ── */
+  var CLG_HIST_KEY="aa_clg_estoque_hist_v1";
+  var clgHist={};
+  async function clgLoadHist(){
+    var h=null;
+    try{h=await gtj(CLG_HIST_KEY);}catch(e){}
+    if(!h){try{h=JSON.parse(localStorage.getItem(CLG_HIST_KEY));}catch(e){}}
+    clgHist=h||{};
+  }
+  function clgSaveHist(){
+    try{localStorage.setItem(CLG_HIST_KEY,JSON.stringify(clgHist));}catch(e){}
+    pushKV("clgPush",CLG_HIST_KEY,clgHist);
+  }
+  function clgLogEstoque(){
+    var day=new Date();day.setHours(0,0,0,0);
+    var t=day.getTime(),changed=false;
+    clgT1.forEach(function(r){
+      var v=clgNum(r.estoque);
+      if(isNaN(v))return;
+      var arr=clgHist[r.id]||(clgHist[r.id]=[]);
+      var last=arr[arr.length-1];
+      if(last&&last.t===t){if(last.v!==v){last.v=v;changed=true;}return;}
+      if(last&&last.v===v)return;
+      arr.push({t:t,v:v});changed=true;
+      if(arr.length>200)arr.splice(0,arr.length-200);
+    });
+    if(changed)clgSaveHist();
+  }
+  function clgRenderChart(){
+    var sel=document.getElementById("clg_chart_meio"),box=document.getElementById("clg_chart");
+    if(!sel||!box)return;
+    if(sel.options.length<=1){
+      sel.innerHTML='<option value="">Todos os meios</option>'+clgT1.map(function(r){return '<option value="'+r.id+'">'+esc(r.meio||"—")+'</option>';}).join("");
+      sel.onchange=clgRenderChart;
+    }
+    var cutoff=new Date();cutoff.setMonth(cutoff.getMonth()-6);cutoff.setHours(0,0,0,0);
+    var rows=sel.value?clgT1.filter(function(r){return r.id===sel.value;}):clgT1;
+    var series=rows.map(function(r){
+      var pts=(clgHist[r.id]||[]).filter(function(p){return p.t>=cutoff.getTime();}).map(function(p){return{t:p.t,v:p.v};});
+      return{name:r.meio||"—",points:pts};
+    }).filter(function(x){return x.points.length;});
+    box.innerHTML=svgLineChart(series,{fmtY:function(v){return v.toLocaleString("pt-BR");}});
+  }
+  /* ── Previsão de duração do estoque por meio, a partir do consumo médio diário registrado no histórico ── */
+  function clgPrevisaoFor(r){
+    var arr=(clgHist[r.id]||[]).slice().sort(function(a,b){return a.t-b.t;});
+    if(arr.length<2)return null;
+    var first=arr[0],last=arr[arr.length-1];
+    var days=(last.t-first.t)/86400000;
+    if(days<=0)return null;
+    var consumoDiario=(first.v-last.v)/days;
+    if(consumoDiario<=0)return null;
+    var estAtual=clgNum(r.estoque);
+    if(isNaN(estAtual))return null;
+    return Math.max(0,Math.round(estAtual/consumoDiario));
+  }
+  function clgRenderPrevisao(){
+    var el=document.getElementById("clg_previsao");
+    if(!el)return;
+    if(!clgT1.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);font-style:italic">Nenhum meio cadastrado no Estoque de ODM.</div>';return;}
+    el.innerHTML=clgT1.map(function(r){
+      var dias=clgPrevisaoFor(r);
+      var txt=dias===null?"Dados insuficientes (é preciso registrar ao menos 2 leituras de estoque em datas diferentes)":("dura aproximadamente <b>"+dias+" dias</b> de comissão, no ritmo de consumo atual");
+      var cls=dias!==null&&dias<=15?"var(--c-red)":(dias!==null&&dias<=30?"#b96a10":"var(--text2)");
+      return '<div class="stats-card"><h4>'+esc(r.meio||"—")+'</h4><div style="font-size:12.5px;color:'+cls+'">'+txt+'</div></div>';
+    }).join("");
+  }
   function clgFindRow(arr,id){return arr.find(function(r){return r.id===id;});}
   function clgFindCard(cid){return clgCards.find(function(c){return c.id===cid;});}
   clgGetState=function(){return{t1:JSON.parse(JSON.stringify(clgT1)),t2:JSON.parse(JSON.stringify(clgT2)),cards:JSON.parse(JSON.stringify(clgCards)),t1c:cloneCols(clgT1Cols),t2c:cloneCols(clgT2Cols),t3n:JSON.parse(JSON.stringify(clgT3Nav)),t3e:JSON.parse(JSON.stringify(clgT3Emb))};};
@@ -4823,13 +5286,20 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     renderThead(document.getElementById("clg_t1_thead"),clgT1Cols,editing,"dt-actions-col",false,CLG_T1_FIXED_KEYS);
     var colspan=clgT1Cols.length+1;
     tb.innerHTML=clgT1.map(function(r){
-      return '<tr'+(editing?' data-rid="'+r.id+'"':'')+'>'+
+      var cls=(!editing&&clgEstoqueAlert(r))?" row-warn":"";
+      return '<tr'+(cls?' class="'+cls.trim()+'"':'')+(editing?' data-rid="'+r.id+'"':'')+'>'+
         clgT1Cols.map(function(col){return colTd(r,col,editing,"dt-cell","dt-cell-ro");}).join("")+
         '<td class="dt-actions dt-actions-col">'+(editing?'<span class="row-dh" title="Arrastar para reordenar">⠿</span><button class="nv-delrow" data-id="'+r.id+'" title="Excluir">🗑</button>':'')+'</td>'+
       '</tr>';
     }).join("")+(editing?'<tr class="dt-addrow-tr"><td colspan="'+colspan+'"><button class="nv-addrow" id="clg_t1_addrow">+ Adicionar meio</button></td></tr>':'');
     clgUpdateToolbar("clg_t1",editing,clgT1Dirty,GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="t1");
     if(editing)bindRowDragGeneric(tb,function(){return clgT1;},renderClgT1,function(){clgT1Dirty=true;});
+  }
+  function clgNum(v){var m=String(v||"").replace(/[^\d,.-]/g,"").replace(/\./g,"").replace(",",".");var n=parseFloat(m);return isNaN(n)?NaN:n;}
+  function clgEstoqueAlert(r){
+    var est=clgNum(r.estoque),min=clgNum(r.estoqueMin);
+    if(isNaN(est)||isNaN(min))return false;
+    return est<=min;
   }
   function renderClgT2(){
     var tb=document.getElementById("clg_t2_tbody");
@@ -4863,7 +5333,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
   }
   function renderClgT3Nav(){renderClgT3("clg_t3nav",clgT3Nav,clgT3NavEditing,clgT3NavDirty,"t3nav");}
   function renderClgT3Emb(){renderClgT3("clg_t3emb",clgT3Emb,clgT3EmbEditing,clgT3EmbDirty,"t3emb");}
-  renderClgTables=function(){renderClgT1();renderClgT2();renderClgT3Nav();renderClgT3Emb();};
+  renderClgTables=function(){renderClgT1();renderClgT2();renderClgT3Nav();renderClgT3Emb();clgRenderChart();clgRenderPrevisao();};
   renderClgCards=function(){
     var grid=document.getElementById("clg_grid");
     if(!grid)return;
@@ -4879,6 +5349,8 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(clgBound)return;
     clgBound=true;
     await clgLoad();
+    await clgLoadHist();
+    clgLogEstoque();
     var tag=document.getElementById("clg_synctag");
     if(tag){tag.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";tag.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
     bindDataTable({
@@ -4888,13 +5360,13 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       getEditing:function(){return clgT1Editing;},setEditing:function(v){clgT1Editing=v;},
       getDirty:function(){return clgT1Dirty;},setDirty:function(v){clgT1Dirty=v;},
       getSnap:function(){return clgT1Snapshot;},setSnap:function(v){clgT1Snapshot=v;},
-      newRowFn:function(){return{id:genUid("t1"),meio:"",capacidade:"",estoque:"",rop:"",naoAsp:""};},
+      newRowFn:function(){return{id:genUid("t1"),meio:"",capacidade:"",estoque:"",rop:"",naoAsp:"",estoqueMin:""};},
       addRowBtnId:"clg_t1_addrow",
       getTitles:function(){return clgT1Cols;},setTitles:function(v){clgT1Cols=v;},
       saveTitlesFn:clgSaveT1Cols,titlesKey:CLG_T1_COLS_KEY,
       getTitlesSnap:function(){return clgT1ColsSnapshot;},setTitlesSnap:function(v){clgT1ColsSnapshot=v;},
       fixedKeys:CLG_T1_FIXED_KEYS,getLock:function(){return GLOBAL_EDIT_LOCK;},setLock:function(v){GLOBAL_EDIT_LOCK=v;},who:"t1",
-      renderFn:renderClgT1,afterRender:renderClgCards,updateToolbar:function(){clgUpdateToolbar("clg_t1",true,true,false);},
+      renderFn:renderClgT1,afterRender:function(){renderClgCards();clgLogEstoque();clgRenderChart();clgRenderPrevisao();},updateToolbar:function(){clgUpdateToolbar("clg_t1",true,true,false);},
       pushLabel:"clgPush",undoLabel:"Editar tabela CLG"
     });
     bindDataTable({
@@ -4904,7 +5376,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       getEditing:function(){return clgT2Editing;},setEditing:function(v){clgT2Editing=v;},
       getDirty:function(){return clgT2Dirty;},setDirty:function(v){clgT2Dirty=v;},
       getSnap:function(){return clgT2Snapshot;},setSnap:function(v){clgT2Snapshot=v;},
-      newRowFn:function(){return{id:genUid("t2"),meio:"",data:"",quantidade:"",local:""};},
+      newRowFn:function(){return{id:genUid("t2"),meio:"",data:"",quantidade:"",local:"",recebeu:""};},
       addRowBtnId:"clg_t2_addrow",
       getTitles:function(){return clgT2Cols;},setTitles:function(v){clgT2Cols=v;},
       saveTitlesFn:clgSaveT2Cols,titlesKey:CLG_T2_COLS_KEY,
@@ -5233,15 +5705,33 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     {key:"placa",title:"Placa"},
     {key:"sit",title:"SIT",type:"choice",options:["P","PO","IM"]},
     {key:"prioridade",title:"Prioridade"},
+    {key:"km",title:"Odômetro (km)"},
+    {key:"kmProxOleo",title:"Próx. troca óleo (km)"},
     {key:"seguroValor",title:"Seguro (R$)"},
     {key:"seguroVenc",title:"Venc. Seguro"},
+    {key:"crlvVenc",title:"Venc. CRLV"},
+    {key:"vistoriaVenc",title:"Venc. Vistoria"},
     {key:"manutPrev",title:"Manut. Preventiva"},
     {key:"manutP",title:"Manut. p/ P"},
     {key:"manutPO",title:"Manut. p/ PO"},
     {key:"manutExtras",title:"Manut. Extras"},
+    {key:"custoComb",title:"Combustível (R$ acum.)"},
     {key:"obs",title:"Observações"}
   ];
   var VTR_FIXED_KEYS=VTR_FIXED.map(function(c){return c.key;});
+  /* Colunas salvas em versões antigas não trazem as colunas novas — insere na posição correta. */
+  function garReconcileCols(cols,rows){
+    var need=[["km","Odômetro (km)","prioridade"],["kmProxOleo","Próx. troca óleo (km)","km"],["crlvVenc","Venc. CRLV","seguroVenc"],["vistoriaVenc","Venc. Vistoria","crlvVenc"],["custoComb","Combustível (R$ acum.)","manutExtras"]];
+    need.forEach(function(n){
+      if(!cols.some(function(c){return c.key===n[0];})){
+        var idx=cols.map(function(c){return c.key;}).indexOf(n[2]);
+        var col={key:n[0],title:n[1]};
+        if(idx>=0)cols.splice(idx+1,0,col);else cols.push(col);
+      }
+    });
+    rows.forEach(function(r){need.forEach(function(n){if(r[n[0]]===undefined)r[n[0]]="";});});
+    return cols;
+  }
   var vtrRows=[],vtrCols=[],vtrCards=[],garBound=false;
   var vtrEditing=false,vtrDirty=false,vtrSnapshot=null,vtrColsSnapshot=null;
   var garCardSt={editingId:null,dirty:false,snapshot:null};
@@ -5251,7 +5741,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     try{r=await gtj(VTR_KEY);}catch(e){}
     vtrRows=(r&&r.length)?r:[];
     try{c=await gtj(VTR_COLS_KEY);}catch(e){}
-    vtrCols=migrateCols(c,VTR_FIXED,vtrRows);
+    vtrCols=garReconcileCols(migrateCols(c,VTR_FIXED,vtrRows),vtrRows);
     vtrCols.forEach(function(col){var f=VTR_FIXED.find(function(x){return x.key===col.key;});if(f&&f.options){col.type=f.type;col.options=f.options;}});
     try{cd=await gtj(VTR_CARDS_KEY);}catch(e){}
     vtrCards=(cd&&cd.length)?cd:[];
@@ -5268,6 +5758,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(garFlt.kpi==="livre"&&!garIsLivre(r))return false;
     if(garFlt.kpi==="extra"&&r.dotacao!=="EXTRA")return false;
     if(garFlt.kpi==="falta"&&r.existencia!=="0")return false;
+    if(garFlt.kpi==="alerta"&&!garTemAlerta(r))return false;
     if(garFlt.q){
       var q=garFlt.q.toLowerCase();
       var hit=vtrCols.some(function(c){return String(r[c.key]||"").toLowerCase().indexOf(q)>=0;});
@@ -5291,8 +5782,9 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var livre=frota.filter(garIsLivre).length;
     var extra=frota.filter(function(r){return r.dotacao==="EXTRA";}).length;
     var falta=vtrRows.filter(function(r){return r.existencia==="0";}).length;
+    var alerta=frota.filter(garTemAlerta).length;
     function kpi(k,cls,n,t){return '<div class="kpi '+cls+(garFlt.kpi===k&&k?" active":"")+'" data-k="'+k+'"><div class="kpi-n">'+n+'</div><div class="kpi-t">'+t+'</div></div>';}
-    el.innerHTML=kpi("","k-purple",tot,"Viaturas")+kpi("pronto","k-teal",pronto,"Prontas para operar")+kpi("imposs","k-red",imposs,"Impossibilitadas")+kpi("livre","k-gold",livre,"Disponíveis")+kpi("extra","k-blue",extra,"Fora de dotação")+kpi("falta","k-amber",falta,"Dotação a preencher");
+    el.innerHTML=kpi("","k-purple",tot,"Viaturas")+kpi("pronto","k-teal",pronto,"Prontas para operar")+kpi("imposs","k-red",imposs,"Impossibilitadas")+kpi("livre","k-gold",livre,"Disponíveis")+kpi("extra","k-blue",extra,"Fora de dotação")+kpi("falta","k-amber",falta,"Dotação a preencher")+kpi("alerta","k-red",alerta,"Docs / óleo a vencer");
     el.querySelectorAll(".kpi[data-k]").forEach(function(b){
       b.onclick=function(){var k=b.dataset.k;garFlt.kpi=(garFlt.kpi===k?"":k);renderGaragem();};
     });
@@ -5321,12 +5813,136 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     }).join("")+(editing?'<tr class="dt-addrow-tr"><td colspan="'+colspan+'"><button class="nv-addrow" id="vtr_tbl_addrow">+ Adicionar viatura</button></td></tr>':(rows.length?'':'<tr><td colspan="'+colspan+'" style="text-align:center;color:var(--text3);font-style:italic">Nenhuma viatura encontrada com os filtros atuais.</td></tr>'));
     garUpdToolbar(editing,vtrDirty);
     if(editing)bindRowDragGeneric(tb,function(){return vtrRows;},renderGarTable,function(){vtrDirty=true;});
-    else tb.querySelectorAll("tr.clickable-row").forEach(function(tr){
-      tr.onclick=function(){var r=vtrRows.find(function(x){return x.id===tr.dataset.rid;});if(r)openDetailDrawer("vtr_tbl",r,vtrCols);};
-    });
+    else{
+      tb.querySelectorAll("tr.clickable-row").forEach(function(tr){
+        tr.onclick=function(){var r=vtrRows.find(function(x){return x.id===tr.dataset.rid;});if(r)openDetailDrawer("vtr_tbl",r,vtrCols);};
+      });
+      garPaintExtras();
+    }
   }
   function garManutTotal(r){return moneyVal(r.manutPrev)+moneyVal(r.manutP)+moneyVal(r.manutPO)+moneyVal(r.manutExtras);}
+  function garCustoTotal(r){return garManutTotal(r)+moneyVal(r.custoComb);}
   function garSitColor(sit){return sit==="IM"?"var(--c-red)":sit==="PO"?"var(--c-teal)":sit==="P"?"var(--c-blue)":"var(--text3)";}
+  /* ── Controle documental + odômetro + manutenção por km ── */
+  var GAR_DOCS=[["crlvVenc","CRLV"],["seguroVenc","Seguro"],["vistoriaVenc","Vistoria"]];
+  function garNum(v){var c=String(v==null?"":v).replace(/[^\d]/g,"");return c?parseInt(c,10):NaN;}
+  function garDocAlerts(r){
+    var out=[];
+    GAR_DOCS.forEach(function(d){
+      var du=daysUntil(r[d[0]]);
+      if(du===null)return;
+      if(du<0)out.push({doc:d[1],lvl:"over",dias:du});
+      else if(du<=30)out.push({doc:d[1],lvl:"warn",dias:du});
+    });
+    return out;
+  }
+  function garOleoInfo(r){
+    var km=garNum(r.km),prox=garNum(r.kmProxOleo);
+    if(isNaN(km)||isNaN(prox))return null;
+    return{faltam:prox-km};
+  }
+  function garTemAlerta(r){
+    var o=garOleoInfo(r);
+    return garDocAlerts(r).length>0||(o&&o.faltam<=500);
+  }
+  function garPaintExtras(){
+    var tb=document.getElementById("vtr_tbl_tbody");
+    if(!tb||vtrEditing)return;
+    vtrRows.forEach(function(r){
+      GAR_DOCS.forEach(function(d){
+        var du=daysUntil(r[d[0]]);
+        if(du===null||du>30)return;
+        var td=tb.querySelector('td[data-id="'+r.id+'"][data-key="'+d[0]+'"]');
+        if(!td)return;
+        var h=document.createElement("div");h.className="nv-stdays";
+        h.style.color=du<0?"var(--c-red)":"#b96a10";
+        h.textContent=du<0?"⚠ vencido":"⚠ vence em "+du+"d";
+        td.appendChild(h);
+      });
+      var oleo=garOleoInfo(r);
+      if(oleo&&oleo.faltam<=500){
+        var td2=tb.querySelector('td[data-id="'+r.id+'"][data-key="kmProxOleo"]');
+        if(td2){
+          var h2=document.createElement("div");h2.className="nv-stdays";
+          h2.style.color=oleo.faltam<=0?"var(--c-red)":"#b96a10";
+          h2.textContent=oleo.faltam<=0?"⚠ troca vencida":"⚠ faltam "+oleo.faltam+" km";
+          td2.appendChild(h2);
+        }
+      }
+    });
+  }
+  /* ── Histórico de odômetro (uma leitura por viatura/dia, só quando muda) → relatório mensal ── */
+  var VTR_KM_KEY="aa_vtr_km_v1";
+  var vtrKmHist={};
+  async function garLoadKm(){
+    var h=null;
+    try{h=await gtj(VTR_KM_KEY);}catch(e){}
+    if(!h){try{h=JSON.parse(localStorage.getItem(VTR_KM_KEY));}catch(e){}}
+    vtrKmHist=h||{};
+  }
+  function garSaveKm(){
+    try{localStorage.setItem(VTR_KM_KEY,JSON.stringify(vtrKmHist));}catch(e){}
+    pushKV("garPush",VTR_KM_KEY,vtrKmHist);
+  }
+  function garLogKm(){
+    var day=new Date();day.setHours(0,0,0,0);
+    var t=day.getTime(),changed=false;
+    vtrRows.forEach(function(r){
+      var v=garNum(r.km);
+      if(isNaN(v))return;
+      var arr=vtrKmHist[r.id]||(vtrKmHist[r.id]=[]);
+      var last=arr[arr.length-1];
+      if(last&&last.t===t){if(last.v!==v){last.v=v;changed=true;}return;}
+      if(last&&last.v===v)return;
+      arr.push({t:t,v:v});changed=true;
+      if(arr.length>200)arr.splice(0,arr.length-200);
+    });
+    if(changed)garSaveKm();
+  }
+  function garMonthKm(r,y,m){
+    var arr=vtrKmHist[r.id]||[];
+    var inMonth=arr.filter(function(p){var d=new Date(p.t);return d.getFullYear()===y&&d.getMonth()===m;});
+    if(!inMonth.length)return null;
+    var before=arr.filter(function(p){return p.t<inMonth[0].t;});
+    var start=before.length?before[before.length-1].v:inMonth[0].v;
+    return Math.max(0,inMonth[inMonth.length-1].v-start);
+  }
+  function garMonthlyReport(){
+    var bg=ensureModal("garRepBg","Relatório mensal da frota");
+    var body=bg.querySelector(".mbody");
+    var now=new Date();
+    var opts=[];
+    for(var i=0;i<12;i++){
+      var d=new Date(now.getFullYear(),now.getMonth()-i,1);
+      opts.push({y:d.getFullYear(),m:d.getMonth(),lbl:ML[d.getMonth()]+" de "+d.getFullYear()});
+    }
+    function render(y,m){
+      var frota=vtrRows.filter(function(r){return r.existencia!=="0";});
+      var rows=frota.map(function(r){
+        return{placa:r.placa||"—",modelo:r.modelo||"—",kmAtual:r.km||"—",kmMes:garMonthKm(r,y,m),manut:garManutTotal(r),comb:moneyVal(r.custoComb),docs:garDocAlerts(r)};
+      });
+      var totKm=rows.reduce(function(a,x){return a+(x.kmMes||0);},0);
+      var totCusto=rows.reduce(function(a,x){return a+x.manut+x.comb;},0);
+      var selHtml='<div class="flt-bar" style="margin-bottom:10px"><select id="garrep_month">'+opts.map(function(o,oi){return '<option value="'+oi+'"'+(o.y===y&&o.m===m?" selected":"")+'>'+o.lbl+'</option>';}).join("")+'</select><span style="font-size:11px;color:var(--text3)">Total do mês: <b>'+totKm.toLocaleString("pt-BR")+' km</b> · Custo acumulado da frota (manut. + comb.): <b>'+fmtBRL(totCusto)+'</b></span></div>';
+      body.innerHTML=selHtml+
+        '<div class="dt-table-wrap" style="margin-bottom:0;max-height:52vh;overflow-y:auto"><table class="dt-table" style="min-width:0"><thead><tr><th>Placa</th><th>Modelo</th><th>Odômetro</th><th>Km no mês</th><th>Manutenção (R$)</th><th>Combustível (R$)</th><th>Docs</th></tr></thead><tbody>'+
+        rows.map(function(x){
+          var docsTxt=x.docs.length?x.docs.map(function(dd){return dd.doc+(dd.lvl==="over"?" vencido":" ≤30d");}).join(", "):"ok";
+          return '<tr'+(x.docs.length?' class="row-warn"':'')+'><td>'+esc(x.placa)+'</td><td>'+esc(x.modelo)+'</td><td>'+esc(String(x.kmAtual))+'</td><td>'+(x.kmMes===null?"—":x.kmMes.toLocaleString("pt-BR")+" km")+'</td><td>'+fmtBRL(x.manut)+'</td><td>'+fmtBRL(x.comb)+'</td><td>'+esc(docsTxt)+'</td></tr>';
+        }).join("")+'</tbody></table></div>'+
+        '<div style="font-size:10px;color:var(--text3);margin-top:8px;font-style:italic">“Km no mês” usa o histórico de leituras do odômetro (registrado a cada salvamento da tabela). Sem leituras no mês, aparece “—”.</div>'+
+        '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="nv-editbtn" id="garrep_csv">⬇ Exportar CSV</button></div>';
+      document.getElementById("garrep_month").onchange=function(){var o=opts[+this.value];render(o.y,o.m);};
+      document.getElementById("garrep_csv").onclick=function(){
+        var csv="Placa;Modelo;Odômetro;Km no mês;Manutenção (R$);Combustível (R$);Docs\n"+rows.map(function(x){
+          return[x.placa,x.modelo,x.kmAtual,(x.kmMes===null?"":x.kmMes),Math.round(x.manut),Math.round(x.comb),(x.docs.length?x.docs.map(function(dd){return dd.doc+(dd.lvl==="over"?" vencido":" a vencer");}).join(", "):"ok")].join(";");
+        }).join("\n");
+        trigDL("frota_"+ML[m].toLowerCase()+"_"+y+".csv","\uFEFF"+csv,"text/csv;charset=utf-8");
+      };
+    }
+    render(now.getFullYear(),now.getMonth());
+    bg.classList.add("open");
+  }
   /* ── LED de disponibilidade (emprestada a navios × fainas administrativas): estado próprio,
      independente da SIT de manutenção — ciclo Disponível → Saída prevista → Em uso ao clicar. ── */
   var VTR_USO_CYCLE=["disponivel","saida_prevista","em_uso"];
@@ -5440,12 +6056,20 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(!frota.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);font-style:italic;grid-column:1/-1">Nenhuma viatura com os filtros atuais.</div>';return;}
     el.innerHTML=frota.map(function(r){
       var custo=garManutTotal(r);
+      var oleo=garOleoInfo(r),docs=garDocAlerts(r);
+      var kmLine="";
+      if(r.km||oleo){
+        kmLine='<div class="ovw-sub">'+(r.km?('Odômetro: <b>'+esc(String(r.km))+' km</b>'):"")+
+          (oleo?((r.km?" · ":"")+"óleo: "+(oleo.faltam<=0?'<b style="color:var(--c-red)">troca vencida ('+(-oleo.faltam).toLocaleString("pt-BR")+' km)</b>':(oleo.faltam<=500?'<b style="color:#b96a10">faltam '+oleo.faltam.toLocaleString("pt-BR")+' km</b>':"faltam "+oleo.faltam.toLocaleString("pt-BR")+" km"))):"")+'</div>';
+      }
+      var docLine=docs.length?'<div class="ovw-sub">'+docs.map(function(d){return '<b style="color:'+(d.lvl==="over"?"var(--c-red)":"#b96a10")+'">'+d.doc+(d.lvl==="over"?" vencido":" vence em "+d.dias+"d")+'</b>';}).join(" · ")+'</div>':"";
       return '<div class="ovw-card" data-rid="'+r.id+'" style="position:relative">'+
         garLedHtml(r)+
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;padding-left:22px"><h5 style="margin:0">'+esc(r.modelo||"—")+'</h5><span class="sit-badge" style="background:'+garSitColor(r.sit)+'">'+esc(r.sit||"?")+'</span></div>'+
         '<div style="font-size:11px;font-weight:600;color:var(--text2)">'+esc(r.placa||"Sem placa")+'</div>'+
         '<div class="ovw-sub">Ano '+esc(r.ano||"—")+' · Tipo '+esc(r.tipo||"—")+' · Prioridade '+esc(r.prioridade||"—")+'</div>'+
-        '<div class="ovw-sub">Manutenção necessária: <b>'+fmtBRL(custo)+'</b>'+(r.seguroValor?' · Seguro '+esc(r.seguroValor):"")+'</div>'+
+        '<div class="ovw-sub">Custo: manut. <b>'+fmtBRL(custo)+'</b>'+(moneyVal(r.custoComb)?' + comb. <b>'+fmtBRL(moneyVal(r.custoComb))+'</b>':"")+(r.seguroValor?' · Seguro '+esc(r.seguroValor):"")+'</div>'+
+        kmLine+docLine+
         (r.obs?'<div class="ovw-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(r.obs)+'">'+esc(r.obs)+'</div>':"")+
       '</div>';
     }).join("");
@@ -5461,9 +6085,9 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(!el)return;
     var frota=vtrRows.filter(function(r){return r.existencia!=="0";});
     var porSit=["P","PO","IM"].map(function(s){return{k:s,v:frota.filter(function(r){return r.sit===s;}).length};}).filter(function(p){return p.v;});
-    var custos=frota.map(function(r){return{k:r.placa||r.modelo||"?",v:Math.round(garManutTotal(r)/1000)};}).filter(function(p){return p.v;}).sort(function(a,b){return b.v-a.v;}).slice(0,8);
-    var totalCusto=frota.reduce(function(a,r){return a+garManutTotal(r);},0);
-    el.innerHTML='<div class="stats-card"><h4>Custo de manutenção necessária (R$ mil) — total '+fmtBRL(totalCusto)+'</h4>'+svgBarChart(custos)+'</div>'+
+    var custos=frota.map(function(r){return{k:r.placa||r.modelo||"?",v:Math.round(garCustoTotal(r)/1000)};}).filter(function(p){return p.v;}).sort(function(a,b){return b.v-a.v;}).slice(0,8);
+    var totalCusto=frota.reduce(function(a,r){return a+garCustoTotal(r);},0);
+    el.innerHTML='<div class="stats-card"><h4>Custo por viatura: manutenção + combustível (R$ mil) — total '+fmtBRL(totalCusto)+'</h4>'+svgBarChart(custos)+'</div>'+
       '<div class="stats-card"><h4>Situação da frota</h4>'+svgDonutChart(porSit)+'</div>';
   }
   function garFindCard(cid){return vtrCards.find(function(c){return c.id===cid;});}
@@ -5481,6 +6105,10 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(garBound){return;}
     garBound=true;
     await garLoad();
+    await garLoadKm();
+    garLogKm();
+    var repBtn=document.getElementById("gar_report_btn");
+    if(repBtn)repBtn.onclick=garMonthlyReport;
     var tag=document.getElementById("gar_synctag");
     if(tag){tag.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";tag.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
     var selSit=document.getElementById("gar_f_sit");
@@ -5491,11 +6119,11 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     bindDataTable({
       prefix:"vtr_tbl",
       getArr:function(){return vtrRows;},setArr:function(v){vtrRows=v;},
-      onSaveKey:VTR_KEY,onSaveDataFn:vtrSaveRows,
+      onSaveKey:VTR_KEY,onSaveDataFn:function(){vtrSaveRows();garLogKm();},
       getEditing:function(){return vtrEditing;},setEditing:function(v){vtrEditing=v;},
       getDirty:function(){return vtrDirty;},setDirty:function(v){vtrDirty=v;},
       getSnap:function(){return vtrSnapshot;},setSnap:function(v){vtrSnapshot=v;},
-      newRowFn:function(){return{id:genUid("vt"),om:"CHN-4",tipo:"",dotacao:"",existencia:"1",niv:"",modelo:"",ano:"",placa:"",sit:"",prioridade:"",seguroValor:"",seguroVenc:"",manutPrev:"",manutP:"",manutPO:"",manutExtras:"",obs:""};},
+      newRowFn:function(){return{id:genUid("vt"),om:"CHN-4",tipo:"",dotacao:"",existencia:"1",niv:"",modelo:"",ano:"",placa:"",sit:"",prioridade:"",km:"",kmProxOleo:"",seguroValor:"",seguroVenc:"",crlvVenc:"",vistoriaVenc:"",manutPrev:"",manutP:"",manutPO:"",manutExtras:"",custoComb:"",obs:""};},
       addRowBtnId:"vtr_tbl_addrow",
       getTitles:function(){return vtrCols;},setTitles:function(v){vtrCols=v;},
       saveTitlesFn:vtrSaveCols,titlesKey:VTR_COLS_KEY,
@@ -5522,6 +6150,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
             else{var nr={id:genUid("vt")};VTR_FIXED.forEach(function(c){nr[c.key]="";});Object.assign(nr,m);vtrRows.push(nr);added++;}
           });
           vtrSaveRows();
+          garLogKm();
           pushKV("garPush",VTR_KEY,vtrRows);
           auditDiffRows("vtr_tbl",preTbl,vtrRows);
           touchLastEdit("vtr_tbl");paintLastEdit("vtr_tbl_lastedit","vtr_tbl");
@@ -5539,6 +6168,137 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(usoBg)usoBg.onclick=function(e){if(e.target.id==="usoBg")closeUsoModal();};
     var usoConfirm=document.getElementById("uso_confirm");
     if(usoConfirm)usoConfirm.onclick=confirmUso;
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════
+   ABA: DASHBOARD — painel consolidado, cruza dados de todas as abas
+   ═══════════════════════════════════════════════════════════ */
+(function(){
+  var HORAS_SHIP_TITLES={nsampaio:"NHO G. Sampaio",castelo:"NHiBTenCastelo",tocantins:"AvHoFlu Rio Tocantins",xingu:"AvHoFlu Rio Xingu",vega:"AvB Vega",denebola:"AvB Denébola",regulus:"AvB Régulus",boto:"AvB Boto"};
+  var dashBound=false,dashExpanded={horas:false,clg:false};
+  function horasParseNum(s){
+    if(s==null)return NaN;
+    var c=String(s).trim().replace(/[^\d.,-]/g,"");
+    if(!c||c==="-")return NaN;
+    c=c.replace(/\./g,"").replace(/,/g,".");
+    var n=parseFloat(c);
+    return isNaN(n)?NaN:n;
+  }
+  function horasFmtNum(n){
+    n=Math.round(n);
+    var neg=n<0;n=Math.abs(n);
+    return (neg?"-":"")+String(n).replace(/\B(?=(\d{3})+(?!\d))/g,".");
+  }
+  function dashCard(k,cls,n,t){return '<div class="kpi '+cls+'" data-k="'+k+'"><div class="kpi-n">'+n+'</div><div class="kpi-t">'+t+'</div></div>';}
+  async function dashRender(){
+    if(typeof navInit==="function")await navInit();
+    if(typeof navLoadPpss==="function")await navLoadPpss();
+    if(typeof clgInit==="function")await clgInit();
+    if(typeof horasInit==="function")await horasInit();
+    if(typeof pessoalInit==="function")await pessoalInit();
+    var ships=(typeof navGetState==="function"?navGetState().ships:[])||[];
+    var clg=(typeof clgGetState==="function"?clgGetState():{t1:[]});
+    var horas=(typeof horasGetState==="function"?horasGetState():{});
+    var pess=(typeof pessoalGetState==="function"?pessoalGetState():{rows:[],ferias:[]});
+
+    // ── CONDEF fora de P ──
+    var forasP=ships.filter(function(s){return s.condef&&s.condef!=="P";});
+    function daysInSt(s){
+      var h=s.stHist;
+      if(!h||!h.length)return null;
+      var last=h[h.length-1];
+      if((last.st||"")!==(s.condef||""))return 0;
+      var t0=new Date(last.ts);t0.setHours(0,0,0,0);
+      return Math.max(0,Math.round((TODAY-t0)/86400000));
+    }
+    var condefBox=document.getElementById("dash_condef");
+    if(condefBox){
+      condefBox.innerHTML=!forasP.length?'<div style="font-size:11px;color:var(--text3);font-style:italic">Todos os meios estão em condição "P" (pronto).</div>':
+        forasP.map(function(s){
+          var d=daysInSt(s);
+          return '<div class="eng-item"><span class="eng-name" title="'+esc(s.nome||"")+'">'+esc(s.nome||"—")+'</span>'+
+            '<span class="sit-badge" style="background:'+(s.condef==="IM"?"var(--c-red)":s.condef==="IO"?"#d8b23a":"var(--c-teal)")+'">'+esc(s.condef||"?")+'</span>'+
+            '<span class="eng-val">'+(d===null?"—":"há "+d+(d===1?" dia":" dias"))+'</span></div>';
+        }).join("");
+    }
+
+    // ── Motores vencidos/próximos (expansível por navio) ──
+    var horasList=[];
+    Object.keys(horas).forEach(function(key){
+      var s=horas[key];
+      (s.rows||[]).forEach(function(r){
+        var op=horasParseNum(r.horasOperacao),man=horasParseNum(r.horasManutencao),crono=horasParseNum(r.cronograma);
+        if(isNaN(op)||isNaN(man)||isNaN(crono)||crono<=0)return;
+        var delta=(man+crono)-op;
+        if(delta>crono*0.25&&delta>250)return; // só entram os em atenção/crítico/ultrapassados
+        horasList.push({ship:HORAS_SHIP_TITLES[key]||key,label:(r.tipoMotor||"Motor")+(r.bordo?" "+r.bordo:""),delta:delta});
+      });
+    });
+    var byShip={};horasList.forEach(function(h){(byShip[h.ship]=byShip[h.ship]||[]).push(h);});
+    var horasBox=document.getElementById("dash_horas");
+    if(horasBox){
+      var shipKeys=Object.keys(byShip);
+      horasBox.innerHTML=!shipKeys.length?'<div style="font-size:11px;color:var(--text3);font-style:italic">Nenhum motor vencido ou próximo de revisão.</div>':
+        '<button class="dt-colbtn" id="dash_horas_toggle" style="margin-bottom:8px">'+(dashExpanded.horas?"▾ Ocultar detalhes":"▸ Expandir por navio")+'</button>'+
+        (dashExpanded.horas?shipKeys.map(function(sk){
+          return '<div style="margin-bottom:8px"><b style="font-size:11.5px">'+esc(sk)+'</b>'+
+            byShip[sk].map(function(h){return '<div class="eng-item"><span class="eng-name">'+esc(h.label)+'</span><span class="eng-val" style="color:'+(h.delta<=0?"var(--c-red)":"var(--c-amber)")+'">'+(h.delta<=0?"ultrapassou "+horasFmtNum(-h.delta)+"h":"faltam "+horasFmtNum(h.delta)+"h")+'</span></div>';}).join("")+
+          '</div>';
+        }).join(""):'<div style="font-size:11px;color:var(--text3)">'+shipKeys.length+' navio(s) com motores em atenção — '+horasList.length+' motor(es) no total.</div>');
+      var htg=document.getElementById("dash_horas_toggle");
+      if(htg)htg.onclick=function(){dashExpanded.horas=!dashExpanded.horas;dashRender();};
+    }
+
+    // ── Estoque CLG por meio (expansível) ──
+    var clgBox=document.getElementById("dash_clg");
+    if(clgBox){
+      var t1=clg.t1||[];
+      clgBox.innerHTML=!t1.length?'<div style="font-size:11px;color:var(--text3);font-style:italic">Nenhum meio cadastrado no Estoque de ODM.</div>':
+        '<button class="dt-colbtn" id="dash_clg_toggle" style="margin-bottom:8px">'+(dashExpanded.clg?"▾ Ocultar detalhes":"▸ Expandir por meio")+'</button>'+
+        (dashExpanded.clg?t1.map(function(r){
+          var est=clgNumSafe(r.estoque),min=clgNumSafe(r.estoqueMin);
+          var alerta=!isNaN(est)&&!isNaN(min)&&est<=min;
+          return '<div class="eng-item"><span class="eng-name">'+esc(r.meio||"—")+'</span><span class="eng-val" style="color:'+(alerta?"var(--c-red)":"var(--text2)")+'">'+esc(String(r.estoque||"—"))+(alerta?" ⚠":"")+'</span></div>';
+        }).join(""):'<div style="font-size:11px;color:var(--text3)">'+t1.length+' meio(s) cadastrados.</div>');
+      var ctg=document.getElementById("dash_clg_toggle");
+      if(ctg)ctg.onclick=function(){dashExpanded.clg=!dashExpanded.clg;dashRender();};
+    }
+    function clgNumSafe(v){var m=String(v||"").replace(/[^\d,.-]/g,"").replace(/\./g,"").replace(",",".");var n=parseFloat(m);return isNaN(n)?NaN:n;}
+
+    // ── Militares disponíveis hoje ──
+    var rows=pess.rows||[],ferias=pess.ferias||[];
+    var todayStr=TODAY.getFullYear()+"-"+String(TODAY.getMonth()+1).padStart(2,"0")+"-"+String(TODAY.getDate()).padStart(2,"0");
+    function indispoHoje(nome){return ferias.some(function(f){return f.militar===nome&&todayStr>=f.inicio&&todayStr<=f.fim;});}
+    var disponiveis=rows.filter(function(r){return!indispoHoje(r.nome||"");});
+    var pessBox=document.getElementById("dash_pessoal");
+    if(pessBox){
+      pessBox.innerHTML=!rows.length?'<div style="font-size:11px;color:var(--text3);font-style:italic">Nenhum militar cadastrado.</div>':
+        '<div style="font-size:24px;font-weight:800;color:var(--c-teal)">'+disponiveis.length+' <span style="font-size:13px;color:var(--text3);font-weight:600">de '+rows.length+'</span></div>'+
+        '<div style="font-size:11px;color:var(--text3);margin-top:4px">'+disponiveis.slice(0,8).map(function(r){return esc(r.nome||"—");}).join(", ")+(disponiveis.length>8?" …":"")+'</div>';
+    }
+
+    // ── KPIs + Alertas do dia ──
+    var alerts=[];
+    forasP.forEach(function(s){alerts.push({lvl:s.condef==="IM"?"bad":"warn",txt:"CONDEF: "+(s.nome||"—")+" está em \""+s.condef+"\""});});
+    horasList.filter(function(h){return h.delta<=0;}).forEach(function(h){alerts.push({lvl:"bad",txt:"Motor: "+h.ship+" — "+h.label+" com revisão ultrapassada"});});
+    (clg.t1||[]).forEach(function(r){
+      var est=clgNumSafe(r.estoque),min=clgNumSafe(r.estoqueMin);
+      if(!isNaN(est)&&!isNaN(min)&&est<=min)alerts.push({lvl:"warn",txt:"CLG: estoque de "+(r.meio||"—")+" abaixo do mínimo"});
+    });
+    var kEl=document.getElementById("dash_kpis");
+    if(kEl)kEl.innerHTML=dashCard("condef","k-red",forasP.length,"Meios fora de P")+dashCard("horas","k-amber",horasList.length,"Motores em atenção")+dashCard("clg","k-gold",(clg.t1||[]).filter(function(r){var e=clgNumSafe(r.estoque),m=clgNumSafe(r.estoqueMin);return!isNaN(e)&&!isNaN(m)&&e<=m;}).length,"Estoques baixos")+dashCard("pess","k-teal",disponiveis.length,"Militares disponíveis");
+    var aEl=document.getElementById("dash_alerts");
+    if(aEl)aEl.innerHTML=!alerts.length?'<div class="ferias-msg info" style="display:block">✓ Nenhuma pendência crítica identificada hoje.</div>':
+      alerts.map(function(a){return '<div class="ferias-msg '+(a.lvl==="bad"?"warn":"info")+'" style="display:block;margin-bottom:6px'+(a.lvl==="bad"?"":";background:var(--c-amber2);color:#8a6d1f;font-weight:600")+'">⚠ '+esc(a.txt)+'</div>';}).join("");
+  }
+  dashInit=async function(){
+    if(!dashBound){
+      dashBound=true;
+      var rb=document.getElementById("dash_refresh_btn");
+      if(rb)rb.onclick=dashRender;
+    }
+    await dashRender();
   };
 })();
 /* MODULE_HORAS_PLACEHOLDER */
@@ -5707,8 +6467,12 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(table)table.classList.toggle("dt-editing",editing);
     renderThead(document.getElementById(prefix+"_thead"),s.cols,editing,"dt-actions-col",false,[]);
     var colspan=s.cols.length+1;
+    var ROWCLS={atencao:"row-warn",critico:"row-crit",ultra:"row-bad"};
     tb.innerHTML=s.rows.map(function(r){
-      return '<tr'+(editing?' data-rid="'+r.id+'"':'')+'>'+
+      var est=editing?null:horasRowEstado(r);
+      var cls=(est&&ROWCLS[est.estado])?ROWCLS[est.estado]:"";
+      var ttl=est?(HORAS_ESTADO_NOME[est.estado]+" — "+(est.delta<=0?("revisão ultrapassada em "+horasFmtNum(-est.delta)+"h"):("faltam "+horasFmtNum(est.delta)+"h para a próxima revisão"))):"";
+      return '<tr'+(cls?' class="'+cls+'"':'')+(ttl?' title="'+esc(ttl)+'"':'')+(editing?' data-rid="'+r.id+'"':'')+'>'+
         s.cols.map(function(col){return colTd(r,col,editing,"dt-cell","dt-cell-ro");}).join("")+
         '<td class="dt-actions dt-actions-col">'+(editing?'<span class="row-dh" title="Arrastar para reordenar">⠿</span><button class="nv-delrow" data-id="'+r.id+'" title="Excluir">🗑</button>':'')+'</td>'+
       '</tr>';
@@ -5734,10 +6498,18 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       save:function(){horasSaveShip(s);},pushTag:"horasPush",key:function(){return s.cardsKey;},
       label:"cart\u00E3o \u2014 "+s.title,render:function(){renderHorasShip(key);renderShipCards(key);}});
   }
-  renderHoras=function(){HORAS_SHIP_LIST.forEach(function(sk){renderHorasShip(sk.key);renderShipCards(sk.key);});renderHorasDash();};
+  renderHoras=function(){HORAS_SHIP_LIST.forEach(function(sk){renderHorasShip(sk.key);renderShipCards(sk.key);});renderHorasDash();horasRenderChart();};
   /* Dashboard: classifica cada motor pela proximidade da próxima revisão (dados já computados por horasRecalcRow). */
   var HORAS_ESTADO_COR={ok:"var(--c-teal)",atencao:"var(--c-amber)",critico:"var(--c-gold)",ultra:"var(--c-red)"};
-  var HORAS_ESTADO_LBL={ok:"Em dia (>25% do cronograma restante)",atencao:"Atenção — ≤25% restante",critico:"Crítico — ≤10% restante",ultra:"Revisão ultrapassada"};
+  var HORAS_ESTADO_LBL={ok:"Em dia (>25% do cronograma restante)",atencao:"Atenção — ≤25% restante ou ≤250h",critico:"Crítico — ≤10% restante",ultra:"Revisão ultrapassada"};
+  var HORAS_ESTADO_NOME={ok:"Em dia",atencao:"Atenção",critico:"Crítico",ultra:"Revisão ultrapassada"};
+  function horasEstadoDe(delta,crono){return delta<=0?"ultra":(delta<=crono*0.1?"critico":((delta<=crono*0.25||delta<=250)?"atencao":"ok"));}
+  function horasRowEstado(r){
+    var op=horasParseNum(r.horasOperacao),man=horasParseNum(r.horasManutencao),crono=horasParseNum(r.cronograma);
+    if(isNaN(op)||isNaN(man)||isNaN(crono)||crono<=0)return null;
+    var delta=(man+crono)-op;
+    return{delta:delta,crono:crono,estado:horasEstadoDe(delta,crono)};
+  }
   var horasDashFlt="";
   function horasEngines(){
     var out=[];
@@ -5749,7 +6521,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         var delta=(man+crono)-op;
         var usado=Math.max(0,op-man);
         var pct=Math.min(100,Math.round(usado/crono*100));
-        var estado=delta<=0?"ultra":(delta<=crono*0.1?"critico":(delta<=crono*0.25?"atencao":"ok"));
+        var estado=horasEstadoDe(delta,crono);
         out.push({label:s.title+" — "+(r.tipoMotor||r.meio||"Motor")+(r.bordo?" "+r.bordo:""),delta:delta,crono:crono,pct:pct,estado:estado});
       });
     });
@@ -5779,12 +6551,56 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       return '<div class="eng-item"><span class="eng-name" title="'+esc(e.label)+'">'+esc(e.label)+'</span><div class="pbar"><div style="width:'+e.pct+'%;background:'+HORAS_ESTADO_COR[e.estado]+'"></div></div><span class="eng-val" style="color:'+HORAS_ESTADO_COR[e.estado]+'">'+txt+'</span></div>';
     }).join("");
   }
+  /* ── Histórico de leituras de horas (uma por motor/dia, só quando o valor muda) → gráfico de tendência ── */
+  var HORAS_HIST_KEY="aa_horas_readings_v1";
+  var horasHist={};
+  async function horasLoadHist(){
+    var h=null;
+    try{h=await gtj(HORAS_HIST_KEY);}catch(e){}
+    if(!h){try{h=JSON.parse(localStorage.getItem(HORAS_HIST_KEY));}catch(e){}}
+    horasHist=h||{};
+  }
+  function horasSaveHist(){
+    try{localStorage.setItem(HORAS_HIST_KEY,JSON.stringify(horasHist));}catch(e){}
+    pushKV("horasPush",HORAS_HIST_KEY,horasHist);
+  }
+  function horasLogReadings(shipKey){
+    var s=horasShips[shipKey];
+    if(!s)return;
+    var day=new Date();day.setHours(0,0,0,0);
+    var t=day.getTime(),changed=false;
+    s.rows.forEach(function(r){
+      var v=horasParseNum(r.horasOperacao);
+      if(isNaN(v))return;
+      var arr=horasHist[r.id]||(horasHist[r.id]=[]);
+      var last=arr[arr.length-1];
+      if(last&&last.t===t){if(last.v!==v){last.v=v;changed=true;}return;}
+      if(last&&last.v===v)return;
+      arr.push({t:t,v:v});changed=true;
+      if(arr.length>200)arr.splice(0,arr.length-200);
+    });
+    if(changed)horasSaveHist();
+  }
+  function horasRenderChart(){
+    var sel=document.getElementById("horas_chart_ship"),box=document.getElementById("horas_chart");
+    if(!sel||!box)return;
+    if(!sel.options.length){
+      sel.innerHTML=HORAS_SHIP_LIST.map(function(sk){return '<option value="'+sk.key+'">'+esc(horasShips[sk.key].title)+'</option>';}).join("");
+      sel.onchange=horasRenderChart;
+    }
+    var s=horasShips[sel.value]||horasShips[HORAS_SHIP_LIST[0].key];
+    var series=(s.rows||[]).map(function(r){
+      var pts=(horasHist[r.id]||[]).map(function(p){return{t:p.t,v:p.v};});
+      return{name:(r.tipoMotor||"Motor")+(r.bordo?" "+r.bordo:""),points:pts};
+    }).filter(function(x){return x.points.length;});
+    box.innerHTML=svgLineChart(series,{fmtY:function(v){return horasFmtNum(v)+"h";}});
+  }
   function horasBindShip(key){
     var s=horasShips[key];
     bindDataTable({
       prefix:"horas_"+key,
       getArr:function(){return s.rows;},setArr:function(v){s.rows=v;},
-      onSaveKey:s.rowsKey,onSaveDataFn:function(){horasSaveShip(s);},
+      onSaveKey:s.rowsKey,onSaveDataFn:function(){horasSaveShip(s);horasLogReadings(key);},
       getEditing:function(){return s.editing;},setEditing:function(v){s.editing=v;},
       getDirty:function(){return s.dirty;},setDirty:function(v){s.dirty=v;},
       getSnap:function(){return s.snapshot;},setSnap:function(v){s.snapshot=v;},
@@ -5849,6 +6665,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         horasRecalcRow(r);
       });
       horasSaveShip(s);
+      horasLogReadings(shipKey);
       await pushKV("horasPush",s.rowsKey,s.rows);
       pushUndo("Inserir manutenção — "+s.title,async function(){s.rows=snap;horasSaveShip(s);await pushKV("horasPush",s.rowsKey,s.rows);renderHorasShip(shipKey);});
       horasCloseMaint();
@@ -5864,6 +6681,8 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     for(var i=0;i<HORAS_SHIP_LIST.length;i++){
       await horasLoadShip(horasShips[HORAS_SHIP_LIST[i].key]);
     }
+    await horasLoadHist();
+    HORAS_SHIP_LIST.forEach(function(sk){horasLogReadings(sk.key);});
     HORAS_SHIP_LIST.forEach(function(sk){horasBindShip(sk.key);bindShipCardGrid(sk.key);});
     HORAS_SHIP_LIST.forEach(function(sk){
       var p="horas_"+sk.key;
@@ -5939,6 +6758,8 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     {key:"feriasDisponiveis",title:"Férias disponíveis",type:"locked",computed:true},
     {key:"feriasGozadas",title:"Férias gozadas",type:"locked",computed:true},
     {key:"previsaoFerias",title:"Previsão de Férias",type:"locked",computed:true},
+    {key:"funcao",title:"Função"},
+    {key:"qualificacoes",title:"Qualificações"},
     {key:"contato",title:"Contato"}
   ];
   var FERIAS_TOTAL_DIAS=30;
@@ -5976,6 +6797,14 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         else{cols.splice(insertAt,0,nc);insertAt++;}
       });
     }
+    keys=cols.map(function(c){return c.key;});
+    [["funcao","Função"],["qualificacoes","Qualificações"]].forEach(function(nc){
+      if(keys.indexOf(nc[0])<0){
+        var contatoIdx=cols.map(function(c){return c.key;}).indexOf("contato");
+        var col={key:nc[0],title:nc[1]};
+        if(contatoIdx>=0)cols.splice(contatoIdx,0,col);else cols.push(col);
+      }
+    });
     return cols;
   }
   var pessoalRows=[],pessoalCols=pessoalColsDefault(),pessoalFerias=[],pessoalCards=[],pessoalBound=false;
@@ -6120,6 +6949,12 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         '<td class="dt-actions dt-actions-col">'+(editing?'<span class="row-dh" title="Arrastar para reordenar">⠿</span><button class="nv-delrow" data-id="'+r.id+'" title="Excluir">🗑</button>':'')+'</td>'+
       '</tr>';
     }).join("")+(editing?'<tr class="dt-addrow-tr"><td colspan="'+colspan+'"><button class="nv-addrow" id="pessoal_tbl_addrow">+ Incluir militar</button></td></tr>':'');
+    if(!editing){
+      tb.querySelectorAll("tr").forEach(function(tr,i){
+        tr.classList.add("clickable-row");
+        tr.onclick=function(){var r=displayRows[i];if(r)openDetailDrawer("pessoal_tbl",r,PESSOAL_FIXED.concat([]));};
+      });
+    }
     var eb=document.getElementById("pessoal_tbl_edit"),actions=document.getElementById("pessoal_tbl_edit_actions"),sb=document.getElementById("pessoal_tbl_save");
     if(eb){
       if(editing){eb.hidden=true;actions.hidden=false;sb.disabled=!pessoalDirty;}
@@ -6311,7 +7146,66 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     }).join("");
     box.innerHTML='<div class="pstat pstat-total"><span>Departamento — férias gozadas</span><b>'+pctBR(deptPct)+'</b></div>'+divHtml;
   }
-  function refreshPessoal(){pessoalRecalcVacation();renderPessoalTable();renderFeriasTable();renderPessoalStats();renderFeriasLegend();renderFeriasJump();renderYearTabs();renderPessoalCards();}
+  /* ── Calendário de disponibilidade (mês atual) — quantos militares disponíveis por dia ── */
+  function pessoalIndisponivelNoDia(nome,ds){return !!dayStatus(nome,ds);}
+  function renderPessoalDispCal(){
+    var box=document.getElementById("pessoal_disp_cal");
+    if(!box)return;
+    var total=pessoalRows.length;
+    if(!total){box.innerHTML='<div style="font-size:11px;color:var(--text3);font-style:italic">Nenhum militar cadastrado.</div>';return;}
+    var y=TODAY.getFullYear(),m=TODAY.getMonth(),lastDay=new Date(y,m+1,0).getDate();
+    var days=[];
+    for(var d=1;d<=lastDay;d++){
+      var dt=new Date(y,m,d),ds=dstr(dt);
+      var indispo=pessoalRows.filter(function(r){return pessoalIndisponivelNoDia(r.nome||"",ds);}).length;
+      days.push({d:d,disp:total-indispo,total:total,isToday:dt.getTime()===TODAY.getTime()});
+    }
+    var max=total;
+    box.innerHTML='<div style="display:flex;gap:3px;align-items:flex-end;height:90px">'+days.map(function(x){
+      var pct=Math.round(x.disp/max*100);
+      var color=pct>=70?"var(--c-teal)":(pct>=40?"var(--c-amber)":"var(--c-red)");
+      return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px" title="Dia '+x.d+': '+x.disp+'/'+x.total+' disponíveis">'+
+        '<div style="width:100%;height:70px;display:flex;align-items:flex-end;background:var(--c-100);border-radius:3px;overflow:hidden'+(x.isToday?';box-shadow:0 0 0 2px var(--c-blue)':'')+'"><div style="width:100%;height:'+pct+'%;background:'+color+'"></div></div>'+
+        '<span style="font-size:8px;color:var(--text3)">'+x.d+'</span>'+
+      '</div>';
+    }).join("")+'</div>';
+  }
+  /* ── Alerta de sobreposição — muitos militares em férias/afastamento no mesmo período ── */
+  function pessoalOverlapThreshold(){return Math.max(2,Math.ceil(pessoalRows.length*0.3));}
+  function renderPessoalOverlapAlert(){
+    var box=document.getElementById("pessoal_overlap_alert");
+    if(!box)return;
+    var total=pessoalRows.length;
+    if(!total){box.innerHTML="";return;}
+    var thr=pessoalOverlapThreshold();
+    var y=TODAY.getFullYear(),m=TODAY.getMonth(),lastDay=new Date(y,m+1,0).getDate();
+    var peakDay=null,peakCount=0;
+    for(var d=1;d<=lastDay;d++){
+      var ds=dstr(new Date(y,m,d));
+      var n=pessoalRows.filter(function(r){return pessoalIndisponivelNoDia(r.nome||"",ds);}).length;
+      if(n>peakCount){peakCount=n;peakDay=d;}
+    }
+    if(peakCount>=thr){
+      box.innerHTML='<div class="ferias-msg warn" style="display:block;margin-bottom:14px">⚠ Sobreposição alta em '+peakDay+'/'+String(m+1).padStart(2,"0")+': <b>'+peakCount+' de '+total+'</b> militares indisponíveis (limite de atenção: '+thr+').</div>';
+    }else box.innerHTML="";
+  }
+  /* ── Escala automática — sugestão simples por rodízio entre os disponíveis hoje ── */
+  function pessoalEscalaAutomatica(){
+    var disponiveis=pessoalRows.filter(function(r){return !pessoalIndisponivelNoDia(r.nome||"",dstr(TODAY));});
+    var bg=ensureModal("pessoalEscalaBg","Sugestão de escala — "+TODAY.toLocaleDateString("pt-BR"));
+    var body=bg.querySelector(".mbody");
+    if(!disponiveis.length){
+      body.innerHTML='<div style="font-size:12px;color:var(--text3);font-style:italic">Nenhum militar disponível hoje para compor escala.</div>';
+    }else{
+      var ordenados=disponiveis.slice().sort(function(a,b){return(+a.antiguidade||9999)-(+b.antiguidade||9999);});
+      body.innerHTML='<div style="font-size:11.5px;color:var(--text3);margin-bottom:10px">Sugestão gerada por antiguidade entre os '+ordenados.length+' militares disponíveis hoje (sem férias/afastamento ativos). Ajuste conforme a necessidade do serviço.</div>'+
+        '<div class="dt-table-wrap" style="margin-bottom:0"><table class="dt-table" style="min-width:0"><thead><tr><th>#</th><th>Nome</th><th>Posto/Grad.</th><th>Divisão</th><th>Função</th></tr></thead><tbody>'+
+        ordenados.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(r.nome||"—")+'</td><td>'+esc(r.posto||"—")+'</td><td>'+esc(r.divisao||"—")+'</td><td>'+esc(r.funcao||"—")+'</td></tr>';}).join("")+
+        '</tbody></table></div>';
+    }
+    bg.classList.add("open");
+  }
+  function refreshPessoal(){pessoalRecalcVacation();renderPessoalTable();renderFeriasTable();renderPessoalStats();renderFeriasLegend();renderFeriasJump();renderYearTabs();renderPessoalCards();renderPessoalDispCal();renderPessoalOverlapAlert();}
   function cycleLabel(y){return "DEZ/"+String(y).slice(2)+"–NOV/"+String(y+1).slice(2);}
   function renderYearTabs(){
     var box=document.getElementById("pessoal_year_tabs");
@@ -6621,6 +7515,8 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     });
     wireFeriasUI();
     wirePessoalCardsUI();
+    var escBtn=document.getElementById("pessoal_escala_btn");
+    if(escBtn)escBtn.onclick=pessoalEscalaAutomatica;
     refreshPessoal();
     renderFeriasJump();
     var tag=document.getElementById("pessoal_synctag");
