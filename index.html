@@ -4895,6 +4895,8 @@ setTimeout(hideSplash,12000);
           ["P","PO","IO","IM"].map(function(k){return '<option value="'+k+'">'+esc(NAV_ST_LABELS[k])+'</option>';}).join("")+
         '</select></div>'+
         '<div class="fld"><label>Data de vigência da alteração</label><input type="date" id="nva_vigencia" value="'+todayStr+'"></div>'+
+        '<div class="fld"><label>Data de retorno ao normal (opcional)</label><input type="date" id="nva_fim"></div>'+
+        '<div class="fld full" style="font-size:10.5px;color:var(--text3)">Se a alteração já é passada (retroativa) e o navio já voltou ao normal, preencha também a data de retorno — assim o período fica corretamente registrado na Timeline de Status e no Relatório de Operacionalidade, sem mudar o estado atual da tabela.</div>'+
         '<div class="fld full"><label>Nova restrição (opcional)</label><input id="nva_restricao" placeholder="Ex.: 200/931"></div>'+
         '<div class="fld"><label>MSG *</label><input id="nva_msg" placeholder="Ex.: P031423Z/JUL/2026"></div>'+
         '<div class="fld"><label>Prazo *</label><input type="date" id="nva_prazo"></div>'+
@@ -4920,13 +4922,14 @@ setTimeout(hideSplash,12000);
     }
     errEl.style.display="none";
     var vigencia=document.getElementById("nva_vigencia").value||navDstr(TODAY);
+    var fim=document.getElementById("nva_fim").value||"";
     var novaCondef=document.getElementById("nva_condef").value||"";
     var restricaoTxt=(document.getElementById("nva_restricao").value||"").trim();
     var obsTxt=(document.getElementById("nva_obs").value||"").trim();
     var todayStr=navDstr(TODAY);
     var isRetroativo=vigencia<todayStr;
     var entry={
-      id:genUid("cdh"),ts:nowISO(),vigencia:vigencia,
+      id:genUid("cdh"),ts:nowISO(),vigencia:vigencia,fim:fim||"",
       condefAntes:ship.condef||"",condefDepois:novaCondef||(ship.condef||""),
       msgAntes:ship.msg||"",msgDepois:msg,
       restricaoAdicionada:restricaoTxt||"—",prazo:prazo,
@@ -4941,13 +4944,24 @@ setTimeout(hideSplash,12000);
       var prazoFmt=navFmtBR(prazo);
       ship.restricao=ship.restricao?ship.restricao+"\n"+(restricaoTxt||"—"):(restricaoTxt||"—");
       ship.previsao=ship.previsao?ship.previsao+"\n"+prazoFmt:prazoFmt;
+    }else if(novaCondef){
+      // Retroativo com condição informada: registra o período direto na linha do tempo de status
+      // (stHist), sem tocar no estado atual — assim a Timeline e o Relatório de Operacionalidade
+      // passam a contar esses dias, exatamente como pedido ("navio ficou IM de um período X a Y").
+      ship.stHist=ship.stHist||[];
+      ship.stHist.push({st:novaCondef,ts:new Date(vigencia+"T12:00:00").toISOString()});
+      if(fim&&fim>=vigencia){
+        var voltaDt=new Date(fim+"T12:00:00");voltaDt.setDate(voltaDt.getDate()+1);
+        ship.stHist.push({st:ship.condef||"",ts:voltaDt.toISOString()});
+      }
+      ship.stHist.sort(function(a,b){return new Date(a.ts)-new Date(b.ts);});
     }
     navSaveShips();
     await pushKV("navPush",NAVIOS_KEY,navShips);
-    auditPushOne("navios_table",ship.id,isRetroativo?("alteração retroativa registrada (vigência "+navFmtBR(vigencia)+")"):"alteração CONDEF inserida");
+    auditPushOne("navios_table",ship.id,isRetroativo?("alteração retroativa registrada (vigência "+navFmtBR(vigencia)+(fim?(" a "+navFmtBR(fim)):"")+")"):"alteração CONDEF inserida");
     touchLastEdit("navios_table");
     bg.classList.remove("open");
-    toast(isRetroativo?"📜 Alteração retroativa registrada no histórico":"✓ Alteração aplicada e registrada no histórico","ok");
+    toast(isRetroativo?"📜 Alteração retroativa registrada no histórico e na timeline":"✓ Alteração aplicada e registrada no histórico","ok");
     renderNavios();renderNaviosCards();
   }
   /* ── Tabela-resumo: cada restrição (linha) vinculada a um PPSS, com dados do pedido ── */
