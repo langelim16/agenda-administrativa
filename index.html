@@ -504,11 +504,11 @@ tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .nv-table:not(.nv-editing) .nv-actions-col{display:none}
 .nv-table.nv-editing .nv-actions-col{position:sticky;right:0;background:var(--surface);box-shadow:-4px 0 6px -4px rgba(0,0,0,.25);z-index:3}
 .nv-table.nv-editing th.nv-actions-col{background:var(--c-100)}
-.nv-table td{padding:7px 6px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;white-space:normal;line-height:1.3;background:var(--rowbg,transparent);text-align:center}
+.nv-table td{padding:7px 6px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;white-space:pre-line;line-height:1.3;background:var(--rowbg,transparent);text-align:center}
 .nv-table td:nth-child(3),.nv-table td.nv-cell{text-align:left}
 .nv-table tbody tr:hover td{background:var(--c-50)}
 .nv-table tbody tr:last-child td{border-bottom:none}
-.nv-table td.nv-cell:not(.nv-cell-ro){white-space:normal;overflow:visible;text-overflow:clip;max-width:none}
+.nv-table td.nv-cell:not(.nv-cell-ro){white-space:pre-line;overflow:visible;text-overflow:clip;max-width:none}
 .nv-table td[data-key="restricao"],.nv-table td[data-key="previsao"]{white-space:pre-line;text-align:left}
 .dt-table-title{text-align:center;font-size:14px;font-weight:700;color:var(--text);margin:0 0 8px}
 .dt-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xs);overflow-x:auto;margin-bottom:14px}
@@ -565,13 +565,13 @@ td.dt-daterange-cell input[type="date"]{width:100%;background:var(--c-50);border
 .pessoal-sort-btn:hover .sort-arrow{opacity:.85}
 .pessoal-sort-clear{background:none;border:none;color:var(--c-red);opacity:.6;font-size:9px;padding:0 0 0 4px;cursor:pointer;vertical-align:middle}
 .pessoal-sort-clear:hover{opacity:1}
-.dt-table td{padding:7px 6px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;white-space:normal;line-height:1.3;text-align:center}
+.dt-table td{padding:7px 6px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;white-space:pre-line;line-height:1.3;text-align:center}
 .dt-table td:first-child{text-align:left}
 .dt-table tbody tr:hover td{background:var(--c-50)}
 .dt-table tbody tr:last-child td{border-bottom:none}
 .dt-table td:first-child{font-weight:600}
 .dt-table td.dt-cell{cursor:text}
-.dt-table td.dt-cell:not(.dt-cell-ro){white-space:normal;overflow:visible;text-overflow:clip;max-width:none}
+.dt-table td.dt-cell:not(.dt-cell-ro){white-space:pre-line;overflow:visible;text-overflow:clip;max-width:none}
 .dt-table td.dt-cell:focus{outline:2px solid var(--c-blue);outline-offset:-2px;background:var(--c-sky)}
 .dt-table td.dt-cell:empty:before{content:"—";color:var(--text3)}
 .dt-table.dt-editing td.dt-cell-computed{background:var(--c-50);font-style:italic;color:var(--text2)}
@@ -2842,7 +2842,7 @@ function bindDataTable(cfg){
     afterCellEdit(row,td.dataset.key);
   });
   tbody.addEventListener("keydown",function(e){
-    if(e.key==="Enter"&&e.target.closest&&e.target.closest(".dt-cell")){e.preventDefault();e.target.blur();}
+    if(e.key==="Enter"&&e.target.closest&&e.target.closest(".dt-cell")){e.preventDefault();document.execCommand("insertText",false,"\n");}
   });
   tbody.addEventListener("change",function(e){
     if(!getEditing())return;
@@ -3071,10 +3071,9 @@ function migrateCols(loaded,fixedCols,rows){
 }
 function colWidthStyle(col){
   if(!col.width)return"";
-  // Colunas "multiline" (ex.: Restrição/Prazo do CONDEF, uma entrada por linha) não podem levar
-  // white-space:nowrap — isso forçaria tudo numa linha só e quebraria o pareamento visual por linha.
-  if(col.multiline)return ' style="width:'+col.width+'px;max-width:'+col.width+'px;overflow:hidden;white-space:pre-line"';
-  return ' style="width:'+col.width+'px;max-width:'+col.width+'px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"';
+  // white-space:pre-line (não nowrap): toda célula agora aceita ENTER pra pular linha dentro
+  // dela mesma (ex.: uma restrição/prazo por linha no CONDEF) — nowrap forçaria tudo numa linha só.
+  return ' style="width:'+col.width+'px;max-width:'+col.width+'px;overflow:hidden;white-space:pre-line"';
 }
 function renderThead(theadEl,cols,editing,actionsCls,noReorder,fixedKeys){
   if(!theadEl)return;
@@ -5129,7 +5128,7 @@ setTimeout(hideSplash,12000);
       td.textContent=v;
     });
     tbody.addEventListener("keydown",function(e){
-      if(e.key==="Enter"&&e.target.closest&&e.target.closest(".nv-cell")){e.preventDefault();e.target.blur();}
+      if(e.key==="Enter"&&e.target.closest&&e.target.closest(".nv-cell")){e.preventDefault();document.execCommand("insertText",false,"\n");}
     });
     tbody.addEventListener("change",function(e){
       var sel=e.target.closest&&e.target.closest(".nv-condef");
