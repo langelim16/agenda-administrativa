@@ -474,8 +474,10 @@ tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .nv-cancelbtn{color:var(--c-red)}
 .nv-cancelbtn:hover:not(:disabled){background:var(--c-red2)}
 .nv-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xs);overflow-x:auto;margin-bottom:14px}
-.nv-table{width:100%;min-width:860px;border-collapse:collapse;font-size:13px}
-.nv-table th{background:var(--c-100);color:var(--text2);font-size:10px;letter-spacing:.3px;text-transform:uppercase;text-align:center;padding:7px 6px;border-bottom:1px solid var(--border);position:sticky;top:0;line-height:1.25;white-space:normal}
+.nv-table{width:max-content;min-width:max(860px,100%);border-collapse:collapse;font-size:13px}
+.nv-table th{background:var(--c-100);color:var(--text2);font-size:10px;letter-spacing:.3px;text-transform:uppercase;text-align:left;padding:7px 6px;border-bottom:1px solid var(--border);position:sticky;top:0;line-height:1.25;white-space:normal}
+.nv-table .th-inner{justify-content:flex-start}
+.nv-table th.nv-actions-col{text-align:center}
 .nv-table.nv-editing th:nth-child(1),.nv-table.nv-editing td:nth-child(1){width:5%}
 .nv-table.nv-editing th:nth-child(2),.nv-table.nv-editing td:nth-child(2){width:8%}
 .nv-table.nv-editing th:nth-child(3),.nv-table.nv-editing td:nth-child(3){width:11%}
@@ -554,7 +556,7 @@ td.dt-daterange-cell input[type="date"]{width:100%;background:var(--c-50);border
 .ferias-cat-pick{background:var(--c-50);border:1.5px solid var(--border);border-radius:var(--r-md);padding:12px 14px;text-align:left;font-size:13px;color:var(--text);display:flex;align-items:center;gap:10px}
 .ferias-cat-pick:hover{border-color:var(--c-blue);background:var(--c-sky)}
 .ferias-cat-dot{width:13px;height:13px;border-radius:3px;flex-shrink:0}
-.dt-table{width:100%;min-width:520px;border-collapse:collapse;font-size:13px}
+.dt-table{width:max-content;min-width:max(520px,100%);border-collapse:collapse;font-size:13px}
 .dt-table th{background:var(--c-100);color:var(--text2);font-size:10px;letter-spacing:.3px;text-transform:uppercase;text-align:center;padding:7px 6px;border-bottom:1px solid var(--border);position:sticky;top:0;line-height:1.25;white-space:normal}
 .pessoal-sort-btn{background:none;border:none;color:inherit;font:inherit;letter-spacing:inherit;text-transform:inherit;padding:0;display:inline-flex;align-items:center;gap:3px;cursor:pointer}
 .pessoal-sort-btn .sort-arrow{font-size:9px;opacity:.55}
@@ -3109,14 +3111,19 @@ function bindTheadEdit(theadEl,getCols,setDirty,rerenderFn,getArr,fixedKeys){
   enableColReorder(theadEl,getCols,setDirty,rerenderFn);
 }
 function enableColResize(theadEl,getCols,setDirty,rerenderFn){
-  var th=null,startX=0,startW=0;
+  var th=null,startX=0,startW=0,lastW=0,COL_MIN_W=24;
   theadEl.addEventListener("pointerdown",function(e){
     var handle=e.target.closest&&e.target.closest(".col-resize");
     if(!handle)return;
     th=handle.closest("th[data-ci]");
     if(!th)return;
     startX=e.clientX;
-    startW=th.getBoundingClientRect().width;
+    // Usa a largura já atribuída à coluna (col.width) como base, não a caixa renderizada: em
+    // tabelas com "width:max-content" o navegador pode exibir a coluna mais estreita do que o
+    // valor pedido enquanto outras colunas ainda disputam espaço — se a base do arraste fosse essa
+    // largura renderizada (já espremida), o arraste parecia "não pegar" e esbarrava sempre no mesmo teto.
+    var col=getCols()[+th.dataset.ci];
+    startW=lastW=(col&&col.width)||th.getBoundingClientRect().width;
     document.body.classList.add("no-select-dragging");
     try{handle.setPointerCapture(e.pointerId);}catch(_){}
     e.preventDefault();
@@ -3126,16 +3133,15 @@ function enableColResize(theadEl,getCols,setDirty,rerenderFn){
     if(!th)return;
     e.preventDefault();
     e.stopPropagation();
-    var w=Math.max(40,Math.round(startW+(e.clientX-startX)));
-    th.style.width=w+"px";
-    th.style.maxWidth=w+"px";
+    lastW=Math.max(COL_MIN_W,Math.round(startW+(e.clientX-startX)));
+    th.style.width=lastW+"px";
+    th.style.maxWidth=lastW+"px";
   });
   function end(e){
     if(!th)return;
     if(e){e.preventDefault();e.stopPropagation();}
     document.body.classList.remove("no-select-dragging");
-    var w=Math.max(40,Math.round(th.getBoundingClientRect().width));
-    getCols()[+th.dataset.ci].width=w;
+    getCols()[+th.dataset.ci].width=lastW;
     setDirty(true);
     th=null;
     if(rerenderFn)rerenderFn();
@@ -4626,7 +4632,9 @@ setTimeout(hideSplash,12000);
     {key:"previsao",title:"Previsão Término"},{key:"obs",title:"Obs."},{key:"comissao",title:"Comissão"},
     {key:"periodo",title:"Período"},{key:"diasMar",title:"Dias de Mar"}
   ];
-  var NAVIOS_FIXED_KEYS=NAVIOS_FIXED.map(function(c){return c.key;});
+  // Só "nome" fica protegido contra exclusão: é a chave usada para cruzar o meio com outras abas
+  // (Pessoal, Horas Motores, PPSS). As demais colunas padrão podem ser excluídas como as extras.
+  var NAVIOS_FIXED_KEYS=["nome"];
   function navColsDefault(){return NAVIOS_FIXED.map(function(c){return{key:c.key,title:c.title,type:c.type};});}
   var navShips=[],navCards=[],navBound=false;
   var navCols=navColsDefault();
@@ -5097,8 +5105,9 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     rows.forEach(function(r){need.forEach(function(n){if(r[n[0]]===undefined)r[n[0]]="";});});
     return cols;
   }
-  var CLG_T1_FIXED_KEYS=CLG_T1_FIXED.map(function(c){return c.key;});
-  var CLG_T2_FIXED_KEYS=CLG_T2_FIXED.map(function(c){return c.key;});
+  // Só "meio" fica protegido: é a chave usada para cruzar o estoque entre as sub-tabelas de CLG.
+  var CLG_T1_FIXED_KEYS=["meio"];
+  var CLG_T2_FIXED_KEYS=["meio"];
   function clgT1ColsDefault(){return CLG_T1_FIXED.map(function(c){return{key:c.key,title:c.title};});}
   function clgT2ColsDefault(){return CLG_T2_FIXED.map(function(c){return{key:c.key,title:c.title};});}
   var clgT1=[],clgT2=[],clgCards=[],clgBound=false;
@@ -5109,7 +5118,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
   /* ── Estoque de Gasolina/Lubrificantes/Graxas: roster fixo de meios (identidade estrutural,
      igual ao HORAS_SHIP_LIST) — os valores de estoque em si vêm do Supabase, nunca hardcoded. ── */
   var CLG_T3_FIXED=[{key:"meio",title:"Meio"},{key:"gasolina",title:"Gasolina"},{key:"lubrificantes",title:"Lubrificantes"},{key:"graxas",title:"Graxas"}];
-  var CLG_T3_FIXED_KEYS=CLG_T3_FIXED.map(function(c){return c.key;});
+  var CLG_T3_FIXED_KEYS=["meio"];
   var CLG_T3_NAV_ROSTER=["NHO G. Sampaio","NHiBTenCastelo","AvHoFlu Rio Tocantins","AvHoFlu Rio Xingu"];
   var CLG_T3_EMB_ROSTER=["AvB Vega","AvB Denébola"];
   var CLG_T3NAV_KEY="aa_clg_t3nav_v1",CLG_T3EMB_KEY="aa_clg_t3emb_v1";
@@ -5395,7 +5404,8 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     {key:"msgNav",title:"MSG NAV"},
     {key:"situacao",title:"Situação",type:"choice",options:["Em andamento","Concluído","Aguardando orçamento","Cancelado"]}
   ];
-  var PPSS_FIXED_KEYS=PPSS_FIXED.map(function(c){return c.key;});
+  // "navio"+"numero" protegidos: juntos identificam o pedido para reconciliação/importação.
+  var PPSS_FIXED_KEYS=["navio","numero"];
   function ppssColsDefault(){return PPSS_FIXED.map(function(c){var o={key:c.key,title:c.title};if(c.type)o.type=c.type;if(c.options)o.options=c.options;return o;});}
   var ppssRows=[],ppssCols=ppssColsDefault(),ppssCards=[],ppssBound=false;
   var ppssEditing=false,ppssDirty=false,ppssSnapshot=null,ppssColsSnapshot=null;
@@ -5674,7 +5684,8 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     {key:"custoComb",title:"Combustível (R$ acum.)"},
     {key:"obs",title:"Observações"}
   ];
-  var VTR_FIXED_KEYS=VTR_FIXED.map(function(c){return c.key;});
+  // "placa" protegida: usada para reconciliar viaturas na importação/CONFIG OM.
+  var VTR_FIXED_KEYS=["placa"];
   /* Colunas salvas em versões antigas não trazem as colunas novas — insere na posição correta. */
   function garReconcileCols(cols,rows){
     var need=[["km","Odômetro (km)","prioridade"],["kmProxOleo","Próx. troca óleo (km)","km"],["crlvVenc","Venc. CRLV","seguroVenc"],["vistoriaVenc","Venc. Vistoria","crlvVenc"],["custoComb","Combustível (R$ acum.)","manutExtras"]];
@@ -7349,7 +7360,8 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       getTitles:function(){return pessoalCols;},setTitles:function(v){pessoalCols=v;},
       saveTitlesFn:pessoalSaveCols,titlesKey:PESSOAL_COLS_KEY,
       getTitlesSnap:function(){return pessoalColsSnapshot;},setTitlesSnap:function(v){pessoalColsSnapshot=v;},
-      fixedKeys:[],getLock:function(){return GLOBAL_EDIT_LOCK;},setLock:function(v){GLOBAL_EDIT_LOCK=v;},who:"tbl",
+      // Só "nome" fica protegido: é a chave usada para cruzar o militar com Férias/Escala e as demais abas.
+      fixedKeys:["nome"],getLock:function(){return GLOBAL_EDIT_LOCK;},setLock:function(v){GLOBAL_EDIT_LOCK=v;},who:"tbl",
       renderFn:renderPessoalTable,afterRender:refreshPessoal,
       updateToolbar:function(){
         var eb=document.getElementById("pessoal_tbl_edit"),actions=document.getElementById("pessoal_tbl_edit_actions"),sb=document.getElementById("pessoal_tbl_save");
