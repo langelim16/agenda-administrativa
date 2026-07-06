@@ -509,6 +509,7 @@ tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .nv-table tbody tr:hover td{background:var(--c-50)}
 .nv-table tbody tr:last-child td{border-bottom:none}
 .nv-table td.nv-cell:not(.nv-cell-ro){white-space:normal;overflow:visible;text-overflow:clip;max-width:none}
+.nv-table td[data-key="restricao"],.nv-table td[data-key="previsao"]{white-space:pre-line;text-align:left}
 .dt-table-title{text-align:center;font-size:14px;font-weight:700;color:var(--text);margin:0 0 8px}
 .dt-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xs);overflow-x:auto;margin-bottom:14px}
 .ferias-legend{display:flex;align-items:center;font-size:11px;color:var(--text2);margin:0 0 8px;gap:5px}
@@ -1470,8 +1471,10 @@ tr.row-crit{background:rgba(233,150,53,.20)}
   <span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-teal)"></span>"PO" — Operando com restrição</span>
 </div>
 
+<div class="dt-section-head"><h3 class="dt-table-title">Condição de Eficiência dos Meios</h3></div>
 <div class="nv-toolbar" id="nv_table_toolbar">
   <span class="last-edit" id="nv_table_lastedit"></span>
+  <button class="nv-editbtn" id="nv_condef_alt_btn">+ Inserir alteração</button>
   <button class="nv-editbtn" id="nv_table_edit">✎ Editar tabela</button>
   <span class="nv-edit-actions" id="nv_table_edit_actions" hidden>
     <button class="dt-colbtn" id="nv_table_addcol">+ coluna</button>
@@ -1487,6 +1490,14 @@ tr.row-crit{background:rgba(233,150,53,.20)}
       </tr>
     </thead>
     <tbody id="nv_tbody"></tbody>
+  </table>
+</div>
+
+<div class="dt-section-head"><h3 class="dt-table-title">Vinculações de PPSS às Restrições CONDEF</h3></div>
+<div class="dt-table-wrap">
+  <table class="dt-table" style="min-width:0" id="nv_ppsslink_table">
+    <thead><tr><th>Navio</th><th>Restrição</th><th>Prazo</th><th>PPSS Nº</th><th>Situação</th><th>Valor Orçado</th></tr></thead>
+    <tbody id="nv_ppsslink_tbody"></tbody>
   </table>
 </div>
 
@@ -3060,6 +3071,9 @@ function migrateCols(loaded,fixedCols,rows){
 }
 function colWidthStyle(col){
   if(!col.width)return"";
+  // Colunas "multiline" (ex.: Restrição/Prazo do CONDEF, uma entrada por linha) não podem levar
+  // white-space:nowrap — isso forçaria tudo numa linha só e quebraria o pareamento visual por linha.
+  if(col.multiline)return ' style="width:'+col.width+'px;max-width:'+col.width+'px;overflow:hidden;white-space:pre-line"';
   return ' style="width:'+col.width+'px;max-width:'+col.width+'px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"';
 }
 function renderThead(theadEl,cols,editing,actionsCls,noReorder,fixedKeys){
@@ -4628,14 +4642,14 @@ setTimeout(hideSplash,12000);
   var NAVIOS_KEY="aa_navios_ships_v1",NAVIOS_CARDS_KEY="aa_navios_cards_v1",NAVIOS_COLS_KEY="aa_navios_cols_v1";
   var NAVIOS_FIXED=[
     {key:"tipo",title:"Tipo"},{key:"indicativo",title:"Indicativo Costado"},{key:"nome",title:"Nome"},
-    {key:"msg",title:"Msg"},{key:"condef",title:"Condef",type:"select"},{key:"restricao",title:"Restrição"},
-    {key:"previsao",title:"Previsão Término"},{key:"obs",title:"Obs."},{key:"comissao",title:"Comissão"},
+    {key:"msg",title:"Msg"},{key:"condef",title:"Condef",type:"select"},{key:"restricao",title:"Restrição",multiline:true},
+    {key:"previsao",title:"Previsão Término",multiline:true},{key:"obs",title:"Obs."},{key:"comissao",title:"Comissão"},
     {key:"periodo",title:"Período"},{key:"diasMar",title:"Dias de Mar"}
   ];
   // Só "nome" fica protegido contra exclusão: é a chave usada para cruzar o meio com outras abas
   // (Pessoal, Horas Motores, PPSS). As demais colunas padrão podem ser excluídas como as extras.
   var NAVIOS_FIXED_KEYS=["nome"];
-  function navColsDefault(){return NAVIOS_FIXED.map(function(c){return{key:c.key,title:c.title,type:c.type};});}
+  function navColsDefault(){return NAVIOS_FIXED.map(function(c){var o={key:c.key,title:c.title,type:c.type};if(c.multiline)o.multiline=true;return o;});}
   var navShips=[],navCards=[],navBound=false;
   var navCols=navColsDefault();
   // Trava de edição: null (livre) | "table" | "card:<id>" — impede editar tabela e cartões ao mesmo tempo
@@ -4665,8 +4679,17 @@ setTimeout(hideSplash,12000);
     try{nc=await gtj(NAVIOS_COLS_KEY);}catch(e){}
     if(!nc||!nc.length){try{nc=JSON.parse(localStorage.getItem(NAVIOS_COLS_KEY));}catch(e){}}
     navCols=migrateCols(nc,NAVIOS_FIXED,navShips);
+    // Reforça multiline mesmo em colunas já persistidas (instalações antigas), pra não perder
+    // a quebra de linha caso o usuário já tenha definido uma largura customizada nessa coluna.
+    navCols.forEach(function(c){if(c.key==="restricao"||c.key==="previsao")c.multiline=true;});
     var seeded=false;
-    navShips.forEach(function(sh){if(!sh.stHist||!sh.stHist.length){sh.stHist=[{st:sh.condef||"",ts:nowISO()}];seeded=true;}});
+    navShips.forEach(function(sh){
+      if(!sh.stHist||!sh.stHist.length){sh.stHist=[{st:sh.condef||"",ts:nowISO()}];seeded=true;}
+      // Migração: vínculo único (ppssLink) -> mapa por linha de restrição (ppssLinks), permitindo
+      // vincular cada restrição individualmente quando a célula tem mais de uma (uma por linha).
+      if(!sh.ppssLinks){sh.ppssLinks=sh.ppssLink?{0:sh.ppssLink}:{};seeded=true;}
+      if(!sh.condefHist)sh.condefHist=[];
+    });
     if(seeded)pushKV("navPush",NAVIOS_KEY,navShips);
     await navLoadPpss();
     navSaveShips();navSaveCards();navSaveCols();
@@ -4723,6 +4746,9 @@ setTimeout(hideSplash,12000);
   }
   function navPpssById(id){return navPpssCache.find(function(r){return r.id===id;})||null;}
   function normNm(s){return String(s||"").toLowerCase().normalize("NFD").replace(/[^a-z0-9]/g,"");}
+  // Restrição/Prazo passaram a admitir múltiplas linhas (uma restrição por linha, pareada por posição
+  // com o prazo de mesma linha) — necessário pra vincular cada restrição a um PPSS individualmente.
+  function navSplitLines(s){return String(s||"").split("\n").map(function(x){return x.trim();}).filter(function(x){return x!=="";});}
   function navPaintExtras(){
     navShips.forEach(function(s){
       var sel=document.querySelector('#nv_tbody .nv-condef[data-id="'+s.id+'"]');
@@ -4741,13 +4767,17 @@ setTimeout(hideSplash,12000);
       var rtd=document.querySelector('#nv_tbody td[data-id="'+s.id+'"][data-key="restricao"]');
       if(rtd){
         rtd.classList.add("nv-restr-link");
-        rtd.title="Clique para vincular esta restrição a um PPSS";
-        if(s.ppssLink){
-          var p=navPpssById(s.ppssLink);
+        var lines=navSplitLines(s.restricao);
+        rtd.title=lines.length>1?"Clique para vincular uma das restrições a um PPSS":"Clique para vincular esta restrição a um PPSS";
+        var links=s.ppssLinks||{};
+        lines.forEach(function(ln,i){
+          var pid=links[i];
+          if(!pid)return;
+          var p=navPpssById(pid);
           var b=document.createElement("div");b.className="nv-ppss-badge";
-          b.textContent="🔗 PPSS "+(p?("Nº "+(p.numero||"—")+(p.situacao?" · "+p.situacao:"")):"(não encontrado)");
+          b.textContent="🔗 "+(lines.length>1?("["+(i+1)+"] "):"")+"PPSS "+(p?("Nº "+(p.numero||"—")+(p.situacao?" · "+p.situacao:"")):"(não encontrado)");
           rtd.appendChild(b);
-        }
+        });
       }
     });
   }
@@ -4761,7 +4791,12 @@ setTimeout(hideSplash,12000);
     bg.addEventListener("click",function(e){if(e.target===bg||e.target.dataset.close)bg.classList.remove("open");});
     return bg;
   }
-  function navOpenPpssPicker(ship){
+  // Abre a lista de PPSS pra vincular a UMA restrição específica (lineIdx = posição da linha
+  // dentro da célula Restrição, pareada com a mesma posição na célula Prazo).
+  function navOpenPpssPicker(ship,lineIdx){
+    lineIdx=lineIdx||0;
+    var lines=navSplitLines(ship.restricao);
+    var restrTxt=lines[lineIdx]!==undefined?lines[lineIdx]:(ship.restricao||"—");
     var bg=navEnsureModal("nvppssBg","Vincular restrição a um PPSS");
     var body=bg.querySelector(".mbody");
     var shipN=normNm(ship.nome);
@@ -4770,8 +4805,9 @@ setTimeout(hideSplash,12000);
       var bm=shipN&&normNm(b.navio).indexOf(shipN)>=0?0:1;
       return am-bm;
     });
-    var cur=ship.ppssLink||"";
-    var head='<div style="font-size:12px;color:var(--text2);margin-bottom:10px"><b>'+esc(ship.nome||"—")+'</b> — restrição: <i>'+esc(ship.restricao||"—")+'</i></div>';
+    var links=ship.ppssLinks||{};
+    var cur=links[lineIdx]||"";
+    var head='<div style="font-size:12px;color:var(--text2);margin-bottom:10px"><b>'+esc(ship.nome||"—")+'</b> — restrição'+(lines.length>1?(" ["+(lineIdx+1)+"/"+lines.length+"]"):"")+': <i>'+esc(restrTxt)+'</i></div>';
     var items=list.length?list.map(function(p){
       var match=shipN&&normNm(p.navio).indexOf(shipN)>=0;
       return '<div class="ps-item" data-pid="'+p.id+'" style="'+(p.id===cur?"box-shadow:0 0 0 2px var(--c-blue) inset;":"")+'">'+
@@ -4787,10 +4823,10 @@ setTimeout(hideSplash,12000);
       '</div>';
     body.innerHTML=head+'<div style="max-height:46vh;overflow-y:auto">'+items+'</div>'+foot;
     body.querySelectorAll(".ps-item").forEach(function(el){
-      el.onclick=function(){navSetPpssLink(ship,el.dataset.pid);bg.classList.remove("open");};
+      el.onclick=function(){navSetPpssLink(ship,lineIdx,el.dataset.pid);bg.classList.remove("open");};
     });
     var un=document.getElementById("nvppss_unlink");
-    if(un)un.onclick=function(){navSetPpssLink(ship,"");bg.classList.remove("open");};
+    if(un)un.onclick=function(){navSetPpssLink(ship,lineIdx,"");bg.classList.remove("open");};
     var det=document.getElementById("nvppss_detail");
     if(det)det.onclick=function(){
       var p=navPpssById(cur);
@@ -4799,14 +4835,142 @@ setTimeout(hideSplash,12000);
     };
     bg.classList.add("open");
   }
-  async function navSetPpssLink(ship,pid){
-    ship.ppssLink=pid||"";
+  // Quando a célula Restrição tem mais de uma linha, mostra primeiro este seletor pra escolher
+  // qual das restrições receberá o vínculo, antes de abrir a lista de PPSS.
+  function navOpenRestrLinePicker(ship){
+    var bg=navEnsureModal("nvRestrLineBg","Selecione a restrição — "+(ship.nome||"—"));
+    var body=bg.querySelector(".mbody");
+    var lines=navSplitLines(ship.restricao);
+    var prazos=navSplitLines(ship.previsao);
+    var links=ship.ppssLinks||{};
+    body.innerHTML=lines.map(function(ln,i){
+      var pid=links[i],p=pid?navPpssById(pid):null;
+      return '<div class="ps-item" data-i="'+i+'">'+
+        '<div class="ps-main"><div class="ps-num">Restrição '+(i+1)+': '+esc(ln)+'</div>'+
+        '<div class="ps-meta">Prazo: '+esc(prazos[i]||"—")+(p?(" · vinculado a PPSS Nº "+esc(p.numero||"—")):"")+'</div></div>'+
+      '</div>';
+    }).join("");
+    body.querySelectorAll(".ps-item").forEach(function(el){
+      el.onclick=function(){bg.classList.remove("open");navOpenPpssPicker(ship,+el.dataset.i);};
+    });
+    bg.classList.add("open");
+  }
+  async function navSetPpssLink(ship,lineIdx,pid){
+    ship.ppssLinks=ship.ppssLinks||{};
+    if(pid)ship.ppssLinks[lineIdx]=pid;else delete ship.ppssLinks[lineIdx];
     navSaveShips();
     await pushKV("navPush",NAVIOS_KEY,navShips);
     auditPushOne("navios_table",ship.id,pid?"vínculo PPSS definido":"vínculo PPSS removido");
     touchLastEdit("navios_table");
     toast(pid?"🔗 Restrição vinculada ao PPSS":"Vínculo removido","ok");
     renderNavios();
+  }
+  /* ── Inserir alteração de CONDEF sem precisar editar a tabela: seleciona o navio, preenche
+     a alteração (MSG e Prazo obrigatórios) e registra em histórico (ship.condefHist). Se a data
+     de vigência for retroativa (passada), só entra no histórico — não altera os campos atuais. ── */
+  function navDstr(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+  function navFmtBR(iso){return iso?iso.split("-").reverse().join("/"):"";}
+  function navOpenAltShipPicker(){
+    var bg=navEnsureModal("nvAltShipBg","Inserir alteração — selecione o navio");
+    var body=bg.querySelector(".mbody");
+    var list=navShips.slice().sort(function(a,b){return String(a.nome||"").localeCompare(String(b.nome||""));});
+    body.innerHTML=list.length?list.map(function(s){
+      return '<div class="ps-item" data-id="'+s.id+'">'+
+        '<div class="ps-main"><div class="ps-num">'+esc(s.nome||"—")+'</div>'+
+        '<div class="ps-meta">'+esc(s.tipo||"")+(s.condef?" · CONDEF atual: "+esc(s.condef):"")+'</div></div>'+
+      '</div>';
+    }).join(""):'<div class="spot-empty">Nenhuma embarcação cadastrada.</div>';
+    body.querySelectorAll(".ps-item").forEach(function(el){
+      el.onclick=function(){bg.classList.remove("open");var ship=navFindShip(el.dataset.id);if(ship)navOpenAltForm(ship);};
+    });
+    bg.classList.add("open");
+  }
+  function navOpenAltForm(ship){
+    var bg=navEnsureModal("nvAltFormBg","Inserir alteração — "+(ship.nome||"—"));
+    var body=bg.querySelector(".mbody");
+    var todayStr=navDstr(TODAY);
+    body.innerHTML=
+      '<div style="font-size:12px;color:var(--text2);margin-bottom:10px">Embarcação: <b>'+esc(ship.nome||"—")+'</b> · CONDEF atual: <b>'+esc(ship.condef||"—")+'</b></div>'+
+      '<div class="mgrid">'+
+        '<div class="fld"><label>Nova condição CONDEF</label><select id="nva_condef"><option value="">Manter atual</option>'+
+          ["P","PO","IO","IM"].map(function(k){return '<option value="'+k+'">'+esc(NAV_ST_LABELS[k])+'</option>';}).join("")+
+        '</select></div>'+
+        '<div class="fld"><label>Data de vigência da alteração</label><input type="date" id="nva_vigencia" value="'+todayStr+'"></div>'+
+        '<div class="fld full"><label>Nova restrição (opcional)</label><input id="nva_restricao" placeholder="Ex.: 200/931"></div>'+
+        '<div class="fld"><label>MSG *</label><input id="nva_msg" placeholder="Ex.: P031423Z/JUL/2026"></div>'+
+        '<div class="fld"><label>Prazo *</label><input type="date" id="nva_prazo"></div>'+
+        '<div class="fld full"><label>Observação (histórico)</label><input id="nva_obs" placeholder="Opcional"></div>'+
+      '</div>'+
+      '<div id="nva_err" class="ferias-msg warn" style="display:none;margin-top:10px"></div>'+
+      '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">'+
+        '<button class="bcancel" id="nva_cancel">Cancelar</button>'+
+        '<button class="bsave" id="nva_save">Salvar</button>'+
+      '</div>';
+    document.getElementById("nva_cancel").onclick=function(){bg.classList.remove("open");};
+    document.getElementById("nva_save").onclick=function(){navSaveAlteracao(ship,bg);};
+    bg.classList.add("open");
+  }
+  async function navSaveAlteracao(ship,bg){
+    var msg=(document.getElementById("nva_msg").value||"").trim();
+    var prazo=document.getElementById("nva_prazo").value||"";
+    var errEl=document.getElementById("nva_err");
+    if(!msg||!prazo){
+      errEl.textContent="Preencha MSG e Prazo — campos obrigatórios para salvar a alteração.";
+      errEl.style.display="block";
+      return;
+    }
+    errEl.style.display="none";
+    var vigencia=document.getElementById("nva_vigencia").value||navDstr(TODAY);
+    var novaCondef=document.getElementById("nva_condef").value||"";
+    var restricaoTxt=(document.getElementById("nva_restricao").value||"").trim();
+    var obsTxt=(document.getElementById("nva_obs").value||"").trim();
+    var todayStr=navDstr(TODAY);
+    var isRetroativo=vigencia<todayStr;
+    var entry={
+      id:genUid("cdh"),ts:nowISO(),vigencia:vigencia,
+      condefAntes:ship.condef||"",condefDepois:novaCondef||(ship.condef||""),
+      msgAntes:ship.msg||"",msgDepois:msg,
+      restricaoAdicionada:restricaoTxt||"—",prazo:prazo,
+      obs:obsTxt,retroativo:isRetroativo
+    };
+    ship.condefHist=ship.condefHist||[];
+    ship.condefHist.push(entry);
+    if(!isRetroativo){
+      if(novaCondef&&novaCondef!==ship.condef){ship.stHist=ship.stHist||[];ship.stHist.push({st:novaCondef,ts:nowISO()});}
+      if(novaCondef)ship.condef=novaCondef;
+      ship.msg=msg;
+      var prazoFmt=navFmtBR(prazo);
+      ship.restricao=ship.restricao?ship.restricao+"\n"+(restricaoTxt||"—"):(restricaoTxt||"—");
+      ship.previsao=ship.previsao?ship.previsao+"\n"+prazoFmt:prazoFmt;
+    }
+    navSaveShips();
+    await pushKV("navPush",NAVIOS_KEY,navShips);
+    auditPushOne("navios_table",ship.id,isRetroativo?("alteração retroativa registrada (vigência "+navFmtBR(vigencia)+")"):"alteração CONDEF inserida");
+    touchLastEdit("navios_table");
+    bg.classList.remove("open");
+    toast(isRetroativo?"📜 Alteração retroativa registrada no histórico":"✓ Alteração aplicada e registrada no histórico","ok");
+    renderNavios();renderNaviosCards();
+  }
+  /* ── Tabela-resumo: cada restrição (linha) vinculada a um PPSS, com dados do pedido ── */
+  function renderNaviosPpssLinkTable(){
+    var tbody=document.getElementById("nv_ppsslink_tbody");
+    if(!tbody)return;
+    var rows=[];
+    navShips.forEach(function(s){
+      var lines=navSplitLines(s.restricao),prazos=navSplitLines(s.previsao),links=s.ppssLinks||{};
+      lines.forEach(function(ln,i){
+        var pid=links[i];
+        if(!pid)return;
+        rows.push({navio:s.nome,restricao:ln,prazo:prazos[i]||"—",p:navPpssById(pid)});
+      });
+    });
+    if(!rows.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text3);font-style:italic">Nenhuma restrição vinculada a PPSS ainda.</td></tr>';return;}
+    tbody.innerHTML=rows.map(function(r){
+      return '<tr><td>'+esc(r.navio||"—")+'</td><td>'+esc(r.restricao||"—")+'</td><td>'+esc(r.prazo||"—")+'</td>'+
+        '<td>'+esc(r.p?(r.p.numero||"—"):"(não encontrado)")+'</td>'+
+        '<td>'+esc(r.p?(r.p.situacao||"—"):"—")+'</td>'+
+        '<td>'+(r.p?fmtBRL(moneyVal(r.p.orcamento)):"—")+'</td></tr>';
+    }).join("");
   }
   function navSegsForYear(s){
     var y=CUR_YEAR,start=new Date(y,0,1),endYear=new Date(y+1,0,1);
@@ -4903,6 +5067,7 @@ setTimeout(hideSplash,12000);
     navUpdateSyncTag();
     if(editing)bindRowDragGeneric(tb,function(){return navShips;},renderNavios,function(){navTableDirty=true;});
     if(!editing)navPaintExtras();
+    renderNaviosPpssLinkTable();
   }
   function navUpdateSyncTag(){
     var tag=document.getElementById("nv_synctag");
@@ -5036,7 +5201,10 @@ setTimeout(hideSplash,12000);
       var td=e.target.closest&&e.target.closest('td[data-key="restricao"]');
       if(!td)return;
       var ship=navFindShip(td.dataset.id);
-      if(ship)navOpenPpssPicker(ship);
+      if(!ship)return;
+      var lines=navSplitLines(ship.restricao);
+      if(lines.length>1)navOpenRestrLinePicker(ship);
+      else navOpenPpssPicker(ship,0);
     });
     document.getElementById("nv_tl_toggle").onclick=function(){
       var sec=document.getElementById("nv_tl_sec");
@@ -5045,6 +5213,7 @@ setTimeout(hideSplash,12000);
       if(!sec.hidden)navRenderTimeline();
     };
     document.getElementById("nv_oper_btn").onclick=navOperReport;
+    document.getElementById("nv_condef_alt_btn").onclick=navOpenAltShipPicker;
     wireCardsGrid({gridId:"nv_grid",addcardId:"nv_addcard",st:navCardSt,
       getCards:function(){return navCards;},setCards:function(v){navCards=v;},
       save:navSaveCards,pushTag:"navPush",key:function(){return NAVIOS_CARDS_KEY;},
