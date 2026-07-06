@@ -1631,7 +1631,7 @@ tr.row-crit{background:rgba(233,150,53,.20)}
 <div class="tl-legend-top" id="horas_legend"></div>
 <div class="stats-card" id="horas_dash" style="margin-bottom:18px;flex:none"></div>
 
-<div class="dt-section-head"><h3 class="dt-table-title">Horas acumuladas — tendência por embarcação</h3></div>
+<div class="dt-section-head"><h3 class="dt-table-title">Horas acumuladas</h3></div>
 <div class="stats-card" id="horas_chart_card" style="margin-bottom:18px;flex:none">
   <div class="flt-bar" style="margin-bottom:8px"><select id="horas_chart_ship"></select></div>
   <div id="horas_chart"></div>
@@ -2695,7 +2695,7 @@ function svgLineChart(series,opts){
   var minV=Math.min.apply(null,pts.map(function(p){return p.v;})),maxV=Math.max.apply(null,pts.map(function(p){return p.v;}));
   if(maxT===minT)maxT=minT+86400000;
   if(maxV===minV)maxV=minV+1;
-  var W=600,H=220,L=56,R=12,T=12,B=26;
+  var W=600,H=opts.height||220,L=56,R=12,T=12,B=26;
   function X(t){return L+(t-minT)/(maxT-minT)*(W-L-R);}
   function Y(v){return T+(1-(v-minV)/(maxV-minV))*(H-T-B);}
   var fmtY=opts.fmtY||function(v){return String(Math.round(v));};
@@ -6430,7 +6430,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       var pts=(horasHist[r.id]||[]).map(function(p){return{t:p.t,v:p.v};});
       return{name:(r.tipoMotor||"Motor")+(r.bordo?" "+r.bordo:""),points:pts};
     }).filter(function(x){return x.points.length;});
-    box.innerHTML=svgLineChart(series,{fmtY:function(v){return horasFmtNum(v)+"h";}});
+    box.innerHTML=svgLineChart(series,{height:130,fmtY:function(v){return horasFmtNum(v)+"h";}});
   }
   function horasBindShip(key){
     var s=horasShips[key];
