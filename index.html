@@ -529,6 +529,7 @@ tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .ferias-table td.fcell.fcat-lts{background:#a65b5b}
 .ferias-table td.fcell.fcat-dispensa{background:#a65b5b}
 .ferias-table td.fcell.fcat-licenca{background:#5b7fa6}
+.ferias-table td.fcell.fpreembarque{background:#3a3f45}
 .ferias-jump{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
 .ferias-jump button{background:var(--c-100);border:1px solid var(--border2);color:var(--text2);font-size:10px;padding:5px 9px;border-radius:var(--r-sm);text-transform:uppercase;letter-spacing:.3px}
 .ferias-jump button:hover{background:var(--c-blue);color:#fff;border-color:var(--c-blue)}
@@ -6578,6 +6579,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     {key:"antiguidade",title:"Antiguidade",hidden:true},
     {key:"posto",title:"Posto/Graduação"},
     {key:"divisao",title:"Divisão"},
+    {key:"dataEmbarque",title:"Data de Embarque"},
     {key:"disponibilidade",title:"Disponibilidade",type:"locked",computed:true},
     {key:"periodo",title:"Período",type:"locked",computed:true},
     {key:"feriasDisponiveis",title:"Férias disponíveis",type:"locked",computed:true},
@@ -6602,6 +6604,12 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       if(ac)ac.hidden=true;
     }
     keys=cols.map(function(c){return c.key;});
+    if(keys.indexOf("dataEmbarque")<0){
+      var divIdx0=keys.indexOf("divisao");
+      var deCol={key:"dataEmbarque",title:"Data de Embarque"};
+      if(divIdx0>=0)cols.splice(divIdx0+1,0,deCol);else cols.unshift(deCol);
+    }
+    keys=cols.map(function(c){return c.key;});
     var newCols=[
       {key:"disponibilidade",title:"Disponibilidade",type:"locked",computed:true},
       {key:"periodo",title:"Período",type:"locked",computed:true},
@@ -6610,11 +6618,11 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       {key:"previsaoFerias",title:"Previsão de Férias",type:"locked",computed:true}
     ];
     if(keys.indexOf("disponibilidade")<0&&keys.indexOf("feriasDisponiveis")<0){
-      var divIdx=keys.indexOf("divisao");
+      var divIdx=keys.indexOf("dataEmbarque");
       if(divIdx>=0)cols.splice.apply(cols,[divIdx+1,0].concat(newCols));
       else cols.push.apply(cols,newCols);
     }else{
-      var insertAt=cols.map(function(x){return x.key;}).indexOf("divisao");
+      var insertAt=cols.map(function(x){return x.key;}).indexOf("dataEmbarque");
       insertAt=insertAt>=0?insertAt+1:cols.length;
       newCols.forEach(function(nc){
         var c=cols.find(function(x){return x.key===nc.key;});
@@ -6854,7 +6862,16 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       };
     });
   }
+  // Data de embarque: antes dela o militar ainda não pertence à OM no calendário — não conta
+  // como disponível nem entra em nenhuma outra categoria (férias/afastamento), e some sem essa data.
+  function embarqueDs(nome){
+    var row=pessoalRows.find(function(r){return r.nome===nome;});
+    var dt=row?parseBRDate(row.dataEmbarque):null;
+    return dt?dstr(dt):null;
+  }
   function dayStatus(nome,ds){
+    var emb=embarqueDs(nome);
+    if(emb&&ds<emb)return"fpreembarque";
     var entry=pessoalFerias.find(function(f){return f.militar===nome&&ds>=f.inicio&&ds<=f.fim;});
     if(!entry)return"";
     if(entry.categoria==="ferias")return entry.tipo==="gozo"?"fgozo":"fprev";
@@ -6904,6 +6921,8 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
   // efetivo. Assim que o período lançado no Calendário termina, volta sozinho pra Disponível / "-".
   function pessoalStatusOf(nome){
     var todayStr=dstr(new Date());
+    var emb=embarqueDs(nome);
+    if(emb&&todayStr<emb)return{label:"Aguardando embarque",periodo:emb.split("-").reverse().join("/")};
     var entry=pessoalFerias.find(function(f){
       if(f.militar!==nome||todayStr<f.inicio||todayStr>f.fim)return false;
       return f.categoria==="ferias"?f.tipo==="gozo":true;
@@ -6933,7 +6952,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(!box)return;
     box.innerHTML=GROUPS.map(function(g){
       return '<span class="ferias-sw" style="background:'+g.color+'"></span> '+esc(g.label);
-    }).join(" &nbsp; ");
+    }).join(" &nbsp; ")+' &nbsp; <span class="ferias-sw" style="background:#3a3f45"></span> Antes do embarque';
   }
   function renderFeriasTable(){
     var table=document.getElementById("ferias_table");
