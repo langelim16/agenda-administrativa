@@ -3424,7 +3424,15 @@ function mkEmptyMonth(tipo,mes){return'<div class="empty-month">Não há '+tipo+
 
 function renderBody(inst){
   var rows=inst.filter(passF).filter(function(i){return statusOf(i)!=="EXCLUIDA";});
-  rows.sort(function(a,b){var oa=ovOrder[a.key]!==undefined?ovOrder[a.key]:Infinity,ob=ovOrder[b.key]!==undefined?ovOrder[b.key]:Infinity;if(oa!==Infinity||ob!==Infinity){if(oa!==ob)return oa-ob;}return(a.deadline?a.deadline.getTime():Infinity)-(b.deadline?b.deadline.getTime():Infinity);});
+  // Ordena por prazo por padrão. Só usa a ordem manual (ovOrder) quando AMBAS as tarefas
+  // comparadas já foram reordenadas manualmente alguma vez — antes, se uma tinha ordem manual
+  // e a outra não, a com ordem manual sempre vencia (mesmo com prazo bem mais distante),
+  // fazendo tarefas novas/não mexidas ficarem presas no fim da lista em vez de intercalar por prazo.
+  rows.sort(function(a,b){
+    var oa=ovOrder[a.key],ob=ovOrder[b.key];
+    if(oa!==undefined&&ob!==undefined&&oa!==ob)return oa-ob;
+    return(a.deadline?a.deadline.getTime():Infinity)-(b.deadline?b.deadline.getTime():Infinity);
+  });
 
   if(viewMode==="cal"){renderCal(rows);bindEv();return;}
   if(viewMode==="tl"){renderTimeline(rows);bindEv();return;}
