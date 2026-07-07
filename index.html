@@ -577,6 +577,7 @@ td.dt-daterange-cell input[type="date"]{width:100%;background:var(--c-50);border
 .dt-table.dt-editing td.dt-cell-computed{background:var(--c-50);font-style:italic;color:var(--text2)}
 .dt-table td.dt-cell-ro{cursor:default}
 .dt-table:not(.dt-editing) .dt-actions-col{display:none}
+input.nv-comissao-date{width:100%;border:none;background:transparent;font:inherit;color:inherit;padding:0}
 .dt-table.dt-editing .dt-actions-col{position:sticky;right:0;background:var(--surface);box-shadow:-4px 0 6px -4px rgba(0,0,0,.25);z-index:3}
 .dt-table.dt-editing th.dt-actions-col{background:var(--c-100)}
 .dt-actions{text-align:center;white-space:nowrap}
@@ -1487,18 +1488,37 @@ tr.row-crit{background:rgba(233,150,53,.20)}
   <table class="nv-table">
     <thead id="nv_thead">
       <tr>
-        <th>Tipo</th><th>Indicativo<br>Costado</th><th>Nome</th><th>Msg</th><th>Condef</th><th>Restrição</th><th>Previsão<br>Término</th><th>Obs.</th><th>Comissão</th><th>Período</th><th>Dias<br>de Mar</th><th class="nv-actions-col">Ações</th>
+        <th>Tipo</th><th>Indicativo<br>Costado</th><th>Nome</th><th>Msg</th><th>Condef</th><th>Restrição</th><th>Previsão<br>Término</th><th>Obs.</th><th class="nv-actions-col">Ações</th>
       </tr>
     </thead>
     <tbody id="nv_tbody"></tbody>
   </table>
 </div>
 
+<div class="dt-section-head"><h3 class="dt-table-title">Controle de Restrições CONDEF</h3></div>
+<div class="dt-table-wrap">
+  <table class="dt-table" style="min-width:0;width:100%;table-layout:fixed" id="nv_restr_table">
+    <thead><tr><th>Indicativo</th><th>Nome</th><th>Msg</th><th>Restrição</th><th>Prazo</th><th>Obs.</th></tr></thead>
+    <tbody id="nv_restr_tbody"></tbody>
+  </table>
+</div>
+
 <div class="dt-section-head"><h3 class="dt-table-title">Vinculações de PPSS às Restrições CONDEF</h3></div>
 <div class="dt-table-wrap">
-  <table class="dt-table" style="min-width:0" id="nv_ppsslink_table">
+  <table class="dt-table" style="min-width:0;width:100%;table-layout:fixed" id="nv_ppsslink_table">
     <thead><tr><th>Navio</th><th>Restrição</th><th>Prazo</th><th>PPSS Nº</th><th>Situação</th><th>Valor Orçado</th></tr></thead>
     <tbody id="nv_ppsslink_tbody"></tbody>
+  </table>
+</div>
+
+<div class="dt-section-head"><h3 class="dt-table-title">Comissões</h3></div>
+<div class="nv-toolbar" style="margin-bottom:0">
+  <button class="nv-editbtn" id="nv_comissao_addrow">+ Adicionar comissão</button>
+</div>
+<div class="dt-table-wrap">
+  <table class="dt-table" style="min-width:0;width:100%;table-layout:fixed" id="nv_comissao_table">
+    <thead><tr><th>Meio</th><th>Comissão</th><th>Início</th><th>Fim</th><th>Localização</th><th>CLG Autorizado</th><th class="nv-actions-col">Ações</th></tr></thead>
+    <tbody id="nv_comissao_tbody"></tbody>
   </table>
 </div>
 
@@ -4649,8 +4669,7 @@ setTimeout(hideSplash,12000);
   var NAVIOS_FIXED=[
     {key:"tipo",title:"Tipo"},{key:"indicativo",title:"Indicativo Costado"},{key:"nome",title:"Nome"},
     {key:"msg",title:"Msg"},{key:"condef",title:"Condef",type:"select"},{key:"restricao",title:"Restrição",multiline:true},
-    {key:"previsao",title:"Previsão Término",multiline:true},{key:"obs",title:"Obs."},{key:"comissao",title:"Comissão"},
-    {key:"periodo",title:"Período"},{key:"diasMar",title:"Dias de Mar"}
+    {key:"previsao",title:"Previsão Término",multiline:true},{key:"obs",title:"Obs."}
   ];
   // Só "nome" fica protegido contra exclusão: é a chave usada para cruzar o meio com outras abas
   // (Pessoal, Horas Motores, PPSS). As demais colunas padrão podem ser excluídas como as extras.
@@ -4658,8 +4677,8 @@ setTimeout(hideSplash,12000);
   function navColsDefault(){return NAVIOS_FIXED.map(function(c){var o={key:c.key,title:c.title,type:c.type};if(c.multiline)o.multiline=true;return o;});}
   var navShips=[],navCards=[],navBound=false;
   var NAV_YEAR_KEY="aa_navios_tl_year_v1";
-  var navYear=(function(){try{var v=+localStorage.getItem(NAV_YEAR_KEY);return v||new Date().getFullYear();}catch(e){return new Date().getFullYear();}})();
-  var NAV_YEAR_MIN=2024;
+  var NAV_YEAR_MIN=2026;
+  var navYear=(function(){try{var v=+localStorage.getItem(NAV_YEAR_KEY);return v>=NAV_YEAR_MIN?v:new Date().getFullYear();}catch(e){return new Date().getFullYear();}})();
   var navCols=navColsDefault();
   // Trava de edição: null (livre) | "table" | "card:<id>" — impede editar tabela e cartões ao mesmo tempo
   var navTableEditing=false,navTableDirty=false,navTableSnapshot=null,navColsSnapshot=null;
@@ -4688,6 +4707,9 @@ setTimeout(hideSplash,12000);
     try{nc=await gtj(NAVIOS_COLS_KEY);}catch(e){}
     if(!nc||!nc.length){try{nc=JSON.parse(localStorage.getItem(NAVIOS_COLS_KEY));}catch(e){}}
     navCols=migrateCols(nc,NAVIOS_FIXED,navShips);
+    // Colunas descontinuadas (Comissão/Período/Dias de Mar) — remove mesmo de instalações antigas
+    // já persistidas, que carregam o array de colunas salvo (migrateCols não filtra esse caso).
+    navCols=navCols.filter(function(c){return["comissao","periodo","diasMar"].indexOf(c.key)<0;});
     // Reforça multiline mesmo em colunas já persistidas (instalações antigas), pra não perder
     // a quebra de linha caso o usuário já tenha definido uma largura customizada nessa coluna.
     navCols.forEach(function(c){if(c.key==="restricao"||c.key==="previsao")c.multiline=true;});
@@ -4882,7 +4904,7 @@ setTimeout(hideSplash,12000);
   function navOpenAltShipPicker(){
     var bg=navEnsureModal("nvAltShipBg","Inserir alteração — selecione o navio");
     var body=bg.querySelector(".mbody");
-    var list=navShips.slice().sort(function(a,b){return String(a.nome||"").localeCompare(String(b.nome||""));});
+    var list=navShips;
     body.innerHTML=list.length?list.map(function(s){
       return '<div class="ps-item" data-id="'+s.id+'">'+
         '<div class="ps-main"><div class="ps-num">'+esc(s.nome||"—")+'</div>'+
@@ -4900,8 +4922,7 @@ setTimeout(hideSplash,12000);
   function navOpenEditShipPicker(){
     var bg=navEnsureModal("nvAltShipBg","Editar períodos lançados — selecione o navio");
     var body=bg.querySelector(".mbody");
-    var withPeriods=navShips.filter(function(s){return(s.condefHist||[]).some(function(h){return h.retroativo;});});
-    var list=withPeriods.slice().sort(function(a,b){return String(a.nome||"").localeCompare(String(b.nome||""));});
+    var list=navShips.filter(function(s){return(s.condefHist||[]).some(function(h){return h.retroativo;});});
     body.innerHTML=list.length?list.map(function(s){
       var n=(s.condefHist||[]).filter(function(h){return h.retroativo;}).length;
       return '<div class="ps-item" data-id="'+s.id+'">'+
@@ -5120,6 +5141,60 @@ setTimeout(hideSplash,12000);
         '<td>'+(r.p?fmtBRL(moneyVal(r.p.orcamento)):"—")+'</td></tr>';
     }).join("");
   }
+  // Controle de Restrições CONDEF: lista todos os meios (na mesma ordem da tabela de Condição de
+  // Eficiência) com as informações de restrição/prazo em vigor — visão de acompanhamento das
+  // condições que mantêm o navio fora de IM e que têm prazo a vencer/alterar.
+  function navRenderRestrTable(){
+    var tbody=document.getElementById("nv_restr_tbody");
+    if(!tbody)return;
+    if(!navShips.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text3);font-style:italic">Nenhuma embarcação cadastrada.</td></tr>';return;}
+    tbody.innerHTML=navShips.map(function(s){
+      return '<tr><td>'+esc(s.indicativo||"—")+'</td><td>'+esc(s.nome||"—")+'</td><td>'+esc(s.msg||"—")+'</td>'+
+        '<td>'+esc(s.restricao||"—")+'</td><td>'+esc(s.previsao||"—")+'</td><td>'+esc(s.obs||"—")+'</td></tr>';
+    }).join("");
+  }
+  // Comissões: mini tabela editável, independente das embarcações — linhas só existem quando o
+  // usuário lança uma comissão em curso/prevista (não é pré-preenchida com os nomes dos meios).
+  var NAVIOS_COMISSAO_KEY="aa_navios_comissoes_v1";
+  var navComissoes=[];
+  function navLoadComissoes(){
+    try{var v=JSON.parse(localStorage.getItem(NAVIOS_COMISSAO_KEY));if(Array.isArray(v))navComissoes=v;}catch(e){}
+  }
+  function navSaveComissoes(){try{localStorage.setItem(NAVIOS_COMISSAO_KEY,JSON.stringify(navComissoes));}catch(e){}}
+  function navRenderComissoes(){
+    var tbody=document.getElementById("nv_comissao_tbody");
+    if(!tbody)return;
+    if(!navComissoes.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text3);font-style:italic">Nenhuma comissão lançada ainda.</td></tr>';return;}
+    tbody.innerHTML=navComissoes.map(function(r){
+      return '<tr data-id="'+r.id+'">'+
+        '<td class="dt-cell" data-key="meio" contenteditable="true" spellcheck="false">'+esc(r.meio||"")+'</td>'+
+        '<td class="dt-cell" data-key="comissao" contenteditable="true" spellcheck="false">'+esc(r.comissao||"")+'</td>'+
+        '<td><input type="date" class="nv-comissao-date" data-key="inicio" value="'+esc(r.inicio||"")+'"></td>'+
+        '<td><input type="date" class="nv-comissao-date" data-key="fim" value="'+esc(r.fim||"")+'"></td>'+
+        '<td class="dt-cell" data-key="localizacao" contenteditable="true" spellcheck="false">'+esc(r.localizacao||"")+'</td>'+
+        '<td class="dt-cell" data-key="clg" contenteditable="true" spellcheck="false">'+esc(r.clg||"")+'</td>'+
+        '<td class="nv-actions nv-actions-col"><button class="nv-delrow" data-id="'+r.id+'" title="Excluir linha">🗑</button></td>'+
+      '</tr>';
+    }).join("");
+    tbody.querySelectorAll(".dt-cell").forEach(function(td){
+      td.onblur=function(){
+        var row=navComissoes.find(function(r){return r.id===td.closest("tr").dataset.id;});
+        if(row){row[td.dataset.key]=td.textContent.trim();navSaveComissoes();}
+      };
+    });
+    tbody.querySelectorAll(".nv-comissao-date").forEach(function(inp){
+      inp.onchange=function(){
+        var row=navComissoes.find(function(r){return r.id===inp.closest("tr").dataset.id;});
+        if(row){row[inp.dataset.key]=inp.value;navSaveComissoes();}
+      };
+    });
+    tbody.querySelectorAll(".nv-delrow").forEach(function(btn){
+      btn.onclick=function(){
+        navComissoes=navComissoes.filter(function(r){return r.id!==btn.dataset.id;});
+        navSaveComissoes();navRenderComissoes();
+      };
+    });
+  }
   // Remove lançamentos de stHist que caiam dentro do intervalo [fromStr, toStr] (toStr null = sem
   // limite superior) — usado pra uma nova inserção/alteração retroativa sobrepor qualquer registro
   // (manual ou de outro período) que já existisse nesses dias, em vez de só competir no sort.
@@ -5147,14 +5222,14 @@ setTimeout(hideSplash,12000);
     return segs;
   }
   function navSetYear(y){
-    navYear=y;
-    try{localStorage.setItem(NAV_YEAR_KEY,String(y));}catch(e){}
+    navYear=Math.max(y,NAV_YEAR_MIN);
+    try{localStorage.setItem(NAV_YEAR_KEY,String(navYear));}catch(e){}
     navRenderTimeline();navRenderOperReport();
   }
   function navYearControls(idPrefix){
     var maxY=Math.max(navYear,CUR_YEAR);
     return '<div class="nv-toolbar" style="margin-bottom:8px">'+
-      '<button type="button" class="nv-editbtn" id="'+idPrefix+'_prev" title="Ano anterior">◀</button>'+
+      '<button type="button" class="nv-editbtn" id="'+idPrefix+'_prev"'+(navYear<=NAV_YEAR_MIN?' disabled':'')+' title="Ano anterior">◀</button>'+
       '<span style="font-weight:700;font-size:13px;padding:0 4px">'+navYear+'</span>'+
       '<button type="button" class="nv-editbtn" id="'+idPrefix+'_next"'+(navYear>=maxY?' disabled':'')+' title="Próximo ano">▶</button>'+
       (navYear>=maxY?'<button type="button" class="nv-editbtn add-year" id="'+idPrefix+'_addyear">+ Ano</button>':'')+
@@ -5164,7 +5239,7 @@ setTimeout(hideSplash,12000);
   function navBindYearControls(idPrefix){
     var prev=document.getElementById(idPrefix+"_prev"),next=document.getElementById(idPrefix+"_next"),
       add=document.getElementById(idPrefix+"_addyear"),refresh=document.getElementById(idPrefix+"_refresh");
-    if(prev)prev.onclick=function(){navSetYear(navYear-1);};
+    if(prev)prev.onclick=function(){if(navYear>NAV_YEAR_MIN)navSetYear(navYear-1);};
     if(next)next.onclick=function(){if(navYear<Math.max(navYear,CUR_YEAR))navSetYear(navYear+1);};
     if(add)add.onclick=function(){navSetYear(navYear+1);};
     if(refresh)refresh.onclick=function(){navRenderTimeline();navRenderOperReport();toast("✓ Timeline e relatório atualizados","ok");};
@@ -5185,7 +5260,7 @@ setTimeout(hideSplash,12000);
       }).join("");
       return '<div class="nv-tl-row"><div class="nv-tl-name" title="'+esc(s.nome||"")+'">'+esc(s.nome||"—")+'</div><div class="nv-tl-strip">'+strip+'</div></div>';
     }).join("");
-    el.innerHTML='<div class="nv-tl-wrap"><h3 class="dt-table-title">Timeline de status — '+y+'</h3>'+navYearControls("nvtl")+legend+months+rows+
+    el.innerHTML='<div class="nv-tl-wrap"><h3 class="dt-table-title">Timeline de CONDEF dos Meios</h3>'+navYearControls("nvtl")+legend+months+rows+
       '<div style="font-size:10px;color:var(--text3);margin-top:10px;font-style:italic">O histórico é registrado automaticamente a cada mudança de CONDEF salva na tabela. Períodos anteriores ao início do registro aparecem como “Sem registro”.</div></div>';
     navBindYearControls("nvtl");
   }
@@ -5249,7 +5324,9 @@ setTimeout(hideSplash,12000);
     navUpdateSyncTag();
     if(editing)bindRowDragGeneric(tb,function(){return navShips;},renderNavios,function(){navTableDirty=true;});
     if(!editing)navPaintExtras();
+    navRenderRestrTable();
     renderNaviosPpssLinkTable();
+    navRenderComissoes();
     navRenderTimeline();
     navRenderOperReport();
   }
@@ -5291,6 +5368,7 @@ setTimeout(hideSplash,12000);
   async function navInit(){
     if(navBound)return;
     navBound=true;
+    navLoadComissoes();
     await navLoad();
     navUpdateSyncTag();
     var tbody=document.getElementById("nv_tbody");
@@ -5340,7 +5418,7 @@ setTimeout(hideSplash,12000);
       }
       if(e.target.id==="nv_addrow"){
         var nid=genUid("nv");
-        navShips.push({id:nid,tipo:"",indicativo:"",nome:"",msg:"",condef:"",restricao:"",previsao:"",comissao:"",periodo:"",diasMar:"",obs:"",rowColor:""});
+        navShips.push({id:nid,tipo:"",indicativo:"",nome:"",msg:"",condef:"",restricao:"",previsao:"",obs:"",rowColor:""});
         navTableDirty=true;renderNavios();
         setTimeout(function(){
           var el=document.querySelector('.nv-cell[data-id="'+nid+'"][data-key="nome"]');
@@ -5392,6 +5470,10 @@ setTimeout(hideSplash,12000);
     });
     document.getElementById("nv_condef_alt_btn").onclick=navOpenAltShipPicker;
     document.getElementById("nv_condef_edit_btn").onclick=navOpenEditShipPicker;
+    document.getElementById("nv_comissao_addrow").onclick=function(){
+      navComissoes.push({id:genUid("cms"),meio:"",comissao:"",inicio:"",fim:"",localizacao:"",clg:""});
+      navSaveComissoes();navRenderComissoes();
+    };
     wireCardsGrid({gridId:"nv_grid",addcardId:"nv_addcard",st:navCardSt,
       getCards:function(){return navCards;},setCards:function(v){navCards=v;},
       save:navSaveCards,pushTag:"navPush",key:function(){return NAVIOS_CARDS_KEY;},
