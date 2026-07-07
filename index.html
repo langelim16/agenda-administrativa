@@ -1563,7 +1563,7 @@ tr.row-crit{background:rgba(233,150,53,.20)}
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Estoque de ODM nos Meios</h3><span class="last-edit" id="clg_t1_lastedit"></span></div>
   <div class="nv-toolbar" id="clg_t1_toolbar">
-    <button class="nv-editbtn" id="clg_consumo_btn">+ Inserir consumo</button>
+    <button class="nv-editbtn" id="clg_consumo_btn">+ Inserir consumo/abastecimento</button>
     <button class="nv-editbtn" id="clg_t1_edit">✎ Editar</button>
     <span class="nv-edit-actions" id="clg_t1_edit_actions" hidden>
       <button class="dt-colbtn" id="clg_t1_addcol">+ coluna</button>
@@ -5812,7 +5812,19 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       return '<div class="ps-item" data-nome="'+esc(n)+'"><div class="ps-main"><div class="ps-num">'+esc(n)+'</div><div class="ps-meta">'+esc(tags)+'</div></div></div>';
     }).join(""):'<div class="spot-empty">Nenhum meio cadastrado em Estoque de ODM ou em Gasolina/Lubrificantes/Graxas.</div>';
     body.querySelectorAll(".ps-item").forEach(function(el){
-      el.onclick=function(){bg.classList.remove("open");clgOpenConsumoTypeStep(el.dataset.nome);};
+      el.onclick=function(){bg.classList.remove("open");clgOpenModoStep(el.dataset.nome);};
+    });
+    bg.classList.add("open");
+  }
+  function clgOpenModoStep(nome){
+    var bg=ensureModal("clgModoBg","Inserir — "+nome);
+    var body=bg.querySelector(".mbody");
+    body.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+
+      '<button type="button" class="ferias-cat-pick" data-m="consumo"><span class="ferias-cat-dot" style="background:var(--c-red)"></span>Consumo (abate do estoque)</button>'+
+      '<button type="button" class="ferias-cat-pick" data-m="abast"><span class="ferias-cat-dot" style="background:var(--c-teal)"></span>Abastecimento (soma ao estoque)</button>'+
+    '</div>';
+    body.querySelectorAll("button").forEach(function(b){
+      b.onclick=function(){bg.classList.remove("open");if(b.dataset.m==="consumo")clgOpenConsumoTypeStep(nome);else clgOpenAbastecimentoForm(nome);};
     });
     bg.classList.add("open");
   }
@@ -5852,8 +5864,10 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     body.innerHTML=
       '<div class="mgrid">'+
         '<div class="fld"><label>Tipo de consumo</label><select id="clgc_tipo"><option value="Operativo">Operativo</option><option value="Administrativo">Administrativo</option></select></div>'+
-        '<div class="fld"><label>Data</label><input type="date" id="clgc_data" value="'+todayStr+'"></div>'+
-        '<div class="fld full"><label>Quantidade consumida</label><input id="clgc_qtd" placeholder="Ex.: 150" inputmode="decimal"></div>'+
+        '<div class="fld"><label>Data (fim do período)</label><input type="date" id="clgc_data" value="'+todayStr+'"></div>'+
+        '<div class="fld"><label>Quantidade consumida (total)</label><input id="clgc_qtd" placeholder="Ex.: 150" inputmode="decimal"></div>'+
+        '<div class="fld"><label>Dias de comissão</label><input id="clgc_dias" placeholder="Ex.: 5" inputmode="numeric" value="1"></div>'+
+        '<div class="fld full" style="font-size:10.5px;color:var(--text3)">A quantidade total é dividida pela média diária ao longo dos dias de comissão informados, gerando um histórico de consumo dia a dia (usado no gráfico de evolução e na previsão de duração do estoque).</div>'+
       '</div>'+
       '<div id="clgc_err" class="ferias-msg warn" style="display:none;margin-top:10px"></div>'+
       '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">'+
@@ -5864,10 +5878,31 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     document.getElementById("clgc_save").onclick=function(){clgSaveConsumo(nome,tipo,bg);};
     bg.classList.add("open");
   }
+  // Gera "dias" pontos diários no histórico (clgHist[histKey]), do estoque anterior até o estoque
+  // final, distribuindo o consumo total em média diária — assim o gráfico de evolução e a previsão
+  // de duração (que dependem de ≥2 leituras em datas diferentes) já refletem o consumo real do
+  // período de comissão, em vez de um único salto no dia do lançamento.
+  function clgAppendHistDaily(histKey,dataStr,totalQtd,dias,estoqueAntes){
+    var arr=clgHist[histKey]||(clgHist[histKey]=[]);
+    var endDay=new Date(dataStr+"T00:00:00");endDay.setHours(0,0,0,0);
+    var avg=totalQtd/dias;
+    for(var i=0;i<dias;i++){
+      var dayDt=new Date(endDay.getTime());dayDt.setDate(dayDt.getDate()-(dias-1-i));
+      var t=dayDt.getTime();
+      var v=(i===dias-1)?Math.max(0,estoqueAntes-totalQtd):Math.max(0,estoqueAntes-avg*(i+1));
+      var existing=arr.find(function(p){return p.t===t;});
+      if(existing)existing.v=v;else arr.push({t:t,v:v});
+    }
+    arr.sort(function(a,b){return a.t-b.t;});
+    if(arr.length>200)arr.splice(0,arr.length-200);
+    clgSaveHist();
+  }
   async function clgSaveConsumo(nome,tipo,bg){
     var qtd=clgNum(document.getElementById("clgc_qtd").value);
     var errEl=document.getElementById("clgc_err");
     if(isNaN(qtd)||qtd<=0){errEl.textContent="Informe uma quantidade válida (maior que zero).";errEl.style.display="block";return;}
+    var dias=Math.round(clgNum(document.getElementById("clgc_dias").value));
+    if(isNaN(dias)||dias<1){errEl.textContent="Informe um número válido de dias de comissão (mínimo 1).";errEl.style.display="block";return;}
     errEl.style.display="none";
     var tipoConsumo=document.getElementById("clgc_tipo").value;
     var dataStr=document.getElementById("clgc_data").value||clgConsumoDstr(new Date());
@@ -5875,27 +5910,91 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(tipo==="odm"){
       var row=clgT1.find(function(r){return r.meio===nome;});
       if(!row)return;
-      var atual=clgNum(row.estoque);
-      row.estoque=String(Math.max(0,(isNaN(atual)?0:atual)-qtd));
+      var atual=clgNum(row.estoque);atual=isNaN(atual)?0:atual;
+      row.estoque=String(Math.max(0,atual-qtd));
       clgSaveT1();
       await pushKV("clgPush",CLG_T1_KEY,clgT1);
-      clgLogEstoque();
-      auditPushOne("clg_t1",row.id,"Consumo "+tipoConsumo.toLowerCase()+": -"+qtd+" ("+dataFmt+")");
+      clgAppendHistDaily(row.id,dataStr,qtd,dias,atual);
+      auditPushOne("clg_t1",row.id,"Consumo "+tipoConsumo.toLowerCase()+": -"+qtd+" em "+dias+" dia(s) ("+dataFmt+")");
       touchLastEdit("clg_t1");paintLastEdit("clg_t1_lastedit","clg_t1");
     }else{
       var isNav=clgT3Nav.some(function(r){return r.meio===nome;});
       var arr=isNav?clgT3Nav:clgT3Emb;
       var row2=arr.find(function(r){return r.meio===nome;});
       if(!row2)return;
-      var atual2=clgNum(row2[tipo]);
-      row2[tipo]=String(Math.max(0,(isNaN(atual2)?0:atual2)-qtd));
+      var atual2=clgNum(row2[tipo]);atual2=isNaN(atual2)?0:atual2;
+      row2[tipo]=String(Math.max(0,atual2-qtd));
       if(isNav){clgSaveT3Nav();await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);}
       else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
-      auditPushOne(isNav?"clg_t3nav":"clg_t3emb",row2.id,"Consumo "+tipoConsumo.toLowerCase()+" de "+tipo+": -"+qtd+" ("+dataFmt+")");
+      clgAppendHistDaily(row2.id+"_"+tipo,dataStr,qtd,dias,atual2);
+      auditPushOne(isNav?"clg_t3nav":"clg_t3emb",row2.id,"Consumo "+tipoConsumo.toLowerCase()+" de "+tipo+": -"+qtd+" em "+dias+" dia(s) ("+dataFmt+")");
       touchLastEdit(isNav?"clg_t3nav":"clg_t3emb");paintLastEdit(isNav?"clg_t3nav_lastedit":"clg_t3emb_lastedit",isNav?"clg_t3nav":"clg_t3emb");
     }
     bg.classList.remove("open");
     toast("✓ Consumo registrado","ok");
+    renderClgTables();
+  }
+  /* ── Abastecimento: função inversa do consumo — soma ao estoque em vez de abater. Um único
+     seletor de "Tipo de combustível" substitui os dois passos (ODM / Gasolina·Lubrificantes·
+     Graxas) usados no consumo, já que aqui o tipo é sempre um valor único e direto. ── */
+  function clgOpenAbastecimentoForm(nome){
+    var hasOdm=clgHasOdm(nome),hasGlg=clgHasGlg(nome);
+    var opts=[hasOdm?["odm","ODM"]:null,hasGlg?["gasolina","Gasolina"]:null,hasGlg?["lubrificantes","Lubrificante"]:null,hasGlg?["graxas","Graxa"]:null].filter(Boolean);
+    if(!opts.length){toast("Este meio não possui estoque cadastrado em ODM nem em Gasolina/Lubrificantes/Graxas.","info");return;}
+    var bg=ensureModal("clgAbastFormBg","Inserir abastecimento — "+nome);
+    var body=bg.querySelector(".mbody");
+    var todayStr=clgConsumoDstr(new Date());
+    body.innerHTML=
+      '<div class="mgrid">'+
+        '<div class="fld"><label>Tipo de combustível</label><select id="clga_tipo">'+opts.map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>';}).join("")+'</select></div>'+
+        '<div class="fld"><label>Data</label><input type="date" id="clga_data" value="'+todayStr+'"></div>'+
+        '<div class="fld full"><label>Quantidade abastecida</label><input id="clga_qtd" placeholder="Ex.: 150" inputmode="decimal"></div>'+
+      '</div>'+
+      '<div id="clga_err" class="ferias-msg warn" style="display:none;margin-top:10px"></div>'+
+      '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">'+
+        '<button class="bcancel" id="clga_cancel">Cancelar</button>'+
+        '<button class="bsave" id="clga_save">Salvar</button>'+
+      '</div>';
+    document.getElementById("clga_cancel").onclick=function(){bg.classList.remove("open");};
+    document.getElementById("clga_save").onclick=function(){clgSaveAbastecimento(nome,bg);};
+    bg.classList.add("open");
+  }
+  async function clgSaveAbastecimento(nome,bg){
+    var tipo=document.getElementById("clga_tipo").value;
+    var qtd=clgNum(document.getElementById("clga_qtd").value);
+    var errEl=document.getElementById("clga_err");
+    if(isNaN(qtd)||qtd<=0){errEl.textContent="Informe uma quantidade válida (maior que zero).";errEl.style.display="block";return;}
+    errEl.style.display="none";
+    var dataStr=document.getElementById("clga_data").value||clgConsumoDstr(new Date());
+    var dataFmt=dataStr.split("-").reverse().join("/");
+    if(tipo==="odm"){
+      var row=clgT1.find(function(r){return r.meio===nome;});
+      if(!row)return;
+      var atual=clgNum(row.estoque);atual=isNaN(atual)?0:atual;
+      row.estoque=String(atual+qtd);
+      clgSaveT1();
+      await pushKV("clgPush",CLG_T1_KEY,clgT1);
+      var arr=clgHist[row.id]||(clgHist[row.id]=[]);
+      arr.push({t:new Date(dataStr+"T00:00:00").getTime(),v:atual+qtd});
+      arr.sort(function(a,b){return a.t-b.t;});
+      if(arr.length>200)arr.splice(0,arr.length-200);
+      clgSaveHist();
+      auditPushOne("clg_t1",row.id,"Abastecimento: +"+qtd+" ("+dataFmt+")");
+      touchLastEdit("clg_t1");paintLastEdit("clg_t1_lastedit","clg_t1");
+    }else{
+      var isNav=clgT3Nav.some(function(r){return r.meio===nome;});
+      var arr2=isNav?clgT3Nav:clgT3Emb;
+      var row2=arr2.find(function(r){return r.meio===nome;});
+      if(!row2)return;
+      var atual2=clgNum(row2[tipo]);atual2=isNaN(atual2)?0:atual2;
+      row2[tipo]=String(atual2+qtd);
+      if(isNav){clgSaveT3Nav();await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);}
+      else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
+      auditPushOne(isNav?"clg_t3nav":"clg_t3emb",row2.id,"Abastecimento de "+tipo+": +"+qtd+" ("+dataFmt+")");
+      touchLastEdit(isNav?"clg_t3nav":"clg_t3emb");paintLastEdit(isNav?"clg_t3nav_lastedit":"clg_t3emb_lastedit",isNav?"clg_t3nav":"clg_t3emb");
+    }
+    bg.classList.remove("open");
+    toast("✓ Abastecimento registrado","ok");
     renderClgTables();
   }
   function clgFindRow(arr,id){return arr.find(function(r){return r.id===id;});}
