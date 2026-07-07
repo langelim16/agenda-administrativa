@@ -1500,6 +1500,7 @@ tr.row-crit{background:rgba(233,150,53,.20)}
   <div class="nv-toolbar" id="nv_restr_toolbar">
     <button class="nv-editbtn" id="nv_restr_edit">✎ Editar</button>
     <span class="nv-edit-actions" id="nv_restr_edit_actions" hidden>
+      <button class="dt-colbtn" id="nv_restr_addcol">+ coluna</button>
       <button class="nv-savebtn" id="nv_restr_save" disabled>✓ Salvar</button>
       <button class="nv-cancelbtn" id="nv_restr_cancel">Cancelar</button>
     </span>
@@ -5162,75 +5163,52 @@ setTimeout(hideSplash,12000);
   // condições que mantêm o navio fora de IM e que têm prazo a vencer/alterar. Edita os mesmos
   // campos do navio (msg/restrição/prazo/obs) — reaproveita navShips, então usa o mesmo
   // GLOBAL_EDIT_LOCK da tabela principal pra nunca editar os dois ao mesmo tempo.
-  var NAV_RESTR_COLS=[
-    {key:"indicativo",title:"Indicativo",type:"locked"},{key:"nome",title:"Nome",type:"locked"},
-    {key:"msg",title:"Msg"},{key:"restricao",title:"Restrição",multiline:true},
-    {key:"previsao",title:"Prazo",multiline:true},{key:"obs",title:"Obs."}
-  ];
-  var navRestrEditing=false,navRestrDirty=false,navRestrSnapshot=null;
+  var NAVIOS_RESTR_COLS_KEY="aa_navios_restr_cols_v1";
+  var NAVIOS_RESTR_FIXED_KEYS=["indicativo","nome"];
+  function navRestrColsDefault(){
+    return [
+      {key:"indicativo",title:"Indicativo"},{key:"nome",title:"Nome"},
+      {key:"msg",title:"Msg"},{key:"restricao",title:"Restrição",multiline:true},
+      {key:"previsao",title:"Prazo",multiline:true},{key:"obs",title:"Obs."}
+    ];
+  }
+  var navRestrCols=navRestrColsDefault();
+  var navRestrEditing=false,navRestrDirty=false,navRestrSnapshot=null,navRestrColsSnapshot=null;
+  async function navLoadRestrCols(){
+    var v=null;
+    try{v=await gtj(NAVIOS_RESTR_COLS_KEY);}catch(e){}
+    if(!v||!v.length){try{v=JSON.parse(localStorage.getItem(NAVIOS_RESTR_COLS_KEY));}catch(e){}}
+    if(v&&v.length)navRestrCols=v;
+    navRestrCols.forEach(function(c){if(c.key==="restricao"||c.key==="previsao")c.multiline=true;});
+  }
+  function navSaveRestrCols(){try{localStorage.setItem(NAVIOS_RESTR_COLS_KEY,JSON.stringify(navRestrCols));}catch(e){}}
+  // Mesmo padrão de tabela usado em todo o app (Condição de Eficiência, CLG etc.): colunas podem
+  // ser inseridas/excluídas/reordenadas/renomeadas via bindDataTable, e as células editadas na
+  // linha. Reaproveita navShips (mesmas linhas/campos da tabela principal), então compartilha o
+  // GLOBAL_EDIT_LOCK pra nunca editar as duas ao mesmo tempo. Sem "+ linha": as linhas são os
+  // próprios navios, cadastrados/excluídos só pela tabela de Condição de Eficiência.
   function navRenderRestrTable(){
     var tbody=document.getElementById("nv_restr_tbody");
     if(!tbody)return;
     var table=document.getElementById("nv_restr_table");
     if(table)table.classList.toggle("dt-editing",navRestrEditing);
-    if(!navShips.length){tbody.innerHTML='<tr><td colspan="'+NAV_RESTR_COLS.length+'" style="text-align:center;color:var(--text3);font-style:italic">Nenhuma embarcação cadastrada.</td></tr>';return;}
-    tbody.innerHTML=navShips.map(function(s){
-      return '<tr>'+NAV_RESTR_COLS.map(function(col){return colTd(s,col,navRestrEditing,"dt-cell","dt-cell-ro");}).join("")+'</tr>';
-    }).join("");
+    renderThead(document.getElementById("nv_restr_thead"),navRestrCols,navRestrEditing,"dt-actions-col",false,NAVIOS_RESTR_FIXED_KEYS);
+    if(!navShips.length){
+      tbody.innerHTML='<tr><td colspan="'+(navRestrCols.length+1)+'" style="text-align:center;color:var(--text3);font-style:italic">Nenhuma embarcação cadastrada.</td></tr>';
+    }else{
+      tbody.innerHTML=navShips.map(function(s){
+        return '<tr data-id="'+s.id+'">'+navRestrCols.map(function(col){return colTd(s,col,navRestrEditing,"dt-cell","dt-cell-ro");}).join("")+
+          '<td class="dt-actions dt-actions-col"></td></tr>';
+      }).join("");
+    }
     navUpdateRestrToolbar();
   }
   function navUpdateRestrToolbar(){
     var editBtn=document.getElementById("nv_restr_edit"),actions=document.getElementById("nv_restr_edit_actions"),saveBtn=document.getElementById("nv_restr_save");
-    paintLastEdit("nv_restr_lastedit","navios_restr");
+    paintLastEdit("nv_restr_lastedit","nv_restr");
     if(!editBtn)return;
     if(navRestrEditing){editBtn.hidden=true;actions.hidden=false;saveBtn.disabled=!navRestrDirty;}
     else{editBtn.hidden=false;actions.hidden=true;editBtn.disabled=!!(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="restr");}
-  }
-  function navBindRestrTable(){
-    var tbody=document.getElementById("nv_restr_tbody");
-    tbody.addEventListener("input",function(e){
-      var td=e.target.closest&&e.target.closest(".dt-cell");
-      if(!td||!navRestrEditing)return;
-      var ship=navFindShip(td.dataset.id);
-      if(!ship)return;
-      ship[td.dataset.key]=td.textContent;
-      navRestrDirty=true;navUpdateRestrToolbar();
-    });
-    tbody.addEventListener("focusout",function(e){
-      var td=e.target.closest&&e.target.closest(".dt-cell");
-      if(!td||!navRestrEditing)return;
-      var ship=navFindShip(td.dataset.id);
-      if(!ship)return;
-      var v=td.textContent.trim();
-      ship[td.dataset.key]=v;td.textContent=v;
-    });
-    tbody.addEventListener("keydown",function(e){
-      if(e.key==="Enter"&&e.target.closest&&e.target.closest(".dt-cell")){e.preventDefault();document.execCommand("insertText",false,"\n");}
-    });
-    document.getElementById("nv_restr_edit").onclick=function(){
-      if(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="restr"){toast("Finalize a edição em andamento antes de iniciar outra.","info");return;}
-      GLOBAL_EDIT_LOCK="restr";navRestrEditing=true;navRestrDirty=false;
-      navRestrSnapshot=JSON.parse(JSON.stringify(navShips));
-      navRenderRestrTable();navUpdateTableToolbar();navUpdateComissaoToolbar();
-    };
-    document.getElementById("nv_restr_cancel").onclick=function(){
-      if(navRestrSnapshot)navShips=navRestrSnapshot;
-      navRestrSnapshot=null;navRestrEditing=false;navRestrDirty=false;GLOBAL_EDIT_LOCK=null;
-      renderNavios();renderNaviosCards();
-    };
-    document.getElementById("nv_restr_save").onclick=async function(){
-      if(!navRestrDirty)return;
-      var preTbl=navRestrSnapshot;
-      navTrackStatusChanges(preTbl);
-      navSaveShips();
-      await pushKV("navPush",NAVIOS_KEY,navShips);
-      navRestrSnapshot=null;navRestrEditing=false;navRestrDirty=false;GLOBAL_EDIT_LOCK=null;
-      if(preTbl)pushUndo("Editar Controle de Prazos - CONDEF",async function(){navShips=JSON.parse(JSON.stringify(preTbl));navSaveShips();await pushKV("navPush",NAVIOS_KEY,navShips);renderNavios();renderNaviosCards();});
-      if(preTbl)auditDiffRows("navios_restr",preTbl,navShips);
-      touchLastEdit("navios_restr");
-      toast("✓ Prazos salvos","ok");
-      renderNavios();renderNaviosCards();
-    };
   }
   // Comissões: mini tabela editável, independente das embarcações — linhas só existem quando o
   // usuário lança uma comissão em curso/prevista (não é pré-preenchida com os nomes dos meios).
@@ -5495,6 +5473,7 @@ setTimeout(hideSplash,12000);
     if(navBound)return;
     navBound=true;
     await navLoadComissoes();
+    await navLoadRestrCols();
     await navLoad();
     navUpdateSyncTag();
     var tbody=document.getElementById("nv_tbody");
@@ -5596,7 +5575,20 @@ setTimeout(hideSplash,12000);
     });
     document.getElementById("nv_condef_alt_btn").onclick=navOpenAltShipPicker;
     document.getElementById("nv_condef_edit_btn").onclick=navOpenEditShipPicker;
-    navBindRestrTable();
+    bindDataTable({
+      prefix:"nv_restr",
+      getArr:function(){return navShips;},setArr:function(v){navShips=v;},
+      onSaveKey:NAVIOS_KEY,onSaveDataFn:navSaveShips,
+      getEditing:function(){return navRestrEditing;},setEditing:function(v){navRestrEditing=v;},
+      getDirty:function(){return navRestrDirty;},setDirty:function(v){navRestrDirty=v;},
+      getSnap:function(){return navRestrSnapshot;},setSnap:function(v){navRestrSnapshot=v;},
+      getTitles:function(){return navRestrCols;},setTitles:function(v){navRestrCols=v;},
+      saveTitlesFn:navSaveRestrCols,titlesKey:NAVIOS_RESTR_COLS_KEY,
+      getTitlesSnap:function(){return navRestrColsSnapshot;},setTitlesSnap:function(v){navRestrColsSnapshot=v;},
+      fixedKeys:NAVIOS_RESTR_FIXED_KEYS,getLock:function(){return GLOBAL_EDIT_LOCK;},setLock:function(v){GLOBAL_EDIT_LOCK=v;},who:"restr",
+      renderFn:navRenderRestrTable,afterRender:function(){renderNavios();renderNaviosCards();},updateToolbar:navUpdateRestrToolbar,
+      pushLabel:"navPush",undoLabel:"Editar Controle de Prazos - CONDEF"
+    });
     navBindComissaoTable();
     wireCardsGrid({gridId:"nv_grid",addcardId:"nv_addcard",st:navCardSt,
       getCards:function(){return navCards;},setCards:function(v){navCards=v;},
@@ -5795,10 +5787,23 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
      sem precisar editar a tabela — mesmo padrão de "Inserir alteração" do CONDEF. Consumo de ODM
      passa por clgLogEstoque() logo em seguida, então o gráfico de evolução (que lê clgHist) já
      reflete o novo valor automaticamente, igual a uma edição manual da célula Estoque. ── */
+  // Normaliza nome de meio (sem acento, minúsculo, espaços colapsados) pra casar o mesmo navio
+  // mesmo quando foi digitado de forma levemente diferente no Estoque de ODM e no Gasolina/
+  // Lubrificantes/Graxas (ex.: acentuação ou maiúsculas diferentes) — sem isso, o mesmo navio
+  // aparecia duas vezes na lista de seleção em vez de uma única entrada com as duas opções.
+  function clgNorm(s){return String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();}
   function clgAllMeios(){
-    var names=[];
-    clgT1.forEach(function(r){if(r.meio&&names.indexOf(r.meio)<0)names.push(r.meio);});
-    clgT3Nav.concat(clgT3Emb).forEach(function(r){if(r.meio&&names.indexOf(r.meio)<0)names.push(r.meio);});
+    var canon={};
+    (typeof navGetState==="function"?navGetState().ships:[]).forEach(function(s){if(s.nome)canon[clgNorm(s.nome)]=s.nome;});
+    var seen={};
+    function add(raw){
+      if(!raw)return;
+      var n=clgNorm(raw);
+      if(!seen[n])seen[n]=canon[n]||raw;
+    }
+    clgT1.forEach(function(r){add(r.meio);});
+    clgT3Nav.concat(clgT3Emb).forEach(function(r){add(r.meio);});
+    var names=Object.keys(seen).map(function(n){return seen[n];});
     // Ordena pela mesma ordem de apresentação da tabela de Condição de Eficiência dos Meios
     // (CONDEF) — não alfabética. Nomes que não constam lá (ex.: só cadastrados aqui em CLG) ficam
     // ao final, na ordem em que foram encontrados.
@@ -5811,8 +5816,9 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       return ia-ib;
     });
   }
-  function clgHasOdm(nome){return clgT1.some(function(r){return r.meio===nome;});}
-  function clgHasGlg(nome){return clgT3Nav.concat(clgT3Emb).some(function(r){return r.meio===nome;});}
+  function clgHasOdm(nome){var n=clgNorm(nome);return clgT1.some(function(r){return clgNorm(r.meio)===n;});}
+  function clgHasGlg(nome){var n=clgNorm(nome);return clgT3Nav.concat(clgT3Emb).some(function(r){return clgNorm(r.meio)===n;});}
+  function clgFindByNome(arr,nome){var n=clgNorm(nome);return arr.find(function(r){return clgNorm(r.meio)===n;});}
   function clgOpenConsumoShipPicker(){
     var bg=ensureModal("clgConsumoShipBg","Inserir consumo/abastecimento — selecione o navio/embarcação");
     var body=bg.querySelector(".mbody");
@@ -5918,7 +5924,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var dataStr=document.getElementById("clgc_data").value||clgConsumoDstr(new Date());
     var dataFmt=dataStr.split("-").reverse().join("/");
     if(tipo==="odm"){
-      var row=clgT1.find(function(r){return r.meio===nome;});
+      var row=clgFindByNome(clgT1,nome);
       if(!row)return;
       var atual=clgNum(row.estoque);atual=isNaN(atual)?0:atual;
       row.estoque=String(Math.max(0,atual-qtd));
@@ -5928,9 +5934,9 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       auditPushOne("clg_t1",row.id,"Consumo "+tipoConsumo.toLowerCase()+": -"+qtd+" em "+dias+" dia(s) ("+dataFmt+")");
       touchLastEdit("clg_t1");paintLastEdit("clg_t1_lastedit","clg_t1");
     }else{
-      var isNav=clgT3Nav.some(function(r){return r.meio===nome;});
+      var isNav=!!clgFindByNome(clgT3Nav,nome);
       var arr=isNav?clgT3Nav:clgT3Emb;
-      var row2=arr.find(function(r){return r.meio===nome;});
+      var row2=clgFindByNome(arr,nome);
       if(!row2)return;
       var atual2=clgNum(row2[tipo]);atual2=isNaN(atual2)?0:atual2;
       row2[tipo]=String(Math.max(0,atual2-qtd));
@@ -5974,7 +5980,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var dataStr=document.getElementById("clga_data").value||clgConsumoDstr(new Date());
     var dataFmt=dataStr.split("-").reverse().join("/");
     if(tipo==="odm"){
-      var row=clgT1.find(function(r){return r.meio===nome;});
+      var row=clgFindByNome(clgT1,nome);
       if(!row)return;
       var atual=clgNum(row.estoque);atual=isNaN(atual)?0:atual;
       row.estoque=String(atual+qtd);
@@ -5988,9 +5994,9 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       auditPushOne("clg_t1",row.id,"Abastecimento: +"+qtd+" ("+dataFmt+")");
       touchLastEdit("clg_t1");paintLastEdit("clg_t1_lastedit","clg_t1");
     }else{
-      var isNav=clgT3Nav.some(function(r){return r.meio===nome;});
+      var isNav=!!clgFindByNome(clgT3Nav,nome);
       var arr2=isNav?clgT3Nav:clgT3Emb;
-      var row2=arr2.find(function(r){return r.meio===nome;});
+      var row2=clgFindByNome(arr2,nome);
       if(!row2)return;
       var atual2=clgNum(row2[tipo]);atual2=isNaN(atual2)?0:atual2;
       row2[tipo]=String(atual2+qtd);
