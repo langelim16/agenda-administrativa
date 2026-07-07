@@ -4657,6 +4657,9 @@ setTimeout(hideSplash,12000);
   var NAVIOS_FIXED_KEYS=["nome"];
   function navColsDefault(){return NAVIOS_FIXED.map(function(c){var o={key:c.key,title:c.title,type:c.type};if(c.multiline)o.multiline=true;return o;});}
   var navShips=[],navCards=[],navBound=false;
+  var NAV_YEAR_KEY="aa_navios_tl_year_v1";
+  var navYear=(function(){try{var v=+localStorage.getItem(NAV_YEAR_KEY);return v||new Date().getFullYear();}catch(e){return new Date().getFullYear();}})();
+  var NAV_YEAR_MIN=2024;
   var navCols=navColsDefault();
   // Trava de edição: null (livre) | "table" | "card:<id>" — impede editar tabela e cartões ao mesmo tempo
   var navTableEditing=false,navTableDirty=false,navTableSnapshot=null,navColsSnapshot=null;
@@ -5025,6 +5028,7 @@ setTimeout(hideSplash,12000);
       // esse srcId) antes de recalcular — nunca mexe nos campos atuais da tabela quando retroativo
       // (o período, por definição, já é passado).
       ship.stHist=ship.stHist.filter(function(h){return h.srcId!==editEntry.id;});
+      if(isRetro?(condicaoAnterior||condicaoFinal):novaCondef)navClearStHistRange(ship,vigencia,isRetro?fim:null);
       editEntry.vigencia=vigencia;editEntry.fim=fim||"";
       editEntry.condefDepois=novaCondef||editEntry.condefAntes;
       editEntry.condicaoAnterior=condicaoAnterior;editEntry.condicaoFinal=condicaoFinal;
@@ -5054,6 +5058,7 @@ setTimeout(hideSplash,12000);
       obs:obsTxt,retroativo:isRetro
     };
     ship.condefHist.push(entry);
+    if(isRetro?(condicaoAnterior||condicaoFinal):novaCondef)navClearStHistRange(ship,vigencia,isRetro?fim:null);
     if(!isRetro){
       // Nova alteração: já entra em vigor na própria data de início (não no dia seguinte) e
       // atualiza os campos atuais da tabela.
@@ -5115,10 +5120,18 @@ setTimeout(hideSplash,12000);
         '<td>'+(r.p?fmtBRL(moneyVal(r.p.orcamento)):"—")+'</td></tr>';
     }).join("");
   }
+  // Remove lançamentos de stHist que caiam dentro do intervalo [fromStr, toStr] (toStr null = sem
+  // limite superior) — usado pra uma nova inserção/alteração retroativa sobrepor qualquer registro
+  // (manual ou de outro período) que já existisse nesses dias, em vez de só competir no sort.
+  function navClearStHistRange(ship,fromStr,toStr){
+    var fromTs=new Date(fromStr+"T00:00:00").getTime();
+    var toTs=toStr?new Date(toStr+"T00:00:00").getTime()+86400000:Infinity;
+    ship.stHist=(ship.stHist||[]).filter(function(h){var t=new Date(h.ts).getTime();return t<fromTs||t>=toTs;});
+  }
   function navSegsForYear(s){
-    var y=CUR_YEAR,start=new Date(y,0,1),endYear=new Date(y+1,0,1);
+    var y=navYear,start=new Date(y,0,1),endYear=new Date(y+1,0,1);
     var now=new Date(TODAY.getTime()+86400000);
-    var end=now<endYear?now:endYear;
+    var end=(y===CUR_YEAR)?(now<endYear?now:endYear):endYear;
     var h=(s.stHist||[]).slice().map(function(e){return{st:e.st||"",t:new Date(e.ts)};}).sort(function(a,b){return a.t-b.t;});
     if(!h.length)return[{st:null,from:start,to:end}];
     var segs=[];
@@ -5133,10 +5146,33 @@ setTimeout(hideSplash,12000);
     }
     return segs;
   }
+  function navSetYear(y){
+    navYear=y;
+    try{localStorage.setItem(NAV_YEAR_KEY,String(y));}catch(e){}
+    navRenderTimeline();navRenderOperReport();
+  }
+  function navYearControls(idPrefix){
+    var maxY=Math.max(navYear,CUR_YEAR);
+    return '<div class="nv-toolbar" style="margin-bottom:8px">'+
+      '<button type="button" class="nv-editbtn" id="'+idPrefix+'_prev" title="Ano anterior">◀</button>'+
+      '<span style="font-weight:700;font-size:13px;padding:0 4px">'+navYear+'</span>'+
+      '<button type="button" class="nv-editbtn" id="'+idPrefix+'_next"'+(navYear>=maxY?' disabled':'')+' title="Próximo ano">▶</button>'+
+      (navYear>=maxY?'<button type="button" class="nv-editbtn add-year" id="'+idPrefix+'_addyear">+ Ano</button>':'')+
+      '<button type="button" class="nv-editbtn" id="'+idPrefix+'_refresh" title="Recarregar com os lançamentos mais recentes">🔄 Atualizar</button>'+
+    '</div>';
+  }
+  function navBindYearControls(idPrefix){
+    var prev=document.getElementById(idPrefix+"_prev"),next=document.getElementById(idPrefix+"_next"),
+      add=document.getElementById(idPrefix+"_addyear"),refresh=document.getElementById(idPrefix+"_refresh");
+    if(prev)prev.onclick=function(){navSetYear(navYear-1);};
+    if(next)next.onclick=function(){if(navYear<Math.max(navYear,CUR_YEAR))navSetYear(navYear+1);};
+    if(add)add.onclick=function(){navSetYear(navYear+1);};
+    if(refresh)refresh.onclick=function(){navRenderTimeline();navRenderOperReport();toast("✓ Timeline e relatório atualizados","ok");};
+  }
   function navRenderTimeline(){
     var el=document.getElementById("nv_tl_sec");
     if(!el)return;
-    var y=CUR_YEAR,totalMs=new Date(y+1,0,1)-new Date(y,0,1);
+    var y=navYear,totalMs=new Date(y+1,0,1)-new Date(y,0,1);
     var legend='<div class="nv-tl-legend">'+Object.keys(NAV_ST_COLORS).map(function(k){return'<span><span class="nv-tl-dot" style="background:'+NAV_ST_COLORS[k]+'"></span>'+NAV_ST_LABELS[k]+'</span>';}).join("")+'<span><span class="nv-tl-dot" style="background:#c9c9c2"></span>Sem registro</span></div>';
     var months='<div class="nv-tl-months">'+MONTHS.map(function(m){return"<span>"+m+"</span>";}).join("")+'</div>';
     var rows=navShips.map(function(s){
@@ -5149,12 +5185,14 @@ setTimeout(hideSplash,12000);
       }).join("");
       return '<div class="nv-tl-row"><div class="nv-tl-name" title="'+esc(s.nome||"")+'">'+esc(s.nome||"—")+'</div><div class="nv-tl-strip">'+strip+'</div></div>';
     }).join("");
-    el.innerHTML='<div class="nv-tl-wrap"><h3 class="dt-table-title">Timeline de status — '+y+'</h3>'+legend+months+rows+
+    el.innerHTML='<div class="nv-tl-wrap"><h3 class="dt-table-title">Timeline de status — '+y+'</h3>'+navYearControls("nvtl")+legend+months+rows+
       '<div style="font-size:10px;color:var(--text3);margin-top:10px;font-style:italic">O histórico é registrado automaticamente a cada mudança de CONDEF salva na tabela. Períodos anteriores ao início do registro aparecem como “Sem registro”.</div></div>';
+    navBindYearControls("nvtl");
   }
   function navRenderOperReport(){
     var el=document.getElementById("nv_oper_sec");
     if(!el)return;
+    var y=navYear;
     var rows=navShips.map(function(s){
       var segs=navSegsForYear(s),acc={IM:0,IO:0,P:0,PO:0,unk:0};
       segs.forEach(function(g){
@@ -5166,17 +5204,18 @@ setTimeout(hideSplash,12000);
       var pct=known?Math.round(oper/known*100):null;
       return{nome:s.nome||"—",acc:acc,pct:pct};
     });
-    el.innerHTML='<h3 class="dt-table-title">Relatório de operacionalidade — '+CUR_YEAR+'</h3>'+
-      '<div class="dt-table-wrap" style="margin-bottom:0"><table class="dt-table" style="min-width:0"><thead><tr><th>Meio</th><th>P</th><th>PO</th><th>IO</th><th>IM</th><th>Sem registro</th><th>% Operacional</th></tr></thead><tbody>'+
+    el.innerHTML='<h3 class="dt-table-title">Relatório de operacionalidade — '+y+'</h3>'+navYearControls("nvop")+
+      '<div class="dt-table-wrap" style="margin-bottom:0"><table class="dt-table" style="min-width:0;width:100%;table-layout:fixed"><thead><tr><th>Meio</th><th>P</th><th>PO</th><th>IO</th><th>IM</th><th>Sem registro</th><th>% Operacional</th></tr></thead><tbody>'+
       rows.map(function(r){
         var cls=r.pct===null?"":(r.pct>=70?"row-ok":(r.pct>=40?"row-warn":"row-bad"));
         return '<tr class="'+cls+'"><td>'+esc(r.nome)+'</td><td>'+r.acc.P+'</td><td>'+r.acc.PO+'</td><td>'+r.acc.IO+'</td><td>'+r.acc.IM+'</td><td>'+r.acc.unk+'</td><td><b>'+(r.pct===null?"—":r.pct+"%")+'</b></td></tr>';
       }).join("")+'</tbody></table></div>'+
-      '<div style="font-size:10px;color:var(--text3);margin-top:8px;font-style:italic">Dias contados de 01/01/'+CUR_YEAR+' até hoje, a partir do histórico registrado. “% Operacional” = (P + PO) ÷ dias com registro.</div>'+
+      '<div style="font-size:10px;color:var(--text3);margin-top:8px;font-style:italic">Dias contados de 01/01/'+y+' até '+(y===CUR_YEAR?"hoje":"31/12/"+y)+', a partir do histórico registrado. “% Operacional” = (P + PO) ÷ dias com registro.</div>'+
       '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="nv-editbtn" id="nvoper_csv">⬇ Exportar CSV</button></div>';
+    navBindYearControls("nvop");
     document.getElementById("nvoper_csv").onclick=function(){
       var csv="Meio;P;PO;IO;IM;Sem registro;% Operacional\n"+rows.map(function(r){return[r.nome,r.acc.P,r.acc.PO,r.acc.IO,r.acc.IM,r.acc.unk,(r.pct===null?"":r.pct+"%")].join(";");}).join("\n");
-      trigDL("operacionalidade_"+CUR_YEAR+".csv","\uFEFF"+csv,"text/csv;charset=utf-8");
+      trigDL("operacionalidade_"+y+".csv","\uFEFF"+csv,"text/csv;charset=utf-8");
     };
   }
   function navColorTd(id,val,editing){
