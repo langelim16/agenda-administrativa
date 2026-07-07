@@ -674,8 +674,6 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .plbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--c-blue);font-weight:600;white-space:nowrap}
 .profilebar select{background:var(--bg);border:1px solid var(--border2);color:var(--text);border-radius:var(--r-md);padding:6px 9px;font-size:13px;font-weight:600;outline:none;flex:1;min-width:180px}
 .phint{font-size:11px;color:var(--text3)}
-.cfg-btn{display:inline-flex;align-items:center;gap:5px;background:var(--bg);border:1px solid var(--border2);color:var(--text2);border-radius:var(--r-md);padding:6px 11px;font-size:12px}
-.cfg-btn:hover{border-color:var(--c-blue);color:var(--c-blue)}
 .legend{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:7px 13px;margin-bottom:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);font-size:12px;color:var(--text2)}
 .li{display:flex;align-items:center;gap:5px;font-weight:500}.li-dot{width:9px;height:9px;border-radius:50%}
 .spot-section{margin-bottom:16px;border:2px solid var(--c-red);border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--sh-sm)}
@@ -1060,7 +1058,6 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
 .storrow{display:flex;align-items:center;gap:12px;margin-top:9px}
 .storlbl{width:110px;font-size:11px;font-weight:600;color:var(--text2);text-align:right;flex:none}
 .storrow .cachebar{margin:0;flex:1;max-width:none}
-.stor-hint{font-size:11px;color:var(--text3);margin:6px 0 4px;line-height:1.5}
 .cache-txt{font-size:10px;font-family:var(--mono);font-weight:600;letter-spacing:.5px;white-space:nowrap;color:var(--c-teal)}
 .splash{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#34506f 0%,#41618c 55%,#324863 100%);transition:opacity .55s ease}
 .splash.hide{opacity:0;pointer-events:none}
@@ -1492,24 +1489,6 @@ tr.row-crit{background:rgba(233,150,53,.20)}
       </tr>
     </thead>
     <tbody id="nv_tbody"></tbody>
-  </table>
-</div>
-
-<div class="dt-section-head">
-  <div class="dt-title-wrap"><h3 class="dt-table-title">Controle de Prazos - CONDEF</h3><span class="last-edit" id="nv_restr_lastedit"></span></div>
-  <div class="nv-toolbar" id="nv_restr_toolbar">
-    <button class="nv-editbtn" id="nv_restr_edit">✎ Editar</button>
-    <span class="nv-edit-actions" id="nv_restr_edit_actions" hidden>
-      <button class="dt-colbtn" id="nv_restr_addcol">+ coluna</button>
-      <button class="nv-savebtn" id="nv_restr_save" disabled>✓ Salvar</button>
-      <button class="nv-cancelbtn" id="nv_restr_cancel">Cancelar</button>
-    </span>
-  </div>
-</div>
-<div class="dt-table-wrap">
-  <table class="dt-table" style="min-width:0;width:100%;table-layout:fixed" id="nv_restr_table">
-    <thead id="nv_restr_thead"><tr><th>Indicativo</th><th>Nome</th><th>Msg</th><th>Restrição</th><th>Prazo</th><th>Obs.</th></tr></thead>
-    <tbody id="nv_restr_tbody"></tbody>
   </table>
 </div>
 
@@ -5158,58 +5137,6 @@ setTimeout(hideSplash,12000);
         '<td>'+(r.p?fmtBRL(moneyVal(r.p.orcamento)):"—")+'</td></tr>';
     }).join("");
   }
-  // Controle de Prazos - CONDEF: lista todos os meios (na mesma ordem da tabela de Condição de
-  // Eficiência) com as informações de restrição/prazo em vigor — visão de acompanhamento das
-  // condições que mantêm o navio fora de IM e que têm prazo a vencer/alterar. Edita os mesmos
-  // campos do navio (msg/restrição/prazo/obs) — reaproveita navShips, então usa o mesmo
-  // GLOBAL_EDIT_LOCK da tabela principal pra nunca editar os dois ao mesmo tempo.
-  var NAVIOS_RESTR_COLS_KEY="aa_navios_restr_cols_v1";
-  var NAVIOS_RESTR_FIXED_KEYS=["indicativo","nome"];
-  function navRestrColsDefault(){
-    return [
-      {key:"indicativo",title:"Indicativo"},{key:"nome",title:"Nome"},
-      {key:"msg",title:"Msg"},{key:"restricao",title:"Restrição",multiline:true},
-      {key:"previsao",title:"Prazo",multiline:true},{key:"obs",title:"Obs."}
-    ];
-  }
-  var navRestrCols=navRestrColsDefault();
-  var navRestrEditing=false,navRestrDirty=false,navRestrSnapshot=null,navRestrColsSnapshot=null;
-  async function navLoadRestrCols(){
-    var v=null;
-    try{v=await gtj(NAVIOS_RESTR_COLS_KEY);}catch(e){}
-    if(!v||!v.length){try{v=JSON.parse(localStorage.getItem(NAVIOS_RESTR_COLS_KEY));}catch(e){}}
-    if(v&&v.length)navRestrCols=v;
-    navRestrCols.forEach(function(c){if(c.key==="restricao"||c.key==="previsao")c.multiline=true;});
-  }
-  function navSaveRestrCols(){try{localStorage.setItem(NAVIOS_RESTR_COLS_KEY,JSON.stringify(navRestrCols));}catch(e){}}
-  // Mesmo padrão de tabela usado em todo o app (Condição de Eficiência, CLG etc.): colunas podem
-  // ser inseridas/excluídas/reordenadas/renomeadas via bindDataTable, e as células editadas na
-  // linha. Reaproveita navShips (mesmas linhas/campos da tabela principal), então compartilha o
-  // GLOBAL_EDIT_LOCK pra nunca editar as duas ao mesmo tempo. Sem "+ linha": as linhas são os
-  // próprios navios, cadastrados/excluídos só pela tabela de Condição de Eficiência.
-  function navRenderRestrTable(){
-    var tbody=document.getElementById("nv_restr_tbody");
-    if(!tbody)return;
-    var table=document.getElementById("nv_restr_table");
-    if(table)table.classList.toggle("dt-editing",navRestrEditing);
-    renderThead(document.getElementById("nv_restr_thead"),navRestrCols,navRestrEditing,"dt-actions-col",false,NAVIOS_RESTR_FIXED_KEYS);
-    if(!navShips.length){
-      tbody.innerHTML='<tr><td colspan="'+(navRestrCols.length+1)+'" style="text-align:center;color:var(--text3);font-style:italic">Nenhuma embarcação cadastrada.</td></tr>';
-    }else{
-      tbody.innerHTML=navShips.map(function(s){
-        return '<tr data-id="'+s.id+'">'+navRestrCols.map(function(col){return colTd(s,col,navRestrEditing,"dt-cell","dt-cell-ro");}).join("")+
-          '<td class="dt-actions dt-actions-col"></td></tr>';
-      }).join("");
-    }
-    navUpdateRestrToolbar();
-  }
-  function navUpdateRestrToolbar(){
-    var editBtn=document.getElementById("nv_restr_edit"),actions=document.getElementById("nv_restr_edit_actions"),saveBtn=document.getElementById("nv_restr_save");
-    paintLastEdit("nv_restr_lastedit","nv_restr");
-    if(!editBtn)return;
-    if(navRestrEditing){editBtn.hidden=true;actions.hidden=false;saveBtn.disabled=!navRestrDirty;}
-    else{editBtn.hidden=false;actions.hidden=true;editBtn.disabled=!!(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="restr");}
-  }
   // Comissões: mini tabela editável, independente das embarcações — linhas só existem quando o
   // usuário lança uma comissão em curso/prevista (não é pré-preenchida com os nomes dos meios).
   // A coluna Ações (excluir linha) só aparece durante a edição, igual às demais tabelas do app.
@@ -5280,12 +5207,12 @@ setTimeout(hideSplash,12000);
       if(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="comissao"){toast("Finalize a edição em andamento antes de iniciar outra.","info");return;}
       GLOBAL_EDIT_LOCK="comissao";navComissaoEditing=true;navComissaoDirty=false;
       navComissaoSnapshot=JSON.parse(JSON.stringify(navComissoes));
-      navRenderComissoes();navUpdateTableToolbar();navUpdateRestrToolbar();
+      navRenderComissoes();navUpdateTableToolbar();
     };
     document.getElementById("nv_comissao_cancel").onclick=function(){
       if(navComissaoSnapshot)navComissoes=navComissaoSnapshot;
       navComissaoSnapshot=null;navComissaoEditing=false;navComissaoDirty=false;GLOBAL_EDIT_LOCK=null;
-      navRenderComissoes();navUpdateTableToolbar();navUpdateRestrToolbar();
+      navRenderComissoes();navUpdateTableToolbar();
     };
     document.getElementById("nv_comissao_save").onclick=async function(){
       if(!navComissaoDirty)return;
@@ -5296,7 +5223,7 @@ setTimeout(hideSplash,12000);
       if(preTbl)pushUndo("Editar Comissões",async function(){navComissoes=JSON.parse(JSON.stringify(preTbl));navSaveComissoes();await pushKV("navPush",NAVIOS_COMISSAO_KEY,navComissoes);navRenderComissoes();});
       touchLastEdit("navios_comissoes");
       toast("✓ Comissões salvas","ok");
-      navRenderComissoes();navUpdateTableToolbar();navUpdateRestrToolbar();
+      navRenderComissoes();navUpdateTableToolbar();
     };
   }
   // Remove lançamentos de stHist que caiam dentro do intervalo [fromStr, toStr] (toStr null = sem
@@ -5428,7 +5355,6 @@ setTimeout(hideSplash,12000);
     navUpdateSyncTag();
     if(editing)bindRowDragGeneric(tb,function(){return navShips;},renderNavios,function(){navTableDirty=true;});
     if(!editing)navPaintExtras();
-    navRenderRestrTable();
     renderNaviosPpssLinkTable();
     navRenderComissoes();
     navRenderTimeline();
@@ -5473,7 +5399,6 @@ setTimeout(hideSplash,12000);
     if(navBound)return;
     navBound=true;
     await navLoadComissoes();
-    await navLoadRestrCols();
     await navLoad();
     navUpdateSyncTag();
     var tbody=document.getElementById("nv_tbody");
@@ -5575,20 +5500,6 @@ setTimeout(hideSplash,12000);
     });
     document.getElementById("nv_condef_alt_btn").onclick=navOpenAltShipPicker;
     document.getElementById("nv_condef_edit_btn").onclick=navOpenEditShipPicker;
-    bindDataTable({
-      prefix:"nv_restr",
-      getArr:function(){return navShips;},setArr:function(v){navShips=v;},
-      onSaveKey:NAVIOS_KEY,onSaveDataFn:navSaveShips,
-      getEditing:function(){return navRestrEditing;},setEditing:function(v){navRestrEditing=v;},
-      getDirty:function(){return navRestrDirty;},setDirty:function(v){navRestrDirty=v;},
-      getSnap:function(){return navRestrSnapshot;},setSnap:function(v){navRestrSnapshot=v;},
-      getTitles:function(){return navRestrCols;},setTitles:function(v){navRestrCols=v;},
-      saveTitlesFn:navSaveRestrCols,titlesKey:NAVIOS_RESTR_COLS_KEY,
-      getTitlesSnap:function(){return navRestrColsSnapshot;},setTitlesSnap:function(v){navRestrColsSnapshot=v;},
-      fixedKeys:NAVIOS_RESTR_FIXED_KEYS,getLock:function(){return GLOBAL_EDIT_LOCK;},setLock:function(v){GLOBAL_EDIT_LOCK=v;},who:"restr",
-      renderFn:navRenderRestrTable,afterRender:function(){renderNavios();renderNaviosCards();},updateToolbar:navUpdateRestrToolbar,
-      pushLabel:"navPush",undoLabel:"Editar Controle de Prazos - CONDEF"
-    });
     navBindComissaoTable();
     wireCardsGrid({gridId:"nv_grid",addcardId:"nv_addcard",st:navCardSt,
       getCards:function(){return navCards;},setCards:function(v){navCards=v;},
@@ -6009,7 +5920,6 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     toast("✓ Abastecimento registrado","ok");
     renderClgTables();
   }
-  function clgFindRow(arr,id){return arr.find(function(r){return r.id===id;});}
   function clgFindCard(cid){return clgCards.find(function(c){return c.id===cid;});}
   clgGetState=function(){return{t1:JSON.parse(JSON.stringify(clgT1)),t2:JSON.parse(JSON.stringify(clgT2)),cards:JSON.parse(JSON.stringify(clgCards)),t1c:cloneCols(clgT1Cols),t2c:cloneCols(clgT2Cols),t3n:JSON.parse(JSON.stringify(clgT3Nav)),t3e:JSON.parse(JSON.stringify(clgT3Emb))};};
   clgSetState=async function(s){clgT1=s.t1;clgT2=s.t2;clgCards=s.cards;clgT1Cols=s.t1c||clgT1ColsDefault();clgT2Cols=s.t2c||clgT2ColsDefault();clgT3Nav=s.t3n||clgT3SeedFor(CLG_T3_NAV_ROSTER);clgT3Emb=s.t3e||clgT3SeedFor(CLG_T3_EMB_ROSTER);clgSaveT1();clgSaveT2();clgSaveCards();clgSaveT1Cols();clgSaveT2Cols();clgSaveT3Nav();clgSaveT3Emb();await pushKV("clgPush",CLG_T1_KEY,clgT1);await pushKV("clgPush",CLG_T2_KEY,clgT2);await pushKV("clgPush",CLG_CARDS_KEY,clgCards);await pushKV("clgPush",CLG_T1_COLS_KEY,clgT1Cols);await pushKV("clgPush",CLG_T2_COLS_KEY,clgT2Cols);await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);};
@@ -7100,7 +7010,6 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     bindMasonryCardDrag(grid,function(){return s.cards;},function(v){s.cards=v;},function(){horasSaveShip(s);},s.cardsKey,function(){renderShipCards(key);},"Reordenar cartões — "+s.title,function(){return GLOBAL_EDIT_LOCK;});
     bindItemDragGeneric(grid,function(cid){return s.cards.find(function(c){return c.id===cid;});},function(v){s.cardSt.dirty=v;},function(){renderShipCards(key);});
   }
-  function findShipCard(s,cid){return s.cards.find(function(c){return c.id===cid;});}
   function bindShipCardGrid(key){
     var s=horasShips[key];
     wireCardsGrid({gridId:"horas_"+key+"_grid",addcardId:"horas_"+key+"_addcard",st:s.cardSt,
