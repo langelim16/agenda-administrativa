@@ -1502,11 +1502,8 @@ tr.row-crit{background:rgba(233,150,53,.20)}
   </table>
 </div>
 
-<div class="nv-toolbar" style="margin:2px 0 12px">
-  <button class="nv-editbtn" id="nv_tl_toggle">📈 Mostrar timeline de status (ano)</button>
-  <button class="nv-editbtn" id="nv_oper_btn">📊 Relatório de operacionalidade</button>
-</div>
-<div id="nv_tl_sec" hidden></div>
+<div id="nv_tl_sec"></div>
+<div id="nv_oper_sec" style="margin-top:16px"></div>
 
 <div class="nv-grid" id="nv_grid"></div>
 
@@ -4890,7 +4887,7 @@ setTimeout(hideSplash,12000);
       '</div>';
     }).join(""):'<div class="spot-empty">Nenhuma embarcação cadastrada.</div>';
     body.querySelectorAll(".ps-item").forEach(function(el){
-      el.onclick=function(){bg.classList.remove("open");var ship=navFindShip(el.dataset.id);if(ship)navOpenAltForm(ship);};
+      el.onclick=function(){bg.classList.remove("open");var ship=navFindShip(el.dataset.id);if(ship)navOpenAltTipoPicker(ship);};
     });
     bg.classList.add("open");
   }
@@ -4920,8 +4917,8 @@ setTimeout(hideSplash,12000);
     var entries=(ship.condefHist||[]).filter(function(h){return h.retroativo;}).sort(function(a,b){return a.vigencia<b.vigencia?1:-1;});
     body.innerHTML=entries.length?entries.map(function(h){
       return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--border);border-radius:var(--r-md);padding:9px 12px;margin-bottom:8px">'+
-        '<div><b>'+esc(NAV_ST_LABELS[h.condefDepois]||h.condefDepois||"—")+'</b><br>'+
-        '<span style="font-size:11px;color:var(--text3)">'+navFmtBR(h.vigencia)+(h.fim?(" a "+navFmtBR(h.fim)):" (sem data de retorno)")+(h.condicaoAnterior?(" · antes: "+h.condicaoAnterior):"")+(h.condicaoFinal?(" · depois: "+h.condicaoFinal):"")+(h.obs?(" · "+esc(h.obs)):"")+'</span></div>'+
+        '<div><b>'+esc(NAV_ST_LABELS[h.condicaoAnterior]||h.condicaoAnterior||"—")+'</b><br>'+
+        '<span style="font-size:11px;color:var(--text3)">'+navFmtBR(h.vigencia)+(h.fim?(" a "+navFmtBR(h.fim)):" (sem data de retorno)")+(h.condicaoFinal?(" · retorno: "+(NAV_ST_LABELS[h.condicaoFinal]||h.condicaoFinal)):"")+(h.obs?(" · "+esc(h.obs)):"")+'</span></div>'+
         '<button type="button" class="brestore" data-id="'+h.id+'">Editar</button>'+
       '</div>';
     }).join(""):'<div class="spot-empty">Nenhum período retroativo lançado para este navio.</div>';
@@ -4934,29 +4931,54 @@ setTimeout(hideSplash,12000);
     });
     bg.classList.add("open");
   }
-  function navOpenAltForm(ship,editEntry){
+  // Passo 1: escolhe se a alteração é NOVA (a partir de hoje, atualiza o CONDEF atual da tabela)
+  // ou RETROATIVA (um período já ocorrido, só entra no histórico/timeline). Ao editar um período
+  // já lançado o tipo já é conhecido (editEntry.retroativo), então esse passo é pulado.
+  function navOpenAltTipoPicker(ship){
+    var bg=navEnsureModal("nvAltTipoBg","Inserir alteração — "+(ship.nome||"—"));
+    var body=bg.querySelector(".mbody");
+    body.innerHTML=
+      '<div style="display:flex;flex-direction:column;gap:10px">'+
+        '<button type="button" class="ps-item" id="nva_tipo_nova" style="text-align:left;cursor:pointer">'+
+          '<div class="ps-main"><div class="ps-num">Nova alteração</div>'+
+          '<div class="ps-meta">A CONDEF muda a partir de hoje (ou de uma data futura) — atualiza a tabela.</div></div>'+
+        '</button>'+
+        '<button type="button" class="ps-item" id="nva_tipo_retro" style="text-align:left;cursor:pointer">'+
+          '<div class="ps-main"><div class="ps-num">Alteração retroativa</div>'+
+          '<div class="ps-meta">Um período já ocorrido (início e retorno no passado) — só entra na Timeline e no Relatório.</div></div>'+
+        '</button>'+
+      '</div>';
+    document.getElementById("nva_tipo_nova").onclick=function(){bg.classList.remove("open");navOpenAltForm(ship,null,"nova");};
+    document.getElementById("nva_tipo_retro").onclick=function(){bg.classList.remove("open");navOpenAltForm(ship,null,"retroativo");};
+    bg.classList.add("open");
+  }
+  function navOpenAltForm(ship,editEntry,tipo){
     var isEdit=!!editEntry;
-    var bg=navEnsureModal("nvAltFormBg",(isEdit?"Editar período — ":"Inserir alteração — ")+(ship.nome||"—"));
+    tipo=editEntry?(editEntry.retroativo?"retroativo":"nova"):tipo;
+    var isRetro=tipo==="retroativo";
+    var bg=navEnsureModal("nvAltFormBg",(isEdit?"Editar período — ":(isRetro?"Alteração retroativa — ":"Nova alteração — "))+(ship.nome||"—"));
     var body=bg.querySelector(".mbody");
     var todayStr=navDstr(TODAY);
-    body.innerHTML=
-      '<div style="font-size:12px;color:var(--text2);margin-bottom:10px">Embarcação: <b>'+esc(ship.nome||"—")+'</b> · CONDEF atual: <b>'+esc(ship.condef||"—")+'</b></div>'+
-      '<div class="mgrid">'+
+    var fields=isRetro?(
+        '<div class="fld"><label>Data de início</label><input type="date" id="nva_vigencia" value="'+(editEntry?editEntry.vigencia:"")+'"></div>'+
+        '<div class="fld"><label>Data de retorno</label><input type="date" id="nva_fim" value="'+(editEntry?(editEntry.fim||""):"")+'"></div>'+
+        '<div class="fld"><label>Condição anterior (durante o período)</label><select id="nva_condicaoAnterior"><option value="">—</option>'+
+          ["P","PO","IO","IM"].map(function(k){return '<option value="'+k+'"'+(editEntry&&editEntry.condicaoAnterior===k?" selected":"")+'>'+esc(NAV_ST_LABELS[k])+'</option>';}).join("")+
+        '</select></div>'+
+        '<div class="fld"><label>Condição final (após o retorno)</label><select id="nva_condicaoFinal"><option value="">—</option>'+
+          ["P","PO","IO","IM"].map(function(k){return '<option value="'+k+'"'+(editEntry&&editEntry.condicaoFinal===k?" selected":"")+'>'+esc(NAV_ST_LABELS[k])+'</option>';}).join("")+
+        '</select></div>'+
+        '<div class="fld full" style="font-size:10.5px;color:var(--text3)">A condição anterior vale a partir da própria data de início; a condição final vale a partir da própria data de retorno e permanece até uma alteração mais recente.</div>'
+      ):(
         '<div class="fld"><label>Nova condição CONDEF</label><select id="nva_condef"><option value="">Manter atual</option>'+
           ["P","PO","IO","IM"].map(function(k){return '<option value="'+k+'"'+(editEntry&&editEntry.condefDepois===k?" selected":"")+'>'+esc(NAV_ST_LABELS[k])+'</option>';}).join("")+
         '</select></div>'+
-        '<div class="fld"><label>Data de vigência da alteração</label><input type="date" id="nva_vigencia" value="'+(editEntry?editEntry.vigencia:todayStr)+'"></div>'+
-        '<div class="fld"><label>Data de retorno ao normal (opcional)</label><input type="date" id="nva_fim" value="'+(editEntry?(editEntry.fim||""):"")+'"></div>'+
-        '<div class="fld full" style="font-size:10.5px;color:var(--text3)">Se a alteração já é passada (retroativa) e o navio já voltou ao normal, preencha também a data de retorno — assim o período fica corretamente registrado na Timeline de Status e no Relatório de Operacionalidade, sem mudar o estado atual da tabela.</div>'+
-        '<div class="mgrid full" id="nva_retro_fields" style="display:none">'+
-          '<div class="fld"><label>Condição anterior ao período</label><select id="nva_condicaoAnterior"><option value="">Manter registro atual</option>'+
-            ["P","PO","IO","IM"].map(function(k){return '<option value="'+k+'"'+(editEntry&&editEntry.condicaoAnterior===k?" selected":"")+'>'+esc(NAV_ST_LABELS[k])+'</option>';}).join("")+
-          '</select></div>'+
-          '<div class="fld"><label>Condição final (após o retorno)</label><select id="nva_condicaoFinal"><option value="">Manter — usa o CONDEF atual do navio</option>'+
-            ["P","PO","IO","IM"].map(function(k){return '<option value="'+k+'"'+((editEntry?editEntry.condicaoFinal===k:ship.condef===k)?" selected":"")+'>'+esc(NAV_ST_LABELS[k])+'</option>';}).join("")+
-          '</select></div>'+
-          '<div class="fld full" style="font-size:10.5px;color:var(--text3)">A condição final registrada aqui vale a partir do dia seguinte ao retorno e permanece até que uma alteração mais recente a substitua.</div>'+
-        '</div>'+
+        '<div class="fld"><label>Data de início</label><input type="date" id="nva_vigencia" value="'+(editEntry?editEntry.vigencia:todayStr)+'"></div>'+
+        '<div class="fld full" style="font-size:10.5px;color:var(--text3)">A nova condição já vale a partir da própria data de início informada.</div>'
+      );
+    body.innerHTML=
+      '<div style="font-size:12px;color:var(--text2);margin-bottom:10px">Embarcação: <b>'+esc(ship.nome||"—")+'</b> · CONDEF atual: <b>'+esc(ship.condef||"—")+'</b></div>'+
+      '<div class="mgrid">'+fields+
         '<div class="fld full"><label>Nova restrição (opcional)</label><input id="nva_restricao" placeholder="Ex.: 200/931" value="'+esc(editEntry&&editEntry.restricaoAdicionada!=="—"?editEntry.restricaoAdicionada:"")+'"></div>'+
         '<div class="fld"><label>MSG *</label><input id="nva_msg" placeholder="Ex.: P031423Z/JUL/2026" value="'+esc(editEntry?editEntry.msgDepois:"")+'"></div>'+
         '<div class="fld"><label>Prazo *</label><input type="date" id="nva_prazo" value="'+(editEntry?editEntry.prazo:"")+'"></div>'+
@@ -4968,50 +4990,50 @@ setTimeout(hideSplash,12000);
         '<span style="display:flex;gap:8px"><button class="bcancel" id="nva_cancel">Cancelar</button><button class="bsave" id="nva_save">Salvar</button></span>'+
       '</div>';
     document.getElementById("nva_cancel").onclick=function(){bg.classList.remove("open");};
-    document.getElementById("nva_save").onclick=function(){navSaveAlteracao(ship,bg,editEntry);};
+    document.getElementById("nva_save").onclick=function(){navSaveAlteracao(ship,bg,editEntry,tipo);};
     if(isEdit)document.getElementById("nva_del").onclick=function(){navDeleteAlteracao(ship,editEntry,bg);};
-    var vigInput=document.getElementById("nva_vigencia"),retroBox=document.getElementById("nva_retro_fields");
-    function toggleRetroFields(){retroBox.style.display=(vigInput.value&&vigInput.value<navDstr(TODAY))?"":"none";}
-    vigInput.oninput=toggleRetroFields;
-    toggleRetroFields();
     bg.classList.add("open");
   }
-  async function navSaveAlteracao(ship,bg,editEntry){
+  async function navSaveAlteracao(ship,bg,editEntry,tipo){
+    tipo=editEntry?(editEntry.retroativo?"retroativo":"nova"):tipo;
+    var isRetro=tipo==="retroativo";
     var msg=(document.getElementById("nva_msg").value||"").trim();
     var prazo=document.getElementById("nva_prazo").value||"";
     var errEl=document.getElementById("nva_err");
-    if(!msg||!prazo){
-      errEl.textContent="Preencha MSG e Prazo — campos obrigatórios para salvar a alteração.";
+    var vigencia=document.getElementById("nva_vigencia").value||"";
+    if(!msg||!prazo||!vigencia){
+      errEl.textContent="Preencha Data de início, MSG e Prazo — campos obrigatórios para salvar a alteração.";
+      errEl.style.display="block";
+      return;
+    }
+    var fim=isRetro?(document.getElementById("nva_fim").value||""):"";
+    var novaCondef=isRetro?"":(document.getElementById("nva_condef").value||"");
+    var condicaoAnterior=isRetro?(document.getElementById("nva_condicaoAnterior").value||""):"";
+    var condicaoFinal=isRetro?(document.getElementById("nva_condicaoFinal").value||""):"";
+    if(isRetro&&fim&&fim<vigencia){
+      errEl.textContent="A data de retorno não pode ser anterior à data de início.";
       errEl.style.display="block";
       return;
     }
     errEl.style.display="none";
-    var vigencia=document.getElementById("nva_vigencia").value||navDstr(TODAY);
-    var fim=document.getElementById("nva_fim").value||"";
-    var novaCondef=document.getElementById("nva_condef").value||"";
-    var condicaoAnterior=document.getElementById("nva_condicaoAnterior").value||"";
-    var condicaoFinal=document.getElementById("nva_condicaoFinal").value||"";
     var restricaoTxt=(document.getElementById("nva_restricao").value||"").trim();
     var obsTxt=(document.getElementById("nva_obs").value||"").trim();
-    var todayStr=navDstr(TODAY);
     ship.condefHist=ship.condefHist||[];
     ship.stHist=ship.stHist||[];
     if(editEntry){
       // Edição de período já lançado: some com os lançamentos antigos na timeline (stHist com
-      // esse srcId) antes de recalcular — nunca mexe nos campos atuais da tabela (o período,
-      // por definição, já é passado).
+      // esse srcId) antes de recalcular — nunca mexe nos campos atuais da tabela quando retroativo
+      // (o período, por definição, já é passado).
       ship.stHist=ship.stHist.filter(function(h){return h.srcId!==editEntry.id;});
       editEntry.vigencia=vigencia;editEntry.fim=fim||"";
       editEntry.condefDepois=novaCondef||editEntry.condefAntes;
       editEntry.condicaoAnterior=condicaoAnterior;editEntry.condicaoFinal=condicaoFinal;
       editEntry.msgDepois=msg;editEntry.restricaoAdicionada=restricaoTxt||"—";editEntry.prazo=prazo;editEntry.obs=obsTxt;
-      if(novaCondef){
+      if(isRetro){
         if(condicaoAnterior)ship.stHist.push({st:condicaoAnterior,ts:new Date(vigencia+"T00:00:00").toISOString(),srcId:editEntry.id});
-        ship.stHist.push({st:novaCondef,ts:new Date(vigencia+"T12:00:00").toISOString(),srcId:editEntry.id});
-        if(fim&&fim>=vigencia){
-          var voltaDt2=new Date(fim+"T12:00:00");voltaDt2.setDate(voltaDt2.getDate()+1);
-          ship.stHist.push({st:condicaoFinal||ship.condef||"",ts:voltaDt2.toISOString(),srcId:editEntry.id});
-        }
+        if(fim&&condicaoFinal)ship.stHist.push({st:condicaoFinal,ts:new Date(fim+"T00:00:00").toISOString(),srcId:editEntry.id});
+      }else if(novaCondef){
+        ship.stHist.push({st:novaCondef,ts:new Date(vigencia+"T00:00:00").toISOString(),srcId:editEntry.id});
       }
       ship.stHist.sort(function(a,b){return new Date(a.ts)-new Date(b.ts);});
       navSaveShips();
@@ -5023,44 +5045,41 @@ setTimeout(hideSplash,12000);
       renderNavios();renderNaviosCards();
       return;
     }
-    var isRetroativo=vigencia<todayStr;
     var entry={
       id:genUid("cdh"),ts:nowISO(),vigencia:vigencia,fim:fim||"",
       condefAntes:ship.condef||"",condefDepois:novaCondef||(ship.condef||""),
       condicaoAnterior:condicaoAnterior,condicaoFinal:condicaoFinal,
       msgAntes:ship.msg||"",msgDepois:msg,
       restricaoAdicionada:restricaoTxt||"—",prazo:prazo,
-      obs:obsTxt,retroativo:isRetroativo
+      obs:obsTxt,retroativo:isRetro
     };
     ship.condefHist.push(entry);
-    if(!isRetroativo){
-      if(novaCondef&&novaCondef!==ship.condef){ship.stHist.push({st:novaCondef,ts:nowISO()});}
+    if(!isRetro){
+      // Nova alteração: já entra em vigor na própria data de início (não no dia seguinte) e
+      // atualiza os campos atuais da tabela.
+      if(novaCondef&&novaCondef!==ship.condef)ship.stHist.push({st:novaCondef,ts:new Date(vigencia+"T00:00:00").toISOString(),srcId:entry.id});
       if(novaCondef)ship.condef=novaCondef;
       ship.msg=msg;
       var prazoFmt=navFmtBR(prazo);
       ship.restricao=ship.restricao?ship.restricao+"\n"+(restricaoTxt||"—"):(restricaoTxt||"—");
       ship.previsao=ship.previsao?ship.previsao+"\n"+prazoFmt:prazoFmt;
-    }else if(novaCondef){
-      // Retroativo com condição informada: registra o período direto na linha do tempo de status
-      // (stHist), sem tocar no estado atual — assim a Timeline e o Relatório de Operacionalidade
-      // passam a contar esses dias, exatamente como pedido ("navio ficou IM de um período X a Y").
-      // condicaoAnterior/condicaoFinal (quando informadas) tornam explícito o estado antes do
-      // período e o estado pro qual ele volta — este último vale até a próxima alteração posterior.
-      // srcId liga essas entradas ao período em condefHist, pra permitir editar/excluir depois.
+    }else{
+      // Retroativo: registra o período direto na linha do tempo de status (stHist), sem tocar no
+      // estado atual — assim a Timeline e o Relatório de Operacionalidade passam a contar esses
+      // dias. Condição anterior vale a partir da própria data de início (dia inicial já com a nova
+      // condição, não o dia seguinte); condição final vale a partir da própria data de retorno e
+      // permanece até a próxima alteração mais recente. srcId liga essas entradas ao período em
+      // condefHist, pra permitir editar/excluir depois.
       if(condicaoAnterior)ship.stHist.push({st:condicaoAnterior,ts:new Date(vigencia+"T00:00:00").toISOString(),srcId:entry.id});
-      ship.stHist.push({st:novaCondef,ts:new Date(vigencia+"T12:00:00").toISOString(),srcId:entry.id});
-      if(fim&&fim>=vigencia){
-        var voltaDt=new Date(fim+"T12:00:00");voltaDt.setDate(voltaDt.getDate()+1);
-        ship.stHist.push({st:condicaoFinal||ship.condef||"",ts:voltaDt.toISOString(),srcId:entry.id});
-      }
+      if(fim&&condicaoFinal)ship.stHist.push({st:condicaoFinal,ts:new Date(fim+"T00:00:00").toISOString(),srcId:entry.id});
       ship.stHist.sort(function(a,b){return new Date(a.ts)-new Date(b.ts);});
     }
     navSaveShips();
     await pushKV("navPush",NAVIOS_KEY,navShips);
-    auditPushOne("navios_table",ship.id,isRetroativo?("alteração retroativa registrada (vigência "+navFmtBR(vigencia)+(fim?(" a "+navFmtBR(fim)):"")+")"):"alteração CONDEF inserida");
+    auditPushOne("navios_table",ship.id,isRetro?("alteração retroativa registrada (vigência "+navFmtBR(vigencia)+(fim?(" a "+navFmtBR(fim)):"")+")"):"alteração CONDEF inserida");
     touchLastEdit("navios_table");
     bg.classList.remove("open");
-    toast(isRetroativo?"📜 Alteração retroativa registrada no histórico e na timeline":"✓ Alteração aplicada e registrada no histórico","ok");
+    toast(isRetro?"📜 Alteração retroativa registrada no histórico e na timeline":"✓ Alteração aplicada e registrada no histórico","ok");
     renderNavios();renderNaviosCards();
   }
   async function navDeleteAlteracao(ship,entry,bg){
@@ -5133,9 +5152,9 @@ setTimeout(hideSplash,12000);
     el.innerHTML='<div class="nv-tl-wrap"><h3 class="dt-table-title">Timeline de status — '+y+'</h3>'+legend+months+rows+
       '<div style="font-size:10px;color:var(--text3);margin-top:10px;font-style:italic">O histórico é registrado automaticamente a cada mudança de CONDEF salva na tabela. Períodos anteriores ao início do registro aparecem como “Sem registro”.</div></div>';
   }
-  function navOperReport(){
-    var bg=navEnsureModal("nvoperBg","Relatório de operacionalidade — "+CUR_YEAR);
-    var body=bg.querySelector(".mbody");
+  function navRenderOperReport(){
+    var el=document.getElementById("nv_oper_sec");
+    if(!el)return;
     var rows=navShips.map(function(s){
       var segs=navSegsForYear(s),acc={IM:0,IO:0,P:0,PO:0,unk:0};
       segs.forEach(function(g){
@@ -5147,7 +5166,8 @@ setTimeout(hideSplash,12000);
       var pct=known?Math.round(oper/known*100):null;
       return{nome:s.nome||"—",acc:acc,pct:pct};
     });
-    body.innerHTML='<div class="dt-table-wrap" style="margin-bottom:0"><table class="dt-table" style="min-width:0"><thead><tr><th>Meio</th><th>P</th><th>PO</th><th>IO</th><th>IM</th><th>Sem registro</th><th>% Operacional</th></tr></thead><tbody>'+
+    el.innerHTML='<h3 class="dt-table-title">Relatório de operacionalidade — '+CUR_YEAR+'</h3>'+
+      '<div class="dt-table-wrap" style="margin-bottom:0"><table class="dt-table" style="min-width:0"><thead><tr><th>Meio</th><th>P</th><th>PO</th><th>IO</th><th>IM</th><th>Sem registro</th><th>% Operacional</th></tr></thead><tbody>'+
       rows.map(function(r){
         var cls=r.pct===null?"":(r.pct>=70?"row-ok":(r.pct>=40?"row-warn":"row-bad"));
         return '<tr class="'+cls+'"><td>'+esc(r.nome)+'</td><td>'+r.acc.P+'</td><td>'+r.acc.PO+'</td><td>'+r.acc.IO+'</td><td>'+r.acc.IM+'</td><td>'+r.acc.unk+'</td><td><b>'+(r.pct===null?"—":r.pct+"%")+'</b></td></tr>';
@@ -5158,7 +5178,6 @@ setTimeout(hideSplash,12000);
       var csv="Meio;P;PO;IO;IM;Sem registro;% Operacional\n"+rows.map(function(r){return[r.nome,r.acc.P,r.acc.PO,r.acc.IO,r.acc.IM,r.acc.unk,(r.pct===null?"":r.pct+"%")].join(";");}).join("\n");
       trigDL("operacionalidade_"+CUR_YEAR+".csv","\uFEFF"+csv,"text/csv;charset=utf-8");
     };
-    bg.classList.add("open");
   }
   function navColorTd(id,val,editing){
     if(!editing)return '<td class="nv-actions nv-actions-col"></td>';
@@ -5192,6 +5211,8 @@ setTimeout(hideSplash,12000);
     if(editing)bindRowDragGeneric(tb,function(){return navShips;},renderNavios,function(){navTableDirty=true;});
     if(!editing)navPaintExtras();
     renderNaviosPpssLinkTable();
+    navRenderTimeline();
+    navRenderOperReport();
   }
   function navUpdateSyncTag(){
     var tag=document.getElementById("nv_synctag");
@@ -5330,13 +5351,6 @@ setTimeout(hideSplash,12000);
       if(lines.length>1)navOpenRestrLinePicker(ship);
       else navOpenPpssPicker(ship,0);
     });
-    document.getElementById("nv_tl_toggle").onclick=function(){
-      var sec=document.getElementById("nv_tl_sec");
-      sec.hidden=!sec.hidden;
-      this.textContent=sec.hidden?"📈 Mostrar timeline de status (ano)":"📈 Ocultar timeline de status";
-      if(!sec.hidden)navRenderTimeline();
-    };
-    document.getElementById("nv_oper_btn").onclick=navOperReport;
     document.getElementById("nv_condef_alt_btn").onclick=navOpenAltShipPicker;
     document.getElementById("nv_condef_edit_btn").onclick=navOpenEditShipPicker;
     wireCardsGrid({gridId:"nv_grid",addcardId:"nv_addcard",st:navCardSt,
