@@ -1495,10 +1495,19 @@ tr.row-crit{background:rgba(233,150,53,.20)}
   </table>
 </div>
 
-<div class="dt-section-head"><h3 class="dt-table-title">Controle de Restrições CONDEF</h3></div>
+<div class="dt-section-head">
+  <div class="dt-title-wrap"><h3 class="dt-table-title">Controle de Prazos - CONDEF</h3><span class="last-edit" id="nv_restr_lastedit"></span></div>
+  <div class="nv-toolbar" id="nv_restr_toolbar">
+    <button class="nv-editbtn" id="nv_restr_edit">✎ Editar</button>
+    <span class="nv-edit-actions" id="nv_restr_edit_actions" hidden>
+      <button class="nv-savebtn" id="nv_restr_save" disabled>✓ Salvar</button>
+      <button class="nv-cancelbtn" id="nv_restr_cancel">Cancelar</button>
+    </span>
+  </div>
+</div>
 <div class="dt-table-wrap">
   <table class="dt-table" style="min-width:0;width:100%;table-layout:fixed" id="nv_restr_table">
-    <thead><tr><th>Indicativo</th><th>Nome</th><th>Msg</th><th>Restrição</th><th>Prazo</th><th>Obs.</th></tr></thead>
+    <thead id="nv_restr_thead"><tr><th>Indicativo</th><th>Nome</th><th>Msg</th><th>Restrição</th><th>Prazo</th><th>Obs.</th></tr></thead>
     <tbody id="nv_restr_tbody"></tbody>
   </table>
 </div>
@@ -1511,13 +1520,20 @@ tr.row-crit{background:rgba(233,150,53,.20)}
   </table>
 </div>
 
-<div class="dt-section-head"><h3 class="dt-table-title">Comissões</h3></div>
-<div class="nv-toolbar" style="margin-bottom:0">
-  <button class="nv-editbtn" id="nv_comissao_addrow">+ Adicionar comissão</button>
+<div class="dt-section-head">
+  <div class="dt-title-wrap"><h3 class="dt-table-title">Comissões</h3><span class="last-edit" id="nv_comissao_lastedit"></span></div>
+  <div class="nv-toolbar" id="nv_comissao_toolbar">
+    <button class="nv-editbtn" id="nv_comissao_edit">✎ Editar</button>
+    <span class="nv-edit-actions" id="nv_comissao_edit_actions" hidden>
+      <button class="nv-addrow" id="nv_comissao_addrow">+ Adicionar comissão</button>
+      <button class="nv-savebtn" id="nv_comissao_save" disabled>✓ Salvar</button>
+      <button class="nv-cancelbtn" id="nv_comissao_cancel">Cancelar</button>
+    </span>
+  </div>
 </div>
 <div class="dt-table-wrap">
   <table class="dt-table" style="min-width:0;width:100%;table-layout:fixed" id="nv_comissao_table">
-    <thead><tr><th>Meio</th><th>Comissão</th><th>Início</th><th>Fim</th><th>Localização</th><th>CLG Autorizado</th><th class="nv-actions-col">Ações</th></tr></thead>
+    <thead id="nv_comissao_thead"><tr><th>Meio</th><th>Comissão</th><th>Início</th><th>Fim</th><th>Localização</th><th>CLG Autorizado</th><th class="dt-actions-col">Ações</th></tr></thead>
     <tbody id="nv_comissao_tbody"></tbody>
   </table>
 </div>
@@ -5141,59 +5157,169 @@ setTimeout(hideSplash,12000);
         '<td>'+(r.p?fmtBRL(moneyVal(r.p.orcamento)):"—")+'</td></tr>';
     }).join("");
   }
-  // Controle de Restrições CONDEF: lista todos os meios (na mesma ordem da tabela de Condição de
+  // Controle de Prazos - CONDEF: lista todos os meios (na mesma ordem da tabela de Condição de
   // Eficiência) com as informações de restrição/prazo em vigor — visão de acompanhamento das
-  // condições que mantêm o navio fora de IM e que têm prazo a vencer/alterar.
+  // condições que mantêm o navio fora de IM e que têm prazo a vencer/alterar. Edita os mesmos
+  // campos do navio (msg/restrição/prazo/obs) — reaproveita navShips, então usa o mesmo
+  // GLOBAL_EDIT_LOCK da tabela principal pra nunca editar os dois ao mesmo tempo.
+  var NAV_RESTR_COLS=[
+    {key:"indicativo",title:"Indicativo",type:"locked"},{key:"nome",title:"Nome",type:"locked"},
+    {key:"msg",title:"Msg"},{key:"restricao",title:"Restrição",multiline:true},
+    {key:"previsao",title:"Prazo",multiline:true},{key:"obs",title:"Obs."}
+  ];
+  var navRestrEditing=false,navRestrDirty=false,navRestrSnapshot=null;
   function navRenderRestrTable(){
     var tbody=document.getElementById("nv_restr_tbody");
     if(!tbody)return;
-    if(!navShips.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text3);font-style:italic">Nenhuma embarcação cadastrada.</td></tr>';return;}
+    var table=document.getElementById("nv_restr_table");
+    if(table)table.classList.toggle("dt-editing",navRestrEditing);
+    if(!navShips.length){tbody.innerHTML='<tr><td colspan="'+NAV_RESTR_COLS.length+'" style="text-align:center;color:var(--text3);font-style:italic">Nenhuma embarcação cadastrada.</td></tr>';return;}
     tbody.innerHTML=navShips.map(function(s){
-      return '<tr><td>'+esc(s.indicativo||"—")+'</td><td>'+esc(s.nome||"—")+'</td><td>'+esc(s.msg||"—")+'</td>'+
-        '<td>'+esc(s.restricao||"—")+'</td><td>'+esc(s.previsao||"—")+'</td><td>'+esc(s.obs||"—")+'</td></tr>';
+      return '<tr>'+NAV_RESTR_COLS.map(function(col){return colTd(s,col,navRestrEditing,"dt-cell","dt-cell-ro");}).join("")+'</tr>';
     }).join("");
+    navUpdateRestrToolbar();
+  }
+  function navUpdateRestrToolbar(){
+    var editBtn=document.getElementById("nv_restr_edit"),actions=document.getElementById("nv_restr_edit_actions"),saveBtn=document.getElementById("nv_restr_save");
+    paintLastEdit("nv_restr_lastedit","navios_restr");
+    if(!editBtn)return;
+    if(navRestrEditing){editBtn.hidden=true;actions.hidden=false;saveBtn.disabled=!navRestrDirty;}
+    else{editBtn.hidden=false;actions.hidden=true;editBtn.disabled=!!(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="restr");}
+  }
+  function navBindRestrTable(){
+    var tbody=document.getElementById("nv_restr_tbody");
+    tbody.addEventListener("input",function(e){
+      var td=e.target.closest&&e.target.closest(".dt-cell");
+      if(!td||!navRestrEditing)return;
+      var ship=navFindShip(td.dataset.id);
+      if(!ship)return;
+      ship[td.dataset.key]=td.textContent;
+      navRestrDirty=true;navUpdateRestrToolbar();
+    });
+    tbody.addEventListener("focusout",function(e){
+      var td=e.target.closest&&e.target.closest(".dt-cell");
+      if(!td||!navRestrEditing)return;
+      var ship=navFindShip(td.dataset.id);
+      if(!ship)return;
+      var v=td.textContent.trim();
+      ship[td.dataset.key]=v;td.textContent=v;
+    });
+    tbody.addEventListener("keydown",function(e){
+      if(e.key==="Enter"&&e.target.closest&&e.target.closest(".dt-cell")){e.preventDefault();document.execCommand("insertText",false,"\n");}
+    });
+    document.getElementById("nv_restr_edit").onclick=function(){
+      if(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="restr"){toast("Finalize a edição em andamento antes de iniciar outra.","info");return;}
+      GLOBAL_EDIT_LOCK="restr";navRestrEditing=true;navRestrDirty=false;
+      navRestrSnapshot=JSON.parse(JSON.stringify(navShips));
+      navRenderRestrTable();navUpdateTableToolbar();navUpdateComissaoToolbar();
+    };
+    document.getElementById("nv_restr_cancel").onclick=function(){
+      if(navRestrSnapshot)navShips=navRestrSnapshot;
+      navRestrSnapshot=null;navRestrEditing=false;navRestrDirty=false;GLOBAL_EDIT_LOCK=null;
+      renderNavios();renderNaviosCards();
+    };
+    document.getElementById("nv_restr_save").onclick=async function(){
+      if(!navRestrDirty)return;
+      var preTbl=navRestrSnapshot;
+      navTrackStatusChanges(preTbl);
+      navSaveShips();
+      await pushKV("navPush",NAVIOS_KEY,navShips);
+      navRestrSnapshot=null;navRestrEditing=false;navRestrDirty=false;GLOBAL_EDIT_LOCK=null;
+      if(preTbl)pushUndo("Editar Controle de Prazos - CONDEF",async function(){navShips=JSON.parse(JSON.stringify(preTbl));navSaveShips();await pushKV("navPush",NAVIOS_KEY,navShips);renderNavios();renderNaviosCards();});
+      if(preTbl)auditDiffRows("navios_restr",preTbl,navShips);
+      touchLastEdit("navios_restr");
+      toast("✓ Prazos salvos","ok");
+      renderNavios();renderNaviosCards();
+    };
   }
   // Comissões: mini tabela editável, independente das embarcações — linhas só existem quando o
   // usuário lança uma comissão em curso/prevista (não é pré-preenchida com os nomes dos meios).
+  // A coluna Ações (excluir linha) só aparece durante a edição, igual às demais tabelas do app.
   var NAVIOS_COMISSAO_KEY="aa_navios_comissoes_v1";
   var navComissoes=[];
-  function navLoadComissoes(){
-    try{var v=JSON.parse(localStorage.getItem(NAVIOS_COMISSAO_KEY));if(Array.isArray(v))navComissoes=v;}catch(e){}
+  var navComissaoEditing=false,navComissaoDirty=false,navComissaoSnapshot=null;
+  async function navLoadComissoes(){
+    var v=null;
+    try{v=await gtj(NAVIOS_COMISSAO_KEY);}catch(e){}
+    if(!v||!v.length){try{v=JSON.parse(localStorage.getItem(NAVIOS_COMISSAO_KEY));}catch(e){}}
+    if(Array.isArray(v))navComissoes=v;
   }
   function navSaveComissoes(){try{localStorage.setItem(NAVIOS_COMISSAO_KEY,JSON.stringify(navComissoes));}catch(e){}}
   function navRenderComissoes(){
     var tbody=document.getElementById("nv_comissao_tbody");
     if(!tbody)return;
-    if(!navComissoes.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text3);font-style:italic">Nenhuma comissão lançada ainda.</td></tr>';return;}
+    var table=document.getElementById("nv_comissao_table");
+    if(table)table.classList.toggle("dt-editing",navComissaoEditing);
+    var editing=navComissaoEditing;
+    if(!navComissoes.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text3);font-style:italic">Nenhuma comissão lançada ainda.</td></tr>';navUpdateComissaoToolbar();return;}
     tbody.innerHTML=navComissoes.map(function(r){
       return '<tr data-id="'+r.id+'">'+
-        '<td class="dt-cell" data-key="meio" contenteditable="true" spellcheck="false">'+esc(r.meio||"")+'</td>'+
-        '<td class="dt-cell" data-key="comissao" contenteditable="true" spellcheck="false">'+esc(r.comissao||"")+'</td>'+
-        '<td><input type="date" class="nv-comissao-date" data-key="inicio" value="'+esc(r.inicio||"")+'"></td>'+
-        '<td><input type="date" class="nv-comissao-date" data-key="fim" value="'+esc(r.fim||"")+'"></td>'+
-        '<td class="dt-cell" data-key="localizacao" contenteditable="true" spellcheck="false">'+esc(r.localizacao||"")+'</td>'+
-        '<td class="dt-cell" data-key="clg" contenteditable="true" spellcheck="false">'+esc(r.clg||"")+'</td>'+
-        '<td class="nv-actions nv-actions-col"><button class="nv-delrow" data-id="'+r.id+'" title="Excluir linha">🗑</button></td>'+
+        '<td class="dt-cell'+(editing?'':' dt-cell-ro')+'" data-key="meio"'+(editing?' contenteditable="true"':'')+' spellcheck="false">'+esc(r.meio||"")+'</td>'+
+        '<td class="dt-cell'+(editing?'':' dt-cell-ro')+'" data-key="comissao"'+(editing?' contenteditable="true"':'')+' spellcheck="false">'+esc(r.comissao||"")+'</td>'+
+        '<td>'+(editing?'<input type="date" class="nv-comissao-date" data-key="inicio" value="'+esc(r.inicio||"")+'">':esc(r.inicio?navFmtBR(r.inicio):"—"))+'</td>'+
+        '<td>'+(editing?'<input type="date" class="nv-comissao-date" data-key="fim" value="'+esc(r.fim||"")+'">':esc(r.fim?navFmtBR(r.fim):"—"))+'</td>'+
+        '<td class="dt-cell'+(editing?'':' dt-cell-ro')+'" data-key="localizacao"'+(editing?' contenteditable="true"':'')+' spellcheck="false">'+esc(r.localizacao||"")+'</td>'+
+        '<td class="dt-cell'+(editing?'':' dt-cell-ro')+'" data-key="clg"'+(editing?' contenteditable="true"':'')+' spellcheck="false">'+esc(r.clg||"")+'</td>'+
+        '<td class="dt-actions dt-actions-col">'+(editing?'<button class="nv-delrow" data-id="'+r.id+'" title="Excluir linha">🗑</button>':'')+'</td>'+
       '</tr>';
     }).join("");
-    tbody.querySelectorAll(".dt-cell").forEach(function(td){
-      td.onblur=function(){
-        var row=navComissoes.find(function(r){return r.id===td.closest("tr").dataset.id;});
-        if(row){row[td.dataset.key]=td.textContent.trim();navSaveComissoes();}
-      };
-    });
-    tbody.querySelectorAll(".nv-comissao-date").forEach(function(inp){
-      inp.onchange=function(){
-        var row=navComissoes.find(function(r){return r.id===inp.closest("tr").dataset.id;});
-        if(row){row[inp.dataset.key]=inp.value;navSaveComissoes();}
-      };
-    });
-    tbody.querySelectorAll(".nv-delrow").forEach(function(btn){
-      btn.onclick=function(){
-        navComissoes=navComissoes.filter(function(r){return r.id!==btn.dataset.id;});
-        navSaveComissoes();navRenderComissoes();
-      };
-    });
+    if(editing){
+      tbody.querySelectorAll(".dt-cell").forEach(function(td){
+        td.onblur=function(){
+          var row=navComissoes.find(function(r){return r.id===td.closest("tr").dataset.id;});
+          if(row){row[td.dataset.key]=td.textContent.trim();navComissaoDirty=true;navUpdateComissaoToolbar();}
+        };
+      });
+      tbody.querySelectorAll(".nv-comissao-date").forEach(function(inp){
+        inp.onchange=function(){
+          var row=navComissoes.find(function(r){return r.id===inp.closest("tr").dataset.id;});
+          if(row){row[inp.dataset.key]=inp.value;navComissaoDirty=true;navUpdateComissaoToolbar();}
+        };
+      });
+      tbody.querySelectorAll(".nv-delrow").forEach(function(btn){
+        btn.onclick=function(){
+          navComissoes=navComissoes.filter(function(r){return r.id!==btn.dataset.id;});
+          navComissaoDirty=true;navRenderComissoes();
+        };
+      });
+    }
+    navUpdateComissaoToolbar();
+  }
+  function navUpdateComissaoToolbar(){
+    var editBtn=document.getElementById("nv_comissao_edit"),actions=document.getElementById("nv_comissao_edit_actions"),saveBtn=document.getElementById("nv_comissao_save");
+    paintLastEdit("nv_comissao_lastedit","navios_comissoes");
+    if(!editBtn)return;
+    if(navComissaoEditing){editBtn.hidden=true;actions.hidden=false;saveBtn.disabled=!navComissaoDirty;}
+    else{editBtn.hidden=false;actions.hidden=true;editBtn.disabled=!!(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="comissao");}
+  }
+  function navBindComissaoTable(){
+    document.getElementById("nv_comissao_addrow").onclick=function(){
+      if(!navComissaoEditing)return;
+      navComissoes.push({id:genUid("cms"),meio:"",comissao:"",inicio:"",fim:"",localizacao:"",clg:""});
+      navComissaoDirty=true;navRenderComissoes();
+    };
+    document.getElementById("nv_comissao_edit").onclick=function(){
+      if(GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="comissao"){toast("Finalize a edição em andamento antes de iniciar outra.","info");return;}
+      GLOBAL_EDIT_LOCK="comissao";navComissaoEditing=true;navComissaoDirty=false;
+      navComissaoSnapshot=JSON.parse(JSON.stringify(navComissoes));
+      navRenderComissoes();navUpdateTableToolbar();navUpdateRestrToolbar();
+    };
+    document.getElementById("nv_comissao_cancel").onclick=function(){
+      if(navComissaoSnapshot)navComissoes=navComissaoSnapshot;
+      navComissaoSnapshot=null;navComissaoEditing=false;navComissaoDirty=false;GLOBAL_EDIT_LOCK=null;
+      navRenderComissoes();navUpdateTableToolbar();navUpdateRestrToolbar();
+    };
+    document.getElementById("nv_comissao_save").onclick=async function(){
+      if(!navComissaoDirty)return;
+      var preTbl=navComissaoSnapshot;
+      navSaveComissoes();
+      await pushKV("navPush",NAVIOS_COMISSAO_KEY,navComissoes);
+      navComissaoSnapshot=null;navComissaoEditing=false;navComissaoDirty=false;GLOBAL_EDIT_LOCK=null;
+      if(preTbl)pushUndo("Editar Comissões",async function(){navComissoes=JSON.parse(JSON.stringify(preTbl));navSaveComissoes();await pushKV("navPush",NAVIOS_COMISSAO_KEY,navComissoes);navRenderComissoes();});
+      touchLastEdit("navios_comissoes");
+      toast("✓ Comissões salvas","ok");
+      navRenderComissoes();navUpdateTableToolbar();navUpdateRestrToolbar();
+    };
   }
   // Remove lançamentos de stHist que caiam dentro do intervalo [fromStr, toStr] (toStr null = sem
   // limite superior) — usado pra uma nova inserção/alteração retroativa sobrepor qualquer registro
@@ -5368,7 +5494,7 @@ setTimeout(hideSplash,12000);
   async function navInit(){
     if(navBound)return;
     navBound=true;
-    navLoadComissoes();
+    await navLoadComissoes();
     await navLoad();
     navUpdateSyncTag();
     var tbody=document.getElementById("nv_tbody");
@@ -5470,10 +5596,8 @@ setTimeout(hideSplash,12000);
     });
     document.getElementById("nv_condef_alt_btn").onclick=navOpenAltShipPicker;
     document.getElementById("nv_condef_edit_btn").onclick=navOpenEditShipPicker;
-    document.getElementById("nv_comissao_addrow").onclick=function(){
-      navComissoes.push({id:genUid("cms"),meio:"",comissao:"",inicio:"",fim:"",localizacao:"",clg:""});
-      navSaveComissoes();navRenderComissoes();
-    };
+    navBindRestrTable();
+    navBindComissaoTable();
     wireCardsGrid({gridId:"nv_grid",addcardId:"nv_addcard",st:navCardSt,
       getCards:function(){return navCards;},setCards:function(v){navCards=v;},
       save:navSaveCards,pushTag:"navPush",key:function(){return NAVIOS_CARDS_KEY;},
