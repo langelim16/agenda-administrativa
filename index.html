@@ -1530,6 +1530,7 @@ tr.row-crit{background:rgba(233,150,53,.20)}
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Estoque de ODM nos Meios</h3><span class="last-edit" id="clg_t1_lastedit"></span></div>
   <div class="nv-toolbar" id="clg_t1_toolbar">
+    <button class="nv-editbtn" id="clg_consumo_btn">+ Inserir consumo</button>
     <button class="nv-editbtn" id="clg_t1_edit">✎ Editar</button>
     <span class="nv-edit-actions" id="clg_t1_edit_actions" hidden>
       <button class="dt-colbtn" id="clg_t1_addcol">+ coluna</button>
@@ -5510,6 +5511,113 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       return '<div class="stats-card"><h4>'+esc(r.meio||"—")+'</h4><div style="font-size:12.5px;color:'+cls+'">'+txt+'</div></div>';
     }).join("");
   }
+  /* ── Inserir consumo (ODM ou Gasolina/Lubrificantes/Graxas): abate direto do estoque do meio,
+     sem precisar editar a tabela — mesmo padrão de "Inserir alteração" do CONDEF. Consumo de ODM
+     passa por clgLogEstoque() logo em seguida, então o gráfico de evolução (que lê clgHist) já
+     reflete o novo valor automaticamente, igual a uma edição manual da célula Estoque. ── */
+  function clgAllMeios(){
+    var names=[];
+    clgT1.forEach(function(r){if(r.meio&&names.indexOf(r.meio)<0)names.push(r.meio);});
+    clgT3Nav.concat(clgT3Emb).forEach(function(r){if(r.meio&&names.indexOf(r.meio)<0)names.push(r.meio);});
+    return names.sort(function(a,b){return a.localeCompare(b);});
+  }
+  function clgHasOdm(nome){return clgT1.some(function(r){return r.meio===nome;});}
+  function clgHasGlg(nome){return clgT3Nav.concat(clgT3Emb).some(function(r){return r.meio===nome;});}
+  function clgOpenConsumoShipPicker(){
+    var bg=ensureModal("clgConsumoShipBg","Inserir consumo — selecione o navio/embarcação");
+    var body=bg.querySelector(".mbody");
+    var names=clgAllMeios();
+    body.innerHTML=names.length?names.map(function(n){
+      var tags=[clgHasOdm(n)?"ODM":null,clgHasGlg(n)?"Gasolina/Lubrificantes/Graxas":null].filter(Boolean).join(" · ");
+      return '<div class="ps-item" data-nome="'+esc(n)+'"><div class="ps-main"><div class="ps-num">'+esc(n)+'</div><div class="ps-meta">'+esc(tags)+'</div></div></div>';
+    }).join(""):'<div class="spot-empty">Nenhum meio cadastrado em Estoque de ODM ou em Gasolina/Lubrificantes/Graxas.</div>';
+    body.querySelectorAll(".ps-item").forEach(function(el){
+      el.onclick=function(){bg.classList.remove("open");clgOpenConsumoTypeStep(el.dataset.nome);};
+    });
+    bg.classList.add("open");
+  }
+  function clgOpenConsumoTypeStep(nome){
+    var hasOdm=clgHasOdm(nome),hasGlg=clgHasGlg(nome);
+    if(hasOdm&&!hasGlg){clgOpenConsumoForm(nome,"odm");return;}
+    if(hasGlg&&!hasOdm){clgOpenConsumoItemStep(nome);return;}
+    var bg=ensureModal("clgConsumoTypeBg","Inserir consumo — "+nome);
+    var body=bg.querySelector(".mbody");
+    body.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+
+      '<button type="button" class="ferias-cat-pick" data-t="odm"><span class="ferias-cat-dot" style="background:var(--c-blue)"></span>Estoque de ODM</button>'+
+      '<button type="button" class="ferias-cat-pick" data-t="glg"><span class="ferias-cat-dot" style="background:var(--c-teal)"></span>Gasolina, Lubrificantes ou Graxas</button>'+
+    '</div>';
+    body.querySelectorAll("button").forEach(function(b){
+      b.onclick=function(){bg.classList.remove("open");if(b.dataset.t==="odm")clgOpenConsumoForm(nome,"odm");else clgOpenConsumoItemStep(nome);};
+    });
+    bg.classList.add("open");
+  }
+  function clgOpenConsumoItemStep(nome){
+    var bg=ensureModal("clgConsumoItemBg","Inserir consumo — "+nome);
+    var body=bg.querySelector(".mbody");
+    var items=[["gasolina","Gasolina","var(--c-blue)"],["lubrificantes","Lubrificantes","var(--c-teal)"],["graxas","Graxas","var(--c-amber)"]];
+    body.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+
+      items.map(function(it){return '<button type="button" class="ferias-cat-pick" data-i="'+it[0]+'"><span class="ferias-cat-dot" style="background:'+it[2]+'"></span>'+it[1]+'</button>';}).join("")+
+    '</div>';
+    body.querySelectorAll("button").forEach(function(b){
+      b.onclick=function(){bg.classList.remove("open");clgOpenConsumoForm(nome,b.dataset.i);};
+    });
+    bg.classList.add("open");
+  }
+  function clgConsumoDstr(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+  function clgOpenConsumoForm(nome,tipo){
+    var titleMap={odm:"Estoque de ODM",gasolina:"Gasolina",lubrificantes:"Lubrificantes",graxas:"Graxas"};
+    var bg=ensureModal("clgConsumoFormBg","Inserir consumo — "+nome+" · "+titleMap[tipo]);
+    var body=bg.querySelector(".mbody");
+    var todayStr=clgConsumoDstr(new Date());
+    body.innerHTML=
+      '<div class="mgrid">'+
+        '<div class="fld"><label>Tipo de consumo</label><select id="clgc_tipo"><option value="Operativo">Operativo</option><option value="Administrativo">Administrativo</option></select></div>'+
+        '<div class="fld"><label>Data</label><input type="date" id="clgc_data" value="'+todayStr+'"></div>'+
+        '<div class="fld full"><label>Quantidade consumida</label><input id="clgc_qtd" placeholder="Ex.: 150" inputmode="decimal"></div>'+
+      '</div>'+
+      '<div id="clgc_err" class="ferias-msg warn" style="display:none;margin-top:10px"></div>'+
+      '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">'+
+        '<button class="bcancel" id="clgc_cancel">Cancelar</button>'+
+        '<button class="bsave" id="clgc_save">Salvar</button>'+
+      '</div>';
+    document.getElementById("clgc_cancel").onclick=function(){bg.classList.remove("open");};
+    document.getElementById("clgc_save").onclick=function(){clgSaveConsumo(nome,tipo,bg);};
+    bg.classList.add("open");
+  }
+  async function clgSaveConsumo(nome,tipo,bg){
+    var qtd=clgNum(document.getElementById("clgc_qtd").value);
+    var errEl=document.getElementById("clgc_err");
+    if(isNaN(qtd)||qtd<=0){errEl.textContent="Informe uma quantidade válida (maior que zero).";errEl.style.display="block";return;}
+    errEl.style.display="none";
+    var tipoConsumo=document.getElementById("clgc_tipo").value;
+    var dataStr=document.getElementById("clgc_data").value||clgConsumoDstr(new Date());
+    var dataFmt=dataStr.split("-").reverse().join("/");
+    if(tipo==="odm"){
+      var row=clgT1.find(function(r){return r.meio===nome;});
+      if(!row)return;
+      var atual=clgNum(row.estoque);
+      row.estoque=String(Math.max(0,(isNaN(atual)?0:atual)-qtd));
+      clgSaveT1();
+      await pushKV("clgPush",CLG_T1_KEY,clgT1);
+      clgLogEstoque();
+      auditPushOne("clg_t1",row.id,"Consumo "+tipoConsumo.toLowerCase()+": -"+qtd+" ("+dataFmt+")");
+      touchLastEdit("clg_t1");paintLastEdit("clg_t1_lastedit","clg_t1");
+    }else{
+      var isNav=clgT3Nav.some(function(r){return r.meio===nome;});
+      var arr=isNav?clgT3Nav:clgT3Emb;
+      var row2=arr.find(function(r){return r.meio===nome;});
+      if(!row2)return;
+      var atual2=clgNum(row2[tipo]);
+      row2[tipo]=String(Math.max(0,(isNaN(atual2)?0:atual2)-qtd));
+      if(isNav){clgSaveT3Nav();await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);}
+      else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
+      auditPushOne(isNav?"clg_t3nav":"clg_t3emb",row2.id,"Consumo "+tipoConsumo.toLowerCase()+" de "+tipo+": -"+qtd+" ("+dataFmt+")");
+      touchLastEdit(isNav?"clg_t3nav":"clg_t3emb");paintLastEdit(isNav?"clg_t3nav_lastedit":"clg_t3emb_lastedit",isNav?"clg_t3nav":"clg_t3emb");
+    }
+    bg.classList.remove("open");
+    toast("✓ Consumo registrado","ok");
+    renderClgTables();
+  }
   function clgFindRow(arr,id){return arr.find(function(r){return r.id===id;});}
   function clgFindCard(cid){return clgCards.find(function(c){return c.id===cid;});}
   clgGetState=function(){return{t1:JSON.parse(JSON.stringify(clgT1)),t2:JSON.parse(JSON.stringify(clgT2)),cards:JSON.parse(JSON.stringify(clgCards)),t1c:cloneCols(clgT1Cols),t2c:cloneCols(clgT2Cols),t3n:JSON.parse(JSON.stringify(clgT3Nav)),t3e:JSON.parse(JSON.stringify(clgT3Emb))};};
@@ -5590,6 +5698,8 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     clgLogEstoque();
     var tag=document.getElementById("clg_synctag");
     if(tag){tag.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";tag.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
+    var consumoBtn=document.getElementById("clg_consumo_btn");
+    if(consumoBtn)consumoBtn.onclick=clgOpenConsumoShipPicker;
     bindDataTable({
       prefix:"clg_t1",
       getArr:function(){return clgT1;},setArr:function(v){clgT1=v;},
