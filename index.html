@@ -4921,7 +4921,7 @@ setTimeout(hideSplash,12000);
     body.innerHTML=entries.length?entries.map(function(h){
       return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--border);border-radius:var(--r-md);padding:9px 12px;margin-bottom:8px">'+
         '<div><b>'+esc(NAV_ST_LABELS[h.condefDepois]||h.condefDepois||"—")+'</b><br>'+
-        '<span style="font-size:11px;color:var(--text3)">'+navFmtBR(h.vigencia)+(h.fim?(" a "+navFmtBR(h.fim)):" (sem data de retorno)")+(h.obs?(" · "+esc(h.obs)):"")+'</span></div>'+
+        '<span style="font-size:11px;color:var(--text3)">'+navFmtBR(h.vigencia)+(h.fim?(" a "+navFmtBR(h.fim)):" (sem data de retorno)")+(h.condicaoAnterior?(" · antes: "+h.condicaoAnterior):"")+(h.condicaoFinal?(" · depois: "+h.condicaoFinal):"")+(h.obs?(" · "+esc(h.obs)):"")+'</span></div>'+
         '<button type="button" class="brestore" data-id="'+h.id+'">Editar</button>'+
       '</div>';
     }).join(""):'<div class="spot-empty">Nenhum período retroativo lançado para este navio.</div>';
@@ -4948,6 +4948,15 @@ setTimeout(hideSplash,12000);
         '<div class="fld"><label>Data de vigência da alteração</label><input type="date" id="nva_vigencia" value="'+(editEntry?editEntry.vigencia:todayStr)+'"></div>'+
         '<div class="fld"><label>Data de retorno ao normal (opcional)</label><input type="date" id="nva_fim" value="'+(editEntry?(editEntry.fim||""):"")+'"></div>'+
         '<div class="fld full" style="font-size:10.5px;color:var(--text3)">Se a alteração já é passada (retroativa) e o navio já voltou ao normal, preencha também a data de retorno — assim o período fica corretamente registrado na Timeline de Status e no Relatório de Operacionalidade, sem mudar o estado atual da tabela.</div>'+
+        '<div class="mgrid full" id="nva_retro_fields" style="display:none">'+
+          '<div class="fld"><label>Condição anterior ao período</label><select id="nva_condicaoAnterior"><option value="">Manter registro atual</option>'+
+            ["P","PO","IO","IM"].map(function(k){return '<option value="'+k+'"'+(editEntry&&editEntry.condicaoAnterior===k?" selected":"")+'>'+esc(NAV_ST_LABELS[k])+'</option>';}).join("")+
+          '</select></div>'+
+          '<div class="fld"><label>Condição final (após o retorno)</label><select id="nva_condicaoFinal"><option value="">Manter — usa o CONDEF atual do navio</option>'+
+            ["P","PO","IO","IM"].map(function(k){return '<option value="'+k+'"'+((editEntry?editEntry.condicaoFinal===k:ship.condef===k)?" selected":"")+'>'+esc(NAV_ST_LABELS[k])+'</option>';}).join("")+
+          '</select></div>'+
+          '<div class="fld full" style="font-size:10.5px;color:var(--text3)">A condição final registrada aqui vale a partir do dia seguinte ao retorno e permanece até que uma alteração mais recente a substitua.</div>'+
+        '</div>'+
         '<div class="fld full"><label>Nova restrição (opcional)</label><input id="nva_restricao" placeholder="Ex.: 200/931" value="'+esc(editEntry&&editEntry.restricaoAdicionada!=="—"?editEntry.restricaoAdicionada:"")+'"></div>'+
         '<div class="fld"><label>MSG *</label><input id="nva_msg" placeholder="Ex.: P031423Z/JUL/2026" value="'+esc(editEntry?editEntry.msgDepois:"")+'"></div>'+
         '<div class="fld"><label>Prazo *</label><input type="date" id="nva_prazo" value="'+(editEntry?editEntry.prazo:"")+'"></div>'+
@@ -4961,6 +4970,10 @@ setTimeout(hideSplash,12000);
     document.getElementById("nva_cancel").onclick=function(){bg.classList.remove("open");};
     document.getElementById("nva_save").onclick=function(){navSaveAlteracao(ship,bg,editEntry);};
     if(isEdit)document.getElementById("nva_del").onclick=function(){navDeleteAlteracao(ship,editEntry,bg);};
+    var vigInput=document.getElementById("nva_vigencia"),retroBox=document.getElementById("nva_retro_fields");
+    function toggleRetroFields(){retroBox.style.display=(vigInput.value&&vigInput.value<navDstr(TODAY))?"":"none";}
+    vigInput.oninput=toggleRetroFields;
+    toggleRetroFields();
     bg.classList.add("open");
   }
   async function navSaveAlteracao(ship,bg,editEntry){
@@ -4976,6 +4989,8 @@ setTimeout(hideSplash,12000);
     var vigencia=document.getElementById("nva_vigencia").value||navDstr(TODAY);
     var fim=document.getElementById("nva_fim").value||"";
     var novaCondef=document.getElementById("nva_condef").value||"";
+    var condicaoAnterior=document.getElementById("nva_condicaoAnterior").value||"";
+    var condicaoFinal=document.getElementById("nva_condicaoFinal").value||"";
     var restricaoTxt=(document.getElementById("nva_restricao").value||"").trim();
     var obsTxt=(document.getElementById("nva_obs").value||"").trim();
     var todayStr=navDstr(TODAY);
@@ -4988,12 +5003,14 @@ setTimeout(hideSplash,12000);
       ship.stHist=ship.stHist.filter(function(h){return h.srcId!==editEntry.id;});
       editEntry.vigencia=vigencia;editEntry.fim=fim||"";
       editEntry.condefDepois=novaCondef||editEntry.condefAntes;
+      editEntry.condicaoAnterior=condicaoAnterior;editEntry.condicaoFinal=condicaoFinal;
       editEntry.msgDepois=msg;editEntry.restricaoAdicionada=restricaoTxt||"—";editEntry.prazo=prazo;editEntry.obs=obsTxt;
       if(novaCondef){
+        if(condicaoAnterior)ship.stHist.push({st:condicaoAnterior,ts:new Date(vigencia+"T00:00:00").toISOString(),srcId:editEntry.id});
         ship.stHist.push({st:novaCondef,ts:new Date(vigencia+"T12:00:00").toISOString(),srcId:editEntry.id});
         if(fim&&fim>=vigencia){
           var voltaDt2=new Date(fim+"T12:00:00");voltaDt2.setDate(voltaDt2.getDate()+1);
-          ship.stHist.push({st:ship.condef||"",ts:voltaDt2.toISOString(),srcId:editEntry.id});
+          ship.stHist.push({st:condicaoFinal||ship.condef||"",ts:voltaDt2.toISOString(),srcId:editEntry.id});
         }
       }
       ship.stHist.sort(function(a,b){return new Date(a.ts)-new Date(b.ts);});
@@ -5010,6 +5027,7 @@ setTimeout(hideSplash,12000);
     var entry={
       id:genUid("cdh"),ts:nowISO(),vigencia:vigencia,fim:fim||"",
       condefAntes:ship.condef||"",condefDepois:novaCondef||(ship.condef||""),
+      condicaoAnterior:condicaoAnterior,condicaoFinal:condicaoFinal,
       msgAntes:ship.msg||"",msgDepois:msg,
       restricaoAdicionada:restricaoTxt||"—",prazo:prazo,
       obs:obsTxt,retroativo:isRetroativo
@@ -5026,11 +5044,14 @@ setTimeout(hideSplash,12000);
       // Retroativo com condição informada: registra o período direto na linha do tempo de status
       // (stHist), sem tocar no estado atual — assim a Timeline e o Relatório de Operacionalidade
       // passam a contar esses dias, exatamente como pedido ("navio ficou IM de um período X a Y").
+      // condicaoAnterior/condicaoFinal (quando informadas) tornam explícito o estado antes do
+      // período e o estado pro qual ele volta — este último vale até a próxima alteração posterior.
       // srcId liga essas entradas ao período em condefHist, pra permitir editar/excluir depois.
+      if(condicaoAnterior)ship.stHist.push({st:condicaoAnterior,ts:new Date(vigencia+"T00:00:00").toISOString(),srcId:entry.id});
       ship.stHist.push({st:novaCondef,ts:new Date(vigencia+"T12:00:00").toISOString(),srcId:entry.id});
       if(fim&&fim>=vigencia){
         var voltaDt=new Date(fim+"T12:00:00");voltaDt.setDate(voltaDt.getDate()+1);
-        ship.stHist.push({st:ship.condef||"",ts:voltaDt.toISOString(),srcId:entry.id});
+        ship.stHist.push({st:condicaoFinal||ship.condef||"",ts:voltaDt.toISOString(),srcId:entry.id});
       }
       ship.stHist.sort(function(a,b){return new Date(a.ts)-new Date(b.ts);});
     }
