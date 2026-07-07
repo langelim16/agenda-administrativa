@@ -1380,11 +1380,155 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
 tr.row-crit{background:rgba(233,150,53,.20)}
 .hr-sem{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle;flex:none}
 </style>
+<style id="visual-refresh-v3">
+/* ═══════════════════════════════════════════════════════════════
+   CAMADA VISUAL v3 — ilhas com profundidade, LEDs realistas,
+   menu agrupado e abas com indicador deslizante. Somente estética.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── A. Tokens de elevação (ilhas) ── */
+:root{
+  --isl-border:color-mix(in srgb,var(--c-200) 70%,transparent);
+  --isl-in:inset 0 1px 0 rgba(255,255,255,.65);
+  --isl-sh:0 1px 2px rgba(24,30,38,.05),0 5px 12px rgba(24,30,38,.06),0 18px 40px -10px rgba(24,30,38,.14);
+  --isl-sh-hover:0 2px 4px rgba(24,30,38,.06),0 10px 22px rgba(24,30,38,.08),0 30px 60px -12px rgba(24,30,38,.2);
+}
+[data-theme="dark"]{
+  --isl-border:rgba(255,255,255,.07);
+  --isl-in:inset 0 1px 0 rgba(255,255,255,.06);
+  --isl-sh:0 1px 2px rgba(0,0,0,.4),0 6px 14px rgba(0,0,0,.32),0 22px 48px -10px rgba(0,0,0,.52);
+  --isl-sh-hover:0 2px 4px rgba(0,0,0,.44),0 12px 26px rgba(0,0,0,.4),0 34px 66px -12px rgba(0,0,0,.6);
+}
+
+/* ── B. Tabelas como ilhas: elevação em camadas + respiro ── */
+.nv-table-wrap,.dt-table-wrap,.ferias-wrap,.tl-wrap,.nv-tl-wrap,.hm-wrap{
+  border:1px solid var(--isl-border);
+  border-radius:var(--r-xl);
+  box-shadow:var(--isl-sh),var(--isl-in);
+  margin-bottom:20px;
+  transition:box-shadow .35s var(--ease-out);
+}
+.nv-table-wrap:hover,.dt-table-wrap:hover,.ferias-wrap:hover,.tl-wrap:hover,.nv-tl-wrap:hover,.hm-wrap:hover{
+  box-shadow:var(--isl-sh-hover),var(--isl-in);
+}
+.nv-table th,.dt-table th{padding:9px 8px;letter-spacing:.5px}
+.nv-table td,.dt-table td{padding:8px 7px}
+.nv-table tbody tr td,.dt-table tbody tr td{transition:background-color .16s ease}
+.nv-table tbody tr:hover td,.dt-table tbody tr:hover td{background:color-mix(in srgb,var(--c-blue) 6%,transparent)}
+
+/* Cartões, KPIs e listas seguem o mesmo vocabulário de ilha */
+.nv-card,.stats-card,.ovw-card,.ps-item,.kpi,.spotcard,.task,.tl-legend-top,.pstat{
+  border-color:var(--isl-border);
+  box-shadow:var(--isl-sh),var(--isl-in);
+}
+.nv-card,.stats-card,.ovw-card{border-radius:var(--r-xl)}
+.task:hover,.spotcard:hover,.nv-card:hover,.stats-card:hover{box-shadow:var(--isl-sh-hover),var(--isl-in)}
+.spot-section{box-shadow:var(--isl-sh)}
+
+/* ── C. LEDs da Garagem: componente físico (aro, cúpula, brilho, halo) ── */
+.fleet-led{
+  top:10px;left:10px;width:15px;height:15px;z-index:2;
+  background:
+    radial-gradient(circle at 32% 26%,rgba(255,255,255,.95) 0%,rgba(255,255,255,0) 30%),
+    radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--led-c) 55%,#fff) 0%,var(--led-c) 52%,color-mix(in srgb,var(--led-c) 68%,#000) 92%);
+  box-shadow:
+    inset 0 -2px 3px rgba(0,0,0,.38),
+    inset 0 1px 1.5px rgba(255,255,255,.6),
+    0 0 0 2.5px #23282e,
+    0 0 0 3.5px rgba(255,255,255,.16),
+    0 2px 4px rgba(0,0,0,.35),
+    0 0 6px 1px color-mix(in srgb,var(--led-c) 70%,transparent),
+    0 0 14px 4px color-mix(in srgb,var(--led-c) 42%,transparent),
+    0 0 26px 9px color-mix(in srgb,var(--led-c) 20%,transparent);
+  animation:ledBreath 2.6s ease-in-out infinite,ledFlicker 6.5s linear infinite;
+  transition:transform .22s var(--spring);
+}
+.fleet-led::before{
+  content:"";position:absolute;left:18%;top:8%;width:48%;height:36%;border-radius:50%;
+  background:linear-gradient(rgba(255,255,255,.92),rgba(255,255,255,0));
+  pointer-events:none;
+}
+.fleet-led::after{
+  content:"";position:absolute;inset:56% 20% 6% 20%;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 100%,rgba(255,255,255,.38),transparent 72%);
+  pointer-events:none;
+}
+.fleet-led:hover{transform:scale(1.35)}
+.fleet-led:active{transform:scale(1.08)}
+@keyframes ledBreath{
+  0%,100%{box-shadow:
+    inset 0 -2px 3px rgba(0,0,0,.38),inset 0 1px 1.5px rgba(255,255,255,.6),
+    0 0 0 2.5px #23282e,0 0 0 3.5px rgba(255,255,255,.16),0 2px 4px rgba(0,0,0,.35),
+    0 0 6px 1px color-mix(in srgb,var(--led-c) 70%,transparent),
+    0 0 14px 4px color-mix(in srgb,var(--led-c) 42%,transparent),
+    0 0 26px 9px color-mix(in srgb,var(--led-c) 20%,transparent)}
+  50%{box-shadow:
+    inset 0 -2px 3px rgba(0,0,0,.38),inset 0 1px 1.5px rgba(255,255,255,.6),
+    0 0 0 2.5px #23282e,0 0 0 3.5px rgba(255,255,255,.16),0 2px 4px rgba(0,0,0,.35),
+    0 0 8px 2px color-mix(in srgb,var(--led-c) 85%,transparent),
+    0 0 20px 7px color-mix(in srgb,var(--led-c) 52%,transparent),
+    0 0 36px 14px color-mix(in srgb,var(--led-c) 28%,transparent)}
+}
+@keyframes ledFlicker{
+  0%,100%{filter:brightness(1)}
+  2.8%{filter:brightness(1.16)}
+  3.4%{filter:brightness(.97)}
+  4.2%{filter:brightness(1.1)}
+  5%{filter:brightness(1)}
+  47%{filter:brightness(1)}
+  47.6%{filter:brightness(1.12)}
+  48.4%{filter:brightness(1)}
+  76%{filter:brightness(1)}
+  76.5%{filter:brightness(.95)}
+  77.2%{filter:brightness(1.08)}
+  78%{filter:brightness(1)}
+}
+
+/* ── D. Menu lateral: grupos, divisores e indicador ativo ── */
+.appnav{padding:14px 0;gap:6px}
+.nav-sep{width:42px;height:1px;background:rgba(255,255,255,.14);margin:5px 0;flex-shrink:0}
+.nav-grp{font-size:7px;letter-spacing:2.4px;text-transform:uppercase;color:rgba(255,255,255,.34);font-weight:600;margin:1px 0 2px;font-family:var(--sans)}
+.nav-item{position:relative}
+.nav-item::before{
+  content:"";position:absolute;left:-7px;top:50%;translate:0 -50%;
+  width:3.5px;height:0;border-radius:99px;background:#fff;opacity:0;
+  box-shadow:0 0 8px rgba(255,255,255,.7);
+  transition:height .32s var(--spring),opacity .2s ease;
+}
+.nav-item.active::before{height:26px;opacity:.95}
+@media(max-width:700px){
+  .nav-sep,.nav-grp{display:none}
+  .nav-item::before{left:50%;top:auto;bottom:-3px;translate:-50% 0;width:0;height:3.5px}
+  .nav-item.active::before{width:22px;height:3.5px}
+}
+
+/* ── E. Abas com indicador deslizante (knob) ── */
+.tabs,.view-toggle{position:relative}
+.seg-knob{
+  position:absolute;top:0;left:0;z-index:0;border-radius:99px;pointer-events:none;
+  background:color-mix(in srgb,var(--header-bg) 78%,transparent);
+  backdrop-filter:blur(10px) saturate(1.7);-webkit-backdrop-filter:blur(10px) saturate(1.7);
+  box-shadow:0 3px 10px color-mix(in srgb,var(--header-bg) 38%,transparent),inset 0 1px 0 rgba(255,255,255,.22);
+  transition:transform .42s var(--spring),width .42s var(--spring),height .25s ease,opacity .2s ease;
+  will-change:transform,width;
+}
+.tabs.has-knob .tab,.view-toggle.has-knob .vtbtn{position:relative;z-index:1}
+.tabs.has-knob .tab.active,.view-toggle.has-knob .vtbtn.active{
+  background:transparent!important;box-shadow:none!important;
+  backdrop-filter:none;-webkit-backdrop-filter:none;animation:none;
+}
+
+/* ── F. Foco visível consistente ── */
+button:focus-visible,.tab:focus-visible,.nav-item:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+</style>
 </head>
 <body id="artifacts-component-root-html">
 <nav class="appnav" id="appnav">
   <button class="nav-item" data-view="config" title="Configurações da OM"><span class="nav-ic" style="font-size:26px">⚙</span><span class="nav-lbl">CONFIG OM</span></button>
+  <div class="nav-sep" aria-hidden="true"></div>
   <button class="nav-item active" data-view="agenda" title="Agenda Administrativa"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="18" rx="2"></rect><path d="M9 3.5V2.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"></path><line x1="8.5" y1="9" x2="15.5" y2="9"></line><line x1="8.5" y1="12.5" x2="15.5" y2="12.5"></line><line x1="8.5" y1="16" x2="13" y2="16"></line></svg></span><span class="nav-lbl">Agenda</span></button>
+  <div class="nav-sep" aria-hidden="true"></div>
+  <div class="nav-grp" aria-hidden="true">Setores</div>
   <button class="nav-item" data-view="navios" title="Controle de CONDEF"><span class="nav-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="2"></circle><line x1="12" y1="7.5" x2="12" y2="19"></line><line x1="8" y1="11" x2="16" y2="11"></line><path d="M5 14a7 7 0 0 0 14 0"></path><path d="M5 14l-1.5-1"></path><path d="M19 14l1.5-1"></path></svg></span><span class="nav-lbl">CONDEF</span></button>
   <button class="nav-item" data-view="clg" title="Controle de CLG"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M6 21V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v15"></path><line x1="5" y1="21" x2="15" y2="21"></line><path d="M14 9h2a2 2 0 0 1 2 2v2.3a1.7 1.7 0 0 0 1.7 1.7"></path><path d="M18 6.5l1.6 1.6a1 1 0 0 1 .4.8V11"></path><line x1="8" y1="6" x2="12" y2="6"></line></svg></span><span class="nav-lbl">CLG</span></button>
   <button class="nav-item" data-view="horas" title="Horas Motores"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></span><span class="nav-lbl">HORAS MOTORES</span></button>
@@ -1452,7 +1596,7 @@ tr.row-crit{background:rgba(233,150,53,.20)}
 <header>
   <div class="brand">
     <div class="crest" id="nv_hdr_crest" style="background:none"><span style="font-size:22px">⚓</span></div>
-    <div><h1 id="nv_hdr_title">Controle de CONDEF</h1><div class="sub" id="nv_hdr_sub">SN-27.2 · Seção de Logística</div></div>
+    <div><h1 id="nv_hdr_title">Controle de CONDEF</h1><div class="sub" id="nv_hdr_sub">Seção de Logística</div></div>
   </div>
   <div class="hright">
     <span class="synctag" id="nv_synctag" style="color:var(--c-teal)">💾 Somente local</span>
@@ -1492,7 +1636,7 @@ tr.row-crit{background:rgba(233,150,53,.20)}
   </table>
 </div>
 
-<div class="dt-section-head"><h3 class="dt-table-title">Vinculações de PPSS às Restrições CONDEF</h3></div>
+<div class="dt-section-head"><h3 class="dt-table-title">PPSS vinculados às Restrições CONDEF</h3></div>
 <div class="dt-table-wrap">
   <table class="dt-table" style="min-width:0;width:100%;table-layout:fixed" id="nv_ppsslink_table">
     <thead><tr><th>Navio</th><th>Restrição</th><th>Prazo</th><th>PPSS Nº</th><th>Situação</th><th>Valor Orçado</th></tr></thead>
@@ -1523,7 +1667,7 @@ tr.row-crit{background:rgba(233,150,53,.20)}
 
 <div class="nv-grid" id="nv_grid"></div>
 
-<div class="foot" id="nv_hdr_foot">Controle de CONDEF · dados transcritos do quadro físico SN-27.2 — versão inicial, sujeita a ajustes</div>
+<div class="foot" id="nv_hdr_foot">· Controle de CONDEF ·</div>
 </div>
 
 <div class="wrap" id="viewCLG" style="display:none;">
@@ -1631,7 +1775,7 @@ tr.row-crit{background:rgba(233,150,53,.20)}
 
 <div class="nv-grid" id="clg_grid"></div>
 
-<div class="foot" id="clg_hdr_foot">Controle de CLG · dados transcritos do quadro físico — versão inicial, sujeita a ajustes</div>
+<div class="foot" id="clg_hdr_foot">· Controle de CLG ·</div>
 </div>
 
 <div class="wrap" id="viewHoras" style="display:none;">
@@ -1727,7 +1871,7 @@ tr.row-crit{background:rgba(233,150,53,.20)}
 <div class="dt-section-head" style="margin-top:18px"><h3 class="dt-table-title">Cartões</h3></div>
 <div class="nv-grid" id="pessoal_grid"></div>
 
-<div class="foot">Pessoal · Militares do Departamento e Controle de Férias — versão inicial, sujeita a ajustes</div>
+<div class="foot">· Pessoal · Militares do Departamento e Controle de Férias ·</div>
 </div>
 
 <div class="wrap" id="viewPpss" style="display:none;">
@@ -4283,7 +4427,7 @@ document.getElementById("c_crest_text").oninput=function(e){var inn=document.get
 // (Agenda fica de fora do "crest" porque seu ícone usa outro elemento/lógica — ver applyHdr().)
 var TABS=[
   {id:"agenda",label:"Agenda",title:"agenda_hdr_title",sub:"appSub",dTitle:"Agenda Administrativa",dSub:function(){return(cfg.departamento||"Logística")+" · "+(cfg.om||"OM");}},
-  {id:"navios",label:"Navios",title:"nv_hdr_title",sub:"nv_hdr_sub",crest:"nv_hdr_crest",foot:"nv_hdr_foot",dTitle:"Controle de CONDEF",dSub:"SN-27.2 · Seção de Logística"},
+  {id:"navios",label:"Navios",title:"nv_hdr_title",sub:"nv_hdr_sub",crest:"nv_hdr_crest",foot:"nv_hdr_foot",dTitle:"Controle de CONDEF",dSub:"Seção de Logística"},
   {id:"clg",label:"CLG",title:"clg_hdr_title",sub:"clg_hdr_sub",crest:"clg_hdr_crest",foot:"clg_hdr_foot",dTitle:"Controle de CLG",dSub:"Combustíveis, Lubrificantes e Graxas · Seção de Logística"},
   {id:"horas",label:"Horas Motores",title:"horas_hdr_title",sub:"horas_hdr_sub",crest:"horas_hdr_crest",dTitle:"Horas Motores",dSub:"Horas de Funcionamento · Seção de Logística"},
   {id:"pessoal",label:"Pessoal",title:"pessoal_hdr_title",sub:"pessoal_hdr_sub",crest:"pessoal_hdr_crest",dTitle:"Pessoal",dSub:"Militares do Departamento · Controle de Férias"},
@@ -8143,6 +8287,36 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       monthFromIdx=toIdx;
     });
   });
+})();
+
+/* ── Camada visual: knob deslizante das abas (meses e alternadores de visão) ──
+   Somente cosmético: injeta um <span class="seg-knob"> em .tabs/.view-toggle e o
+   posiciona sob o botão ativo. Reage a re-renderizações via MutationObserver. */
+(function(){
+  function place(c){
+    if(!c.offsetParent)return;
+    var knob=c.querySelector(":scope>.seg-knob"),fresh=false;
+    if(!knob){
+      knob=document.createElement("span");
+      knob.className="seg-knob";knob.setAttribute("aria-hidden","true");
+      c.prepend(knob);c.classList.add("has-knob");fresh=true;
+    }
+    var act=c.querySelector(".tab.active,.vtbtn.active");
+    if(!act){knob.style.opacity="0";return;}
+    if(fresh)knob.style.transition="none";
+    knob.style.opacity="1";
+    knob.style.transform="translate("+act.offsetLeft+"px,"+act.offsetTop+"px)";
+    knob.style.width=act.offsetWidth+"px";
+    knob.style.height=act.offsetHeight+"px";
+    if(fresh){void knob.offsetWidth;knob.style.transition="";}
+  }
+  function all(){document.querySelectorAll(".tabs,.view-toggle").forEach(place);}
+  var raf=null;
+  function sched(){if(raf)return;raf=requestAnimationFrame(function(){raf=null;all();});}
+  new MutationObserver(sched).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:["class"]});
+  window.addEventListener("resize",sched);
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(sched);
+  sched();
 })();
 </script>
 </body></html>
