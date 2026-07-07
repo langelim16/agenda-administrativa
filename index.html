@@ -5757,7 +5757,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       var pts=(clgHist[r.id]||[]).filter(function(p){return p.t>=cutoff.getTime();}).map(function(p){return{t:p.t,v:p.v};});
       return{name:r.meio||"—",points:pts};
     }).filter(function(x){return x.points.length;});
-    box.innerHTML=svgLineChart(series,{fmtY:function(v){return v.toLocaleString("pt-BR");}});
+    box.innerHTML=svgLineChart(series,{height:130,fmtY:function(v){return v.toLocaleString("pt-BR");}});
   }
   /* ── Previsão de duração do estoque por meio, a partir do consumo médio diário registrado no histórico ── */
   function clgPrevisaoFor(r){
