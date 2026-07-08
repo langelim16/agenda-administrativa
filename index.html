@@ -6360,19 +6360,16 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var histKey=l.e.scope==="clg_t1"?row.id:row.id+"_"+l.produto;
     var pts=clgHist[histKey]||[];
     var endT=new Date(l.data.split("/").reverse().join("-")+"T00:00:00").getTime();
+    // Os pontos do período do lançamento são DESCARTADOS (não restaurados): senão sobrava uma
+    // "leitura" fantasma no gráfico e na previsão de duração ao editar/estornar um lançamento.
+    // Pontos posteriores só são deslocados em lançamentos não-retroativos (retroativo nunca os moveu).
     if(l.kind==="consumo"){
-      var avg=l.qtd/l.dias;
-      pts.forEach(function(p){
-        // Lançamento retroativo não deslocou os pontos posteriores ao período — só reverte os do próprio período.
-        if(p.t>endT){if(!l.retro)p.v+=l.qtd;return;}
-        var i=l.dias-1-Math.round((endT-p.t)/86400000);
-        if(i>=0&&i<l.dias)p.v+=(i===l.dias-1)?l.qtd:avg*(i+1);
-      });
+      var startT=endT-(l.dias-1)*86400000;
+      clgHist[histKey]=pts.filter(function(p){return p.t<startT||p.t>endT;});
+      if(!l.retro)clgHist[histKey].forEach(function(p){if(p.t>endT)p.v+=l.qtd;});
     }else{
-      pts.forEach(function(p){
-        if(l.retro){if(p.t===endT)p.v=Math.max(0,p.v-l.qtd);}
-        else if(p.t>=endT)p.v=Math.max(0,p.v-l.qtd);
-      });
+      clgHist[histKey]=pts.filter(function(p){return p.t!==endT;});
+      if(!l.retro)clgHist[histKey].forEach(function(p){if(p.t>endT)p.v=Math.max(0,p.v-l.qtd);});
     }
     clgSaveHist();
     l.e.estornado=true;
