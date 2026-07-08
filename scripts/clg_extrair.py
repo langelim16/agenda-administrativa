@@ -65,8 +65,11 @@ PROD_ESTOQUE = [('gasolina', 1), ('qav', 2), ('odm', 3), ('odr', 4),
 
 def extrair(pasta):
     consumos, estoques = [], []
-    arquivos = sorted(glob.glob(os.path.join(pasta, '*.ods')) +
-                      glob.glob(os.path.join(pasta, '*.ODS')))
+    # busca recursiva (as planilhas ficam em subpastas por ano, ex.: 2026/);
+    # ignora arquivos de lock do LibreOffice (~$...)
+    arquivos = sorted(
+        f for f in glob.glob(os.path.join(pasta, '**', '*'), recursive=True)
+        if f.lower().endswith('.ods') and not os.path.basename(f).startswith('~$'))
     for f in arquivos:
         rows = sheet_rows(f, 'Consumos')
         if not rows:
