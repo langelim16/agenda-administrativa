@@ -6134,6 +6134,11 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         '<div class="fld"><label>Data (fim do período)</label><input type="date" id="clgc_data" value="'+todayStr+'"></div>'+
         '<div class="fld"><label>Quantidade consumida (total)</label><input id="clgc_qtd" placeholder="Ex.: 150" inputmode="decimal"></div>'+
         '<div class="fld"><label>Dias de comissão</label><input id="clgc_dias" placeholder="Ex.: 5" inputmode="numeric" value="1"></div>'+
+        // Campos condicionais ao tipo: Operativo exige Nº do evento PMPE + descrição; Administrativo
+        // aceita uma justificativa opcional. Alternados pelo onchange do select.
+        '<div class="fld" id="clgc_fld_evento"><label>Nº Evento PMPE *</label><input id="clgc_evento" placeholder="Ex.: 034/2026"></div>'+
+        '<div class="fld" id="clgc_fld_descricao"><label>Descrição *</label><input id="clgc_descricao" placeholder="Ex.: Patrulha naval no rio Guamá"></div>'+
+        '<div class="fld full" id="clgc_fld_justificativa" style="display:none"><label>Justificativa (opcional)</label><input id="clgc_justificativa" placeholder="Ex.: Teste de motores no porto"></div>'+
         '<div class="fld full" style="font-size:10.5px;color:var(--text3)">'+(retro?"Lançamento retroativo: gera o histórico de consumo dia a dia no gráfico de evolução <b>na data informada</b> e abate a quantidade do estoque atual da tabela.":"A quantidade total é dividida pela média diária ao longo dos dias de comissão informados, gerando um histórico de consumo dia a dia (usado no gráfico de evolução e na previsão de duração do estoque).")+'</div>'+
       '</div>'+
       '<div id="clgc_err" class="ferias-msg warn" style="display:none;margin-top:10px"></div>'+
@@ -6141,6 +6146,12 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         '<button class="bcancel" id="clgc_cancel">Cancelar</button>'+
         '<button class="bsave" id="clgc_save">Salvar</button>'+
       '</div>';
+    document.getElementById("clgc_tipo").onchange=function(){
+      var op=this.value==="Operativo";
+      document.getElementById("clgc_fld_evento").style.display=op?"":"none";
+      document.getElementById("clgc_fld_descricao").style.display=op?"":"none";
+      document.getElementById("clgc_fld_justificativa").style.display=op?"none":"";
+    };
     document.getElementById("clgc_cancel").onclick=function(){bg.classList.remove("open");};
     document.getElementById("clgc_save").onclick=function(){clgSaveConsumo(nome,tipo,bg,retro);};
     bg.classList.add("open");
@@ -6183,10 +6194,15 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(isNaN(qtd)||qtd<=0){errEl.textContent="Informe uma quantidade válida (maior que zero).";errEl.style.display="block";return;}
     var dias=Math.round(clgNum(document.getElementById("clgc_dias").value));
     if(isNaN(dias)||dias<1){errEl.textContent="Informe um número válido de dias de comissão (mínimo 1).";errEl.style.display="block";return;}
-    errEl.style.display="none";
     var tipoConsumo=document.getElementById("clgc_tipo").value;
+    var evento=(document.getElementById("clgc_evento").value||"").trim();
+    var descricao=(document.getElementById("clgc_descricao").value||"").trim();
+    var justificativa=(document.getElementById("clgc_justificativa").value||"").trim();
+    if(tipoConsumo==="Operativo"&&(!evento||!descricao)){errEl.textContent="Consumo operativo exige Nº Evento PMPE e Descrição.";errEl.style.display="block";return;}
+    errEl.style.display="none";
     var dataStr=document.getElementById("clgc_data").value||clgConsumoDstr(new Date());
     var dataFmt=dataStr.split("-").reverse().join("/");
+    var extra=tipoConsumo==="Operativo"?(" · PMPE "+evento+" · "+descricao):(justificativa?(" · Justificativa: "+justificativa):"");
     var lbl=retro?"Consumo retroativo ("+tipoConsumo.toLowerCase()+")":"Consumo "+tipoConsumo.toLowerCase();
     if(tipo==="odm"){
       var row=clgFindByNome(clgT1,nome);
@@ -6199,7 +6215,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       // (não no estoque de hoje); o abatimento no estoque atual é o mesmo dos lançamentos do dia.
       if(retro)clgAppendHistDaily(row.id,dataStr,qtd,dias,clgRetroBaseline(row.id,dataStr,dias,qtd,atual));
       else clgAppendHistDaily(row.id,dataStr,qtd,dias,atual);
-      auditPushOne("clg_t1",row.id,lbl+": -"+qtd+" em "+dias+" dia(s) ("+dataFmt+")");
+      auditPushOne("clg_t1",row.id,lbl+": -"+qtd+" em "+dias+" dia(s) ("+dataFmt+")"+extra);
       touchLastEdit("clg_t1");paintLastEdit("clg_t1_lastedit","clg_t1");
     }else{
       var isNav=!!clgFindByNome(clgT3Nav,nome);
@@ -6213,7 +6229,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
       if(retro)clgAppendHistDaily(histKey,dataStr,qtd,dias,clgRetroBaseline(histKey,dataStr,dias,qtd,atual2));
       else clgAppendHistDaily(histKey,dataStr,qtd,dias,atual2);
-      auditPushOne(isNav?"clg_t3nav":"clg_t3emb",row2.id,lbl+" de "+tipo+": -"+qtd+" em "+dias+" dia(s) ("+dataFmt+")");
+      auditPushOne(isNav?"clg_t3nav":"clg_t3emb",row2.id,lbl+" de "+tipo+": -"+qtd+" em "+dias+" dia(s) ("+dataFmt+")"+extra);
       touchLastEdit(isNav?"clg_t3nav":"clg_t3emb");paintLastEdit(isNav?"clg_t3nav_lastedit":"clg_t3emb_lastedit",isNav?"clg_t3nav":"clg_t3emb");
     }
     bg.classList.remove("open");
@@ -6302,10 +6318,10 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
   var CLG_LANC_ARRMAP=function(){return{clg_t1:clgT1,clg_t3nav:clgT3Nav,clg_t3emb:clgT3Emb};};
   function clgParseLanc(e){
     if(["clg_t1","clg_t3nav","clg_t3emb"].indexOf(e.scope)<0||e.estornado)return null;
-    var m=/^Consumo retroativo \((\S+)\)(?: de (\w+))?: -([\d.,]+) em (\d+) dia\(s\) \((\d{2}\/\d{2}\/\d{4})\)$/.exec(e.action||"");
-    if(m)return{kind:"consumo",retro:true,tipoConsumo:m[1],produto:m[2]||"odm",qtd:clgNum(m[3]),dias:+m[4],data:m[5],e:e};
-    m=/^Consumo (\S+)(?: de (\w+))?: -([\d.,]+) em (\d+) dia\(s\) \((\d{2}\/\d{2}\/\d{4})\)$/.exec(e.action||"");
-    if(m)return{kind:"consumo",retro:false,tipoConsumo:m[1],produto:m[2]||"odm",qtd:clgNum(m[3]),dias:+m[4],data:m[5],e:e};
+    var m=/^Consumo retroativo \((\S+)\)(?: de (\w+))?: -([\d.,]+) em (\d+) dia\(s\) \((\d{2}\/\d{2}\/\d{4})\)( · .+)?$/.exec(e.action||"");
+    if(m)return{kind:"consumo",retro:true,tipoConsumo:m[1],produto:m[2]||"odm",qtd:clgNum(m[3]),dias:+m[4],data:m[5],extra:(m[6]||"").replace(/^ · /,""),e:e};
+    m=/^Consumo (\S+)(?: de (\w+))?: -([\d.,]+) em (\d+) dia\(s\) \((\d{2}\/\d{2}\/\d{4})\)( · .+)?$/.exec(e.action||"");
+    if(m)return{kind:"consumo",retro:false,tipoConsumo:m[1],produto:m[2]||"odm",qtd:clgNum(m[3]),dias:+m[4],data:m[5],extra:(m[6]||"").replace(/^ · /,""),e:e};
     m=/^Abastecimento( retroativo)?(?: de (\w+))?: \+([\d.,]+) \((\d{2}\/\d{2}\/\d{4})\)$/.exec(e.action||"");
     if(m)return{kind:"abastecimento",retro:!!m[1],produto:m[2]||"odm",qtd:clgNum(m[3]),dias:1,data:m[4],e:e};
     return null;
@@ -6358,7 +6374,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       lancs.map(function(l,i){
         var row=(CLG_LANC_ARRMAP()[l.e.scope]||[]).find(function(r){return r.id===l.e.rowId;});
         var meio=row?(row.meio||"—"):"(meio excluído)";
-        var desc=(l.kind==="consumo"?("Consumo "+l.tipoConsumo+" · −"+l.qtd+(l.dias>1?" em "+l.dias+" dias":"")):("Abastecimento · +"+l.qtd))+" · "+(prodLbl[l.produto]||l.produto)+(l.retro?" · 📜 retroativo":"");
+        var desc=(l.kind==="consumo"?("Consumo "+l.tipoConsumo+" · −"+l.qtd+(l.dias>1?" em "+l.dias+" dias":"")):("Abastecimento · +"+l.qtd))+" · "+(prodLbl[l.produto]||l.produto)+(l.retro?" · 📜 retroativo":"")+(l.extra?" · "+l.extra:"");
         return '<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border)">'+
           '<div style="flex:1;min-width:0"><b style="font-size:12.5px">'+esc(meio)+'</b><div style="font-size:11.5px;color:var(--text2)">'+esc(desc)+' · '+esc(l.data)+' · lançado em '+fmtAuditTs(l.e.ts)+'</div></div>'+
           '<button class="bcancel clg-lanc-del" data-i="'+i+'">🗑 Estornar</button></div>';
