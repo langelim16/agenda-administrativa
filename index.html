@@ -6123,9 +6123,9 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     bg.classList.add("open");
   }
   function clgConsumoDstr(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
-  function clgOpenConsumoForm(nome,tipo,retro){
+  function clgOpenConsumoForm(nome,tipo,retro,editLanc){
     var titleMap={odm:"Estoque de ODM",gasolina:"Gasolina",lubrificantes:"Lubrificantes",graxas:"Graxas"};
-    var bg=ensureModal("clgConsumoFormBg","Inserir consumo"+(retro?" retroativo":"")+" — "+nome+" · "+titleMap[tipo]);
+    var bg=ensureModal("clgConsumoFormBg",(editLanc?"Editar consumo":"Inserir consumo")+(retro?" retroativo":"")+" — "+nome+" · "+titleMap[tipo]);
     var body=bg.querySelector(".mbody");
     var todayStr=clgConsumoDstr(new Date());
     body.innerHTML=
@@ -6146,14 +6146,26 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         '<button class="bcancel" id="clgc_cancel">Cancelar</button>'+
         '<button class="bsave" id="clgc_save">Salvar</button>'+
       '</div>';
-    document.getElementById("clgc_tipo").onchange=function(){
-      var op=this.value==="Operativo";
+    var tipoSel=document.getElementById("clgc_tipo");
+    tipoSel.onchange=function(){
+      var op=tipoSel.value==="Operativo";
       document.getElementById("clgc_fld_evento").style.display=op?"":"none";
       document.getElementById("clgc_fld_descricao").style.display=op?"":"none";
       document.getElementById("clgc_fld_justificativa").style.display=op?"none":"";
     };
+    if(editLanc){
+      tipoSel.value=editLanc.tipoConsumo.charAt(0).toUpperCase()+editLanc.tipoConsumo.slice(1).toLowerCase();
+      tipoSel.onchange();
+      document.getElementById("clgc_data").value=editLanc.data.split("/").reverse().join("-");
+      document.getElementById("clgc_qtd").value=editLanc.qtd;
+      document.getElementById("clgc_dias").value=editLanc.dias;
+      var mm=/^PMPE (.*?) · ([\s\S]*)$/.exec(editLanc.extra||"");
+      if(mm){document.getElementById("clgc_evento").value=mm[1];document.getElementById("clgc_descricao").value=mm[2];}
+      var mj=/^Justificativa: ([\s\S]*)$/.exec(editLanc.extra||"");
+      if(mj)document.getElementById("clgc_justificativa").value=mj[1];
+    }
     document.getElementById("clgc_cancel").onclick=function(){bg.classList.remove("open");};
-    document.getElementById("clgc_save").onclick=function(){clgSaveConsumo(nome,tipo,bg,retro);};
+    document.getElementById("clgc_save").onclick=function(){clgSaveConsumo(nome,tipo,bg,retro,editLanc);};
     bg.classList.add("open");
   }
   // Gera "dias" pontos diários no histórico (clgHist[histKey]), do estoque anterior até o estoque
@@ -6188,7 +6200,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(after)return after.v+qtd;
     return(isNaN(estoqueAtual)?0:estoqueAtual)+qtd;
   }
-  async function clgSaveConsumo(nome,tipo,bg,retro){
+  async function clgSaveConsumo(nome,tipo,bg,retro,editLanc){
     var qtd=clgNum(document.getElementById("clgc_qtd").value);
     var errEl=document.getElementById("clgc_err");
     if(isNaN(qtd)||qtd<=0){errEl.textContent="Informe uma quantidade válida (maior que zero).";errEl.style.display="block";return;}
@@ -6204,6 +6216,8 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var dataFmt=dataStr.split("-").reverse().join("/");
     var extra=tipoConsumo==="Operativo"?(" · PMPE "+evento+" · "+descricao):(justificativa?(" · Justificativa: "+justificativa):"");
     var lbl=retro?"Consumo retroativo ("+tipoConsumo.toLowerCase()+")":"Consumo "+tipoConsumo.toLowerCase();
+    // Edição: estorna o lançamento original em silêncio e aplica o novo em seguida.
+    if(editLanc)await clgEstornarLanc(editLanc,true);
     if(tipo==="odm"){
       var row=clgFindByNome(clgT1,nome);
       if(!row)return;
@@ -6240,9 +6254,9 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
   /* ── Abastecimento: função inversa do consumo — soma ao estoque em vez de abater. O tipo
      (ODM/Gasolina/Lubrificante/Graxa) já foi escolhido na etapa anterior (clgOpenTypeStep/
      clgOpenItemStep), então aqui só falta Data e Quantidade. ── */
-  function clgOpenAbastecimentoForm(nome,tipo,retro){
+  function clgOpenAbastecimentoForm(nome,tipo,retro,editLanc){
     var titleMap={odm:"Estoque de ODM",gasolina:"Gasolina",lubrificantes:"Lubrificantes",graxas:"Graxas"};
-    var bg=ensureModal("clgAbastFormBg","Inserir abastecimento"+(retro?" retroativo":"")+" — "+nome+" · "+titleMap[tipo]);
+    var bg=ensureModal("clgAbastFormBg",(editLanc?"Editar abastecimento":"Inserir abastecimento")+(retro?" retroativo":"")+" — "+nome+" · "+titleMap[tipo]);
     var body=bg.querySelector(".mbody");
     var todayStr=clgConsumoDstr(new Date());
     body.innerHTML=
@@ -6256,8 +6270,12 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         '<button class="bcancel" id="clga_cancel">Cancelar</button>'+
         '<button class="bsave" id="clga_save">Salvar</button>'+
       '</div>';
+    if(editLanc){
+      document.getElementById("clga_data").value=editLanc.data.split("/").reverse().join("-");
+      document.getElementById("clga_qtd").value=editLanc.qtd;
+    }
     document.getElementById("clga_cancel").onclick=function(){bg.classList.remove("open");};
-    document.getElementById("clga_save").onclick=function(){clgSaveAbastecimento(nome,tipo,bg,retro);};
+    document.getElementById("clga_save").onclick=function(){clgSaveAbastecimento(nome,tipo,bg,retro,editLanc);};
     bg.classList.add("open");
   }
   // Anota um ponto de abastecimento no histórico do gráfico. No retroativo o valor parte do
@@ -6271,7 +6289,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(arr.length>200)arr.splice(0,arr.length-200);
     clgSaveHist();
   }
-  async function clgSaveAbastecimento(nome,tipo,bg,retro){
+  async function clgSaveAbastecimento(nome,tipo,bg,retro,editLanc){
     var qtd=clgNum(document.getElementById("clga_qtd").value);
     var errEl=document.getElementById("clga_err");
     if(isNaN(qtd)||qtd<=0){errEl.textContent="Informe uma quantidade válida (maior que zero).";errEl.style.display="block";return;}
@@ -6279,6 +6297,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var dataStr=document.getElementById("clga_data").value||clgConsumoDstr(new Date());
     var dataFmt=dataStr.split("-").reverse().join("/");
     var lbl=retro?"Abastecimento retroativo":"Abastecimento";
+    if(editLanc)await clgEstornarLanc(editLanc,true);
     if(tipo==="odm"){
       var row=clgFindByNome(clgT1,nome);
       if(!row)return;
@@ -6326,7 +6345,9 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(m)return{kind:"abastecimento",retro:!!m[1],produto:m[2]||"odm",qtd:clgNum(m[3]),dias:1,data:m[4],e:e};
     return null;
   }
-  async function clgEstornarLanc(l){
+  // silent=true: usado pelo "Editar lançamento" (estorna o antigo e reaplica o novo em seguida) —
+  // sem toast/re-render próprios e sem registro de estorno na auditoria, só o do novo lançamento.
+  async function clgEstornarLanc(l,silent){
     var arr=CLG_LANC_ARRMAP()[l.e.scope];
     var row=arr.find(function(r){return r.id===l.e.rowId;});
     if(!row){toast("Meio não encontrado — não é possível estornar.","info");return;}
@@ -6355,30 +6376,55 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     }
     clgSaveHist();
     l.e.estornado=true;
-    auditPushOne(l.e.scope,l.e.rowId,"Estorno de "+l.kind+(l.retro?" retroativo":"")+(l.produto!=="odm"?" de "+l.produto:"")+": "+(l.kind==="consumo"?"+":"-")+l.qtd+" ("+l.data+")");
-    touchLastEdit(l.e.scope);paintLastEdit(l.e.scope+"_lastedit",l.e.scope);
-    toast("✓ Lançamento estornado","ok");
-    clgLogEstoque();
-    renderClgTables();
+    if(!silent){
+      auditPushOne(l.e.scope,l.e.rowId,"Estorno de "+l.kind+(l.retro?" retroativo":"")+(l.produto!=="odm"?" de "+l.produto:"")+": "+(l.kind==="consumo"?"+":"-")+l.qtd+" ("+l.data+")");
+      touchLastEdit(l.e.scope);paintLastEdit(l.e.scope+"_lastedit",l.e.scope);
+      toast("✓ Lançamento estornado","ok");
+      clgLogEstoque();
+      renderClgTables();
+    }
   }
   function clgOpenLancamentos(){
     var bg=ensureModal("clgLancBg","Lançamentos de consumo/abastecimento");
     var body=bg.querySelector(".mbody");
-    var lancs=auditLog.map(clgParseLanc).filter(Boolean).sort(function(a,b){return String(b.e.ts).localeCompare(String(a.e.ts));});
+    // Ordena pela data do lançamento (não pela hora em que foi digitado): mais recente no topo,
+    // com agrupamento por mês. Empate na data → desempata pela hora de registro.
+    function dOrd(l){var p=l.data.split("/");return p[2]+p[1]+p[0];}
+    var lancs=auditLog.map(clgParseLanc).filter(Boolean).sort(function(a,b){
+      return dOrd(b).localeCompare(dOrd(a))||String(b.e.ts).localeCompare(String(a.e.ts));
+    });
     if(!lancs.length){
       body.innerHTML='<div style="font-size:12px;color:var(--text3);font-style:italic">Nenhum lançamento registrado ainda.</div>';
       bg.classList.add("open");return;
     }
     var prodLbl={odm:"ODM",gasolina:"Gasolina",lubrificantes:"Lubrificantes",graxas:"Graxas"};
-    body.innerHTML='<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Estornar desfaz o efeito do lançamento no estoque e no gráfico de evolução. Para corrigir um lançamento, estorne-o e insira novamente com os valores corretos.</div>'+
-      lancs.map(function(l,i){
+    var html='<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Editar reabre o formulário com os valores do lançamento e substitui o efeito dele no estoque e no gráfico. Estornar apenas desfaz.</div>';
+    var lastGrp=null;
+    lancs.forEach(function(l,i){
+      var p=l.data.split("/"),grp=p[1]+"/"+p[2];
+      if(grp!==lastGrp){
+        lastGrp=grp;
+        html+='<div style="margin:12px 0 2px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);border-bottom:1.5px solid var(--border2);padding-bottom:3px">'+ML[+p[1]-1]+' de '+p[2]+'</div>';
+      }
+      var row=(CLG_LANC_ARRMAP()[l.e.scope]||[]).find(function(r){return r.id===l.e.rowId;});
+      var meio=row?(row.meio||"—"):"(meio excluído)";
+      var desc=(l.kind==="consumo"?("Consumo "+l.tipoConsumo+" · −"+l.qtd+(l.dias>1?" em "+l.dias+" dias":"")):("Abastecimento · +"+l.qtd))+" · "+(prodLbl[l.produto]||l.produto)+(l.retro?" · 📜 retroativo":"")+(l.extra?" · "+l.extra:"");
+      html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid var(--border)">'+
+        '<div style="flex:1;min-width:0"><b style="font-size:12.5px">'+esc(meio)+' · '+esc(l.data)+'</b><div style="font-size:11.5px;color:var(--text2)">'+esc(desc)+' · lançado em '+fmtAuditTs(l.e.ts)+'</div></div>'+
+        '<button class="bsave clg-lanc-edit" data-i="'+i+'" style="padding:4px 10px;font-size:11.5px">✎ Editar</button>'+
+        '<button class="bcancel clg-lanc-del" data-i="'+i+'" style="padding:4px 10px;font-size:11.5px">🗑 Estornar</button></div>';
+    });
+    body.innerHTML=html;
+    body.querySelectorAll(".clg-lanc-edit").forEach(function(btn){
+      btn.onclick=function(){
+        var l=lancs[+btn.dataset.i];
         var row=(CLG_LANC_ARRMAP()[l.e.scope]||[]).find(function(r){return r.id===l.e.rowId;});
-        var meio=row?(row.meio||"—"):"(meio excluído)";
-        var desc=(l.kind==="consumo"?("Consumo "+l.tipoConsumo+" · −"+l.qtd+(l.dias>1?" em "+l.dias+" dias":"")):("Abastecimento · +"+l.qtd))+" · "+(prodLbl[l.produto]||l.produto)+(l.retro?" · 📜 retroativo":"")+(l.extra?" · "+l.extra:"");
-        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border)">'+
-          '<div style="flex:1;min-width:0"><b style="font-size:12.5px">'+esc(meio)+'</b><div style="font-size:11.5px;color:var(--text2)">'+esc(desc)+' · '+esc(l.data)+' · lançado em '+fmtAuditTs(l.e.ts)+'</div></div>'+
-          '<button class="bcancel clg-lanc-del" data-i="'+i+'">🗑 Estornar</button></div>';
-      }).join("");
+        if(!row){toast("Meio não encontrado — não é possível editar.","info");return;}
+        bg.classList.remove("open");
+        if(l.kind==="consumo")clgOpenConsumoForm(row.meio,l.produto,l.retro,l);
+        else clgOpenAbastecimentoForm(row.meio,l.produto,l.retro,l);
+      };
+    });
     body.querySelectorAll(".clg-lanc-del").forEach(function(btn){
       btn.onclick=async function(){
         if(btn.dataset.arm!=="1"){btn.dataset.arm="1";btn.textContent="Confirmar estorno?";btn.style.color="var(--c-red)";return;}
