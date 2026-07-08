@@ -1795,7 +1795,7 @@ button:focus-visible,.tab:focus-visible,.nav-item:focus-visible{outline:2px soli
   </table>
 </div>
 
-<div class="dt-section-head"><h3 class="dt-table-title">Evolução do estoque — últimos 6 meses</h3></div>
+<div class="dt-section-head"><h3 class="dt-table-title">Evolução do estoque</h3></div>
 <div class="stats-card" id="clg_chart_card" style="margin-bottom:18px;flex:none">
   <div class="flt-bar" style="margin-bottom:8px"><select id="clg_chart_meio"><option value="">Todos os meios</option></select></div>
   <div id="clg_chart"></div>
@@ -3035,6 +3035,9 @@ function svgLineChart(series,opts){
     var area=xy.length>1?('<path class="cl-area" d="'+path+' L'+xy[xy.length-1][0].toFixed(1)+','+baseY+' L'+xy[0][0].toFixed(1)+','+baseY+' Z" fill="url(#'+gradId+')" stroke="none"></path>'):"";
     var line=xy.length>1?('<path class="cl-line" d="'+path+'" fill="none" stroke="'+c+'" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round" style="stroke-dasharray:'+len.toFixed(1)+';stroke-dashoffset:'+len.toFixed(1)+'"></path>'):"";
     var dots=sp.map(function(p,i){
+      // markedDotsOnly: bolinha só nos pontos sinalizados (p.dot) — os demais viram só linha,
+      // mostrando a variação gradual entre um lançamento e outro.
+      if(opts.markedDotsOnly&&!p.dot)return"";
       var isLast=i===sp.length-1;
       return '<circle class="cl-dot'+(isLast?" cl-endpoint":"")+'" cx="'+X(p.t).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="'+(isLast?4.2:2.8)+'" fill="'+c+'" stroke="var(--surface)" stroke-width="1.2"><title>'+esc(s.name)+' — '+fmtX(p.t)+': '+esc(fmtY(p.v))+'</title></circle>';
     }).join("");
@@ -5974,13 +5977,23 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       sel.innerHTML='<option value="">Todos os meios</option>'+clgT1.map(function(r){return '<option value="'+r.id+'">'+esc(r.meio||"—")+'</option>';}).join("");
       sel.onchange=clgRenderChart;
     }
-    var cutoff=new Date();cutoff.setMonth(cutoff.getMonth()-6);cutoff.setHours(0,0,0,0);
+    var cutoff=new Date(new Date().getFullYear(),0,1); // ano corrente inteiro
+    // Bolinhas só nas datas de lançamento (consumo/abastecimento), extraídas da auditoria;
+    // os pontos intermediários (consumo diário distribuído, leituras automáticas) viram só linha.
+    var lancDates={};
+    auditLog.forEach(function(e){
+      var l=clgParseLanc(e);
+      if(!l||l.e.scope!=="clg_t1")return;
+      var t=new Date(l.data.split("/").reverse().join("-")+"T00:00:00").getTime();
+      (lancDates[l.e.rowId]||(lancDates[l.e.rowId]={}))[t]=true;
+    });
     var rows=sel.value?clgT1.filter(function(r){return r.id===sel.value;}):clgT1;
     var series=rows.map(function(r){
-      var pts=(clgHist[r.id]||[]).filter(function(p){return p.t>=cutoff.getTime();}).map(function(p){return{t:p.t,v:p.v};});
+      var marks=lancDates[r.id]||{};
+      var pts=(clgHist[r.id]||[]).filter(function(p){return p.t>=cutoff.getTime();}).map(function(p){return{t:p.t,v:p.v,dot:!!marks[p.t]};});
       return{name:r.meio||"—",points:pts};
     }).filter(function(x){return x.points.length;});
-    box.innerHTML=svgLineChart(series,{height:130,fmtY:function(v){return v.toLocaleString("pt-BR");}});
+    box.innerHTML=svgLineChart(series,{height:130,markedDotsOnly:true,fmtY:function(v){return v.toLocaleString("pt-BR");}});
   }
   /* ── Previsão de duração do estoque por meio, a partir do consumo médio diário registrado no histórico ── */
   function clgPrevisaoFor(r){
@@ -7679,11 +7692,13 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       sel.onchange=horasRenderChart;
     }
     var s=horasShips[sel.value]||horasShips[HORAS_SHIP_LIST[0].key];
+    var cutoff=new Date(new Date().getFullYear(),0,1).getTime(); // ano corrente inteiro
     var series=(s.rows||[]).map(function(r){
-      var pts=(horasHist[r.id]||[]).map(function(p){return{t:p.t,v:p.v};});
+      // Cada ponto do histórico de horas é um registro real de leitura → todos ganham bolinha.
+      var pts=(horasHist[r.id]||[]).filter(function(p){return p.t>=cutoff;}).map(function(p){return{t:p.t,v:p.v,dot:true};});
       return{name:(r.tipoMotor||"Motor")+(r.bordo?" "+r.bordo:""),points:pts};
     }).filter(function(x){return x.points.length;});
-    box.innerHTML=svgLineChart(series,{height:130,fmtY:function(v){return horasFmtNum(v)+"h";}});
+    box.innerHTML=svgLineChart(series,{height:130,markedDotsOnly:true,fmtY:function(v){return horasFmtNum(v)+"h";}});
   }
   function horasBindShip(key){
     var s=horasShips[key];
