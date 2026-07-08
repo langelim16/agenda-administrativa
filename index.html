@@ -1396,17 +1396,47 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
 .nv-ppss-badge{display:inline-block;font-size:9px;font-weight:700;color:var(--c-blue);background:var(--c-sky);border:1px solid rgba(65,97,140,.25);border-radius:99px;padding:1px 7px;margin-top:3px;cursor:pointer}
 .nv-table:not(.nv-editing) td.nv-restr-link{cursor:pointer}
 .nv-table:not(.nv-editing) td.nv-restr-link:hover{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
-.nv-tl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xs);padding:14px 16px;margin-bottom:14px}
-.nv-tl-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:var(--text2);margin-bottom:10px}
-.nv-tl-legend span{display:inline-flex;align-items:center;gap:5px}
-.nv-tl-dot{width:9px;height:9px;border-radius:3px;display:inline-block;flex:none}
-.nv-tl-months{display:flex;margin-left:150px;font-size:8.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
-.nv-tl-months span{flex:1;text-align:left;border-left:1px solid var(--border);padding-left:3px}
-.nv-tl-row{display:flex;align-items:center;margin-top:6px}
-.nv-tl-name{width:150px;flex:none;font-size:11px;font-weight:600;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px}
-.nv-tl-strip{flex:1;display:flex;height:16px;border-radius:4px;overflow:hidden;background:var(--c-100)}
-.nv-tl-seg{height:100%}
-@media(max-width:700px){.nv-tl-name{width:96px}.nv-tl-months{margin-left:96px}}
+.nv-tl-wrap{--tl-namew:158px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xs);padding:16px 18px 14px;position:relative}
+.nv-tl-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:10.5px;color:var(--text2);margin-bottom:12px}
+.nv-tl-legend span{display:inline-flex;align-items:center;gap:6px}
+.nv-tl-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+.nv-tl-months{display:flex;margin-left:var(--tl-namew);font-size:8.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;padding-bottom:7px;border-bottom:1px solid var(--border);margin-bottom:2px}
+.nv-tl-months span{flex:1;text-align:left;padding-left:4px}
+.nv-tl-body{position:relative}
+.nv-tl-today{position:absolute;top:28px;bottom:6px;width:2px;background:var(--c-red);border-radius:1px;opacity:.55;pointer-events:none;z-index:2}
+.nv-tl-today::after{content:"hoje";position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:8px;letter-spacing:.5px;text-transform:uppercase;color:var(--c-red);white-space:nowrap}
+.nv-tl-row{display:flex;align-items:center;margin-top:3px;padding:3px 0;border-radius:8px;transition:background .15s}
+.nv-tl-row:hover{background:color-mix(in srgb,var(--c-blue) 6%,transparent)}
+.nv-tl-name{width:var(--tl-namew);flex:none;font-size:11px;font-weight:600;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px}
+.nv-tl-strip{flex:1;display:flex;height:19px;border-radius:6px;overflow:hidden;background:repeating-linear-gradient(to right,var(--c-100) 0,var(--c-100) calc(100%/12 - 1px),var(--border) calc(100%/12 - 1px),var(--border) calc(100%/12));box-shadow:inset 0 0 0 1px var(--isl-border);position:relative}
+.nv-tl-seg{height:100%;position:relative;box-shadow:inset -1px 0 0 rgba(0,0,0,.12);transition:filter .15s,transform .15s;transform-origin:center}
+.nv-tl-seg:hover{filter:brightness(1.14);transform:scaleY(1.18);z-index:3;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5),0 2px 6px rgba(0,0,0,.18)}
+@media(max-width:700px){.nv-tl-wrap{--tl-namew:96px}}
+/* ── Gráficos de linha (CLG · Horas de Funcionamento) ── */
+.lchart-root{position:relative}
+.lchart-root svg{overflow:visible}
+.cl-series{transition:opacity .2s}
+.lchart-root:has(.cl-series:hover) .cl-series:not(:hover){opacity:.28}
+.cl-line{animation:lchartDraw 1.15s var(--ease-out) forwards}
+@keyframes lchartDraw{to{stroke-dashoffset:0}}
+.cl-area{opacity:0;animation:lchartFade .7s .35s ease forwards}
+@keyframes lchartFade{to{opacity:.9}}
+.cl-dot{transition:transform .15s var(--ease-out);transform-box:fill-box;transform-origin:center;cursor:pointer}
+.cl-dot:hover{transform:scale(1.8)}
+.cl-series:hover .cl-line{stroke-width:3.2}
+.cl-endpoint{animation:cl-pulse 1.8s ease-in-out infinite}
+@keyframes cl-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.35)}}
+.lchart-grid-line{stroke:var(--border);stroke-dasharray:2 4}
+.lchart-axis{fill:var(--text3);font-family:var(--mono,monospace)}
+.lchart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+.lchart-legend-item{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;color:var(--text2);padding:3px 9px 3px 6px;border-radius:99px;background:var(--c-100);transition:background .15s}
+.lchart-legend-item:hover{background:var(--isl-border)}
+.lchart-legend-swatch{width:9px;height:9px;border-radius:50%;flex:none}
+.lchart-single{display:flex;flex-direction:column;gap:8px;padding:6px 2px}
+.lchart-single-row{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2)}
+.lchart-single-dot{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:0 0 0 4px color-mix(in srgb,currentColor 14%,transparent)}
+.lchart-single-val{margin-left:auto;font-weight:700;color:var(--text1);font-family:var(--mono,monospace)}
+.lchart-single-note{font-size:10.5px;color:var(--text3);font-style:italic;margin-top:2px}
 tr.row-crit{background:rgba(233,150,53,.20)}
 .hr-sem{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle;flex:none}
 </style>
@@ -2915,38 +2945,75 @@ function svgDonutChart(pairs){
   var legend=pairs.map(function(p,i){return '<div style="display:flex;align-items:center;gap:6px;font-size:11px;margin-top:4px"><span style="width:9px;height:9px;border-radius:50%;background:'+CHART_PALETTE[i%CHART_PALETTE.length]+';flex:none"></span>'+esc(p.k)+' ('+p.v+')</div>';}).join("");
   return '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><svg viewBox="0 0 100 100" width="110" height="110">'+segs+'</svg><div>'+legend+'</div></div>';
 }
+/* Converte uma lista de pontos [x,y] numa curva suave (Catmull-Rom → Bézier cúbica). */
+function svgSmoothPath(p){
+  if(p.length<2)return"";
+  var d="M"+p[0][0].toFixed(1)+","+p[0][1].toFixed(1);
+  for(var i=0;i<p.length-1;i++){
+    var p0=p[i-1]||p[i],p1=p[i],p2=p[i+1],p3=p[i+2]||p2;
+    var c1x=p1[0]+(p2[0]-p0[0])/6,c1y=p1[1]+(p2[1]-p0[1])/6;
+    var c2x=p2[0]-(p3[0]-p1[0])/6,c2y=p2[1]-(p3[1]-p1[1])/6;
+    d+=" C"+c1x.toFixed(1)+","+c1y.toFixed(1)+" "+c2x.toFixed(1)+","+c2y.toFixed(1)+" "+p2[0].toFixed(1)+","+p2[1].toFixed(1);
+  }
+  return d;
+}
+var svgLineChartUID=0;
 /* Gráfico de linhas SVG genérico. series: [{name, points:[{t:msEpoch, v:número}]}]. opts.fmtY formata o eixo Y. */
 function svgLineChart(series,opts){
   opts=opts||{};
   var pts=[];series.forEach(function(s){(s.points||[]).forEach(function(p){pts.push(p);});});
   if(!pts.length)return '<div style="font-size:11px;color:var(--text3);font-style:italic;padding:8px 0">Sem dados suficientes ainda.</div>';
-  var minT=Math.min.apply(null,pts.map(function(p){return p.t;})),maxT=Math.max.apply(null,pts.map(function(p){return p.t;}));
-  var minV=Math.min.apply(null,pts.map(function(p){return p.v;})),maxV=Math.max.apply(null,pts.map(function(p){return p.v;}));
-  if(maxT===minT)maxT=minT+86400000;
-  if(maxV===minV)maxV=minV+1;
-  var W=600,H=opts.height||220,L=56,R=12,T=12,B=26;
-  function X(t){return L+(t-minT)/(maxT-minT)*(W-L-R);}
-  function Y(v){return T+(1-(v-minV)/(maxV-minV))*(H-T-B);}
+  var uid=++svgLineChartUID;
+  var rawMinT=Math.min.apply(null,pts.map(function(p){return p.t;})),rawMaxT=Math.max.apply(null,pts.map(function(p){return p.t;}));
   var fmtY=opts.fmtY||function(v){return String(Math.round(v));};
   function fmtX(t){var d=new Date(t);return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0");}
+  /* Só existe 1 timestamp registrado até agora: em vez de esticar um eixo falso, mostra as leituras atuais como cartão de status. */
+  if(rawMaxT===rawMinT){
+    var rows=series.map(function(s,si){
+      var c=CHART_PALETTE[si%CHART_PALETTE.length];
+      var v=(s.points||[])[0]?s.points[0].v:null;
+      return '<div class="lchart-single-row"><span class="lchart-single-dot" style="color:'+c+';background:'+c+'"></span>'+esc(s.name)+'<span class="lchart-single-val">'+(v===null?"—":esc(fmtY(v)))+'</span></div>';
+    }).join("");
+    return '<div class="lchart-single">'+rows+'</div><div class="lchart-single-note">Ainda há apenas uma leitura registrada — a tendência aparece aqui assim que houver leituras em datas diferentes.</div>';
+  }
+  var minT=rawMinT,maxT=rawMaxT;
+  var minV=Math.min.apply(null,pts.map(function(p){return p.v;})),maxV=Math.max.apply(null,pts.map(function(p){return p.v;}));
+  if(maxV===minV){minV-=1;maxV+=1;}
+  var vPad=(maxV-minV)*0.08;minV-=vPad;maxV+=vPad;
+  var W=600,H=opts.height||220,L=56,R=14,T=14,B=26;
+  function X(t){return L+(t-minT)/(maxT-minT)*(W-L-R);}
+  function Y(v){return T+(1-(v-minV)/(maxV-minV))*(H-T-B);}
   var grid="",gi;
   for(gi=0;gi<3;gi++){
     var gv=minV+(maxV-minV)*gi/2,gy=Y(gv);
-    grid+='<line x1="'+L+'" y1="'+gy+'" x2="'+(W-R)+'" y2="'+gy+'" stroke="var(--border)" stroke-width="1"></line>'+
-      '<text x="'+(L-6)+'" y="'+(gy+3)+'" text-anchor="end" font-size="9" fill="var(--text3)">'+esc(fmtY(gv))+'</text>';
+    grid+='<line class="lchart-grid-line" x1="'+L+'" y1="'+gy.toFixed(1)+'" x2="'+(W-R)+'" y2="'+gy.toFixed(1)+'"></line>'+
+      '<text class="lchart-axis" x="'+(L-8)+'" y="'+(gy+3).toFixed(1)+'" text-anchor="end" font-size="9.5">'+esc(fmtY(Math.round(gv)))+'</text>';
   }
-  grid+='<text x="'+L+'" y="'+(H-8)+'" font-size="9" fill="var(--text3)">'+fmtX(minT)+'</text>'+
-        '<text x="'+(W-R)+'" y="'+(H-8)+'" text-anchor="end" font-size="9" fill="var(--text3)">'+fmtX(maxT)+'</text>';
+  var midT=minT+(maxT-minT)/2;
+  grid+='<text class="lchart-axis" x="'+L+'" y="'+(H-8)+'" font-size="9.5">'+fmtX(minT)+'</text>'+
+        '<text class="lchart-axis" x="'+((L+W-R)/2).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle" font-size="9.5">'+fmtX(midT)+'</text>'+
+        '<text class="lchart-axis" x="'+(W-R)+'" y="'+(H-8)+'" text-anchor="end" font-size="9.5">'+fmtX(maxT)+'</text>';
+  var baseY=H-B;
   var lines=series.map(function(s,si){
     var c=CHART_PALETTE[si%CHART_PALETTE.length];
     var sp=(s.points||[]).slice().sort(function(a,b){return a.t-b.t;});
     if(!sp.length)return"";
-    var d=sp.map(function(p){return X(p.t).toFixed(1)+","+Y(p.v).toFixed(1);}).join(" ");
-    var dots=sp.map(function(p){return '<circle cx="'+X(p.t).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="2.6" fill="'+c+'"><title>'+esc(s.name)+' — '+fmtX(p.t)+': '+esc(fmtY(p.v))+'</title></circle>';}).join("");
-    return '<polyline points="'+d+'" fill="none" stroke="'+c+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline>'+dots;
+    var xy=sp.map(function(p){return[X(p.t),Y(p.v)];});
+    var len=0;for(var i=1;i<xy.length;i++){var dx=xy[i][0]-xy[i-1][0],dy=xy[i][1]-xy[i-1][1];len+=Math.sqrt(dx*dx+dy*dy);}
+    len=Math.max(len*1.15,40);
+    var path=svgSmoothPath(xy);
+    var gradId="lg"+uid+"_"+si;
+    var area=xy.length>1?('<path class="cl-area" d="'+path+' L'+xy[xy.length-1][0].toFixed(1)+','+baseY+' L'+xy[0][0].toFixed(1)+','+baseY+' Z" fill="url(#'+gradId+')" stroke="none"></path>'):"";
+    var line=xy.length>1?('<path class="cl-line" d="'+path+'" fill="none" stroke="'+c+'" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round" style="stroke-dasharray:'+len.toFixed(1)+';stroke-dashoffset:'+len.toFixed(1)+'"></path>'):"";
+    var dots=sp.map(function(p,i){
+      var isLast=i===sp.length-1;
+      return '<circle class="cl-dot'+(isLast?" cl-endpoint":"")+'" cx="'+X(p.t).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="'+(isLast?4.2:2.8)+'" fill="'+c+'" stroke="var(--surface)" stroke-width="1.2"><title>'+esc(s.name)+' — '+fmtX(p.t)+': '+esc(fmtY(p.v))+'</title></circle>';
+    }).join("");
+    return '<defs><linearGradient id="'+gradId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+c+'" stop-opacity=".32"></stop><stop offset="100%" stop-color="'+c+'" stop-opacity="0"></stop></linearGradient></defs>'+
+      '<g class="cl-series">'+area+line+dots+'</g>';
   }).join("");
-  var legend2='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px">'+series.map(function(s,si){return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:var(--text2)"><span style="width:10px;height:3px;border-radius:2px;background:'+CHART_PALETTE[si%CHART_PALETTE.length]+'"></span>'+esc(s.name)+'</span>';}).join("")+'</div>';
-  return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">'+grid+lines+'</svg>'+legend2;
+  var legend2='<div class="lchart-legend">'+series.map(function(s,si){return '<span class="lchart-legend-item"><span class="lchart-legend-swatch" style="background:'+CHART_PALETTE[si%CHART_PALETTE.length]+'"></span>'+esc(s.name)+'</span>';}).join("")+'</div>';
+  return '<div class="lchart-root"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">'+grid+lines+'</svg></div>'+legend2;
 }
 
 /* ── Importador de planilha (CSV) com confirmação — genérico.
@@ -5502,7 +5569,12 @@ setTimeout(hideSplash,12000);
       }).join("");
       return '<div class="nv-tl-row"><div class="nv-tl-name" title="'+esc(s.nome||"")+'">'+esc(s.nome||"—")+'</div><div class="nv-tl-strip">'+strip+'</div></div>';
     }).join("");
-    el.innerHTML='<div class="nv-tl-wrap"><h3 class="dt-table-title">Timeline de CONDEF dos Meios</h3>'+navYearControls("nvtl")+legend+months+rows+
+    var todayMarker="";
+    if(y===CUR_YEAR){
+      var pct=((Date.now()-new Date(y,0,1).getTime())/totalMs*100).toFixed(2);
+      todayMarker='<div class="nv-tl-today" style="left:calc(var(--tl-namew) + (100% - var(--tl-namew)) * '+(pct/100)+')"></div>';
+    }
+    el.innerHTML='<div class="nv-tl-wrap"><h3 class="dt-table-title">Timeline de CONDEF dos Meios</h3>'+navYearControls("nvtl")+legend+'<div class="nv-tl-body">'+months+rows+todayMarker+'</div>'+
       '<div style="font-size:10px;color:var(--text3);margin-top:10px;font-style:italic">O histórico é registrado automaticamente a cada mudança de CONDEF salva na tabela. Períodos anteriores ao início do registro aparecem como “Sem registro”.</div></div>';
     navBindYearControls("nvtl");
   }
