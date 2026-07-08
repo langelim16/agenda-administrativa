@@ -5986,17 +5986,23 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     box.innerHTML=svgLineChart(series,{height:130,markedDotsOnly:true,fmtY:function(v){return v.toLocaleString("pt-BR");}});
   }
   /* ── Previsão de duração do estoque por meio, a partir do consumo médio diário registrado no histórico ── */
+  // Autonomia operativa: média de consumo diário EM COMISSÃO = soma dos consumos OPERATIVOS
+  // lançados ÷ soma dos dias de comissão desses lançamentos. Consumo administrativo fica de fora
+  // (a previsão é de dias de comissão) e abastecimento não entra na média — ele só aumenta o
+  // estoque atual, que é o numerador da projeção (mais combustível = mais dias navegando).
   function clgPrevisaoFor(r){
-    var arr=(clgHist[r.id]||[]).slice().sort(function(a,b){return a.t-b.t;});
-    if(arr.length<2)return null;
-    var first=arr[0],last=arr[arr.length-1];
-    var days=(last.t-first.t)/86400000;
-    if(days<=0)return null;
-    var consumoDiario=(first.v-last.v)/days;
-    if(consumoDiario<=0)return null;
+    var totalQtd=0,totalDias=0;
+    auditLog.forEach(function(e){
+      var l=clgParseLanc(e);
+      if(!l||l.e.scope!=="clg_t1"||l.e.rowId!==r.id)return;
+      if(l.kind!=="consumo"||String(l.tipoConsumo).toLowerCase()!=="operativo")return;
+      totalQtd+=l.qtd;totalDias+=l.dias;
+    });
+    if(totalDias<=0||totalQtd<=0)return null;
+    var consumoDiario=totalQtd/totalDias;
     var estAtual=clgNum(r.estoque);
     if(isNaN(estAtual))return null;
-    return Math.max(0,Math.round(estAtual/consumoDiario));
+    return{dias:Math.max(0,Math.round(estAtual/consumoDiario)),media:consumoDiario};
   }
   function clgRenderPrevisao(){
     var el=document.getElementById("clg_previsao");
@@ -6009,8 +6015,9 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       return aAvb-bAvb;
     });
     el.innerHTML=ordenado.map(function(r){
-      var dias=clgPrevisaoFor(r);
-      var txt=dias===null?"Dados insuficientes (é preciso registrar ao menos 2 leituras de estoque em datas diferentes)":("dura aproximadamente <b>"+dias+" dias</b> de comissão, no ritmo de consumo atual");
+      var p=clgPrevisaoFor(r);
+      var dias=p?p.dias:null;
+      var txt=p===null?"Dados insuficientes (é preciso registrar ao menos 1 consumo operativo com os dias de comissão)":("autonomia de <b>"+dias+" dias</b> de comissão — média de "+Math.round(p.media).toLocaleString("pt-BR")+"/dia em comissão");
       var cls=dias!==null&&dias<=15?"var(--c-red)":(dias!==null&&dias<=30?"#b96a10":"var(--text2)");
       return '<div class="stats-card"><h4>'+esc(r.meio||"—")+'</h4><div style="font-size:12.5px;color:'+cls+'">'+txt+'</div></div>';
     }).join("");
