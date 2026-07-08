@@ -6068,14 +6068,36 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       '<button type="button" class="ferias-cat-pick" data-m="abast"><span class="ferias-cat-dot" style="background:var(--c-teal)"></span>Abastecimento (soma ao estoque)</button>'+
     '</div>';
     body.querySelectorAll("button").forEach(function(b){
-      b.onclick=function(){bg.classList.remove("open");if(b.dataset.m==="consumo")clgOpenConsumoForm(nome,tipo);else clgOpenAbastecimentoForm(nome,tipo);};
+      b.onclick=function(){bg.classList.remove("open");clgOpenQuandoStep(nome,tipo,b.dataset.m);};
     });
     bg.classList.add("open");
   }
+  // Mesmo padrão do CONDEF (Nova alteração × Alteração retroativa): o lançamento do dia atualiza
+  // o estoque da tabela; o retroativo serve pra reconstruir o histórico passado de CLG — só gera
+  // os pontos do gráfico de evolução/previsão, sem alterar o estoque presente.
+  function clgOpenQuandoStep(nome,tipo,modo){
+    var lbl=modo==="consumo"?"consumo":"abastecimento";
+    var bg=ensureModal("clgQuandoBg","Inserir "+lbl+" — "+nome);
+    var body=bg.querySelector(".mbody");
+    body.innerHTML=
+      '<div style="display:flex;flex-direction:column;gap:10px">'+
+        '<button type="button" class="ps-item" id="clgq_dia" style="text-align:left;cursor:pointer">'+
+          '<div class="ps-main"><div class="ps-num">Lançamento do dia</div>'+
+          '<div class="ps-meta">O '+lbl+' acabou de ocorrer — atualiza o estoque da tabela e o gráfico.</div></div>'+
+        '</button>'+
+        '<button type="button" class="ps-item" id="clgq_retro" style="text-align:left;cursor:pointer">'+
+          '<div class="ps-main"><div class="ps-num">Lançamento retroativo</div>'+
+          '<div class="ps-meta">Um período já ocorrido — só alimenta o histórico do gráfico, sem alterar o estoque atual.</div></div>'+
+        '</button>'+
+      '</div>';
+    document.getElementById("clgq_dia").onclick=function(){bg.classList.remove("open");if(modo==="consumo")clgOpenConsumoForm(nome,tipo,false);else clgOpenAbastecimentoForm(nome,tipo,false);};
+    document.getElementById("clgq_retro").onclick=function(){bg.classList.remove("open");if(modo==="consumo")clgOpenConsumoForm(nome,tipo,true);else clgOpenAbastecimentoForm(nome,tipo,true);};
+    bg.classList.add("open");
+  }
   function clgConsumoDstr(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
-  function clgOpenConsumoForm(nome,tipo){
+  function clgOpenConsumoForm(nome,tipo,retro){
     var titleMap={odm:"Estoque de ODM",gasolina:"Gasolina",lubrificantes:"Lubrificantes",graxas:"Graxas"};
-    var bg=ensureModal("clgConsumoFormBg","Inserir consumo — "+nome+" · "+titleMap[tipo]);
+    var bg=ensureModal("clgConsumoFormBg","Inserir consumo"+(retro?" retroativo":"")+" — "+nome+" · "+titleMap[tipo]);
     var body=bg.querySelector(".mbody");
     var todayStr=clgConsumoDstr(new Date());
     body.innerHTML=
@@ -6084,7 +6106,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         '<div class="fld"><label>Data (fim do período)</label><input type="date" id="clgc_data" value="'+todayStr+'"></div>'+
         '<div class="fld"><label>Quantidade consumida (total)</label><input id="clgc_qtd" placeholder="Ex.: 150" inputmode="decimal"></div>'+
         '<div class="fld"><label>Dias de comissão</label><input id="clgc_dias" placeholder="Ex.: 5" inputmode="numeric" value="1"></div>'+
-        '<div class="fld full" style="font-size:10.5px;color:var(--text3)">A quantidade total é dividida pela média diária ao longo dos dias de comissão informados, gerando um histórico de consumo dia a dia (usado no gráfico de evolução e na previsão de duração do estoque).</div>'+
+        '<div class="fld full" style="font-size:10.5px;color:var(--text3)">'+(retro?"Lançamento retroativo: gera o histórico de consumo dia a dia no gráfico de evolução, <b>sem alterar o estoque atual</b> da tabela.":"A quantidade total é dividida pela média diária ao longo dos dias de comissão informados, gerando um histórico de consumo dia a dia (usado no gráfico de evolução e na previsão de duração do estoque).")+'</div>'+
       '</div>'+
       '<div id="clgc_err" class="ferias-msg warn" style="display:none;margin-top:10px"></div>'+
       '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">'+
@@ -6092,7 +6114,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         '<button class="bsave" id="clgc_save">Salvar</button>'+
       '</div>';
     document.getElementById("clgc_cancel").onclick=function(){bg.classList.remove("open");};
-    document.getElementById("clgc_save").onclick=function(){clgSaveConsumo(nome,tipo,bg);};
+    document.getElementById("clgc_save").onclick=function(){clgSaveConsumo(nome,tipo,bg,retro);};
     bg.classList.add("open");
   }
   // Gera "dias" pontos diários no histórico (clgHist[histKey]), do estoque anterior até o estoque
@@ -6114,7 +6136,20 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(arr.length>200)arr.splice(0,arr.length-200);
     clgSaveHist();
   }
-  async function clgSaveConsumo(nome,tipo,bg){
+  // Baseline do lançamento retroativo: valor do último ponto do histórico anterior ao início do
+  // período; se não houver, primeiro ponto posterior + qtd (pra curva "encaixar"); senão, o
+  // estoque atual + qtd — assim o gráfico desce até um valor coerente sem mexer no estoque.
+  function clgRetroBaseline(histKey,dataStr,dias,qtd,estoqueAtual){
+    var pts=(clgHist[histKey]||[]).slice().sort(function(a,b){return a.t-b.t;});
+    var endT=new Date(dataStr+"T00:00:00").getTime();
+    var startT=endT-(dias-1)*86400000;
+    var before=null,after=null;
+    pts.forEach(function(p){if(p.t<startT)before=p;else if(p.t>endT&&!after)after=p;});
+    if(before)return before.v;
+    if(after)return after.v+qtd;
+    return(isNaN(estoqueAtual)?0:estoqueAtual)+qtd;
+  }
+  async function clgSaveConsumo(nome,tipo,bg,retro){
     var qtd=clgNum(document.getElementById("clgc_qtd").value);
     var errEl=document.getElementById("clgc_err");
     if(isNaN(qtd)||qtd<=0){errEl.textContent="Informe uma quantidade válida (maior que zero).";errEl.style.display="block";return;}
@@ -6124,15 +6159,20 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var tipoConsumo=document.getElementById("clgc_tipo").value;
     var dataStr=document.getElementById("clgc_data").value||clgConsumoDstr(new Date());
     var dataFmt=dataStr.split("-").reverse().join("/");
+    var lbl=retro?"Consumo retroativo ("+tipoConsumo.toLowerCase()+")":"Consumo "+tipoConsumo.toLowerCase();
     if(tipo==="odm"){
       var row=clgFindByNome(clgT1,nome);
       if(!row)return;
       var atual=clgNum(row.estoque);atual=isNaN(atual)?0:atual;
-      row.estoque=String(Math.max(0,atual-qtd));
-      clgSaveT1();
-      await pushKV("clgPush",CLG_T1_KEY,clgT1);
-      clgAppendHistDaily(row.id,dataStr,qtd,dias,atual);
-      auditPushOne("clg_t1",row.id,"Consumo "+tipoConsumo.toLowerCase()+": -"+qtd+" em "+dias+" dia(s) ("+dataFmt+")");
+      if(retro){
+        clgAppendHistDaily(row.id,dataStr,qtd,dias,clgRetroBaseline(row.id,dataStr,dias,qtd,atual));
+      }else{
+        row.estoque=String(Math.max(0,atual-qtd));
+        clgSaveT1();
+        await pushKV("clgPush",CLG_T1_KEY,clgT1);
+        clgAppendHistDaily(row.id,dataStr,qtd,dias,atual);
+      }
+      auditPushOne("clg_t1",row.id,lbl+": -"+qtd+" em "+dias+" dia(s) ("+dataFmt+")");
       touchLastEdit("clg_t1");paintLastEdit("clg_t1_lastedit","clg_t1");
     }else{
       var isNav=!!clgFindByNome(clgT3Nav,nome);
@@ -6140,29 +6180,35 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       var row2=clgFindByNome(arr,nome);
       if(!row2)return;
       var atual2=clgNum(row2[tipo]);atual2=isNaN(atual2)?0:atual2;
-      row2[tipo]=String(Math.max(0,atual2-qtd));
-      if(isNav){clgSaveT3Nav();await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);}
-      else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
-      clgAppendHistDaily(row2.id+"_"+tipo,dataStr,qtd,dias,atual2);
-      auditPushOne(isNav?"clg_t3nav":"clg_t3emb",row2.id,"Consumo "+tipoConsumo.toLowerCase()+" de "+tipo+": -"+qtd+" em "+dias+" dia(s) ("+dataFmt+")");
+      var histKey=row2.id+"_"+tipo;
+      if(retro){
+        clgAppendHistDaily(histKey,dataStr,qtd,dias,clgRetroBaseline(histKey,dataStr,dias,qtd,atual2));
+      }else{
+        row2[tipo]=String(Math.max(0,atual2-qtd));
+        if(isNav){clgSaveT3Nav();await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);}
+        else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
+        clgAppendHistDaily(histKey,dataStr,qtd,dias,atual2);
+      }
+      auditPushOne(isNav?"clg_t3nav":"clg_t3emb",row2.id,lbl+" de "+tipo+": -"+qtd+" em "+dias+" dia(s) ("+dataFmt+")");
       touchLastEdit(isNav?"clg_t3nav":"clg_t3emb");paintLastEdit(isNav?"clg_t3nav_lastedit":"clg_t3emb_lastedit",isNav?"clg_t3nav":"clg_t3emb");
     }
     bg.classList.remove("open");
-    toast("✓ Consumo registrado","ok");
+    toast(retro?"📜 Consumo retroativo registrado no histórico do gráfico":"✓ Consumo registrado","ok");
     renderClgTables();
   }
   /* ── Abastecimento: função inversa do consumo — soma ao estoque em vez de abater. O tipo
      (ODM/Gasolina/Lubrificante/Graxa) já foi escolhido na etapa anterior (clgOpenTypeStep/
      clgOpenItemStep), então aqui só falta Data e Quantidade. ── */
-  function clgOpenAbastecimentoForm(nome,tipo){
+  function clgOpenAbastecimentoForm(nome,tipo,retro){
     var titleMap={odm:"Estoque de ODM",gasolina:"Gasolina",lubrificantes:"Lubrificantes",graxas:"Graxas"};
-    var bg=ensureModal("clgAbastFormBg","Inserir abastecimento — "+nome+" · "+titleMap[tipo]);
+    var bg=ensureModal("clgAbastFormBg","Inserir abastecimento"+(retro?" retroativo":"")+" — "+nome+" · "+titleMap[tipo]);
     var body=bg.querySelector(".mbody");
     var todayStr=clgConsumoDstr(new Date());
     body.innerHTML=
       '<div class="mgrid">'+
         '<div class="fld"><label>Data</label><input type="date" id="clga_data" value="'+todayStr+'"></div>'+
         '<div class="fld full"><label>Quantidade abastecida</label><input id="clga_qtd" placeholder="Ex.: 150" inputmode="decimal"></div>'+
+        (retro?'<div class="fld full" style="font-size:10.5px;color:var(--text3)">Lançamento retroativo: registra o abastecimento no histórico do gráfico de evolução, <b>sem alterar o estoque atual</b> da tabela.</div>':'')+
       '</div>'+
       '<div id="clga_err" class="ferias-msg warn" style="display:none;margin-top:10px"></div>'+
       '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">'+
@@ -6170,29 +6216,42 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         '<button class="bsave" id="clga_save">Salvar</button>'+
       '</div>';
     document.getElementById("clga_cancel").onclick=function(){bg.classList.remove("open");};
-    document.getElementById("clga_save").onclick=function(){clgSaveAbastecimento(nome,tipo,bg);};
+    document.getElementById("clga_save").onclick=function(){clgSaveAbastecimento(nome,tipo,bg,retro);};
     bg.classList.add("open");
   }
-  async function clgSaveAbastecimento(nome,tipo,bg){
+  // Anota um ponto de abastecimento no histórico do gráfico. No retroativo o valor parte do
+  // último ponto anterior à data (ou do estoque atual, se não houver histórico), sem tocar na tabela.
+  function clgHistPushPoint(histKey,dataStr,v){
+    var arr=clgHist[histKey]||(clgHist[histKey]=[]);
+    var t=new Date(dataStr+"T00:00:00").getTime();
+    var existing=arr.find(function(p){return p.t===t;});
+    if(existing)existing.v=v;else arr.push({t:t,v:v});
+    arr.sort(function(a,b){return a.t-b.t;});
+    if(arr.length>200)arr.splice(0,arr.length-200);
+    clgSaveHist();
+  }
+  async function clgSaveAbastecimento(nome,tipo,bg,retro){
     var qtd=clgNum(document.getElementById("clga_qtd").value);
     var errEl=document.getElementById("clga_err");
     if(isNaN(qtd)||qtd<=0){errEl.textContent="Informe uma quantidade válida (maior que zero).";errEl.style.display="block";return;}
     errEl.style.display="none";
     var dataStr=document.getElementById("clga_data").value||clgConsumoDstr(new Date());
     var dataFmt=dataStr.split("-").reverse().join("/");
+    var lbl=retro?"Abastecimento retroativo":"Abastecimento";
     if(tipo==="odm"){
       var row=clgFindByNome(clgT1,nome);
       if(!row)return;
       var atual=clgNum(row.estoque);atual=isNaN(atual)?0:atual;
-      row.estoque=String(atual+qtd);
-      clgSaveT1();
-      await pushKV("clgPush",CLG_T1_KEY,clgT1);
-      var arr=clgHist[row.id]||(clgHist[row.id]=[]);
-      arr.push({t:new Date(dataStr+"T00:00:00").getTime(),v:atual+qtd});
-      arr.sort(function(a,b){return a.t-b.t;});
-      if(arr.length>200)arr.splice(0,arr.length-200);
-      clgSaveHist();
-      auditPushOne("clg_t1",row.id,"Abastecimento: +"+qtd+" ("+dataFmt+")");
+      if(retro){
+        var base=clgRetroBaseline(row.id,dataStr,1,0,atual);
+        clgHistPushPoint(row.id,dataStr,base+qtd);
+      }else{
+        row.estoque=String(atual+qtd);
+        clgSaveT1();
+        await pushKV("clgPush",CLG_T1_KEY,clgT1);
+        clgHistPushPoint(row.id,dataStr,atual+qtd);
+      }
+      auditPushOne("clg_t1",row.id,lbl+": +"+qtd+" ("+dataFmt+")");
       touchLastEdit("clg_t1");paintLastEdit("clg_t1_lastedit","clg_t1");
     }else{
       var isNav=!!clgFindByNome(clgT3Nav,nome);
@@ -6200,14 +6259,21 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       var row2=clgFindByNome(arr2,nome);
       if(!row2)return;
       var atual2=clgNum(row2[tipo]);atual2=isNaN(atual2)?0:atual2;
-      row2[tipo]=String(atual2+qtd);
-      if(isNav){clgSaveT3Nav();await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);}
-      else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
-      auditPushOne(isNav?"clg_t3nav":"clg_t3emb",row2.id,"Abastecimento de "+tipo+": +"+qtd+" ("+dataFmt+")");
+      var histKey=row2.id+"_"+tipo;
+      if(retro){
+        var base2=clgRetroBaseline(histKey,dataStr,1,0,atual2);
+        clgHistPushPoint(histKey,dataStr,base2+qtd);
+      }else{
+        row2[tipo]=String(atual2+qtd);
+        if(isNav){clgSaveT3Nav();await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);}
+        else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
+        clgHistPushPoint(histKey,dataStr,atual2+qtd);
+      }
+      auditPushOne(isNav?"clg_t3nav":"clg_t3emb",row2.id,lbl+" de "+tipo+": +"+qtd+" ("+dataFmt+")");
       touchLastEdit(isNav?"clg_t3nav":"clg_t3emb");paintLastEdit(isNav?"clg_t3nav_lastedit":"clg_t3emb_lastedit",isNav?"clg_t3nav":"clg_t3emb");
     }
     bg.classList.remove("open");
-    toast("✓ Abastecimento registrado","ok");
+    toast(retro?"📜 Abastecimento retroativo registrado no histórico do gráfico":"✓ Abastecimento registrado","ok");
     renderClgTables();
   }
   /* ── Editar lançamentos: lista os consumos/abastecimentos já inseridos — reconstruídos a partir
@@ -6218,38 +6284,46 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
   var CLG_LANC_ARRMAP=function(){return{clg_t1:clgT1,clg_t3nav:clgT3Nav,clg_t3emb:clgT3Emb};};
   function clgParseLanc(e){
     if(["clg_t1","clg_t3nav","clg_t3emb"].indexOf(e.scope)<0||e.estornado)return null;
-    var m=/^Consumo (\S+)(?: de (\w+))?: -([\d.,]+) em (\d+) dia\(s\) \((\d{2}\/\d{2}\/\d{4})\)$/.exec(e.action||"");
-    if(m)return{kind:"consumo",tipoConsumo:m[1],produto:m[2]||"odm",qtd:clgNum(m[3]),dias:+m[4],data:m[5],e:e};
-    m=/^Abastecimento(?: de (\w+))?: \+([\d.,]+) \((\d{2}\/\d{2}\/\d{4})\)$/.exec(e.action||"");
-    if(m)return{kind:"abastecimento",produto:m[1]||"odm",qtd:clgNum(m[2]),dias:1,data:m[3],e:e};
+    var m=/^Consumo retroativo \((\S+)\)(?: de (\w+))?: -([\d.,]+) em (\d+) dia\(s\) \((\d{2}\/\d{2}\/\d{4})\)$/.exec(e.action||"");
+    if(m)return{kind:"consumo",retro:true,tipoConsumo:m[1],produto:m[2]||"odm",qtd:clgNum(m[3]),dias:+m[4],data:m[5],e:e};
+    m=/^Consumo (\S+)(?: de (\w+))?: -([\d.,]+) em (\d+) dia\(s\) \((\d{2}\/\d{2}\/\d{4})\)$/.exec(e.action||"");
+    if(m)return{kind:"consumo",retro:false,tipoConsumo:m[1],produto:m[2]||"odm",qtd:clgNum(m[3]),dias:+m[4],data:m[5],e:e};
+    m=/^Abastecimento( retroativo)?(?: de (\w+))?: \+([\d.,]+) \((\d{2}\/\d{2}\/\d{4})\)$/.exec(e.action||"");
+    if(m)return{kind:"abastecimento",retro:!!m[1],produto:m[2]||"odm",qtd:clgNum(m[3]),dias:1,data:m[4],e:e};
     return null;
   }
   async function clgEstornarLanc(l){
     var arr=CLG_LANC_ARRMAP()[l.e.scope];
     var row=arr.find(function(r){return r.id===l.e.rowId;});
     if(!row){toast("Meio não encontrado — não é possível estornar.","info");return;}
-    var field=l.e.scope==="clg_t1"?"estoque":l.produto;
-    var atual=clgNum(row[field]);atual=isNaN(atual)?0:atual;
-    row[field]=String(Math.max(0,l.kind==="consumo"?atual+l.qtd:atual-l.qtd));
-    if(l.e.scope==="clg_t1"){clgSaveT1();await pushKV("clgPush",CLG_T1_KEY,clgT1);}
-    else if(l.e.scope==="clg_t3nav"){clgSaveT3Nav();await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);}
-    else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
+    if(!l.retro){
+      var field=l.e.scope==="clg_t1"?"estoque":l.produto;
+      var atual=clgNum(row[field]);atual=isNaN(atual)?0:atual;
+      row[field]=String(Math.max(0,l.kind==="consumo"?atual+l.qtd:atual-l.qtd));
+      if(l.e.scope==="clg_t1"){clgSaveT1();await pushKV("clgPush",CLG_T1_KEY,clgT1);}
+      else if(l.e.scope==="clg_t3nav"){clgSaveT3Nav();await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);}
+      else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
+    }
     var histKey=l.e.scope==="clg_t1"?row.id:row.id+"_"+l.produto;
     var pts=clgHist[histKey]||[];
     var endT=new Date(l.data.split("/").reverse().join("-")+"T00:00:00").getTime();
     if(l.kind==="consumo"){
       var avg=l.qtd/l.dias;
       pts.forEach(function(p){
-        if(p.t>endT){p.v+=l.qtd;return;}
+        // Lançamento retroativo não deslocou os pontos posteriores ao período — só reverte os do próprio período.
+        if(p.t>endT){if(!l.retro)p.v+=l.qtd;return;}
         var i=l.dias-1-Math.round((endT-p.t)/86400000);
         if(i>=0&&i<l.dias)p.v+=(i===l.dias-1)?l.qtd:avg*(i+1);
       });
     }else{
-      pts.forEach(function(p){if(p.t>=endT)p.v=Math.max(0,p.v-l.qtd);});
+      pts.forEach(function(p){
+        if(l.retro){if(p.t===endT)p.v=Math.max(0,p.v-l.qtd);}
+        else if(p.t>=endT)p.v=Math.max(0,p.v-l.qtd);
+      });
     }
     clgSaveHist();
     l.e.estornado=true;
-    auditPushOne(l.e.scope,l.e.rowId,"Estorno de "+l.kind+(l.produto!=="odm"?" de "+l.produto:"")+": "+(l.kind==="consumo"?"+":"-")+l.qtd+" ("+l.data+")");
+    auditPushOne(l.e.scope,l.e.rowId,"Estorno de "+l.kind+(l.retro?" retroativo":"")+(l.produto!=="odm"?" de "+l.produto:"")+": "+(l.kind==="consumo"?"+":"-")+l.qtd+" ("+l.data+")");
     touchLastEdit(l.e.scope);paintLastEdit(l.e.scope+"_lastedit",l.e.scope);
     toast("✓ Lançamento estornado","ok");
     renderClgTables();
@@ -6267,7 +6341,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       lancs.map(function(l,i){
         var row=(CLG_LANC_ARRMAP()[l.e.scope]||[]).find(function(r){return r.id===l.e.rowId;});
         var meio=row?(row.meio||"—"):"(meio excluído)";
-        var desc=(l.kind==="consumo"?("Consumo "+l.tipoConsumo+" · −"+l.qtd+(l.dias>1?" em "+l.dias+" dias":"")):("Abastecimento · +"+l.qtd))+" · "+(prodLbl[l.produto]||l.produto);
+        var desc=(l.kind==="consumo"?("Consumo "+l.tipoConsumo+" · −"+l.qtd+(l.dias>1?" em "+l.dias+" dias":"")):("Abastecimento · +"+l.qtd))+" · "+(prodLbl[l.produto]||l.produto)+(l.retro?" · 📜 retroativo (só gráfico)":"");
         return '<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border)">'+
           '<div style="flex:1;min-width:0"><b style="font-size:12.5px">'+esc(meio)+'</b><div style="font-size:11.5px;color:var(--text2)">'+esc(desc)+' · '+esc(l.data)+' · lançado em '+fmtAuditTs(l.e.ts)+'</div></div>'+
           '<button class="bcancel clg-lanc-del" data-i="'+i+'">🗑 Estornar</button></div>';
