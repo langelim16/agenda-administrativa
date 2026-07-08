@@ -6420,8 +6420,10 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         var row=(CLG_LANC_ARRMAP()[l.e.scope]||[]).find(function(r){return r.id===l.e.rowId;});
         var meio=row?(row.meio||"—"):"(meio excluído)";
         var desc=(l.kind==="consumo"?("Consumo "+l.tipoConsumo+" · −"+l.qtd+(l.dias>1?" em "+l.dias+" dias":"")):("Abastecimento · +"+l.qtd))+" · "+(prodLbl[l.produto]||l.produto)+(l.retro?" · 📜 retroativo":"")+(l.extra?" · "+l.extra:"");
+        // Nome do meio colorido pelo tipo: consumo em vermelho (débito), abastecimento em verde (crédito).
+        var corMeio=l.kind==="consumo"?"var(--c-red)":"var(--c-teal)";
         html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">'+
-          '<div style="flex:1;min-width:0"><b style="font-size:12.5px">'+esc(meio)+' · '+esc(l.data)+'</b><div style="font-size:11.5px;color:var(--text2)">'+esc(desc)+' · lançado em '+fmtAuditTs(l.e.ts)+'</div></div>'+
+          '<div style="flex:1;min-width:0"><b style="font-size:12.5px;color:'+corMeio+'">'+esc(meio)+'</b><b style="font-size:12.5px"> · '+esc(l.data)+'</b><div style="font-size:11.5px;color:var(--text2)">'+esc(desc)+' · lançado em '+fmtAuditTs(l.e.ts)+'</div></div>'+
           '<button class="bsave clg-lanc-edit" data-i="'+i+'" style="padding:4px 10px;font-size:11.5px">✎ Editar</button>'+
           '<button class="bcancel clg-lanc-del" data-i="'+i+'" style="padding:4px 10px;font-size:11.5px">🗑 Estornar</button></div>';
       });
