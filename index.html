@@ -429,6 +429,10 @@ tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .dt-table tbody tr.clickable-row{cursor:pointer}
 .dt-table tbody tr.clickable-row:hover{background:color-mix(in srgb,var(--c-blue) 6%,transparent)}
 .stats-grid{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+#clg_previsao{display:grid;grid-template-columns:repeat(4,1fr)}
+#clg_previsao .stats-card{min-width:0}
+@media (max-width:900px){#clg_previsao{grid-template-columns:1fr 1fr}}
+@media (max-width:560px){#clg_previsao{grid-template-columns:1fr}}
 .stats-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px;flex:1;min-width:240px}
 .stats-card h4{margin:0 0 8px;font-size:12px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
 .imp-preview{width:100%;border-collapse:collapse;font-size:11px;margin-top:10px}
@@ -1690,7 +1694,7 @@ button:focus-visible,.tab:focus-visible,.nav-item:focus-visible{outline:2px soli
 </div>
 <div class="dt-table-wrap">
   <table class="dt-table" style="min-width:0;width:100%;table-layout:fixed" id="nv_comissao_table">
-    <thead id="nv_comissao_thead"><tr><th>Meio</th><th>Comissão</th><th>Início</th><th>Fim</th><th>Localização</th><th>CLG Autorizado</th><th class="dt-actions-col">Ações</th></tr></thead>
+    <thead id="nv_comissao_thead"><tr><th>Meio</th><th>Comissão</th><th>Início</th><th>Fim</th><th>Localização</th><th>CLG Autorizado</th><th>PMPE</th><th class="dt-actions-col">Ações</th></tr></thead>
     <tbody id="nv_comissao_tbody"></tbody>
   </table>
 </div>
@@ -5347,7 +5351,7 @@ setTimeout(hideSplash,12000);
     var table=document.getElementById("nv_comissao_table");
     if(table)table.classList.toggle("dt-editing",navComissaoEditing);
     var editing=navComissaoEditing;
-    if(!navComissoes.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text3);font-style:italic">Nenhuma comissão lançada ainda.</td></tr>';navUpdateComissaoToolbar();return;}
+    if(!navComissoes.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text3);font-style:italic">Nenhuma comissão lançada ainda.</td></tr>';navUpdateComissaoToolbar();return;}
     tbody.innerHTML=navComissoes.map(function(r){
       return '<tr data-id="'+r.id+'">'+
         '<td class="dt-cell'+(editing?'':' dt-cell-ro')+'" data-key="meio"'+(editing?' contenteditable="true"':'')+' spellcheck="false">'+esc(r.meio||"")+'</td>'+
@@ -5356,6 +5360,7 @@ setTimeout(hideSplash,12000);
         '<td>'+(editing?'<input type="date" class="nv-comissao-date" data-key="fim" value="'+esc(r.fim||"")+'">':esc(r.fim?navFmtBR(r.fim):"—"))+'</td>'+
         '<td class="dt-cell'+(editing?'':' dt-cell-ro')+'" data-key="localizacao"'+(editing?' contenteditable="true"':'')+' spellcheck="false">'+esc(r.localizacao||"")+'</td>'+
         '<td class="dt-cell'+(editing?'':' dt-cell-ro')+'" data-key="clg"'+(editing?' contenteditable="true"':'')+' spellcheck="false">'+esc(r.clg||"")+'</td>'+
+        '<td class="dt-cell'+(editing?'':' dt-cell-ro')+'" data-key="pmpe"'+(editing?' contenteditable="true"':'')+' spellcheck="false">'+esc(r.pmpe||"")+'</td>'+
         '<td class="dt-actions dt-actions-col">'+(editing?'<button class="nv-delrow" data-id="'+r.id+'" title="Excluir linha">🗑</button>':'')+'</td>'+
       '</tr>';
     }).join("");
@@ -5391,7 +5396,7 @@ setTimeout(hideSplash,12000);
   function navBindComissaoTable(){
     document.getElementById("nv_comissao_addrow").onclick=function(){
       if(!navComissaoEditing)return;
-      navComissoes.push({id:genUid("cms"),meio:"",comissao:"",inicio:"",fim:"",localizacao:"",clg:""});
+      navComissoes.push({id:genUid("cms"),meio:"",comissao:"",inicio:"",fim:"",localizacao:"",clg:"",pmpe:""});
       navComissaoDirty=true;navRenderComissoes();
     };
     document.getElementById("nv_comissao_edit").onclick=function(){
@@ -5878,7 +5883,13 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var el=document.getElementById("clg_previsao");
     if(!el)return;
     if(!clgT1.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);font-style:italic">Nenhum meio cadastrado no Estoque de ODM.</div>';return;}
-    el.innerHTML=clgT1.map(function(r){
+    // Navios na primeira linha da grade e AvB na segunda (grade de 4 colunas fixas — os 2 AvB
+    // ocupam as 2 primeiras células da linha de baixo, todos os cartões do mesmo tamanho).
+    var ordenado=clgT1.slice().sort(function(a,b){
+      var aAvb=/\bavb\b/i.test(a.meio||"")?1:0,bAvb=/\bavb\b/i.test(b.meio||"")?1:0;
+      return aAvb-bAvb;
+    });
+    el.innerHTML=ordenado.map(function(r){
       var dias=clgPrevisaoFor(r);
       var txt=dias===null?"Dados insuficientes (é preciso registrar ao menos 2 leituras de estoque em datas diferentes)":("dura aproximadamente <b>"+dias+" dias</b> de comissão, no ritmo de consumo atual");
       var cls=dias!==null&&dias<=15?"var(--c-red)":(dias!==null&&dias<=30?"#b96a10":"var(--text2)");
