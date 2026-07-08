@@ -2332,7 +2332,7 @@ function sbBumpMeta(){
   metaBumpTimer=setTimeout(function(){
     var ts=Date.now();
     fetch(SB_TABLE,{method:"POST",headers:sbHeaders({"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"}),body:JSON.stringify([{key:"_meta",value:String(ts),updated_at:new Date().toISOString()}])})
-      .then(function(r){if(r.ok)lastSeenMetaTs=ts;})
+      .then(function(r){if(r.ok){lastSeenMetaTs=ts;rtBroadcastSync();}})
       .catch(function(){});
   },300);
 }
@@ -2381,9 +2381,37 @@ async function checkMetaTs(){
   var rows=await r.json();
   return +((rows[0]&&rows[0].value)||0);
 }
+/* ── Sync instantâneo entre dispositivos: canal Broadcast do Supabase Realtime (WebSocket).
+   Não depende de replicação/publication na tabela — os clientes só trocam um sinal "sync" entre
+   si; quem recebe busca o doc completo (sbFetchFullAndApply). O polling do _meta continua como
+   fallback (rede corporativa bloqueando WebSocket, Realtime fora do ar etc.). Protocolo Phoenix
+   falado à mão pra manter o artefato sem dependências externas. ── */
+var rtWs=null,rtWsRef=2,rtWsOpen=false,rtWsRetry=1000,rtHbTimer=null;
+var RT_TOPIC="realtime:aa_sync";
+function rtWsSend(o){try{if(rtWsOpen)rtWs.send(JSON.stringify(o));}catch(e){}}
+function rtBroadcastSync(){rtWsSend({topic:RT_TOPIC,event:"broadcast",payload:{type:"broadcast",event:"sync",payload:{ts:Date.now()}},ref:String(rtWsRef++)});}
+function startWs(){
+  if(bk!=="supabase"||typeof WebSocket==="undefined")return;
+  try{rtWs=new WebSocket(SB_URL.replace("https://","wss://")+"/realtime/v1/websocket?apikey="+SB_KEY+"&vsn=1.0.0");}catch(e){return;}
+  rtWs.onopen=function(){
+    rtWsOpen=true;rtWsRetry=1000;
+    rtWs.send(JSON.stringify({topic:RT_TOPIC,event:"phx_join",payload:{config:{broadcast:{self:false}}},ref:"1"}));
+    clearInterval(rtHbTimer);
+    rtHbTimer=setInterval(function(){rtWsSend({topic:"phoenix",event:"heartbeat",payload:{},ref:String(rtWsRef++)});},25000);
+  };
+  rtWs.onmessage=async function(ev){
+    try{
+      var m=JSON.parse(ev.data);
+      if(m.event==="broadcast"&&m.payload&&m.payload.event==="sync")await sbFetchFullAndApply();
+    }catch(e){}
+  };
+  rtWs.onclose=function(){rtWsOpen=false;clearInterval(rtHbTimer);setTimeout(startWs,rtWsRetry);rtWsRetry=Math.min(rtWsRetry*2,30000);};
+  rtWs.onerror=function(){try{rtWs.close();}catch(e){}};
+}
 function startRT(){
   if(rtActive||bk!=="supabase")return;
   rtActive=true;
+  startWs();
   var VISIBLE_POLL_MS=20000,HIDDEN_POLL_MS=60000; // aba em 2º plano: poll bem mais espaçado
   function poll(){
     setTimeout(async function(){
