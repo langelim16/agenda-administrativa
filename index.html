@@ -6384,40 +6384,60 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       renderClgTables();
     }
   }
-  function clgOpenLancamentos(){
+  var clgLancFuel="odm"; // filtro lembrado enquanto o modal for reaberto na mesma sessão
+  function clgOpenLancamentos(fuel){
+    if(typeof fuel==="string")clgLancFuel=fuel; // guarda: onclick direto passa o event como 1º arg
     var bg=ensureModal("clgLancBg","Lançamentos de consumo/abastecimento");
     var body=bg.querySelector(".mbody");
     // Ordena pela data do lançamento (não pela hora em que foi digitado): mais recente no topo,
     // com agrupamento por mês. Empate na data → desempata pela hora de registro.
     function dOrd(l){var p=l.data.split("/");return p[2]+p[1]+p[0];}
-    var lancs=auditLog.map(clgParseLanc).filter(Boolean).sort(function(a,b){
+    var todos=auditLog.map(clgParseLanc).filter(Boolean).sort(function(a,b){
       return dOrd(b).localeCompare(dOrd(a))||String(b.e.ts).localeCompare(String(a.e.ts));
     });
-    if(!lancs.length){
-      body.innerHTML='<div style="font-size:12px;color:var(--text3);font-style:italic">Nenhum lançamento registrado ainda.</div>';
-      bg.classList.add("open");return;
-    }
+    // Filtro por tipo de combustível: ODM × Gasolina/Lubrificantes/Graxas
+    var lancs=todos.filter(function(l){return clgLancFuel==="odm"?l.produto==="odm":l.produto!=="odm";});
     var prodLbl={odm:"ODM",gasolina:"Gasolina",lubrificantes:"Lubrificantes",graxas:"Graxas"};
-    var html='<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Editar reabre o formulário com os valores do lançamento e substitui o efeito dele no estoque e no gráfico. Estornar apenas desfaz.</div>';
-    var lastGrp=null;
-    lancs.forEach(function(l,i){
-      var p=l.data.split("/"),grp=p[1]+"/"+p[2];
-      if(grp!==lastGrp){
-        lastGrp=grp;
-        html+='<div style="margin:12px 0 2px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);border-bottom:1.5px solid var(--border2);padding-bottom:3px">'+ML[+p[1]-1]+' de '+p[2]+'</div>';
-      }
-      var row=(CLG_LANC_ARRMAP()[l.e.scope]||[]).find(function(r){return r.id===l.e.rowId;});
-      var meio=row?(row.meio||"—"):"(meio excluído)";
-      var desc=(l.kind==="consumo"?("Consumo "+l.tipoConsumo+" · −"+l.qtd+(l.dias>1?" em "+l.dias+" dias":"")):("Abastecimento · +"+l.qtd))+" · "+(prodLbl[l.produto]||l.produto)+(l.retro?" · 📜 retroativo":"")+(l.extra?" · "+l.extra:"");
-      html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid var(--border)">'+
-        '<div style="flex:1;min-width:0"><b style="font-size:12.5px">'+esc(meio)+' · '+esc(l.data)+'</b><div style="font-size:11.5px;color:var(--text2)">'+esc(desc)+' · lançado em '+fmtAuditTs(l.e.ts)+'</div></div>'+
-        '<button class="bsave clg-lanc-edit" data-i="'+i+'" style="padding:4px 10px;font-size:11.5px">✎ Editar</button>'+
-        '<button class="bcancel clg-lanc-del" data-i="'+i+'" style="padding:4px 10px;font-size:11.5px">🗑 Estornar</button></div>';
-    });
+    function fuelBtn(val,label){
+      var on=clgLancFuel===val;
+      return '<button type="button" class="clg-lanc-fuel" data-f="'+val+'" style="flex:1;padding:7px 10px;font-size:12px;font-family:inherit;cursor:pointer;border-radius:var(--r-md);border:1.5px solid '+(on?'var(--c-blue)':'var(--border2)')+';background:'+(on?'var(--c-sky)':'var(--bg)')+';color:'+(on?'var(--c-blue)':'var(--text2)')+';font-weight:'+(on?'700':'400')+'">'+label+'</button>';
+    }
+    var html='<div style="display:flex;gap:8px;margin-bottom:10px">'+fuelBtn("odm","ODM")+fuelBtn("glg","Gasolina/Lubrificantes/Graxas")+'</div>';
+    if(!lancs.length){
+      html+='<div style="font-size:12px;color:var(--text3);font-style:italic">Nenhum lançamento de '+(clgLancFuel==="odm"?"ODM":"Gasolina/Lubrificantes/Graxas")+' registrado ainda.</div>';
+    }else{
+      html+='<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Clique no mês para abrir os lançamentos. Editar reabre o formulário com os valores do lançamento e substitui o efeito dele; Estornar apenas desfaz.</div>';
+      // Meses como sanfonas (<details>): comprimidos por padrão, clique no mês expande a lista.
+      var lastGrp=null;
+      lancs.forEach(function(l){
+        var p=l.data.split("/"),grp=p[1]+"/"+p[2];
+        var i=todos.indexOf(l);
+        if(grp!==lastGrp){
+          if(lastGrp!==null)html+='</div></details>';
+          lastGrp=grp;
+          var count=lancs.filter(function(x){var q=x.data.split("/");return q[1]+"/"+q[2]===grp;}).length;
+          html+='<details style="margin:6px 0;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden">'+
+            '<summary style="cursor:pointer;padding:9px 12px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);background:var(--c-100);list-style-position:inside">'+ML[+p[1]-1]+' de '+p[2]+' <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">· '+count+' lançamento'+(count>1?'s':'')+'</span></summary>'+
+            '<div style="padding:2px 12px 6px">';
+        }
+        var row=(CLG_LANC_ARRMAP()[l.e.scope]||[]).find(function(r){return r.id===l.e.rowId;});
+        var meio=row?(row.meio||"—"):"(meio excluído)";
+        var desc=(l.kind==="consumo"?("Consumo "+l.tipoConsumo+" · −"+l.qtd+(l.dias>1?" em "+l.dias+" dias":"")):("Abastecimento · +"+l.qtd))+" · "+(prodLbl[l.produto]||l.produto)+(l.retro?" · 📜 retroativo":"")+(l.extra?" · "+l.extra:"");
+        html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">'+
+          '<div style="flex:1;min-width:0"><b style="font-size:12.5px">'+esc(meio)+' · '+esc(l.data)+'</b><div style="font-size:11.5px;color:var(--text2)">'+esc(desc)+' · lançado em '+fmtAuditTs(l.e.ts)+'</div></div>'+
+          '<button class="bsave clg-lanc-edit" data-i="'+i+'" style="padding:4px 10px;font-size:11.5px">✎ Editar</button>'+
+          '<button class="bcancel clg-lanc-del" data-i="'+i+'" style="padding:4px 10px;font-size:11.5px">🗑 Estornar</button></div>';
+      });
+      html+='</div></details>';
+    }
     body.innerHTML=html;
+    var lancsRef=todos;
+    body.querySelectorAll(".clg-lanc-fuel").forEach(function(btn){
+      btn.onclick=function(){clgOpenLancamentos(btn.dataset.f);};
+    });
     body.querySelectorAll(".clg-lanc-edit").forEach(function(btn){
       btn.onclick=function(){
-        var l=lancs[+btn.dataset.i];
+        var l=lancsRef[+btn.dataset.i];
         var row=(CLG_LANC_ARRMAP()[l.e.scope]||[]).find(function(r){return r.id===l.e.rowId;});
         if(!row){toast("Meio não encontrado — não é possível editar.","info");return;}
         bg.classList.remove("open");
@@ -6429,7 +6449,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       btn.onclick=async function(){
         if(btn.dataset.arm!=="1"){btn.dataset.arm="1";btn.textContent="Confirmar estorno?";btn.style.color="var(--c-red)";return;}
         btn.disabled=true;
-        await clgEstornarLanc(lancs[+btn.dataset.i]);
+        await clgEstornarLanc(lancsRef[+btn.dataset.i]);
         clgOpenLancamentos();
       };
     });
