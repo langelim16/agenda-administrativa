@@ -1777,6 +1777,7 @@ button:focus-visible,.tab:focus-visible,.nav-item:focus-visible{outline:2px soli
   <div class="dt-title-wrap"><h3 class="dt-table-title">Estoque de ODM nos Meios</h3><span class="last-edit" id="clg_t1_lastedit"></span></div>
   <div class="nv-toolbar" id="clg_t1_toolbar">
     <button class="nv-editbtn" id="clg_consumo_btn">+ Inserir consumo/abastecimento</button>
+    <button class="nv-editbtn" id="clg_lanc_btn">✎ Editar lançamentos</button>
     <button class="nv-editbtn" id="clg_t1_edit">✎ Editar</button>
     <span class="nv-edit-actions" id="clg_t1_edit_actions" hidden>
       <button class="dt-colbtn" id="clg_t1_addcol">+ coluna</button>
@@ -6209,6 +6210,78 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     toast("✓ Abastecimento registrado","ok");
     renderClgTables();
   }
+  /* ── Editar lançamentos: lista os consumos/abastecimentos já inseridos — reconstruídos a partir
+     do log de auditoria, que registra quantidade/dias/data de cada um — e permite estornar:
+     devolve (ou retira) a quantidade do estoque e reverte os pontos do histórico usados pelo
+     gráfico de evolução e pela previsão de duração. O registro original fica marcado como
+     estornado (some da lista, mas permanece na auditoria), e o estorno gera novo registro. ── */
+  var CLG_LANC_ARRMAP=function(){return{clg_t1:clgT1,clg_t3nav:clgT3Nav,clg_t3emb:clgT3Emb};};
+  function clgParseLanc(e){
+    if(["clg_t1","clg_t3nav","clg_t3emb"].indexOf(e.scope)<0||e.estornado)return null;
+    var m=/^Consumo (\S+)(?: de (\w+))?: -([\d.,]+) em (\d+) dia\(s\) \((\d{2}\/\d{2}\/\d{4})\)$/.exec(e.action||"");
+    if(m)return{kind:"consumo",tipoConsumo:m[1],produto:m[2]||"odm",qtd:clgNum(m[3]),dias:+m[4],data:m[5],e:e};
+    m=/^Abastecimento(?: de (\w+))?: \+([\d.,]+) \((\d{2}\/\d{2}\/\d{4})\)$/.exec(e.action||"");
+    if(m)return{kind:"abastecimento",produto:m[1]||"odm",qtd:clgNum(m[2]),dias:1,data:m[3],e:e};
+    return null;
+  }
+  async function clgEstornarLanc(l){
+    var arr=CLG_LANC_ARRMAP()[l.e.scope];
+    var row=arr.find(function(r){return r.id===l.e.rowId;});
+    if(!row){toast("Meio não encontrado — não é possível estornar.","info");return;}
+    var field=l.e.scope==="clg_t1"?"estoque":l.produto;
+    var atual=clgNum(row[field]);atual=isNaN(atual)?0:atual;
+    row[field]=String(Math.max(0,l.kind==="consumo"?atual+l.qtd:atual-l.qtd));
+    if(l.e.scope==="clg_t1"){clgSaveT1();await pushKV("clgPush",CLG_T1_KEY,clgT1);}
+    else if(l.e.scope==="clg_t3nav"){clgSaveT3Nav();await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);}
+    else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
+    var histKey=l.e.scope==="clg_t1"?row.id:row.id+"_"+l.produto;
+    var pts=clgHist[histKey]||[];
+    var endT=new Date(l.data.split("/").reverse().join("-")+"T00:00:00").getTime();
+    if(l.kind==="consumo"){
+      var avg=l.qtd/l.dias;
+      pts.forEach(function(p){
+        if(p.t>endT){p.v+=l.qtd;return;}
+        var i=l.dias-1-Math.round((endT-p.t)/86400000);
+        if(i>=0&&i<l.dias)p.v+=(i===l.dias-1)?l.qtd:avg*(i+1);
+      });
+    }else{
+      pts.forEach(function(p){if(p.t>=endT)p.v=Math.max(0,p.v-l.qtd);});
+    }
+    clgSaveHist();
+    l.e.estornado=true;
+    auditPushOne(l.e.scope,l.e.rowId,"Estorno de "+l.kind+(l.produto!=="odm"?" de "+l.produto:"")+": "+(l.kind==="consumo"?"+":"-")+l.qtd+" ("+l.data+")");
+    touchLastEdit(l.e.scope);paintLastEdit(l.e.scope+"_lastedit",l.e.scope);
+    toast("✓ Lançamento estornado","ok");
+    renderClgTables();
+  }
+  function clgOpenLancamentos(){
+    var bg=ensureModal("clgLancBg","Lançamentos de consumo/abastecimento");
+    var body=bg.querySelector(".mbody");
+    var lancs=auditLog.map(clgParseLanc).filter(Boolean).sort(function(a,b){return String(b.e.ts).localeCompare(String(a.e.ts));});
+    if(!lancs.length){
+      body.innerHTML='<div style="font-size:12px;color:var(--text3);font-style:italic">Nenhum lançamento registrado ainda.</div>';
+      bg.classList.add("open");return;
+    }
+    var prodLbl={odm:"ODM",gasolina:"Gasolina",lubrificantes:"Lubrificantes",graxas:"Graxas"};
+    body.innerHTML='<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Estornar desfaz o efeito do lançamento no estoque e no gráfico de evolução. Para corrigir um lançamento, estorne-o e insira novamente com os valores corretos.</div>'+
+      lancs.map(function(l,i){
+        var row=(CLG_LANC_ARRMAP()[l.e.scope]||[]).find(function(r){return r.id===l.e.rowId;});
+        var meio=row?(row.meio||"—"):"(meio excluído)";
+        var desc=(l.kind==="consumo"?("Consumo "+l.tipoConsumo+" · −"+l.qtd+(l.dias>1?" em "+l.dias+" dias":"")):("Abastecimento · +"+l.qtd))+" · "+(prodLbl[l.produto]||l.produto);
+        return '<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border)">'+
+          '<div style="flex:1;min-width:0"><b style="font-size:12.5px">'+esc(meio)+'</b><div style="font-size:11.5px;color:var(--text2)">'+esc(desc)+' · '+esc(l.data)+' · lançado em '+fmtAuditTs(l.e.ts)+'</div></div>'+
+          '<button class="bcancel clg-lanc-del" data-i="'+i+'">🗑 Estornar</button></div>';
+      }).join("");
+    body.querySelectorAll(".clg-lanc-del").forEach(function(btn){
+      btn.onclick=async function(){
+        if(btn.dataset.arm!=="1"){btn.dataset.arm="1";btn.textContent="Confirmar estorno?";btn.style.color="var(--c-red)";return;}
+        btn.disabled=true;
+        await clgEstornarLanc(lancs[+btn.dataset.i]);
+        clgOpenLancamentos();
+      };
+    });
+    bg.classList.add("open");
+  }
   function clgFindCard(cid){return clgCards.find(function(c){return c.id===cid;});}
   clgGetState=function(){return{t1:JSON.parse(JSON.stringify(clgT1)),t2:JSON.parse(JSON.stringify(clgT2)),cards:JSON.parse(JSON.stringify(clgCards)),t1c:cloneCols(clgT1Cols),t2c:cloneCols(clgT2Cols),t3n:JSON.parse(JSON.stringify(clgT3Nav)),t3e:JSON.parse(JSON.stringify(clgT3Emb))};};
   clgSetState=async function(s){clgT1=s.t1;clgT2=s.t2;clgCards=s.cards;clgT1Cols=s.t1c||clgT1ColsDefault();clgT2Cols=s.t2c||clgT2ColsDefault();clgT3Nav=s.t3n||clgT3SeedFor(CLG_T3_NAV_ROSTER);clgT3Emb=s.t3e||clgT3SeedFor(CLG_T3_EMB_ROSTER);clgSaveT1();clgSaveT2();clgSaveCards();clgSaveT1Cols();clgSaveT2Cols();clgSaveT3Nav();clgSaveT3Emb();await pushKV("clgPush",CLG_T1_KEY,clgT1);await pushKV("clgPush",CLG_T2_KEY,clgT2);await pushKV("clgPush",CLG_CARDS_KEY,clgCards);await pushKV("clgPush",CLG_T1_COLS_KEY,clgT1Cols);await pushKV("clgPush",CLG_T2_COLS_KEY,clgT2Cols);await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);};
@@ -6290,6 +6363,8 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     if(tag){tag.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";tag.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
     var consumoBtn=document.getElementById("clg_consumo_btn");
     if(consumoBtn)consumoBtn.onclick=clgOpenConsumoShipPicker;
+    var lancBtn=document.getElementById("clg_lanc_btn");
+    if(lancBtn)lancBtn.onclick=clgOpenLancamentos;
     bindDataTable({
       prefix:"clg_t1",
       getArr:function(){return clgT1;},setArr:function(v){clgT1=v;},
