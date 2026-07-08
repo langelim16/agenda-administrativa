@@ -58,8 +58,13 @@ def sheet_rows(f, sheetname):
     return []
 
 
+# colunas da aba "Estoques Físicos" (OM ARMAZENADORA, Tipo01.., 0-based)
+PROD_ESTOQUE = [('gasolina', 1), ('qav', 2), ('odm', 3), ('odr', 4),
+                ('lub', 5), ('alcool', 6), ('graxa', 7)]
+
+
 def extrair(pasta):
-    out = []
+    consumos, estoques = [], []
     arquivos = sorted(glob.glob(os.path.join(pasta, '*.ods')) +
                       glob.glob(os.path.join(pasta, '*.ODS')))
     for f in arquivos:
@@ -82,14 +87,25 @@ def extrair(pasta):
                      if i < len(r) and num(r[i]) > 0}
             if not prods:
                 continue
-            out.append({
+            consumos.append({
                 'arquivo': os.path.basename(f), 'epoca': epoca, 'mes': mes,
                 'utilizador': util, 'meioDoArtefato': util in MEIOS_ARTEFATO,
                 'tipo': 'Operativo' if r[3].strip() == 'PMPE' else 'Administrativo',
                 'nEvt': r[4].strip(), 'descricao': r[5].strip(),
                 'consumos': prods,
             })
-    return out
+        # Estoque físico ao fim do mês — usado pra inferir abastecimentos
+        # implícitos (saldo calculado × estoque físico) por meio/produto.
+        for r in sheet_rows(f, 'Estoques Físicos'):
+            if not r or r[0].strip() not in MEIOS_ARTEFATO:
+                continue
+            estoques.append({
+                'arquivo': os.path.basename(f), 'epoca': epoca, 'mes': mes,
+                'meio': r[0].strip(),
+                'estoque': {k: num(r[i]) for k, i in PROD_ESTOQUE
+                            if i < len(r)},
+            })
+    return {'consumos': consumos, 'estoquesFisicosFimDoMes': estoques}
 
 
 if __name__ == '__main__':
