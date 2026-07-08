@@ -6376,11 +6376,14 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     }
     clgSaveHist();
     l.e.estornado=true;
+    // Mesmo no estorno silencioso (edição), o ponto de hoje do gráfico precisa refletir o estoque
+    // já revertido: senão a baseline do relançamento ancora num ponto desatualizado e soma a
+    // quantidade duas vezes (saldo inicial dobrado no gráfico).
+    clgLogEstoque();
     if(!silent){
       auditPushOne(l.e.scope,l.e.rowId,"Estorno de "+l.kind+(l.retro?" retroativo":"")+(l.produto!=="odm"?" de "+l.produto:"")+": "+(l.kind==="consumo"?"+":"-")+l.qtd+" ("+l.data+")");
       touchLastEdit(l.e.scope);paintLastEdit(l.e.scope+"_lastedit",l.e.scope);
       toast("✓ Lançamento estornado","ok");
-      clgLogEstoque();
       renderClgTables();
     }
   }
