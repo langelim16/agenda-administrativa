@@ -2974,6 +2974,26 @@ function svgDonutChart(pairs){
   var legend=pairs.map(function(p,i){return '<div style="display:flex;align-items:center;gap:6px;font-size:11px;margin-top:4px"><span style="width:9px;height:9px;border-radius:50%;background:'+CHART_PALETTE[i%CHART_PALETTE.length]+';flex:none"></span>'+esc(p.k)+' ('+p.v+')</div>';}).join("");
   return '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap"><svg viewBox="0 0 100 100" width="110" height="110">'+segs+'</svg><div>'+legend+'</div></div>';
 }
+/* Curva cúbica monotônica (Fritsch–Carlson): suaviza só os cantos nos pontos de inflexão,
+   passa exatamente por todos os pontos e nunca cria overshoot/vales falsos nem regride no
+   eixo X (defeito da suavização Catmull-Rom usada antes). */
+function svgMonotonePath(p){
+  if(p.length<2)return p.length?("M"+p[0][0].toFixed(1)+","+p[0][1].toFixed(1)):"";
+  var n=p.length,dx=[],dy=[],m=[],t=[],i;
+  for(i=0;i<n-1;i++){dx[i]=p[i+1][0]-p[i][0];dy[i]=p[i+1][1]-p[i][1];m[i]=dx[i]?dy[i]/dx[i]:0;}
+  t[0]=m[0];t[n-1]=m[n-2];
+  for(i=1;i<n-1;i++){
+    if(m[i-1]*m[i]<=0)t[i]=0;
+    else{var w1=2*dx[i]+dx[i-1],w2=dx[i]+2*dx[i-1];t[i]=(w1+w2)/(w1/m[i-1]+w2/m[i]);}
+  }
+  var d="M"+p[0][0].toFixed(1)+","+p[0][1].toFixed(1);
+  for(i=0;i<n-1;i++){
+    var c1x=p[i][0]+dx[i]/3,c1y=p[i][1]+t[i]*dx[i]/3;
+    var c2x=p[i+1][0]-dx[i]/3,c2y=p[i+1][1]-t[i+1]*dx[i]/3;
+    d+=" C"+c1x.toFixed(1)+","+c1y.toFixed(1)+" "+c2x.toFixed(1)+","+c2y.toFixed(1)+" "+p[i+1][0].toFixed(1)+","+p[i+1][1].toFixed(1);
+  }
+  return d;
+}
 var svgLineChartUID=0;
 /* Gráfico de linhas SVG genérico. series: [{name, points:[{t:msEpoch, v:número}]}]. opts.fmtY formata o eixo Y. */
 function svgLineChart(series,opts){
@@ -3018,9 +3038,7 @@ function svgLineChart(series,opts){
     var xy=sp.map(function(p){return[X(p.t),Y(p.v)];});
     var len=0;for(var i=1;i<xy.length;i++){var dx=xy[i][0]-xy[i-1][0],dy=xy[i][1]-xy[i-1][1];len+=Math.sqrt(dx*dx+dy*dy);}
     len=Math.max(len*1.15,40);
-    // Segmentos retos (não svgSmoothPath): a suavização Catmull-Rom fazia a curva "voltar" no eixo
-    // do tempo quando pontos diários densos eram seguidos de um vão grande até o próximo lançamento.
-    var path=xy.map(function(p,i){return (i?"L":"M")+p[0].toFixed(1)+","+p[1].toFixed(1);}).join(" ");
+    var path=svgMonotonePath(xy);
     var gradId="lg"+uid+"_"+si;
     var area=xy.length>1?('<path class="cl-area" d="'+path+' L'+xy[xy.length-1][0].toFixed(1)+','+baseY+' L'+xy[0][0].toFixed(1)+','+baseY+' Z" fill="url(#'+gradId+')" stroke="none"></path>'):"";
     var line=xy.length>1?('<path class="cl-line" d="'+path+'" fill="none" stroke="'+c+'" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round" style="stroke-dasharray:'+len.toFixed(1)+';stroke-dashoffset:'+len.toFixed(1)+'"></path>'):"";
@@ -5970,17 +5988,31 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var cutoff=new Date(new Date().getFullYear(),0,1); // ano corrente inteiro
     // Bolinhas só nas datas de lançamento (consumo/abastecimento), extraídas da auditoria;
     // os pontos intermediários (consumo diário distribuído, leituras automáticas) viram só linha.
-    var lancDates={};
+    var lancDates={},consumoPeriods={};
     auditLog.forEach(function(e){
       var l=clgParseLanc(e);
       if(!l||l.e.scope!=="clg_t1")return;
       var t=new Date(l.data.split("/").reverse().join("-")+"T00:00:00").getTime();
       (lancDates[l.e.rowId]||(lancDates[l.e.rowId]={}))[t]=true;
+      if(l.kind==="consumo")(consumoPeriods[l.e.rowId]||(consumoPeriods[l.e.rowId]=[])).push({start:t-(l.dias-1)*86400000,end:t});
     });
     var rows=sel.value?clgT1.filter(function(r){return r.id===sel.value;}):clgT1;
     var series=rows.map(function(r){
       var marks=lancDates[r.id]||{};
       var pts=(clgHist[r.id]||[]).filter(function(p){return p.t>=cutoff.getTime();}).map(function(p){return{t:p.t,v:p.v,dot:!!marks[p.t]};});
+      // Ponto-âncora na véspera do início de cada comissão: sem ele, a linha interpola direto do
+      // último ponto anterior até o 1º dia do período e o gráfico "desce antes" da comissão começar.
+      // O âncora segura o valor plano até a véspera; só entra se não houver ponto naquele intervalo.
+      pts.sort(function(a,b){return a.t-b.t;});
+      (consumoPeriods[r.id]||[]).forEach(function(per){
+        var anchorT=per.start-86400000;
+        if(anchorT<cutoff.getTime())return;
+        if(pts.some(function(p){return p.t>=anchorT&&p.t<per.start;}))return;
+        var prev=null;
+        pts.forEach(function(p){if(p.t<anchorT&&(!prev||p.t>prev.t))prev=p;});
+        if(prev)pts.push({t:anchorT,v:prev.v,dot:false});
+      });
+      pts.sort(function(a,b){return a.t-b.t;});
       return{name:r.meio||"—",points:pts};
     }).filter(function(x){return x.points.length;});
     box.innerHTML=svgLineChart(series,{height:130,markedDotsOnly:true,fmtY:function(v){return v.toLocaleString("pt-BR");}});
