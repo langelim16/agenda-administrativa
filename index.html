@@ -6087,7 +6087,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         '</button>'+
         '<button type="button" class="ps-item" id="clgq_retro" style="text-align:left;cursor:pointer">'+
           '<div class="ps-main"><div class="ps-num">Lançamento retroativo</div>'+
-          '<div class="ps-meta">Um período já ocorrido — só alimenta o histórico do gráfico, sem alterar o estoque atual.</div></div>'+
+          '<div class="ps-meta">Um período já ocorrido — os pontos entram no gráfico na data informada e o estoque atual também é atualizado.</div></div>'+
         '</button>'+
       '</div>';
     document.getElementById("clgq_dia").onclick=function(){bg.classList.remove("open");if(modo==="consumo")clgOpenConsumoForm(nome,tipo,false);else clgOpenAbastecimentoForm(nome,tipo,false);};
@@ -6106,7 +6106,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         '<div class="fld"><label>Data (fim do período)</label><input type="date" id="clgc_data" value="'+todayStr+'"></div>'+
         '<div class="fld"><label>Quantidade consumida (total)</label><input id="clgc_qtd" placeholder="Ex.: 150" inputmode="decimal"></div>'+
         '<div class="fld"><label>Dias de comissão</label><input id="clgc_dias" placeholder="Ex.: 5" inputmode="numeric" value="1"></div>'+
-        '<div class="fld full" style="font-size:10.5px;color:var(--text3)">'+(retro?"Lançamento retroativo: gera o histórico de consumo dia a dia no gráfico de evolução, <b>sem alterar o estoque atual</b> da tabela.":"A quantidade total é dividida pela média diária ao longo dos dias de comissão informados, gerando um histórico de consumo dia a dia (usado no gráfico de evolução e na previsão de duração do estoque).")+'</div>'+
+        '<div class="fld full" style="font-size:10.5px;color:var(--text3)">'+(retro?"Lançamento retroativo: gera o histórico de consumo dia a dia no gráfico de evolução <b>na data informada</b> e abate a quantidade do estoque atual da tabela.":"A quantidade total é dividida pela média diária ao longo dos dias de comissão informados, gerando um histórico de consumo dia a dia (usado no gráfico de evolução e na previsão de duração do estoque).")+'</div>'+
       '</div>'+
       '<div id="clgc_err" class="ferias-msg warn" style="display:none;margin-top:10px"></div>'+
       '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">'+
@@ -6164,14 +6164,13 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       var row=clgFindByNome(clgT1,nome);
       if(!row)return;
       var atual=clgNum(row.estoque);atual=isNaN(atual)?0:atual;
-      if(retro){
-        clgAppendHistDaily(row.id,dataStr,qtd,dias,clgRetroBaseline(row.id,dataStr,dias,qtd,atual));
-      }else{
-        row.estoque=String(Math.max(0,atual-qtd));
-        clgSaveT1();
-        await pushKV("clgPush",CLG_T1_KEY,clgT1);
-        clgAppendHistDaily(row.id,dataStr,qtd,dias,atual);
-      }
+      row.estoque=String(Math.max(0,atual-qtd));
+      clgSaveT1();
+      await pushKV("clgPush",CLG_T1_KEY,clgT1);
+      // Retroativo: os pontos do gráfico entram na data informada, ancorados no histórico
+      // (não no estoque de hoje); o abatimento no estoque atual é o mesmo dos lançamentos do dia.
+      if(retro)clgAppendHistDaily(row.id,dataStr,qtd,dias,clgRetroBaseline(row.id,dataStr,dias,qtd,atual));
+      else clgAppendHistDaily(row.id,dataStr,qtd,dias,atual);
       auditPushOne("clg_t1",row.id,lbl+": -"+qtd+" em "+dias+" dia(s) ("+dataFmt+")");
       touchLastEdit("clg_t1");paintLastEdit("clg_t1_lastedit","clg_t1");
     }else{
@@ -6181,19 +6180,17 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       if(!row2)return;
       var atual2=clgNum(row2[tipo]);atual2=isNaN(atual2)?0:atual2;
       var histKey=row2.id+"_"+tipo;
-      if(retro){
-        clgAppendHistDaily(histKey,dataStr,qtd,dias,clgRetroBaseline(histKey,dataStr,dias,qtd,atual2));
-      }else{
-        row2[tipo]=String(Math.max(0,atual2-qtd));
-        if(isNav){clgSaveT3Nav();await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);}
-        else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
-        clgAppendHistDaily(histKey,dataStr,qtd,dias,atual2);
-      }
+      row2[tipo]=String(Math.max(0,atual2-qtd));
+      if(isNav){clgSaveT3Nav();await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);}
+      else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
+      if(retro)clgAppendHistDaily(histKey,dataStr,qtd,dias,clgRetroBaseline(histKey,dataStr,dias,qtd,atual2));
+      else clgAppendHistDaily(histKey,dataStr,qtd,dias,atual2);
       auditPushOne(isNav?"clg_t3nav":"clg_t3emb",row2.id,lbl+" de "+tipo+": -"+qtd+" em "+dias+" dia(s) ("+dataFmt+")");
       touchLastEdit(isNav?"clg_t3nav":"clg_t3emb");paintLastEdit(isNav?"clg_t3nav_lastedit":"clg_t3emb_lastedit",isNav?"clg_t3nav":"clg_t3emb");
     }
     bg.classList.remove("open");
-    toast(retro?"📜 Consumo retroativo registrado no histórico do gráfico":"✓ Consumo registrado","ok");
+    toast(retro?"📜 Consumo retroativo registrado — estoque e gráfico atualizados":"✓ Consumo registrado","ok");
+    clgLogEstoque();
     renderClgTables();
   }
   /* ── Abastecimento: função inversa do consumo — soma ao estoque em vez de abater. O tipo
@@ -6208,7 +6205,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       '<div class="mgrid">'+
         '<div class="fld"><label>Data</label><input type="date" id="clga_data" value="'+todayStr+'"></div>'+
         '<div class="fld full"><label>Quantidade abastecida</label><input id="clga_qtd" placeholder="Ex.: 150" inputmode="decimal"></div>'+
-        (retro?'<div class="fld full" style="font-size:10.5px;color:var(--text3)">Lançamento retroativo: registra o abastecimento no histórico do gráfico de evolução, <b>sem alterar o estoque atual</b> da tabela.</div>':'')+
+        (retro?'<div class="fld full" style="font-size:10.5px;color:var(--text3)">Lançamento retroativo: registra o abastecimento no gráfico de evolução <b>na data informada</b> e soma a quantidade ao estoque atual da tabela.</div>':'')+
       '</div>'+
       '<div id="clga_err" class="ferias-msg warn" style="display:none;margin-top:10px"></div>'+
       '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">'+
@@ -6242,15 +6239,11 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       var row=clgFindByNome(clgT1,nome);
       if(!row)return;
       var atual=clgNum(row.estoque);atual=isNaN(atual)?0:atual;
-      if(retro){
-        var base=clgRetroBaseline(row.id,dataStr,1,0,atual);
-        clgHistPushPoint(row.id,dataStr,base+qtd);
-      }else{
-        row.estoque=String(atual+qtd);
-        clgSaveT1();
-        await pushKV("clgPush",CLG_T1_KEY,clgT1);
-        clgHistPushPoint(row.id,dataStr,atual+qtd);
-      }
+      row.estoque=String(atual+qtd);
+      clgSaveT1();
+      await pushKV("clgPush",CLG_T1_KEY,clgT1);
+      if(retro)clgHistPushPoint(row.id,dataStr,clgRetroBaseline(row.id,dataStr,1,0,atual)+qtd);
+      else clgHistPushPoint(row.id,dataStr,atual+qtd);
       auditPushOne("clg_t1",row.id,lbl+": +"+qtd+" ("+dataFmt+")");
       touchLastEdit("clg_t1");paintLastEdit("clg_t1_lastedit","clg_t1");
     }else{
@@ -6260,20 +6253,17 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       if(!row2)return;
       var atual2=clgNum(row2[tipo]);atual2=isNaN(atual2)?0:atual2;
       var histKey=row2.id+"_"+tipo;
-      if(retro){
-        var base2=clgRetroBaseline(histKey,dataStr,1,0,atual2);
-        clgHistPushPoint(histKey,dataStr,base2+qtd);
-      }else{
-        row2[tipo]=String(atual2+qtd);
-        if(isNav){clgSaveT3Nav();await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);}
-        else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
-        clgHistPushPoint(histKey,dataStr,atual2+qtd);
-      }
+      row2[tipo]=String(atual2+qtd);
+      if(isNav){clgSaveT3Nav();await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);}
+      else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
+      if(retro)clgHistPushPoint(histKey,dataStr,clgRetroBaseline(histKey,dataStr,1,0,atual2)+qtd);
+      else clgHistPushPoint(histKey,dataStr,atual2+qtd);
       auditPushOne(isNav?"clg_t3nav":"clg_t3emb",row2.id,lbl+" de "+tipo+": +"+qtd+" ("+dataFmt+")");
       touchLastEdit(isNav?"clg_t3nav":"clg_t3emb");paintLastEdit(isNav?"clg_t3nav_lastedit":"clg_t3emb_lastedit",isNav?"clg_t3nav":"clg_t3emb");
     }
     bg.classList.remove("open");
-    toast(retro?"📜 Abastecimento retroativo registrado no histórico do gráfico":"✓ Abastecimento registrado","ok");
+    toast(retro?"📜 Abastecimento retroativo registrado — estoque e gráfico atualizados":"✓ Abastecimento registrado","ok");
+    clgLogEstoque();
     renderClgTables();
   }
   /* ── Editar lançamentos: lista os consumos/abastecimentos já inseridos — reconstruídos a partir
@@ -6296,14 +6286,12 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var arr=CLG_LANC_ARRMAP()[l.e.scope];
     var row=arr.find(function(r){return r.id===l.e.rowId;});
     if(!row){toast("Meio não encontrado — não é possível estornar.","info");return;}
-    if(!l.retro){
-      var field=l.e.scope==="clg_t1"?"estoque":l.produto;
-      var atual=clgNum(row[field]);atual=isNaN(atual)?0:atual;
-      row[field]=String(Math.max(0,l.kind==="consumo"?atual+l.qtd:atual-l.qtd));
-      if(l.e.scope==="clg_t1"){clgSaveT1();await pushKV("clgPush",CLG_T1_KEY,clgT1);}
-      else if(l.e.scope==="clg_t3nav"){clgSaveT3Nav();await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);}
-      else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
-    }
+    var field=l.e.scope==="clg_t1"?"estoque":l.produto;
+    var atual=clgNum(row[field]);atual=isNaN(atual)?0:atual;
+    row[field]=String(Math.max(0,l.kind==="consumo"?atual+l.qtd:atual-l.qtd));
+    if(l.e.scope==="clg_t1"){clgSaveT1();await pushKV("clgPush",CLG_T1_KEY,clgT1);}
+    else if(l.e.scope==="clg_t3nav"){clgSaveT3Nav();await pushKV("clgPush",CLG_T3NAV_KEY,clgT3Nav);}
+    else{clgSaveT3Emb();await pushKV("clgPush",CLG_T3EMB_KEY,clgT3Emb);}
     var histKey=l.e.scope==="clg_t1"?row.id:row.id+"_"+l.produto;
     var pts=clgHist[histKey]||[];
     var endT=new Date(l.data.split("/").reverse().join("-")+"T00:00:00").getTime();
@@ -6326,6 +6314,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     auditPushOne(l.e.scope,l.e.rowId,"Estorno de "+l.kind+(l.retro?" retroativo":"")+(l.produto!=="odm"?" de "+l.produto:"")+": "+(l.kind==="consumo"?"+":"-")+l.qtd+" ("+l.data+")");
     touchLastEdit(l.e.scope);paintLastEdit(l.e.scope+"_lastedit",l.e.scope);
     toast("✓ Lançamento estornado","ok");
+    clgLogEstoque();
     renderClgTables();
   }
   function clgOpenLancamentos(){
@@ -6341,7 +6330,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       lancs.map(function(l,i){
         var row=(CLG_LANC_ARRMAP()[l.e.scope]||[]).find(function(r){return r.id===l.e.rowId;});
         var meio=row?(row.meio||"—"):"(meio excluído)";
-        var desc=(l.kind==="consumo"?("Consumo "+l.tipoConsumo+" · −"+l.qtd+(l.dias>1?" em "+l.dias+" dias":"")):("Abastecimento · +"+l.qtd))+" · "+(prodLbl[l.produto]||l.produto)+(l.retro?" · 📜 retroativo (só gráfico)":"");
+        var desc=(l.kind==="consumo"?("Consumo "+l.tipoConsumo+" · −"+l.qtd+(l.dias>1?" em "+l.dias+" dias":"")):("Abastecimento · +"+l.qtd))+" · "+(prodLbl[l.produto]||l.produto)+(l.retro?" · 📜 retroativo":"");
         return '<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border)">'+
           '<div style="flex:1;min-width:0"><b style="font-size:12.5px">'+esc(meio)+'</b><div style="font-size:11.5px;color:var(--text2)">'+esc(desc)+' · '+esc(l.data)+' · lançado em '+fmtAuditTs(l.e.ts)+'</div></div>'+
           '<button class="bcancel clg-lanc-del" data-i="'+i+'">🗑 Estornar</button></div>';
@@ -6399,6 +6388,41 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     }).join("")+(editing?'<tr class="dt-addrow-tr"><td colspan="'+colspan+'"><button class="nv-addrow" id="clg_t2_addrow">+ Adicionar abastecimento</button></td></tr>':(clgT2.length?'':'<tr><td colspan="'+colspan+'" style="text-align:center;color:var(--text3);font-style:italic">Nenhum abastecimento programado.</td></tr>'));
     clgUpdateToolbar("clg_t2",editing,clgT2Dirty,GLOBAL_EDIT_LOCK&&GLOBAL_EDIT_LOCK!=="t2");
     if(editing)bindRowDragGeneric(tb,function(){return clgT2;},renderClgT2,function(){clgT2Dirty=true;});
+    // Botão "✓ Receber" na coluna Recebeu (fora da edição): confirma o recebimento do abastecimento
+    // previsto e soma a quantidade ao Estoque de ODM do meio automaticamente, sem lançamento manual.
+    if(!editing)clgT2.forEach(function(r){
+      if(r.recebidoEm)return;
+      var td=tb.querySelector('.dt-cell[data-id="'+r.id+'"][data-key="recebeu"]');
+      if(!td)return;
+      var b=document.createElement("button");
+      b.className="nv-editbtn";b.textContent="✓ Receber";
+      b.style.cssText="font-size:11px;padding:3px 9px;margin-left:6px";
+      b.onclick=function(ev){
+        ev.stopPropagation();
+        if(b.dataset.arm!=="1"){b.dataset.arm="1";b.textContent="Confirmar +"+(r.quantidade||"?")+"?";b.style.color="var(--c-red)";return;}
+        b.disabled=true;
+        clgReceberAbastecimento(r);
+      };
+      td.appendChild(b);
+    });
+  }
+  async function clgReceberAbastecimento(r){
+    var row=clgFindByNome(clgT1,r.meio);
+    if(!row){toast("Meio \""+(r.meio||"—")+"\" não encontrado no Estoque de ODM.","info");renderClgT2();return;}
+    var qtd=clgNum(r.quantidade);
+    if(isNaN(qtd)||qtd<=0){toast("Quantidade inválida nesta linha de abastecimento.","info");renderClgT2();return;}
+    var atual=clgNum(row.estoque);atual=isNaN(atual)?0:atual;
+    row.estoque=String(atual+qtd);
+    clgSaveT1();await pushKV("clgPush",CLG_T1_KEY,clgT1);
+    var todayStr=clgConsumoDstr(new Date()),todayFmt=todayStr.split("-").reverse().join("/");
+    clgHistPushPoint(row.id,todayStr,atual+qtd);
+    r.recebidoEm=todayStr;
+    r.recebeu="✓ Recebido em "+todayFmt;
+    clgSaveT2();await pushKV("clgPush",CLG_T2_KEY,clgT2);
+    auditPushOne("clg_t1",row.id,"Abastecimento: +"+qtd+" ("+todayFmt+")");
+    touchLastEdit("clg_t1");paintLastEdit("clg_t1_lastedit","clg_t1");
+    toast("✓ Abastecimento recebido — estoque de "+(row.meio||"—")+" atualizado","ok");
+    renderClgTables();
   }
   function renderClgT3(prefix,arr,editing,dirty,who){
     var tb=document.getElementById(prefix+"_tbody");
