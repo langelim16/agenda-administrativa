@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Extrator de lançamentos de consumo de CLG das planilhas ODS (aba "Consumos").
 
-Uso: python3 scripts/clg_extrair.py [pasta]   (padrão: "1. clg"/)
+Uso: python3 scripts/clg_extrair.py [pasta]   (padrão: "1. leituras/1. clg")
 Saída: JSON com um lançamento por linha de consumo, pronto para conferência
 e posterior registro no Supabase do artefato.
 
@@ -109,5 +109,5 @@ def extrair(pasta):
 
 
 if __name__ == '__main__':
-    pasta = sys.argv[1] if len(sys.argv) > 1 else '1. clg'
+    pasta = sys.argv[1] if len(sys.argv) > 1 else '1. leituras/1. clg'
     print(json.dumps(extrair(pasta), ensure_ascii=False, indent=1))
