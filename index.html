@@ -1093,6 +1093,15 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
 .splash-meta{display:flex;align-items:center;justify-content:space-between;width:340px;font-family:var(--mono,monospace)}
 .splash-stage{font-size:10.5px;letter-spacing:1.2px;color:rgba(255,255,255,.6);text-transform:uppercase}
 .splash-pct{font-size:13px;letter-spacing:1px;color:#fff;font-weight:600;font-family:var(--mono,monospace)}
+.splash-bubbles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.splash-bubble{position:absolute;bottom:-10%;border-radius:50%;background:radial-gradient(circle at 32% 30%,rgba(255,255,255,.6),rgba(255,255,255,.06) 70%);animation:bubbleRise linear infinite;opacity:0}
+@keyframes bubbleRise{0%{transform:translate(0,0);opacity:0}8%{opacity:.75}88%{opacity:.35}100%{transform:translate(var(--drift,18px),-125vh);opacity:0}}
+.splash-beacon{position:absolute;inset:-46px;border-radius:50%;background:conic-gradient(from 0deg,transparent 0deg,rgba(255,255,255,.16) 35deg,transparent 95deg,transparent 360deg);animation:beaconSpin 7s linear infinite;filter:blur(3px)}
+@keyframes beaconSpin{to{transform:rotate(360deg)}}
+.splash-title{background:linear-gradient(100deg,#fff 30%,#a9d3e8 45%,#fff 60%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:titleShimmer 3.6s ease-in-out infinite}
+@keyframes titleShimmer{0%{background-position:200% 0}100%{background-position:-60% 0}}
+.splash-anchor-draw{stroke-dasharray:1000;stroke-dashoffset:1000;animation:drawAnchor 1.9s .15s cubic-bezier(.3,0,.2,1) forwards}
+@keyframes drawAnchor{to{stroke-dashoffset:0}}
 .flag-inst{background:color-mix(in srgb,var(--c-purple) 14%,#fff);color:var(--c-purple);border-color:color-mix(in srgb,var(--c-purple) 30%,#fff)}
 .recdlg-opt{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1.5px solid var(--border);border-radius:var(--r-md);background:var(--surface);color:var(--text1);cursor:pointer;text-align:left;width:100%;font-family:inherit;font-size:13px;transition:border-color .15s,box-shadow .15s}
 .recdlg-opt:hover{border-color:var(--c-blue);box-shadow:var(--sh-sm)}
@@ -1560,10 +1569,23 @@ button:focus-visible,.tab:focus-visible,.nav-item:focus-visible{outline:2px soli
 <div id="toast-container"></div>
 <div id="splash" class="splash">
 <div class="splash-waves"><svg class="w1" viewBox="0 0 1600 200" preserveAspectRatio="none"><path d="M0,110 C200,150 200,70 400,110 C600,150 600,70 800,110 C1000,150 1000,70 1200,110 C1400,150 1400,70 1600,110 L1600,200 L0,200 Z" fill="rgba(255,255,255,.55)"/></svg><svg class="w2" viewBox="0 0 1600 200" preserveAspectRatio="none"><path d="M0,130 C200,90 200,160 400,130 C600,90 600,160 800,130 C1000,90 1000,160 1200,130 C1400,90 1400,160 1600,130 L1600,200 L0,200 Z" fill="rgba(255,255,255,.45)"/></svg></div>
+<div class="splash-bubbles">
+<span class="splash-bubble" style="left:8%;width:10px;height:10px;animation-duration:9s;animation-delay:-1s;--drift:24px"></span>
+<span class="splash-bubble" style="left:18%;width:6px;height:6px;animation-duration:7s;animation-delay:-4s;--drift:-14px"></span>
+<span class="splash-bubble" style="left:28%;width:13px;height:13px;animation-duration:11s;animation-delay:-6.5s;--drift:18px"></span>
+<span class="splash-bubble" style="left:39%;width:8px;height:8px;animation-duration:8s;animation-delay:-2.5s;--drift:-20px"></span>
+<span class="splash-bubble" style="left:52%;width:5px;height:5px;animation-duration:6.5s;animation-delay:-3.2s;--drift:12px"></span>
+<span class="splash-bubble" style="left:63%;width:11px;height:11px;animation-duration:10s;animation-delay:-7.8s;--drift:-16px"></span>
+<span class="splash-bubble" style="left:72%;width:7px;height:7px;animation-duration:7.5s;animation-delay:-1.6s;--drift:22px"></span>
+<span class="splash-bubble" style="left:83%;width:9px;height:9px;animation-duration:9.5s;animation-delay:-5.4s;--drift:-10px"></span>
+<span class="splash-bubble" style="left:91%;width:6px;height:6px;animation-duration:8.5s;animation-delay:-3.9s;--drift:14px"></span>
+<span class="splash-bubble" style="left:47%;width:4px;height:4px;animation-duration:6s;animation-delay:-0.6s;--drift:-8px"></span>
+</div>
 <div class="splash-inner">
 <div class="splash-crest-wrap">
+<div class="splash-beacon"></div>
 <div class="splash-ring r1"></div><div class="splash-ring r2"></div><div class="splash-ring r3"></div>
-<div class="splash-crest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" width="220" height="220"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,0.95)"/><stop offset="100%" stop-color="rgba(255,255,255,0.65)"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="3.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g filter="url(#glow)" fill="none" stroke="url(#ag)" stroke-linecap="round" stroke-linejoin="round"><circle cx="110" cy="55" r="18" stroke-width="7"/><line x1="110" y1="73" x2="110" y2="175" stroke-width="7"/><line x1="74" y1="95" x2="146" y2="95" stroke-width="7"/><path d="M74 175 Q54 155 52 130" stroke-width="7"/><path d="M146 175 Q166 155 168 130" stroke-width="7"/><path d="M52 130 Q60 148 74 155" stroke-width="7"/><path d="M168 130 Q160 148 146 155" stroke-width="7"/><path d="M74 155 Q92 170 110 175 Q128 170 146 155" stroke-width="7"/><circle cx="110" cy="55" r="5" fill="url(#ag)" stroke="none"/></g><g fill="rgba(255,255,255,0.18)"><circle cx="110" cy="55" r="10"/></g></svg></div>
+<div class="splash-crest"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" width="220" height="220"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,0.95)"/><stop offset="100%" stop-color="rgba(255,255,255,0.65)"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="3.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g class="splash-anchor-draw" filter="url(#glow)" fill="none" stroke="url(#ag)" stroke-linecap="round" stroke-linejoin="round"><circle cx="110" cy="55" r="18" stroke-width="7"/><line x1="110" y1="73" x2="110" y2="175" stroke-width="7"/><line x1="74" y1="95" x2="146" y2="95" stroke-width="7"/><path d="M74 175 Q54 155 52 130" stroke-width="7"/><path d="M146 175 Q166 155 168 130" stroke-width="7"/><path d="M52 130 Q60 148 74 155" stroke-width="7"/><path d="M168 130 Q160 148 146 155" stroke-width="7"/><path d="M74 155 Q92 170 110 175 Q128 170 146 155" stroke-width="7"/><circle cx="110" cy="55" r="5" fill="url(#ag)" stroke="none"/></g><g fill="rgba(255,255,255,0.18)"><circle cx="110" cy="55" r="10"/></g></svg></div>
 </div>
 <div class="splash-welcome">Bem-vindo à</div>
 <div class="splash-title">Agenda Administrativa</div>
