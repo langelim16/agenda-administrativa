@@ -46,7 +46,13 @@ abastecimento  = estoque_físico_fim_do_mês (aba Estoques Físicos) − saldo_c
 ```
 
 Se `abastecimento > 0`, lançar um **abastecimento** desse valor com data no
-**dia 01 do mês seguinte**. Exemplo validado: Tocantins jan/2026 — início
+**dia 01 do mês seguinte**. EXCEÇÃO (regra de 09/07/2026): se essa data deixar
+o saldo NEGATIVO em algum ponto do gráfico (consumo do mês maior que o saldo),
+mover o abastecimento para a **data de início da comissão** que o consumiu
+(período do evento no PMPE). Validar sempre: nenhum ponto do histórico pode
+ficar negativo nem ULTRAPASSAR A CAPACIDADE do meio (coluna Capacidade da
+tabela). Se ao mover para o início da comissão a capacidade for ultrapassada,
+NÃO gravar — perguntar ao usuário a data exata do abastecimento. Exemplo validado: Tocantins jan/2026 — início
 22.268, consumo 10.766 → 11.502; estoque físico 21.502 → abastecimento de
 10.000 lançado em 01/02.
 
