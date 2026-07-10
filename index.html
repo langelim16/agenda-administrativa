@@ -8007,9 +8007,17 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
         }
         return{t:p.t,v:p.v,dot:!!l,meta:meta};
       });
+      // O gráfico mostra a acumulação DENTRO do período exibido (desde 01/01), não o total
+      // absoluto de vida do motor (dezenas de milhares de horas) — senão os incrementos
+      // mensais (centenas de horas) ficam invisíveis na escala do total histórico. O total
+      // absoluto continua disponível no detalhe de cada ponto ("Horas acumuladas" no popup).
+      if(pts.length){
+        var base=pts[0].v;
+        pts=pts.map(function(p){return{t:p.t,v:p.v-base,dot:p.dot,meta:p.meta};});
+      }
       return{name:(r.tipoMotor||"Motor")+(r.bordo?" "+r.bordo:""),points:pts};
     }).filter(function(x){return x.points.length;});
-    svgLineChart(box,series,{height:300,markedDotsOnly:true,fmtY:function(v){return horasFmtNum(v)+"h";},fmtVal:function(v){return horasFmtNum(v)+" h";}});
+    svgLineChart(box,series,{height:300,markedDotsOnly:true,yMin0:true,fmtY:function(v){return(v>0?"+":"")+horasFmtNum(v)+"h";},fmtVal:function(v){return(v>0?"+":"")+horasFmtNum(v)+" h no período";}});
   }
   /* ── Lançamento mensal de horas em operação (mesmo padrão dos botões de CLG):
      navio → motor → formulário (mês de referência + horas no mês + observação).
