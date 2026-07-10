@@ -3847,7 +3847,7 @@ function taskHTML(i){
   det+='<button class="histbtn" data-hist="'+esc(i.key)+'">'+(hO?"▲":"▼")+' Histórico <span class="kbd">'+H.length+'</span></button><div class="histlist'+(hO?" open":"")+'" id="h'+detId+'">'+
   (H.length?H.map(function(e){return'<div class="hentry"><span class="h-dot">●</span><div><span class="h-action">'+esc(e.a)+"</span>"+(e.d?' <span class="h-detail">— '+esc(e.d)+"</span>":"")+'<span class="h-src">'+esc(e.src)+'</span><div class="h-meta">'+esc(e.u)+" · "+fmtDT(e.at)+"</div></div></div>";}).join(""):"<div style=\"color:var(--text3);font-size:11px\">Sem registros.</div>")+"</div></div>";
 
-  return'<div class="task'+(isNav?" nav":" div")+(done?" done":"")+'" data-key="'+esc(i.key)+'">'+
+  return'<div class="task'+(isNav?" nav":" div")+(done?" done":"")+'" data-key="'+esc(i.key)+'" data-day="'+esc(i.deadline?i.deadline.toDateString():"")+'">'+
     '<div class="trow" data-key="'+esc(i.key)+'">'+
       '<span class="task-dh" title="Reordenar">⠿</span>'+
       '<span class="sit-dot '+S.dot+'"></span>'+
@@ -4324,16 +4324,18 @@ function renderHeatMapAno(allInst){
 document.addEventListener("dragstart",function(){document.body.classList.add("is-dragging");});
 document.addEventListener("dragend",function(){document.body.classList.remove("is-dragging");});
 document.addEventListener("drop",function(){document.body.classList.remove("is-dragging");});
-var tdKey=null;
+var tdKey=null,tdDay=null;
 function bindTDrag(){
   document.querySelectorAll(".task").forEach(function(card){
     var h=card.querySelector(".task-dh");
     if(h){h.onmousedown=function(){card.setAttribute("draggable","true");};}
     card.onmouseup=function(){card.removeAttribute("draggable");};
-    card.ondragstart=function(e){if(card.getAttribute("draggable")!=="true"){e.preventDefault();return;}tdKey=card.dataset.key;e.dataTransfer.effectAllowed="move";};
-    card.ondragend=function(){card.removeAttribute("draggable");document.querySelectorAll(".task").forEach(function(c){c.style.borderTop="";});};
-    card.ondragover=function(e){if(!tdKey)return;e.preventDefault();};
-    card.ondrop=async function(e){e.preventDefault();if(!tdKey||card.dataset.key===tdKey)return;var all=[...document.querySelectorAll(".task")].map(function(c){return c.dataset.key;});var fi=all.indexOf(tdKey),ti=all.indexOf(card.dataset.key);if(fi<0||ti<0)return;var prev=Object.assign({},ovOrder);var r=[...all];r.splice(fi,1);r.splice(ti,0,tdKey);r.forEach(function(k,idx){ovOrder[k]=idx;});await svs(K.ord,ovOrder);pushUndo("Reordenar",async function(){ovOrder=prev;await svs(K.ord,ovOrder);});tdKey=null;renderAll();};
+    card.ondragstart=function(e){if(card.getAttribute("draggable")!=="true"){e.preventDefault();return;}tdKey=card.dataset.key;tdDay=card.dataset.day;e.dataTransfer.effectAllowed="move";};
+    card.ondragend=function(){card.removeAttribute("draggable");document.querySelectorAll(".task").forEach(function(c){c.style.borderTop="";});tdKey=null;tdDay=null;};
+    // Só permite reordenar dentro do mesmo dia de prazo — mudar o prazo em si só é
+    // possível editando a tarefa, nunca arrastando-a para o grupo de outro dia.
+    card.ondragover=function(e){if(!tdKey||card.dataset.day!==tdDay)return;e.preventDefault();};
+    card.ondrop=async function(e){e.preventDefault();if(!tdKey||card.dataset.key===tdKey||card.dataset.day!==tdDay)return;var group=[...document.querySelectorAll('.task[data-day="'+CSS.escape(tdDay)+'"]')].map(function(c){return c.dataset.key;});var fi=group.indexOf(tdKey),ti=group.indexOf(card.dataset.key);if(fi<0||ti<0)return;var prev=Object.assign({},ovOrder);var r=[...group];r.splice(fi,1);r.splice(ti,0,tdKey);r.forEach(function(k,idx){ovOrder[k]=idx;});await svs(K.ord,ovOrder);pushUndo("Reordenar",async function(){ovOrder=prev;await svs(K.ord,ovOrder);});tdKey=null;tdDay=null;renderAll();};
   });
 }
 
