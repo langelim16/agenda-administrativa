@@ -2251,6 +2251,7 @@ Divisão Administrativa"></textarea></div>
 (function(){
 "use strict";
 var clgInit,renderClgTables,renderClgCards,appSwitchTab;
+var clgT1; // exposto ao módulo Horas (horasComissaoMes cruza consumo de ODM por meio/mês)
 var clgGetState,clgSetState,navGetState,navSetState,horasGetState,horasSetState,horasInit,renderHoras;
 var pessoalInit,renderPessoal,pessoalGetState,pessoalSetState;
 var ppssInit,renderPpss,garInit,renderGaragem;
@@ -6052,7 +6053,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
   var CLG_T2_FIXED_KEYS=["meio"];
   function clgT1ColsDefault(){return CLG_T1_FIXED.map(function(c){return{key:c.key,title:c.title};});}
   function clgT2ColsDefault(){return CLG_T2_FIXED.map(function(c){return{key:c.key,title:c.title};});}
-  var clgT1=[],clgT2=[],clgCards=[],clgBound=false;
+  clgT1=[];var clgT2=[],clgCards=[],clgBound=false;
   var clgT1Cols=clgT1ColsDefault(),clgT2Cols=clgT2ColsDefault();
   var clgT1Editing=false,clgT1Dirty=false,clgT1Snapshot=null,clgT1ColsSnapshot=null;
   var clgT2Editing=false,clgT2Dirty=false,clgT2Snapshot=null,clgT2ColsSnapshot=null;
