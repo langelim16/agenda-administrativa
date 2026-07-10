@@ -369,7 +369,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--c-red:#a8554b;--c-red2:color-mix(in srgb,var(--c-red) 13%,#fff);--c-blue:#41618c;--c-sky:color-mix(in srgb,var(--c-blue) 12%,#fff);--c-amber:#977b43;--c-amber2:color-mix(in srgb,var(--c-amber) 16%,#fff);--c-teal:#557a66;--c-teal2:color-mix(in srgb,var(--c-teal) 15%,#fff);--c-gold:#856a3d;--c-purple:#6f5aa6;--c-purple2:color-mix(in srgb,var(--c-purple) 14%,#fff);--c-500:#767c83;--c-900:#262a2e;--c-700:#474d54;--c-200:#e4e3df;--c-100:#efeee9;--c-50:#f8f7f3;--bg:var(--c-50);--bg-base:#ffffff;--surface:#fff;--border:var(--c-200);--border2:#cdccc5;--text:var(--c-900);--text2:var(--c-700);--text3:var(--c-500);--header-bg:#2f3a44;--sans:'Josefin Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'Josefin Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--sh-xs:0 1px 2px rgba(38,42,46,.06);--sh-sm:0 2px 8px rgba(38,42,46,.09);--sh-lg:0 14px 40px rgba(38,42,46,.13);--r-sm:4px;--r-md:8px;--r-lg:12px;--r-xl:16px;}
+:root{--c-red:#bb4f3f;--c-red2:color-mix(in srgb,var(--c-red) 13%,#fff);--c-blue:#3f6cae;--c-sky:color-mix(in srgb,var(--c-blue) 12%,#fff);--c-amber:#ad8226;--c-amber2:color-mix(in srgb,var(--c-amber) 16%,#fff);--c-teal:#47906c;--c-teal2:color-mix(in srgb,var(--c-teal) 15%,#fff);--c-gold:#9c7a2e;--c-purple:#7758c9;--c-purple2:color-mix(in srgb,var(--c-purple) 14%,#fff);--c-500:#767c83;--c-900:#262a2e;--c-700:#474d54;--c-200:#e4e3df;--c-100:#efeee9;--c-50:#f8f7f3;--bg:var(--c-50);--bg-base:#ffffff;--surface:#fff;--border:var(--c-200);--border2:#cdccc5;--text:var(--c-900);--text2:var(--c-700);--text3:var(--c-500);--header-bg:#2f3a44;--sans:'Josefin Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'Josefin Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--sh-xs:0 1px 2px rgba(38,42,46,.06);--sh-sm:0 2px 8px rgba(38,42,46,.09);--sh-lg:0 14px 40px rgba(38,42,46,.13);--r-sm:4px;--r-md:8px;--r-lg:12px;--r-xl:16px;}
 [data-theme="dark"]{--bg:#0b1118;--bg-base:#000000;--surface:#141d2b;--border:#1e293b;--border2:#2d3f55;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--c-sky:#1e3a5f;--c-amber2:#3d2a00;--c-teal2:#053330;--c-red2:#3a0a0a;--c-purple2:#1e1433;--c-100:#1e293b;--c-50:#141d2b;--c-200:#1e293b;}
 *{box-sizing:border-box;margin:0;padding:0}
 body{
@@ -529,13 +529,13 @@ tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .ferias-table td.fname{position:sticky;left:0;background:var(--surface);z-index:1;text-align:left;font-weight:600;padding:5px 10px;white-space:nowrap;border-right:2px solid var(--border)}
 .ferias-table th.fname-h{position:sticky;left:0;z-index:3;text-align:left;padding:5px 10px;border-right:2px solid var(--border)}
 .ferias-table td.fcell{width:17px;height:20px;min-width:17px;background:var(--mtint,transparent)}
-.ferias-table td.fcell.fprev{background:#d8b23a}
-.ferias-table td.fcell.fgozo{background:#5a9b6e}
-.ferias-table td.fcell.fcat-curso{background:#8a5ba6}
-.ferias-table td.fcell.fcat-comissao{background:#8a5ba6}
-.ferias-table td.fcell.fcat-lts{background:#a65b5b}
-.ferias-table td.fcell.fcat-dispensa{background:#a65b5b}
-.ferias-table td.fcell.fcat-licenca{background:#5b7fa6}
+.ferias-table td.fcell.fprev{background:#e8b81c}
+.ferias-table td.fcell.fgozo{background:#3aa864}
+.ferias-table td.fcell.fcat-curso{background:#9a55c4}
+.ferias-table td.fcell.fcat-comissao{background:#9a55c4}
+.ferias-table td.fcell.fcat-lts{background:#c34f45}
+.ferias-table td.fcell.fcat-dispensa{background:#c34f45}
+.ferias-table td.fcell.fcat-licenca{background:#4a7dc4}
 .ferias-table td.fcell.fpreembarque{background:#3a3f45}
 .ferias-jump{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
 .ferias-jump button{background:var(--c-100);border:1px solid var(--border2);color:var(--text2);font-size:10px;padding:5px 9px;border-radius:var(--r-sm);text-transform:uppercase;letter-spacing:.3px}
@@ -1592,6 +1592,51 @@ tr.row-crit{background:rgba(233,150,53,.20)}
 
 /* ── F. Foco visível consistente ── */
 button:focus-visible,.tab:focus-visible,.nav-item:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+</style>
+<style id="visual-refresh-4k">
+/* ═══════════════════════════════════════════════════════════════
+   REFINO 4K — nitidez de renderização, sombras em camadas e
+   cores com volume (aspecto 3D). Camada puramente visual.
+   ═══════════════════════════════════════════════════════════════ */
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
+
+/* ── KPIs: superfície com gradiente sutil, sombra em camadas e halo da cor no hover ── */
+.kpi{
+  background:linear-gradient(180deg,color-mix(in srgb,#fff 45%,var(--surface)),var(--surface) 52%,color-mix(in srgb,var(--kpi-c) 5%,var(--surface)));
+  box-shadow:0 1px 2px rgba(38,42,46,.07),0 3px 8px rgba(38,42,46,.06),inset 0 1px 0 color-mix(in srgb,#fff 55%,transparent);
+  transition:transform .24s var(--spring),box-shadow .28s ease,border-color .2s ease;
+}
+.kpi::before{
+  width:4px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--kpi-c) 62%,#fff),var(--kpi-c) 45%,color-mix(in srgb,var(--kpi-c) 72%,#000));
+  box-shadow:1px 0 6px color-mix(in srgb,var(--kpi-c) 40%,transparent);
+}
+.kpi:hover{
+  transform:translateY(-4px) scale(1.02);
+  border-color:color-mix(in srgb,var(--kpi-c) 45%,var(--border));
+  box-shadow:0 2px 4px rgba(38,42,46,.08),0 10px 22px color-mix(in srgb,var(--kpi-c) 22%,rgba(38,42,46,.08)),0 18px 40px rgba(38,42,46,.10),inset 0 1px 0 color-mix(in srgb,#fff 65%,transparent);
+}
+.kpi:active{transform:translateY(-1px) scale(.985)}
+.kpi.active{box-shadow:0 0 0 2.5px var(--kpi-c) inset,0 8px 20px color-mix(in srgb,var(--kpi-c) 26%,transparent)}
+.kpi-n{text-shadow:0 1px 0 color-mix(in srgb,#fff 40%,transparent),0 2px 6px color-mix(in srgb,var(--kpi-c) 26%,transparent)}
+.kpi-prog-fill{background:linear-gradient(90deg,color-mix(in srgb,var(--kpi-c) 60%,#fff),var(--kpi-c));box-shadow:0 0 6px color-mix(in srgb,var(--kpi-c) 50%,transparent)}
+
+/* ── Legenda do Controle de Férias: letra do grupo dentro do quadradinho ── */
+.ferias-sw{display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:8.5px;font-weight:800;line-height:1;text-shadow:0 1px 1px rgba(0,0,0,.35);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -1px 1px rgba(0,0,0,.22),0 1px 2px rgba(38,42,46,.18)}
+
+/* ── Quadradinhos do calendário: letra do grupo, volume 3D e clique ── */
+.ferias-table td.fcell{font-size:9px;font-weight:800;color:#fff;line-height:1;user-select:none}
+.ferias-table td.fcell.fprev,.ferias-table td.fcell.fgozo,.ferias-table td.fcell[class*="fcat-"],.ferias-table td.fcell.fpreembarque{
+  background-image:linear-gradient(180deg,rgba(255,255,255,.32),rgba(255,255,255,.06) 42%,rgba(0,0,0,.16));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.38),inset 0 -1px 1px rgba(0,0,0,.22);
+  text-shadow:0 1px 1px rgba(0,0,0,.4);
+}
+.ferias-table td.fcell.fclick{cursor:pointer;position:relative;transition:transform .14s ease,box-shadow .16s ease,filter .14s ease}
+.ferias-table td.fcell.fclick:hover,.ferias-table td.fcell.fclick:focus-visible{
+  transform:scale(1.45);border-radius:5px;z-index:6;filter:brightness(1.08) saturate(1.15);
+  box-shadow:0 3px 10px rgba(38,42,46,.4),inset 0 1px 0 rgba(255,255,255,.5);
+  outline:none;
+}
 </style>
 </head>
 <body id="artifacts-component-root-html">
@@ -3772,8 +3817,8 @@ function passF(i){
 
 /* ── TEMA / HEADER ── */
 function applyTheme(){document.documentElement.setAttribute("data-theme",theme);document.querySelectorAll(".theme-toggle-btn").forEach(function(b){b.textContent=theme==="light"?"🌙 Noturno":"☀ Diurno";});}
-var PAL0={danger:"#a8554b",warning:"#977b43",success:"#557a66"};
-var PALPRE=[{n:"Ardósia",header:"#2f3a44",danger:"#a8554b",warning:"#977b43",success:"#557a66"},{n:"Sépia",header:"#3a332b",danger:"#9c5a4a",warning:"#9a7b43",success:"#6b7355"},{n:"Floresta",header:"#2b3a30",danger:"#a3564a",warning:"#8c7a3f",success:"#5a7d57"},{n:"Grafite",header:"#2c2e33",danger:"#94605a",warning:"#8a7d5a",success:"#5f7068"},{n:"Borgonha",header:"#3d2b2e",danger:"#9c5048",warning:"#9a7b43",success:"#5f7565"}];
+var PAL0={danger:"#bb4f3f",warning:"#ad8226",success:"#47906c"};
+var PALPRE=[{n:"Ardósia",header:"#2f3a44",danger:"#bb4f3f",warning:"#ad8226",success:"#47906c"},{n:"Sépia",header:"#3a332b",danger:"#9c5a4a",warning:"#9a7b43",success:"#6b7355"},{n:"Floresta",header:"#2b3a30",danger:"#a3564a",warning:"#8c7a3f",success:"#5a7d57"},{n:"Grafite",header:"#2c2e33",danger:"#94605a",warning:"#8a7d5a",success:"#5f7068"},{n:"Borgonha",header:"#3d2b2e",danger:"#9c5048",warning:"#9a7b43",success:"#5f7565"}];
 function _pv(id){var el=document.getElementById(id);return el?el.value:"";}
 function applyPalette(){var p=(typeof cfg!=="undefined"&&cfg&&cfg.palette)||PAL0,r=document.documentElement.style;r.setProperty("--c-red",p.danger||PAL0.danger);r.setProperty("--c-amber",p.warning||PAL0.warning);r.setProperty("--c-gold",p.warning||PAL0.warning);r.setProperty("--c-teal",p.success||PAL0.success);}
 function fillPalInputs(){var p=(cfg&&cfg.palette)||PAL0;document.getElementById("pc_danger").value=p.danger||PAL0.danger;document.getElementById("pc_warning").value=p.warning||PAL0.warning;document.getElementById("pc_success").value=p.success||PAL0.success;}
@@ -8319,12 +8364,13 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
   rebuildFeriasRange();
   // Grupos de legenda do calendário (Controle de Férias) — agrupam os tipos de afastamento por cor.
   var GROUPS=[
-    {key:"destaque",label:"Destaque",color:"#8a5ba6"},
-    {key:"previsao",label:"Previsão de férias",color:"#d8b23a"},
-    {key:"gozo",label:"Férias gozadas",color:"#5a9b6e"},
-    {key:"medica",label:"LTS/Dispensa Médica",color:"#a65b5b"},
-    {key:"licenca",label:"Afastamento",color:"#5b7fa6"}
+    {key:"destaque",label:"Destaque",color:"#9a55c4",letter:"D"},
+    {key:"previsao",label:"Previsão de férias",color:"#e8b81c",letter:"P"},
+    {key:"gozo",label:"Férias gozadas",color:"#3aa864",letter:"F"},
+    {key:"medica",label:"LTS/Dispensa Médica",color:"#c34f45",letter:"L"},
+    {key:"licenca",label:"Afastamento",color:"#4a7dc4",letter:"A"}
   ];
+  function groupOf(key){return GROUPS.find(function(g){return g.key===key;});}
   // Tipos de afastamento (categoria armazenada em pessoalFerias). "ferias" e "licenca" (categoria fixa,
   // subtipo no campo "tipo") são tratados à parte — ver catLabel/dayStatus/AFASTAMENTO_TYPES.
   // Os demais: período livre, sem limite de dias — regras específicas a definir futuramente.
@@ -8647,14 +8693,24 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var dt=row?parseBRDate(row.dataEmbarque):null;
     return dt?dstr(dt):null;
   }
-  function dayStatus(nome,ds){
+  function dayInfo(nome,ds){
     var emb=embarqueDs(nome);
-    if(emb&&ds<emb)return"fpreembarque";
+    if(emb&&ds<emb)return{st:"fpreembarque",entry:null};
     var entry=pessoalFerias.find(function(f){return f.militar===nome&&ds>=f.inicio&&ds<=f.fim;});
-    if(!entry)return"";
-    if(entry.categoria==="ferias")return entry.tipo==="gozo"?"fgozo":"fprev";
-    return "fcat-"+entry.categoria;
+    if(!entry)return{st:"",entry:null};
+    var st=entry.categoria==="ferias"?(entry.tipo==="gozo"?"fgozo":"fprev"):("fcat-"+entry.categoria);
+    return{st:st,entry:entry};
   }
+  function dayStatus(nome,ds){return dayInfo(nome,ds).st;}
+  // Grupo de legenda de um lançamento — subitens herdam a letra do grupo maior
+  // (ex.: Afastamento por Licença Especial → "A" de Afastamento).
+  function entryGroupKey(entry){
+    if(entry.categoria==="ferias")return entry.tipo==="gozo"?"gozo":"previsao";
+    if(entry.categoria==="licenca")return"licenca";
+    var t=periodTypeOf(entry.categoria);
+    return t?t.group:"licenca";
+  }
+  function entryLetter(entry){var g=groupOf(entryGroupKey(entry));return g?g.letter:"";}
   function militarLabel(r){return((r.posto||"")+" "+(r.nome||"")).trim()||"(sem nome)";}
   function periodDays(inicio,fim){var di=new Date(inicio+"T00:00:00"),df=new Date(fim+"T00:00:00");return Math.round((df-di)/86400000)+1;}
   function vacationDaysOf(nome,subtipo){
@@ -8729,7 +8785,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var box=document.getElementById("ferias_legend");
     if(!box)return;
     box.innerHTML=GROUPS.map(function(g){
-      return '<span class="ferias-sw" style="background:'+g.color+'"></span> '+esc(g.label);
+      return '<span class="ferias-sw" style="background:'+g.color+'">'+g.letter+'</span> '+esc(g.label);
     }).join(" &nbsp; ")+' &nbsp; <span class="ferias-sw" style="background:#3a3f45"></span> Antes do embarque';
   }
   function renderFeriasTable(){
@@ -8738,12 +8794,54 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var body=pessoalRows.map(function(r){
       var nome=r.nome||"",label=militarLabel(r);
       var cells=FERIAS_DAYS.map(function(d){
-        var ds=dstr(d),st=dayStatus(nome,ds);
-        return '<td class="fcell'+(st?" "+st:"")+'" style="--mtint:'+monthTintFor(d)+'" title="'+esc(label)+" — "+d.toLocaleDateString("pt-BR")+'"></td>';
+        var ds=dstr(d),info=dayInfo(nome,ds),st=info.st,entry=info.entry;
+        var tip=esc(label)+" — "+d.toLocaleDateString("pt-BR");
+        if(entry){
+          tip+=" · "+esc(catLabel(entry.categoria,entry.tipo))+" ("+entry.inicio.split("-").reverse().join("/")+" a "+entry.fim.split("-").reverse().join("/")+") — clique para detalhes";
+          return '<td class="fcell '+st+' fclick" role="button" tabindex="0" data-fid="'+entry.id+'" style="--mtint:'+monthTintFor(d)+'" title="'+tip+'">'+entryLetter(entry)+'</td>';
+        }
+        return '<td class="fcell'+(st?" "+st:"")+'" style="--mtint:'+monthTintFor(d)+'" title="'+tip+'"></td>';
       }).join("");
       return '<tr><td class="fname">'+esc(label)+'</td>'+cells+'</tr>';
     }).join("");
     table.innerHTML=feriasTheadHtml()+'<tbody>'+body+'</tbody>';
+    table.onclick=function(e){var td=e.target.closest("td.fclick");if(td)openFeriasDetail(td.dataset.fid);};
+    table.onkeydown=function(e){if(e.key!=="Enter"&&e.key!==" ")return;var td=e.target.closest("td.fclick");if(td){e.preventDefault();openFeriasDetail(td.dataset.fid);}};
+  }
+  /* ── Janela de referência de um período lançado (clique no quadradinho do calendário) ── */
+  function openFeriasDetail(id){
+    var f=pessoalFerias.find(function(x){return x.id===id;});
+    if(!f)return;
+    var gk=entryGroupKey(f),g=groupOf(gk)||{color:"#4a7dc4",label:"Afastamento",letter:"A"};
+    var dias=periodDays(f.inicio,f.fim);
+    var ini=f.inicio.split("-").reverse().join("/"),fim=f.fim.split("-").reverse().join("/");
+    var hoje=dstr(new Date());
+    var status=hoje<f.inicio?["Previsto","var(--c-blue)"]:(hoje>f.fim?["Concluído","var(--text3)"]:["Em curso","var(--c-teal)"]);
+    var bg=ensureModal("fdetbg","Período lançado — referência");
+    var body=bg.querySelector(".mbody");
+    function fld(k,v){return '<div style="border:1px solid var(--border);border-radius:var(--r-md);padding:8px 11px;background:var(--c-50)"><b style="display:block;font-size:9px;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);margin-bottom:2px">'+k+'</b><span style="font-size:13px;font-weight:600">'+v+'</span></div>';}
+    body.innerHTML=
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">'+
+        '<span style="width:38px;height:38px;border-radius:9px;background:linear-gradient(180deg,color-mix(in srgb,'+g.color+' 70%,#fff),'+g.color+' 55%,color-mix(in srgb,'+g.color+' 75%,#000));box-shadow:0 3px 8px color-mix(in srgb,'+g.color+' 45%,transparent),inset 0 1px 0 rgba(255,255,255,.45);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;flex:none">'+g.letter+'</span>'+
+        '<div style="flex:1;min-width:180px"><div style="font-weight:700;font-size:15px">'+esc(catLabel(f.categoria,f.tipo))+'</div>'+
+        '<div style="font-size:11px;color:var(--text3)">Grupo da legenda: '+esc(g.label)+' — letra \u201C'+g.letter+'\u201D</div></div>'+
+        '<span style="font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#fff;background:'+status[1]+';padding:4px 10px;border-radius:99px">'+status[0]+'</span>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+        fld("Militar",esc(pessoalMilitarLabelOf(f.militar)))+
+        fld("Motivo",esc(f.motivo||catLabel(f.categoria,f.tipo)))+
+        fld("Início",ini)+fld("Término",fim)+
+        fld("Duração",dias+" dia(s)")+
+        fld("Ano de referência",cycleLabel(pessoalCurCycle))+
+      '</div>'+
+      '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">'+
+        '<button type="button" class="nv-editbtn" id="fdet_edit">✎ Editar período</button>'+
+      '</div>';
+    document.getElementById("fdet_edit").onclick=function(){
+      bg.classList.remove("open");
+      openFeriasForm(f.categoria,f.tipo,f);
+    };
+    bg.classList.add("open");
   }
   function pctBR(n){return n.toFixed(2).replace(".",",")+"%";}
   function renderPessoalStats(){
@@ -8972,7 +9070,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
   function openAfastSubtypePicker(mode){
     var list=document.getElementById("fa_list");
     list.innerHTML=AFASTAMENTO_TYPES.filter(function(t){return t.key!=="maternidade_prorrogacao";}).map(function(t){
-      return '<button type="button" class="ferias-cat-pick" data-key="'+t.key+'"><span class="ferias-cat-dot" style="background:#5b7fa6"></span>'+esc(t.label)+'</button>';
+      return '<button type="button" class="ferias-cat-pick" data-key="'+t.key+'"><span class="ferias-cat-dot" style="background:#4a7dc4"></span>'+esc(t.label)+'</button>';
     }).join("");
     list.querySelectorAll("button").forEach(function(b){
       b.onclick=function(){closeMbg("fabg");applyGroupPick("licenca",b.dataset.key,mode);};
