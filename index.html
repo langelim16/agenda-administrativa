@@ -3924,14 +3924,17 @@ function mkEmptyMonth(tipo,mes){return'<div class="empty-month">Não há '+tipo+
 
 function renderBody(inst){
   var rows=inst.filter(passF).filter(function(i){return statusOf(i)!=="EXCLUIDA";});
-  // Ordena por prazo por padrão. Só usa a ordem manual (ovOrder) quando AMBAS as tarefas
-  // comparadas já foram reordenadas manualmente alguma vez — antes, se uma tinha ordem manual
-  // e a outra não, a com ordem manual sempre vencia (mesmo com prazo bem mais distante),
-  // fazendo tarefas novas/não mexidas ficarem presas no fim da lista em vez de intercalar por prazo.
+  // Ordena sempre por prazo. A ordem manual (ovOrder) só desempata quando os dois
+  // prazos caem no mesmo dia — assim, ao mudar o prazo de uma tarefa, ela assume
+  // sua nova posição cronológica (não fica presa por ordem manual de dias diferentes).
   rows.sort(function(a,b){
-    var oa=ovOrder[a.key],ob=ovOrder[b.key];
-    if(oa!==undefined&&ob!==undefined&&oa!==ob)return oa-ob;
-    return(a.deadline?a.deadline.getTime():Infinity)-(b.deadline?b.deadline.getTime():Infinity);
+    var ta=a.deadline?a.deadline.getTime():Infinity,tb=b.deadline?b.deadline.getTime():Infinity;
+    var sameDay=a.deadline&&b.deadline&&a.deadline.toDateString()===b.deadline.toDateString();
+    if(sameDay){
+      var oa=ovOrder[a.key],ob=ovOrder[b.key];
+      if(oa!==undefined&&ob!==undefined&&oa!==ob)return oa-ob;
+    }
+    return ta-tb;
   });
 
   if(viewMode==="cal"){renderCal(rows);bindEv();return;}
