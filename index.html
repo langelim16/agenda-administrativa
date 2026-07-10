@@ -1437,6 +1437,18 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
 .lchart-single-dot{width:10px;height:10px;border-radius:50%;flex:none;box-shadow:0 0 0 4px color-mix(in srgb,currentColor 14%,transparent)}
 .lchart-single-val{margin-left:auto;font-weight:700;color:var(--text1);font-family:var(--mono,monospace)}
 .lchart-single-note{font-size:10.5px;color:var(--text3);font-style:italic;margin-top:2px}
+.lchart-root{position:relative}
+.cl-dot[data-clk="1"]{cursor:pointer}
+.lchart-tt{position:absolute;display:none;pointer-events:none;z-index:5;max-width:250px;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--sh-lg);padding:9px 12px 8px;font-size:11px;line-height:1.45;color:var(--text2)}
+.lchart-xh line{stroke:var(--text3);stroke-dasharray:4 4;stroke-width:1.1}
+.lchart-xh rect{fill:var(--text)}
+.lchart-xh text{fill:var(--surface);font-size:10px;font-weight:700;font-family:var(--mono,monospace)}
+.lchart-modal-tag{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;border-radius:99px;padding:3px 10px;background:var(--c-100)}
+.lchart-modal-row{display:flex;align-items:baseline;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px dashed var(--border)}
+.lchart-modal-row:last-child{border-bottom:none}
+.lchart-modal-k{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+.lchart-modal-v{font-size:13.5px;color:var(--text);font-weight:700;text-align:right}
+.lchart-modal-note{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--c-50);border-left:3px solid var(--c-blue);font-size:11.5px;line-height:1.5;color:var(--text2)}
 tr.row-crit{background:rgba(233,150,53,.20)}
 .hr-sem{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle;flex:none}
 </style>
@@ -3001,47 +3013,94 @@ function svgMonotonePath(p){
   return d;
 }
 var svgLineChartUID=0;
-/* Gráfico de linhas SVG genérico. series: [{name, points:[{t:msEpoch, v:número}]}]. opts.fmtY formata o eixo Y. */
-function svgLineChart(series,opts){
+var LCHART_MESL=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+/* Passo de escala "redondo": múltiplos de 1/2/2,5/5 × 10^k — o eixo Y só usa valores terminados em zero. */
+function lchartNiceStep(raw){
+  raw=Math.max(raw||10,10);
+  var k=Math.pow(10,Math.floor(Math.log10(raw)));
+  var c=[1,2,2.5,5,10];
+  for(var i=0;i<c.length;i++){var s=c[i]*k;if(s>=raw&&Math.round(s)%10===0)return s;}
+  return 10*k;
+}
+function lchartFmtLong(t){var d=new Date(t);return d.getDate()+" "+LCHART_MESL[d.getMonth()]+" "+d.getFullYear();}
+/* Modal de detalhe de um ponto de inflexão — meta:{title,tag,tagColor,rows:[[k,v]...],note?} */
+function openLchartDetail(meta){
+  var bg=ensureModal("lchartDetailBg",meta.title||"Detalhe");
+  var body=bg.querySelector(".mbody");
+  var rowsHtml=meta.rows.map(function(r){
+    return '<div class="lchart-modal-row"><span class="lchart-modal-k">'+esc(r[0])+'</span><span class="lchart-modal-v">'+esc(r[1])+'</span></div>';
+  }).join("");
+  body.innerHTML='<span class="lchart-modal-tag" style="color:'+(meta.tagColor||"var(--c-blue)")+'">'+esc(meta.tag||"")+'</span>'+
+    '<div style="margin:8px 0 2px">'+rowsHtml+'</div>'+
+    (meta.note?'<div class="lchart-modal-note" style="border-left-color:'+(meta.tagColor||"var(--c-blue)")+'">'+esc(meta.note)+'</div>':"");
+  bg.classList.add("open");
+}
+/* Gráfico de linhas SVG genérico. Desenha dentro de `box` e liga hover/clique.
+   series: [{name, points:[{t:msEpoch, v:número, dot?, meta?}]}]. opts.fmtY formata o eixo Y;
+   opts.fmtVal formata o valor no tooltip (padrão = fmtY); opts.refLines:[{v,label,color}]. */
+function svgLineChart(box,series,opts){
+  if(!box)return;
   opts=opts||{};
   var pts=[];series.forEach(function(s){(s.points||[]).forEach(function(p){pts.push(p);});});
-  if(!pts.length)return '<div style="font-size:11px;color:var(--text3);font-style:italic;padding:8px 0">Sem dados suficientes ainda.</div>';
+  if(!pts.length){box.innerHTML='<div style="font-size:11px;color:var(--text3);font-style:italic;padding:8px 0">Sem dados suficientes ainda.</div>';return;}
   var uid=++svgLineChartUID;
   var rawMinT=Math.min.apply(null,pts.map(function(p){return p.t;})),rawMaxT=Math.max.apply(null,pts.map(function(p){return p.t;}));
   var fmtY=opts.fmtY||function(v){return String(Math.round(v));};
+  var fmtVal=opts.fmtVal||fmtY;
   function fmtX(t){var d=new Date(t);return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0");}
   /* Só existe 1 timestamp registrado até agora: em vez de esticar um eixo falso, mostra as leituras atuais como cartão de status. */
   if(rawMaxT===rawMinT){
-    var rows=series.map(function(s,si){
+    var rows0=series.map(function(s,si){
       var c=CHART_PALETTE[si%CHART_PALETTE.length];
       var v=(s.points||[])[0]?s.points[0].v:null;
       return '<div class="lchart-single-row"><span class="lchart-single-dot" style="color:'+c+';background:'+c+'"></span>'+esc(s.name)+'<span class="lchart-single-val">'+(v===null?"—":esc(fmtY(v)))+'</span></div>';
     }).join("");
-    return '<div class="lchart-single">'+rows+'</div><div class="lchart-single-note">Ainda há apenas uma leitura registrada — a tendência aparece aqui assim que houver leituras em datas diferentes.</div>';
+    box.innerHTML='<div class="lchart-single">'+rows0+'</div><div class="lchart-single-note">Ainda há apenas uma leitura registrada — a tendência aparece aqui assim que houver leituras em datas diferentes.</div>';
+    return;
   }
   var minT=rawMinT,maxT=rawMaxT;
   var minV=Math.min.apply(null,pts.map(function(p){return p.v;})),maxV=Math.max.apply(null,pts.map(function(p){return p.v;}));
+  (opts.refLines||[]).forEach(function(r){if(r.v>maxV)maxV=r.v;if(r.v<minV)minV=r.v;});
   if(maxV===minV){minV-=1;maxV+=1;}
-  var vPad=(maxV-minV)*0.08;minV-=vPad;maxV+=vPad;
-  var W=600,H=opts.height||220,L=56,R=14,T=14,B=26;
+  var step=lchartNiceStep((maxV-minV)/4);
+  var y0=Math.floor(minV/step)*step,y1=Math.ceil((maxV+(maxV-minV)*0.06)/step)*step;
+  if(y1<=y0)y1=y0+step;
+  var W=600,H=opts.height||220,L=60,R=14,T=14,B=30,baseY=H-B;
   function X(t){return L+(t-minT)/(maxT-minT)*(W-L-R);}
-  function Y(v){return T+(1-(v-minV)/(maxV-minV))*(H-T-B);}
-  var grid="",gi;
-  for(gi=0;gi<3;gi++){
-    var gv=minV+(maxV-minV)*gi/2,gy=Y(gv);
+  function Y(v){return T+(1-(v-y0)/(y1-y0))*(baseY-T);}
+  var grid="";
+  for(var gv=y0;gv<=y1+1e-9;gv+=step){
+    var gy=Y(gv);
     grid+='<line class="lchart-grid-line" x1="'+L+'" y1="'+gy.toFixed(1)+'" x2="'+(W-R)+'" y2="'+gy.toFixed(1)+'"></line>'+
-      '<text class="lchart-axis" x="'+(L-8)+'" y="'+(gy+3).toFixed(1)+'" text-anchor="end" font-size="9.5">'+esc(fmtY(Math.round(gv)))+'</text>';
+      '<text class="lchart-axis" x="'+(L-8)+'" y="'+(gy+3).toFixed(1)+'" text-anchor="end" font-size="9.5">'+esc(fmtY(gv))+'</text>';
   }
-  var midT=minT+(maxT-minT)/2;
-  grid+='<text class="lchart-axis" x="'+L+'" y="'+(H-8)+'" font-size="9.5">'+fmtX(minT)+'</text>'+
-        '<text class="lchart-axis" x="'+((L+W-R)/2).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle" font-size="9.5">'+fmtX(midT)+'</text>'+
-        '<text class="lchart-axis" x="'+(W-R)+'" y="'+(H-8)+'" text-anchor="end" font-size="9.5">'+fmtX(maxT)+'</text>';
-  var baseY=H-B;
+  /* eixo X: dias dos lançamentos que geraram as inflexões (não datas arbitrárias) */
+  var evT={};evT[minT]=1;
+  series.forEach(function(s){(s.points||[]).forEach(function(p){if(p.dot)evT[p.t]=1;});});
+  var ts=Object.keys(evT).map(Number).sort(function(a,b){return a-b;});
+  var lastX=-1e9;
+  ts.forEach(function(t){
+    var x=X(t);
+    if(x-lastX<48)return;
+    lastX=x;
+    grid+='<line x1="'+x.toFixed(1)+'" y1="'+T+'" x2="'+x.toFixed(1)+'" y2="'+baseY+'" stroke="var(--border)" stroke-dasharray="2 5" opacity="'+(t===minT?0:0.5)+'"></line>'+
+      '<text class="lchart-axis" x="'+x.toFixed(1)+'" y="'+(baseY+17)+'" text-anchor="middle" font-size="9">'+fmtX(t)+'</text>';
+  });
+  grid+='<line x1="'+L+'" y1="'+baseY+'" x2="'+(W-R)+'" y2="'+baseY+'" stroke="var(--border2)" stroke-width="1"></line>';
+  /* linhas de referência (ex.: ROP / estoque mínimo) */
+  var refHtml="";
+  (opts.refLines||[]).forEach(function(r){
+    var ry=Y(r.v);if(ry<T-1||ry>baseY+1)return;
+    refHtml+='<line x1="'+L+'" y1="'+ry.toFixed(1)+'" x2="'+(W-R)+'" y2="'+ry.toFixed(1)+'" stroke="'+r.color+'" stroke-width="1.2" stroke-dasharray="6 4" opacity=".7"></line>'+
+      '<text x="'+(W-R)+'" y="'+(ry-4).toFixed(1)+'" text-anchor="end" font-size="8.5" fill="'+r.color+'" font-weight="700">'+esc(r.label)+'</text>';
+  });
+  var seriesData=[]; // guarda pontos em coords de tela p/ hover/click, por série
   var lines=series.map(function(s,si){
     var c=CHART_PALETTE[si%CHART_PALETTE.length];
     var sp=(s.points||[]).slice().sort(function(a,b){return a.t-b.t;});
-    if(!sp.length)return"";
+    if(!sp.length){seriesData.push({name:s.name,c:c,pts:[]});return"";}
     var xy=sp.map(function(p){return[X(p.t),Y(p.v)];});
+    seriesData.push({name:s.name,c:c,pts:sp,xy:xy});
     var len=0;for(var i=1;i<xy.length;i++){var dx=xy[i][0]-xy[i-1][0],dy=xy[i][1]-xy[i-1][1];len+=Math.sqrt(dx*dx+dy*dy);}
     len=Math.max(len*1.15,40);
     var path=svgMonotonePath(xy);
@@ -3053,13 +3112,97 @@ function svgLineChart(series,opts){
       // mostrando a variação gradual entre um lançamento e outro.
       if(opts.markedDotsOnly&&!p.dot)return"";
       var isLast=i===sp.length-1;
-      return '<circle class="cl-dot'+(isLast?" cl-endpoint":"")+'" cx="'+X(p.t).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="'+(isLast?4.2:2.8)+'" fill="'+c+'" stroke="var(--surface)" stroke-width="1.2"><title>'+esc(s.name)+' — '+fmtX(p.t)+': '+esc(fmtY(p.v))+'</title></circle>';
+      return '<circle class="cl-dot'+(isLast?" cl-endpoint":"")+(p.meta?' data-clk="1"':"")+'" cx="'+X(p.t).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="'+(isLast?4.2:2.8)+'" fill="'+c+'" stroke="var(--surface)" stroke-width="1.2"></circle>';
     }).join("");
     return '<defs><linearGradient id="'+gradId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+c+'" stop-opacity=".32"></stop><stop offset="100%" stop-color="'+c+'" stop-opacity="0"></stop></linearGradient></defs>'+
-      '<g class="cl-series">'+area+line+dots+'</g>';
+      '<g class="cl-series" data-si="'+si+'">'+area+line+dots+'</g>';
   }).join("");
   var legend2='<div class="lchart-legend">'+series.map(function(s,si){return '<span class="lchart-legend-item"><span class="lchart-legend-swatch" style="background:'+CHART_PALETTE[si%CHART_PALETTE.length]+'"></span>'+esc(s.name)+'</span>';}).join("")+'</div>';
-  return '<div class="lchart-root"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">'+grid+lines+'</svg></div>'+legend2;
+  /* crosshair: linhas tracejadas do ponto até os eixos X e Y, com balões de valor */
+  var xh='<g class="lchart-xh" style="display:none">'+
+    '<line class="xh-v"></line><line class="xh-h"></line>'+
+    '<circle class="xh-halo" r="8" fill="none" stroke-width="1.2" opacity=".5"></circle>'+
+    '<circle class="xh-dot" r="3.6" stroke="var(--surface)" stroke-width="1.4"></circle>'+
+    '<g class="xh-yb"><rect rx="5" height="18"></rect><text text-anchor="middle"></text></g>'+
+    '<g class="xh-xb"><rect rx="5" height="18"></rect><text text-anchor="middle"></text></g>'+
+    '</g>';
+  box.innerHTML='<div class="lchart-root"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;overflow:visible">'+grid+refHtml+lines+xh+'</svg>'+
+    '<div class="lchart-tt"></div></div>'+legend2;
+  /* ── interação: hover mostra crosshair+tooltip; clique num ponto sinalizado abre o detalhe ── */
+  var svg=box.querySelector("svg"),tt=box.querySelector(".lchart-tt");
+  var xhg=svg.querySelector(".lchart-xh"),xv=svg.querySelector(".xh-v"),xhh=svg.querySelector(".xh-h");
+  var dot=svg.querySelector(".xh-dot"),halo=svg.querySelector(".xh-halo");
+  var ybr=svg.querySelector(".xh-yb rect"),ybt=svg.querySelector(".xh-yb text");
+  var xbr=svg.querySelector(".xh-xb rect"),xbt=svg.querySelector(".xh-xb text");
+  var sgs=svg.querySelectorAll(".cl-series");
+  function hide(){xhg.style.display="none";tt.style.display="none";sgs.forEach(function(n){n.style.opacity=1;});}
+  function interp(sp,t){
+    if(!sp.length)return null;
+    if(t<=sp[0].t)return sp[0].v;
+    if(t>=sp[sp.length-1].t)return sp[sp.length-1].v;
+    for(var i=1;i<sp.length;i++){if(t<=sp[i].t){var a=sp[i-1],b=sp[i];return a.v+(b.v-a.v)*((t-a.t)/((b.t-a.t)||1));}}
+    return sp[sp.length-1].v;
+  }
+  function nearestPoint(mx,my){
+    var found=null;
+    seriesData.forEach(function(sd,si){
+      (sd.pts||[]).forEach(function(p){
+        if(!p.meta)return;
+        var d=Math.hypot(X(p.t)-mx,Y(p.v)-my);
+        if(d<=13&&(!found||d<found.d))found={p:p,si:si,d:d};
+      });
+    });
+    return found;
+  }
+  svg.addEventListener("mousemove",function(ev){
+    var r=svg.getBoundingClientRect(),sc=r.width/W;
+    var mx=(ev.clientX-r.left)/sc,my=(ev.clientY-r.top)/sc;
+    svg.style.cursor=nearestPoint(mx,my)?"pointer":"default";
+    if(mx<L||mx>W-R||my<0||my>H){hide();return;}
+    var t=minT+(mx-L)/(W-L-R)*(maxT-minT);
+    var best=null;
+    seriesData.forEach(function(sd,si){
+      var v=interp(sd.pts,t);if(v===null)return;
+      var y=Y(v),d=Math.abs(my-y);
+      if(!best||d<best.d)best={sd:sd,si:si,v:v,d:d};
+    });
+    if(!best){hide();return;}
+    var snap=null;
+    (best.sd.pts||[]).forEach(function(p){if(p.dot){var d=Math.abs(X(p.t)-mx);if(d<=12&&(!snap||d<snap.d))snap={p:p,d:d};}});
+    var pt=snap?{t:snap.p.t,v:snap.p.v}:{t:t,v:best.v};
+    var x=X(pt.t),y=Y(pt.v);
+    xhg.style.display="";
+    xv.setAttribute("x1",x);xv.setAttribute("y1",y);xv.setAttribute("x2",x);xv.setAttribute("y2",baseY);
+    xhh.setAttribute("x1",L);xhh.setAttribute("y1",y);xhh.setAttribute("x2",x);xhh.setAttribute("y2",y);
+    dot.setAttribute("cx",x);dot.setAttribute("cy",y);dot.setAttribute("fill",best.sd.c);
+    halo.setAttribute("cx",x);halo.setAttribute("cy",y);halo.setAttribute("stroke",best.sd.c);
+    var yTxt=fmtY(pt.v),yw=yTxt.length*6.3+14;
+    ybr.setAttribute("width",yw);ybr.setAttribute("x",L-6-yw);ybr.setAttribute("y",y-9);
+    ybt.textContent=yTxt;ybt.setAttribute("x",L-6-yw/2);ybt.setAttribute("y",y+3.2);
+    var xTxt=fmtX(pt.t),xw=xTxt.length*6.3+14;
+    var bx=Math.min(Math.max(x-xw/2,L),W-R-xw);
+    xbr.setAttribute("width",xw);xbr.setAttribute("x",bx);xbr.setAttribute("y",baseY+4);
+    xbt.textContent=xTxt;xbt.setAttribute("x",bx+xw/2);xbt.setAttribute("y",baseY+16.5);
+    sgs.forEach(function(n){n.style.opacity=(seriesData.length===1||+n.dataset.si===best.si)?1:0.22;});
+    var html='<div style="font-weight:700;color:'+best.sd.c+';font-size:11.5px">'+esc(best.sd.name)+'</div>'+
+      '<div style="font-size:16.5px;font-weight:700;color:var(--text);margin-top:1px">'+esc(fmtVal(pt.v))+'</div>'+
+      '<div style="color:var(--text3);font-size:10px">'+esc(lchartFmtLong(pt.t))+'</div>';
+    if(snap&&snap.p.meta){
+      var m=snap.p.meta;
+      html+='<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border);color:'+(m.tagColor||"var(--c-blue)")+';font-weight:600;font-size:10.5px">'+esc(m.tag)+'</div>';
+      html+='<div style="color:var(--c-blue);font-size:9.5px;margin-top:4px;font-weight:600">▸ clique para ver todos os dados</div>';
+    }
+    tt.innerHTML=html;tt.style.display="block";
+    var px=x*sc,py=y*sc,ttw=tt.offsetWidth,tth=tt.offsetHeight;
+    tt.style.left=(px+16+ttw>r.width?px-16-ttw:px+16)+"px";
+    tt.style.top=Math.max(4,py-tth-14)+"px";
+  });
+  svg.addEventListener("mouseleave",hide);
+  svg.addEventListener("click",function(ev){
+    var r=svg.getBoundingClientRect(),sc=r.width/W;
+    var hit=nearestPoint((ev.clientX-r.left)/sc,(ev.clientY-r.top)/sc);
+    if(hit&&hit.p.meta)openLchartDetail(hit.p.meta);
+  });
 }
 
 /* ── Importador de planilha (CSV) com confirmação — genérico.
@@ -5994,18 +6137,45 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     var cutoff=new Date(new Date().getFullYear(),0,1); // ano corrente inteiro
     // Bolinhas só nas datas de lançamento (consumo/abastecimento), extraídas da auditoria;
     // os pontos intermediários (consumo diário distribuído, leituras automáticas) viram só linha.
+    // lancDates guarda o lançamento COMPLETO (não só um flag) — vira o detalhe clicável do ponto.
     var lancDates={},consumoPeriods={};
     auditLog.forEach(function(e){
       var l=clgParseLanc(e);
       if(!l||l.e.scope!=="clg_t1")return;
       var t=new Date(l.data.split("/").reverse().join("-")+"T00:00:00").getTime();
-      (lancDates[l.e.rowId]||(lancDates[l.e.rowId]={}))[t]=true;
+      (lancDates[l.e.rowId]||(lancDates[l.e.rowId]={}))[t]=l;
       if(l.kind==="consumo")(consumoPeriods[l.e.rowId]||(consumoPeriods[l.e.rowId]=[])).push({start:t-(l.dias-1)*86400000,end:t});
     });
     var rows=sel.value?clgT1.filter(function(r){return r.id===sel.value;}):clgT1;
     var series=rows.map(function(r){
       var marks=lancDates[r.id]||{};
-      var pts=(clgHist[r.id]||[]).filter(function(p){return p.t>=cutoff.getTime();}).map(function(p){return{t:p.t,v:p.v,dot:!!marks[p.t]};});
+      var pts=(clgHist[r.id]||[]).filter(function(p){return p.t>=cutoff.getTime();}).map(function(p){
+        var l=marks[p.t],meta=null;
+        if(l){
+          if(l.kind==="consumo"){
+            var startT=p.t-(l.dias-1)*86400000;
+            meta={title:r.meio||"—",tag:"Consumo de ODM",tagColor:"var(--c-red)",
+              rows:[
+                ["Tipo de consumo",(l.tipoConsumo||"").replace(/^\w/,function(c){return c.toUpperCase();})],
+                ["Período da comissão",lchartFmtLong(startT)+" → "+lchartFmtLong(p.t)],
+                ["Dias de comissão",l.dias+" dia(s)"],
+                ["Quantidade consumida","−"+Math.round(l.qtd).toLocaleString("pt-BR")+" L"],
+                ["Média em comissão",Math.round(l.qtd/l.dias).toLocaleString("pt-BR")+" L/dia"],
+                ["Estoque antes",Math.round(p.v+l.qtd).toLocaleString("pt-BR")+" L"],
+                ["Estoque após",Math.round(p.v).toLocaleString("pt-BR")+" L"]
+              ]};
+          }else{
+            meta={title:r.meio||"—",tag:"Abastecimento de ODM",tagColor:"var(--c-teal)",
+              rows:[
+                ["Data",lchartFmtLong(p.t)],
+                ["Quantidade recebida","+"+Math.round(l.qtd).toLocaleString("pt-BR")+" L"],
+                ["Estoque antes",Math.round(p.v-l.qtd).toLocaleString("pt-BR")+" L"],
+                ["Estoque após",Math.round(p.v).toLocaleString("pt-BR")+" L"]
+              ]};
+          }
+        }
+        return{t:p.t,v:p.v,dot:!!l,meta:meta};
+      });
       // Ponto-âncora na véspera do início de cada comissão: sem ele, a linha interpola direto do
       // último ponto anterior até o 1º dia do período e o gráfico "desce antes" da comissão começar.
       // O âncora segura o valor plano até a véspera; só entra se não houver ponto naquele intervalo.
@@ -6021,7 +6191,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       pts.sort(function(a,b){return a.t-b.t;});
       return{name:r.meio||"—",points:pts};
     }).filter(function(x){return x.points.length;});
-    box.innerHTML=svgLineChart(series,{height:130,markedDotsOnly:true,fmtY:function(v){return v.toLocaleString("pt-BR");}});
+    svgLineChart(box,series,{height:130,markedDotsOnly:true,fmtY:function(v){return v.toLocaleString("pt-BR");},fmtVal:function(v){return v.toLocaleString("pt-BR")+" L";}});
   }
   /* ── Previsão de duração do estoque por meio, a partir do consumo médio diário registrado no histórico ── */
   // Autonomia operativa: média de consumo diário EM COMISSÃO = soma dos consumos OPERATIVOS
@@ -7722,6 +7892,48 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     });
     if(changed)horasSaveHist();
   }
+  function lchartStrongNorm(s){return String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");}
+  function lchartMonthRange(y,m){return{ini:new Date(y,m-1,1).getTime(),fim:new Date(y,m,0).getTime()};}
+  function lchartOverlapDias(aIni,aFim,bIni,bFim){var lo=Math.max(aIni,bIni),hi=Math.min(aFim,bFim);return lo>hi?0:Math.round((hi-lo)/86400000)+1;}
+  function horasFmtDec(n){return String((Math.round(n*10)/10).toFixed(1)).replace(".",",");}
+  /* Dias de comissão de um meio (navio) num mês, para a média de h/dia do gráfico de Horas.
+     1) PMPE (aba Navios › Comissões): cobre o caso de comissão "quebrada" entre a virada de um mês
+        e o outro — ex. comissão de 15/mar a 04/abr aparece em ambos os meses, mesmo que o consumo
+        de ODM só tenha sido lançado inteiro em março. 2) Sem PMPE, cai para os "dias" somados dos
+        lançamentos de consumo do CLG naquele mês (o meio precisa ter subsido para consumir ODM). */
+  function horasComissaoMes(shipTitle,y,m){
+    var norm=lchartStrongNorm(shipTitle);
+    var clgRow=clgT1.find(function(r){return lchartStrongNorm(r.meio)===norm;});
+    var mr=lchartMonthRange(y,m),qtdMes=0;
+    if(clgRow)auditLog.forEach(function(e){
+      var l=clgParseLanc(e);
+      if(!l||l.e.scope!=="clg_t1"||l.e.rowId!==clgRow.id||l.kind!=="consumo")return;
+      var t=new Date(l.data.split("/").reverse().join("-")+"T00:00:00").getTime();
+      if(t>=mr.ini&&t<=mr.fim)qtdMes+=l.qtd;
+    });
+    var per=(typeof navComissoes!=="undefined"?navComissoes:[]).find(function(c){
+      if(lchartStrongNorm(c.meio)!==norm||!c.inicio||!c.fim)return false;
+      var ini=new Date(c.inicio.split("/").reverse().join("-")+"T00:00:00").getTime();
+      var fim=new Date(c.fim.split("/").reverse().join("-")+"T00:00:00").getTime();
+      return!isNaN(ini)&&!isNaN(fim)&&lchartOverlapDias(ini,fim,mr.ini,mr.fim)>0;
+    });
+    if(per){
+      var ini=new Date(per.inicio.split("/").reverse().join("-")+"T00:00:00").getTime();
+      var fim=new Date(per.fim.split("/").reverse().join("-")+"T00:00:00").getTime();
+      var dias=lchartOverlapDias(ini,fim,mr.ini,mr.fim);
+      var cross=ini<mr.ini||fim>mr.fim;
+      return{dias:dias,fonte:"pmpe",qtd:qtdMes,clgNome:clgRow?clgRow.meio:null,
+        nota:cross?("Comissão do PMPE de "+esc(per.inicio)+" a "+esc(per.fim)+" — atravessa a virada do mês, por isso o consumo de ODM pode ter sido lançado em outro mês do CLG."):null};
+    }
+    var diasClg=0,temClg=false;
+    if(clgRow)auditLog.forEach(function(e){
+      var l=clgParseLanc(e);
+      if(!l||l.e.scope!=="clg_t1"||l.e.rowId!==clgRow.id||l.kind!=="consumo")return;
+      var t=new Date(l.data.split("/").reverse().join("-")+"T00:00:00").getTime();
+      if(t>=mr.ini&&t<=mr.fim){diasClg+=l.dias;temClg=true;}
+    });
+    return{dias:diasClg,fonte:temClg?"clg":null,qtd:qtdMes,clgNome:clgRow?clgRow.meio:null,nota:null};
+  }
   function horasRenderChart(){
     var sel=document.getElementById("horas_chart_ship"),box=document.getElementById("horas_chart");
     if(!sel||!box)return;
@@ -7731,12 +7943,43 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     }
     var s=horasShips[sel.value]||horasShips[HORAS_SHIP_LIST[0].key];
     var cutoff=new Date(new Date().getFullYear(),0,1).getTime(); // ano corrente inteiro
+    // Lançamentos mensais reais (auditoria) por motor — cada um vira o ponto clicável com a
+    // média de h/dia CALCULADA SOBRE OS DIAS DE COMISSÃO (não sobre todos os dias do mês).
+    var lancsByRow={};
+    auditLog.forEach(function(e){
+      var l=horasParseLanc(e);
+      if(!l||l.key!==sel.value)return;
+      (lancsByRow[e.rowId]||(lancsByRow[e.rowId]=[])).push(l);
+    });
     var series=(s.rows||[]).map(function(r){
-      // Cada ponto do histórico de horas é um registro real de leitura → todos ganham bolinha.
-      var pts=(horasHist[r.id]||[]).filter(function(p){return p.t>=cutoff;}).map(function(p){return{t:p.t,v:p.v,dot:true};});
+      var lancs=(lancsByRow[r.id]||[]).slice();
+      var byT={};
+      lancs.forEach(function(l){var t=new Date(l.data.split("/").reverse().join("-")+"T00:00:00").getTime();byT[t]=l;});
+      var pts=(horasHist[r.id]||[]).filter(function(p){return p.t>=cutoff;}).map(function(p){
+        var l=byT[p.t],meta=null;
+        if(l){
+          var d=new Date(l.data.split("/").reverse().join("-")+"T00:00:00"),y=d.getFullYear(),mo=d.getMonth()+1;
+          var cm=horasComissaoMes(s.title,y,mo);
+          var comDias=cm?cm.dias:0,media=comDias>0?(l.qtd/comDias):null,mismatch=comDias<=0;
+          var viaPmpe=cm&&cm.fonte==="pmpe";
+          var rowsD=[
+            ["Mês de referência",String(mo).padStart(2,"0")+"/"+y],
+            ["Horas no mês","+"+horasFmtNum(l.qtd)+" h"],
+            ["Dias de comissão",comDias>0?(comDias+" dia(s)"+(viaPmpe?" (PMPE)":" (CLG)")):"nenhum registrado"],
+            ["Média em comissão",media!==null?horasFmtDec(media)+" h/dia":"—"],
+            ["Horas acumuladas",horasFmtNum(p.v)+" h"]
+          ];
+          if(cm&&cm.qtd>0)rowsD.push(["Consumo de ODM lançado no mês","−"+Math.round(cm.qtd).toLocaleString("pt-BR")+" L ("+cm.clgNome+")"]);
+          var tag=mismatch?"Horas sem comissão registrada":(viaPmpe?"Comissão dividida entre meses (PMPE)":"Horas em operação");
+          var tagColor=mismatch?"var(--c-gold)":(viaPmpe?"var(--c-purple)":"var(--c-blue)");
+          var note=cm&&cm.nota?cm.nota:(mismatch?"Houve horas de motor registradas, mas nenhuma comissão (CLG ou PMPE) cobre este mês — verificar coerência entre as abas.":(cm&&cm.qtd>0?"Comissão confirmada: consumo de ODM lançado no CLG no mesmo mês.":null));
+          meta={title:s.title+" · "+(r.tipoMotor||"Motor")+(r.bordo?" "+r.bordo:""),tag:tag,tagColor:tagColor,note:note,rows:rowsD};
+        }
+        return{t:p.t,v:p.v,dot:!!l,meta:meta};
+      });
       return{name:(r.tipoMotor||"Motor")+(r.bordo?" "+r.bordo:""),points:pts};
     }).filter(function(x){return x.points.length;});
-    box.innerHTML=svgLineChart(series,{height:130,markedDotsOnly:true,fmtY:function(v){return horasFmtNum(v)+"h";}});
+    svgLineChart(box,series,{height:130,markedDotsOnly:true,fmtY:function(v){return horasFmtNum(v)+"h";},fmtVal:function(v){return horasFmtNum(v)+" h";}});
   }
   /* ── Lançamento mensal de horas em operação (mesmo padrão dos botões de CLG):
      navio → motor → formulário (mês de referência + horas no mês + observação).
