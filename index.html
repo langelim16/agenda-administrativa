@@ -5182,14 +5182,24 @@ setTimeout(hideSplash,12000);
   // Recebe atualizações em tempo real do polling do Firebase (startRT). Não pisa em edições em andamento.
   navRemoteHook=function(freshDc){
     if(!freshDc)return;
-    if(navTableEditing||navCardSt.editingId)return;
     var changed=false;
-    try{var s=freshDc[NAVIOS_KEY]?JSON.parse(freshDc[NAVIOS_KEY]):null;if(s&&s.length){navShips=s;changed=true;}}catch(e){}
-    try{var c=freshDc[NAVIOS_CARDS_KEY]?JSON.parse(freshDc[NAVIOS_CARDS_KEY]):null;if(c&&c.length){navCards=c;changed=true;}}catch(e){}
-    if(!changed)return;
-    navSaveShips();navSaveCards();
+    if(!navTableEditing&&!navCardSt.editingId){
+      try{var s=freshDc[NAVIOS_KEY]?JSON.parse(freshDc[NAVIOS_KEY]):null;if(s&&s.length){navShips=s;changed=true;}}catch(e){}
+      try{var c=freshDc[NAVIOS_CARDS_KEY]?JSON.parse(freshDc[NAVIOS_CARDS_KEY]):null;if(c&&c.length){navCards=c;changed=true;}}catch(e){}
+    }
+    var comChanged=false;
+    if(!navComissaoEditing){
+      try{var cm=freshDc[NAVIOS_COMISSAO_KEY]?JSON.parse(freshDc[NAVIOS_COMISSAO_KEY]):null;if(Array.isArray(cm)){navComissoes=cm;comChanged=true;}}catch(e){}
+      try{var cc=freshDc[NAVIOS_COMISSAO_COLS_KEY]?JSON.parse(freshDc[NAVIOS_COMISSAO_COLS_KEY]):null;if(cc&&cc.length){navComissaoCols=cc;navComissaoCols.forEach(function(col){if(col.key==="inicio"||col.key==="fim")col.type="date";});comChanged=true;}}catch(e){}
+    }
+    if(comChanged){navSaveComissoes();navSaveComissaoCols();}
+    if(!changed&&!comChanged)return;
+    if(changed){navSaveShips();navSaveCards();}
     var vn=document.getElementById("viewNavios");
-    if(vn&&vn.style.display!=="none"){renderNavios();renderNaviosCards();}
+    if(vn&&vn.style.display!=="none"){
+      if(changed){renderNavios();renderNaviosCards();}
+      if(comChanged)navRenderComissoes();
+    }
   };
   async function navLoad(){
     var s=null,c=null,nc=null;
