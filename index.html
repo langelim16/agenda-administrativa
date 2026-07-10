@@ -8348,7 +8348,8 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
     {key:"conjuge",label:"Acompanhar cônjuge/companheiro",dias:252,exact:false},
     {key:"maternidade",label:"Licença maternidade",dias:120,exact:true},
     {key:"maternidade_prorrogacao",label:"Licença maternidade (prorrogação)",dias:60,exact:true},
-    {key:"paternidade",label:"Licença paternidade",dias:20,exact:true}
+    {key:"paternidade",label:"Licença paternidade",dias:20,exact:true},
+    {key:"especial",label:"Licença Especial",semLimite:true}
   ];
   function afastTypeOf(key){return AFASTAMENTO_TYPES.find(function(t){return t.key===key;});}
   var PESSOAL_FIXED=[
@@ -8896,7 +8897,9 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       if(dias===null){msg.style.display="none";saveBtn.disabled=true;return;}
       if(dias<=0){msg.className="ferias-msg warn";msg.style.display="block";msg.textContent="Período inválido.";saveBtn.disabled=true;return;}
       var usados=diasUsadosAfastamento(militar,subtipoEf,feriasFormState.editId);
-      if(at.exact){
+      if(at.semLimite){
+        // sem período máximo estipulado — só valida que o período é positivo (já checado acima)
+      }else if(at.exact){
         if(usados>0){msg.className="ferias-msg warn";msg.style.display="block";msg.textContent=at.label+" já utilizado(a) por "+pessoalMilitarLabelOf(militar)+" — benefício único.";saveBtn.disabled=true;return;}
         if(dias!==at.dias){msg.className="ferias-msg warn";msg.style.display="block";msg.textContent=at.label+" deve ter exatamente "+at.dias+" dia(s) (selecionado: "+dias+" dia(s)).";saveBtn.disabled=true;return;}
       }else if(at.maxOnce){
