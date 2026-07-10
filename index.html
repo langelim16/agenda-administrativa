@@ -3058,21 +3058,27 @@ function svgLineChart(box,series,opts){
     box.innerHTML='<div class="lchart-single">'+rows0+'</div><div class="lchart-single-note">Ainda há apenas uma leitura registrada — a tendência aparece aqui assim que houver leituras em datas diferentes.</div>';
     return;
   }
-  var minT=rawMinT,maxT=rawMaxT;
-  var minV=Math.min.apply(null,pts.map(function(p){return p.v;})),maxV=Math.max.apply(null,pts.map(function(p){return p.v;}));
-  (opts.refLines||[]).forEach(function(r){if(r.v>maxV)maxV=r.v;if(r.v<minV)minV=r.v;});
+  // Eixo do tempo: ano corrente inteiro (1º jan → hoje), igual ao preview — dá contexto e ancora a linha "HOJE".
+  var yr=new Date().getFullYear();
+  var minT=new Date(yr,0,1).getTime(),nowT=Date.now(),maxT=Math.max(nowT,rawMaxT);
+  var minV=opts.yMin0?0:Math.min.apply(null,pts.map(function(p){return p.v;})),maxV=Math.max.apply(null,pts.map(function(p){return p.v;}));
+  (opts.refLines||[]).forEach(function(r){if(r.v>maxV)maxV=r.v;if(!opts.yMin0&&r.v<minV)minV=r.v;});
   if(maxV===minV){minV-=1;maxV+=1;}
-  var step=lchartNiceStep((maxV-minV)/4);
-  var y0=Math.floor(minV/step)*step,y1=Math.ceil((maxV+(maxV-minV)*0.06)/step)*step;
+  var step=lchartNiceStep((maxV-minV)/(opts.yMin0?5:4));
+  var y0=opts.yMin0?0:Math.floor(minV/step)*step,y1=Math.ceil((maxV+(maxV-minV)*0.06)/step)*step;
   if(y1<=y0)y1=y0+step;
-  var W=600,H=opts.height||220,L=60,R=14,T=14,B=30,baseY=H-B;
+  var W=960,H=opts.height||330,L=76,R=20,T=18,B=40,baseY=H-B;
+  var lw=+(opts.lw||1.8),doFill=opts.fill!==false;
   function X(t){return L+(t-minT)/(maxT-minT)*(W-L-R);}
   function Y(v){return T+(1-(v-y0)/(y1-y0))*(baseY-T);}
+  // Paleta em pares (tom escuro → claro) para o degradê horizontal das linhas — idêntica ao preview.
+  var PAL=[["#41618c","#7ea1cf"],["#557a66","#8fbf9f"],["#977b43","#d1ab5e"],["#a8554b","#d98a7d"],["#6f5aa6","#a48ed6"],["#856a3d","#c2a066"]];
+  /* grade + eixo Y (só valores redondos, terminados em zero) */
   var grid="";
   for(var gv=y0;gv<=y1+1e-9;gv+=step){
     var gy=Y(gv);
     grid+='<line class="lchart-grid-line" x1="'+L+'" y1="'+gy.toFixed(1)+'" x2="'+(W-R)+'" y2="'+gy.toFixed(1)+'"></line>'+
-      '<text class="lchart-axis" x="'+(L-8)+'" y="'+(gy+3).toFixed(1)+'" text-anchor="end" font-size="9.5">'+esc(fmtY(gv))+'</text>';
+      '<text x="'+(L-10)+'" y="'+(gy+3.5).toFixed(1)+'" text-anchor="end" font-size="10.5" fill="var(--text3)" font-weight="600">'+esc(fmtY(gv))+'</text>';
   }
   /* eixo X: dias dos lançamentos que geraram as inflexões (não datas arbitrárias) */
   var evT={};evT[minT]=1;
@@ -3081,52 +3087,60 @@ function svgLineChart(box,series,opts){
   var lastX=-1e9;
   ts.forEach(function(t){
     var x=X(t);
-    if(x-lastX<48)return;
+    if(x-lastX<54)return;
     lastX=x;
-    grid+='<line x1="'+x.toFixed(1)+'" y1="'+T+'" x2="'+x.toFixed(1)+'" y2="'+baseY+'" stroke="var(--border)" stroke-dasharray="2 5" opacity="'+(t===minT?0:0.5)+'"></line>'+
-      '<text class="lchart-axis" x="'+x.toFixed(1)+'" y="'+(baseY+17)+'" text-anchor="middle" font-size="9">'+fmtX(t)+'</text>';
+    grid+='<line x1="'+x.toFixed(1)+'" y1="'+T+'" x2="'+x.toFixed(1)+'" y2="'+baseY+'" stroke="var(--border)" stroke-dasharray="2 5" opacity="'+(t===minT?0:0.55)+'"></line>'+
+      '<line x1="'+x.toFixed(1)+'" y1="'+baseY+'" x2="'+x.toFixed(1)+'" y2="'+(baseY+5)+'" stroke="var(--border2)"></line>'+
+      '<text x="'+x.toFixed(1)+'" y="'+(baseY+19)+'" text-anchor="middle" font-size="10" fill="var(--text3)" font-weight="600">'+fmtX(t)+'</text>';
   });
-  grid+='<line x1="'+L+'" y1="'+baseY+'" x2="'+(W-R)+'" y2="'+baseY+'" stroke="var(--border2)" stroke-width="1"></line>';
+  grid+='<line x1="'+L+'" y1="'+baseY+'" x2="'+(W-R)+'" y2="'+baseY+'" stroke="var(--border2)" stroke-width="1.2"></line>';
   /* linhas de referência (ex.: ROP / estoque mínimo) */
   var refHtml="";
   (opts.refLines||[]).forEach(function(r){
     var ry=Y(r.v);if(ry<T-1||ry>baseY+1)return;
-    refHtml+='<line x1="'+L+'" y1="'+ry.toFixed(1)+'" x2="'+(W-R)+'" y2="'+ry.toFixed(1)+'" stroke="'+r.color+'" stroke-width="1.2" stroke-dasharray="6 4" opacity=".7"></line>'+
-      '<text x="'+(W-R)+'" y="'+(ry-4).toFixed(1)+'" text-anchor="end" font-size="8.5" fill="'+r.color+'" font-weight="700">'+esc(r.label)+'</text>';
+    refHtml+='<line x1="'+L+'" y1="'+ry.toFixed(1)+'" x2="'+(W-R)+'" y2="'+ry.toFixed(1)+'" stroke="'+r.color+'" stroke-width="1.3" stroke-dasharray="7 5" opacity=".75"></line>'+
+      '<text x="'+(W-R)+'" y="'+(ry-5).toFixed(1)+'" text-anchor="end" font-size="9.5" fill="'+r.color+'" font-weight="700" letter-spacing=".5">'+esc(r.label)+'</text>';
   });
-  var seriesData=[]; // guarda pontos em coords de tela p/ hover/click, por série
+  var seriesData=[],defs=""; // seriesData: pontos em coords de tela p/ hover/click
   var lines=series.map(function(s,si){
-    var c=CHART_PALETTE[si%CHART_PALETTE.length];
+    var pal=PAL[si%PAL.length],c1=pal[0],c2=pal[1];
     var sp=(s.points||[]).slice().sort(function(a,b){return a.t-b.t;});
-    if(!sp.length){seriesData.push({name:s.name,c:c,pts:[]});return"";}
+    if(!sp.length){seriesData.push({name:s.name,c:c1,pts:[]});return"";}
     var xy=sp.map(function(p){return[X(p.t),Y(p.v)];});
-    seriesData.push({name:s.name,c:c,pts:sp,xy:xy});
+    seriesData.push({name:s.name,c:c1,pts:sp,xy:xy});
     var len=0;for(var i=1;i<xy.length;i++){var dx=xy[i][0]-xy[i-1][0],dy=xy[i][1]-xy[i-1][1];len+=Math.sqrt(dx*dx+dy*dy);}
-    len=Math.max(len*1.15,40);
+    len=Math.max(len*1.18,60);
     var path=svgMonotonePath(xy);
-    var gradId="lg"+uid+"_"+si;
-    var area=xy.length>1?('<path class="cl-area" d="'+path+' L'+xy[xy.length-1][0].toFixed(1)+','+baseY+' L'+xy[0][0].toFixed(1)+','+baseY+' Z" fill="url(#'+gradId+')" stroke="none"></path>'):"";
-    var line=xy.length>1?('<path class="cl-line" d="'+path+'" fill="none" stroke="'+c+'" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round" style="stroke-dasharray:'+len.toFixed(1)+';stroke-dashoffset:'+len.toFixed(1)+'"></path>'):"";
+    var gid="lg"+uid+"_"+si,aid="la"+uid+"_"+si;
+    defs+='<linearGradient id="'+gid+'" gradientUnits="userSpaceOnUse" x1="'+L+'" y1="0" x2="'+(W-R)+'" y2="0"><stop offset="0" stop-color="'+c1+'"></stop><stop offset="1" stop-color="'+c2+'"></stop></linearGradient>'+
+      '<linearGradient id="'+aid+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+c2+'" stop-opacity=".28"></stop><stop offset="1" stop-color="'+c2+'" stop-opacity="0"></stop></linearGradient>';
+    var area=(doFill&&xy.length>1)?('<path class="cl-area" d="'+path+' L'+xy[xy.length-1][0].toFixed(1)+','+baseY+' L'+xy[0][0].toFixed(1)+','+baseY+' Z" fill="url(#'+aid+')" stroke="none"></path>'):"";
+    var line=xy.length>1?('<path class="cl-line" d="'+path+'" fill="none" stroke="url(#'+gid+')" stroke-width="'+lw+'" stroke-linejoin="round" stroke-linecap="round" style="stroke-dasharray:'+len.toFixed(0)+';stroke-dashoffset:'+len.toFixed(0)+'"></path>'):"";
     var dots=sp.map(function(p,i){
       // markedDotsOnly: bolinha só nos pontos sinalizados (p.dot) — os demais viram só linha,
       // mostrando a variação gradual entre um lançamento e outro.
       if(opts.markedDotsOnly&&!p.dot)return"";
       var isLast=i===sp.length-1;
-      return '<circle class="cl-dot'+(isLast?" cl-endpoint":"")+(p.meta?' data-clk="1"':"")+'" cx="'+X(p.t).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="'+(isLast?4.2:2.8)+'" fill="'+c+'" stroke="var(--surface)" stroke-width="1.2"></circle>';
+      var isAbast=p.meta&&/Abastec/.test(p.meta.tag||"");
+      if(isLast)return '<circle class="cl-dot cl-endpoint'+(p.meta?'" data-clk="1':"")+'" cx="'+X(p.t).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="4.4" fill="'+c2+'" stroke="var(--surface)" stroke-width="1.4"></circle>';
+      return '<circle class="cl-dot'+(p.meta?'" data-clk="1':"")+'" cx="'+X(p.t).toFixed(1)+'" cy="'+Y(p.v).toFixed(1)+'" r="3.4" fill="'+(isAbast?c2:c1)+'" stroke="var(--surface)" stroke-width="1.4"></circle>';
     }).join("");
-    return '<defs><linearGradient id="'+gradId+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+c+'" stop-opacity=".32"></stop><stop offset="100%" stop-color="'+c+'" stop-opacity="0"></stop></linearGradient></defs>'+
-      '<g class="cl-series" data-si="'+si+'">'+area+line+dots+'</g>';
+    return '<g class="cl-series" data-si="'+si+'">'+area+line+dots+'</g>';
   }).join("");
-  var legend2='<div class="lchart-legend">'+series.map(function(s,si){return '<span class="lchart-legend-item"><span class="lchart-legend-swatch" style="background:'+CHART_PALETTE[si%CHART_PALETTE.length]+'"></span>'+esc(s.name)+'</span>';}).join("")+'</div>';
+  var legend2='<div class="lchart-legend">'+series.map(function(s,si){var pal=PAL[si%PAL.length];return '<span class="lchart-legend-item"><span class="lchart-legend-swatch" style="background:linear-gradient(90deg,'+pal[0]+','+pal[1]+')"></span>'+esc(s.name)+'</span>';}).join("")+'</div>';
+  /* linha "HOJE" */
+  var tx=X(nowT);
+  var today='<line x1="'+tx.toFixed(1)+'" y1="'+(T-2)+'" x2="'+tx.toFixed(1)+'" y2="'+baseY+'" stroke="var(--c-red)" stroke-width="1.3" opacity=".38"></line>'+
+    '<text x="'+(tx-4).toFixed(1)+'" y="'+(T-6)+'" text-anchor="end" font-size="8.5" fill="var(--c-red)" letter-spacing=".8" opacity=".8">HOJE</text>';
   /* crosshair: linhas tracejadas do ponto até os eixos X e Y, com balões de valor */
   var xh='<g class="lchart-xh" style="display:none">'+
     '<line class="xh-v"></line><line class="xh-h"></line>'+
-    '<circle class="xh-halo" r="8" fill="none" stroke-width="1.2" opacity=".5"></circle>'+
-    '<circle class="xh-dot" r="3.6" stroke="var(--surface)" stroke-width="1.4"></circle>'+
-    '<g class="xh-yb"><rect rx="5" height="18"></rect><text text-anchor="middle"></text></g>'+
-    '<g class="xh-xb"><rect rx="5" height="18"></rect><text text-anchor="middle"></text></g>'+
+    '<circle class="xh-halo" r="8.5" fill="none" stroke-width="1.2" opacity=".55"></circle>'+
+    '<circle class="xh-dot" r="3.8" stroke="var(--surface)" stroke-width="1.5"></circle>'+
+    '<g class="xh-yb"><rect rx="5.5" height="19"></rect><text text-anchor="middle"></text></g>'+
+    '<g class="xh-xb"><rect rx="5.5" height="19"></rect><text text-anchor="middle"></text></g>'+
     '</g>';
-  box.innerHTML='<div class="lchart-root"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;overflow:visible">'+grid+refHtml+lines+xh+'</svg>'+
+  box.innerHTML='<div class="lchart-root"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;overflow:visible"><defs>'+defs+'</defs>'+grid+refHtml+lines+today+xh+'</svg>'+
     '<div class="lchart-tt"></div></div>'+legend2;
   /* ── interação: hover mostra crosshair+tooltip; clique num ponto sinalizado abre o detalhe ── */
   var svg=box.querySelector("svg"),tt=box.querySelector(".lchart-tt");
@@ -6191,7 +6205,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       pts.sort(function(a,b){return a.t-b.t;});
       return{name:r.meio||"—",points:pts};
     }).filter(function(x){return x.points.length;});
-    svgLineChart(box,series,{height:130,markedDotsOnly:true,fmtY:function(v){return v.toLocaleString("pt-BR");},fmtVal:function(v){return v.toLocaleString("pt-BR")+" L";}});
+    svgLineChart(box,series,{height:330,yMin0:true,markedDotsOnly:true,fmtY:function(v){return v.toLocaleString("pt-BR");},fmtVal:function(v){return v.toLocaleString("pt-BR")+" L";}});
   }
   /* ── Previsão de duração do estoque por meio, a partir do consumo médio diário registrado no histórico ── */
   // Autonomia operativa: média de consumo diário EM COMISSÃO = soma dos consumos OPERATIVOS
@@ -7979,7 +7993,7 @@ document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")cl
       });
       return{name:(r.tipoMotor||"Motor")+(r.bordo?" "+r.bordo:""),points:pts};
     }).filter(function(x){return x.points.length;});
-    svgLineChart(box,series,{height:130,markedDotsOnly:true,fmtY:function(v){return horasFmtNum(v)+"h";},fmtVal:function(v){return horasFmtNum(v)+" h";}});
+    svgLineChart(box,series,{height:300,markedDotsOnly:true,fmtY:function(v){return horasFmtNum(v)+"h";},fmtVal:function(v){return horasFmtNum(v)+" h";}});
   }
   /* ── Lançamento mensal de horas em operação (mesmo padrão dos botões de CLG):
      navio → motor → formulário (mês de referência + horas no mês + observação).
