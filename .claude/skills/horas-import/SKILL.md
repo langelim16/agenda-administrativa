@@ -5,8 +5,9 @@ description: Importa as planilhas mensais de Horas de Funcionamento dos motores 
 
 # Importação mensal de Horas de Funcionamento (ODS → Supabase do artefato)
 
-Mesmo modelo do pipeline de CLG (ver skill `clg-import`): extrair → conferir
-com o usuário → só gravar após autorização. Lançamentos são DADOS no Supabase.
+Mesmo modelo do pipeline de CLG (ver skill `clg-import`): extrair e gravar
+direto, sem etapa de confirmação — a leitura tem se mostrado confiável.
+Lançamentos são DADOS no Supabase.
 
 ## Fonte
 
@@ -47,7 +48,8 @@ operação" faz (funções horasSaveLanc/horasEstornarLanc no index.html):
 
 Antes de gravar, remover lançamentos manuais duplicados do usuário para o
 mesmo mês/motor (marcar `estornado` e reverter efeito), substituindo pelos do
-agente.
+agente. Deltas negativos (`revisar`) continuam exigindo decisão do usuário —
+isso não é validação de dado lido, é ambiguidade real da planilha.
 
 ## Estado (jul/2026)
 

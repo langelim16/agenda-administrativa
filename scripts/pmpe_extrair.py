@@ -141,5 +141,17 @@ def extrair(pasta):
 
 
 if __name__ == '__main__':
-    pasta = sys.argv[1] if len(sys.argv) > 1 else '1. leituras/2. pmpe'
-    print(json.dumps(extrair(pasta), ensure_ascii=False, indent=1))
+    # --desde AAAA-MM-DD: descarta comissões já encerradas (dataFim < data).
+    # Uso do skill pmpe-import (só quer presente/futuro); clg-import precisa
+    # de meses passados também, por isso não filtra por padrão.
+    desde = None
+    args = sys.argv[1:]
+    if '--desde' in args:
+        i = args.index('--desde')
+        desde = args[i + 1]
+        args = args[:i] + args[i + 2:]
+    pasta = args[0] if args else '1. leituras/2. pmpe'
+    resultados = extrair(pasta)
+    if desde:
+        resultados = [r for r in resultados if r['dataFim'] and r['dataFim'] >= desde]
+    print(json.dumps(resultados, ensure_ascii=False, indent=1))

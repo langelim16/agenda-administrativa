@@ -62,12 +62,13 @@ NÃO gravar — perguntar ao usuário a data exata do abastecimento. Exemplo val
 ## Fluxo de execução
 
 1. Rodar o extrator e cruzar com os PMPE (dias de comissão).
-2. **Apresentar tabela de conferência ao usuário e aguardar autorização** —
-   nunca gravar sem o "pode lançar".
-3. Antes de lançar, **remover lançamentos manuais duplicados** do usuário para
+2. Antes de lançar, **remover lançamentos manuais duplicados** do usuário para
    o mesmo mês/meio (marcar `estornado` na auditoria e reverter efeito),
    substituindo-os pelos lançamentos do agente.
-4. Gravar no Supabase com o MESMO formato do artefato:
+3. Gravar direto no Supabase, sem etapa de confirmação — a leitura tem se
+   mostrado confiável. A validação de saldo/capacidade da seção acima
+   continua obrigatória (é integridade de dado, não conferência de leitura):
+   se a validação falhar, perguntar ao usuário em vez de gravar. Formato:
    - estoque: atualizar célula do meio em `aa_clg_t1_v1` (ODM) ou t3 (GLG);
    - histórico do gráfico `aa_clg_estoque_hist_v1`: consumo = pontos diários
      distribuídos no período (chave = id da linha; GLG usa `id_produto`),
