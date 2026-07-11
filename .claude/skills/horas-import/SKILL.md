@@ -9,6 +9,10 @@ Mesmo modelo do pipeline de CLG (ver skill `clg-import`): extrair e gravar
 direto, sem etapa de confirmação — a leitura tem se mostrado confiável.
 Lançamentos são DADOS no Supabase.
 
+**Permissão de escrita**: só incluir/atualizar lançamentos novos. Nunca
+remover ou estornar nada direto — remoção é sempre **sugestão**, apresentada
+ao usuário, mediante aprovação explícita antes de executar.
+
 ## Fonte
 
 Planilhas ODS em `1. leituras/3. horas-funcionamento/` (subpastas por ano),
@@ -46,10 +50,13 @@ operação" faz (funções horasSaveLanc/horasEstornarLanc no index.html):
   horasParseLanc — manter compatível para Editar/Estornar funcionarem);
 - bump `_meta` ao final.
 
-Antes de gravar, remover lançamentos manuais duplicados do usuário para o
-mesmo mês/motor (marcar `estornado` e reverter efeito), substituindo pelos do
-agente. Deltas negativos (`revisar`) continuam exigindo decisão do usuário —
-isso não é validação de dado lido, é ambiguidade real da planilha.
+Se houver lançamentos manuais duplicados do usuário para o mesmo mês/motor,
+**não estornar direto** — listar como sugestão de estorno (motivo: duplicidade
+com o lançamento do agente) e aguardar aprovação antes de marcar
+`estornado`/reverter. O lançamento novo do agente pode ser incluído
+normalmente mesmo com a sugestão pendente. Deltas negativos (`revisar`)
+continuam exigindo decisão do usuário — isso não é validação de dado lido,
+é ambiguidade real da planilha.
 
 ## Estado (jul/2026)
 

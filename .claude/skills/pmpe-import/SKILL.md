@@ -15,6 +15,13 @@ PDF entre os dois: os dois usam `scripts/pmpe_extrair.py`.
 Sem etapa de confirmação — a leitura do PMPE já se mostrou confiável.
 Extrai e grava direto no Supabase.
 
+**Permissão de escrita**: só incluir comissões novas e atualizar campos de
+comissões já lançadas (ver "Duplicatas/atualizações" abaixo). Nunca remover
+uma linha da tabela direto — se uma comissão lançada não aparecer mais no
+PMPE mais recente (cancelada, incorporada a outro evento etc.), isso é
+**sugestão** de remoção apresentada ao usuário, mediante aprovação explícita
+antes de excluir.
+
 ## Fonte
 
 PMPE em PDF em `1. leituras/2. pmpe/AAAA/PMPE MES-AAAA PARTE I.pdf` — usar
@@ -93,5 +100,7 @@ sem avisar o usuário do que mudou.
 2. Descartar comissões já encerradas (fim < hoje).
 3. Ler `aa_navios_comissoes_v1` atual via REST do Supabase.
 4. Gravar direto — adicionar linhas novas, atualizar as existentes
-   (preservando `id` e respeitando status manuais, ver acima).
+   (preservando `id` e respeitando status manuais, ver acima). Se alguma
+   linha existente não corresponder a nenhum evento do PMPE mais recente,
+   NÃO remover — listar como sugestão de remoção e aguardar aprovação.
 5. Bump da chave `_meta` ao final para os dispositivos sincronizarem.
