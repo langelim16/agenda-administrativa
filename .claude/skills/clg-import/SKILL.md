@@ -14,7 +14,10 @@ Supabase (mesmas chaves que o artefato usa), nunca alterações no código.
    Extração: `python3 scripts/clg_extrair.py "1. leituras/1. clg"` (JSON pronto para conferência).
 2. **PMPE em PDF** em `1. leituras/2. pmpe/` — contém os **períodos de comissão** de cada
    navio. É de lá que saem os **dias de comissão** dos consumos operativos
-   (a planilha não traz esse dado).
+   (a planilha não traz esse dado). Extração: `python3 scripts/pmpe_extrair.py`
+   (mesmo script usado pelo skill dedicado `pmpe-import`, que popula a tabela
+   Comissões do CONDEF — objetivo diferente deste skill; não duplicar lógica
+   de parsing de PMPE aqui).
    (Há também `1. leituras/3. horas-funcionamento/` para os controles de horas de motores.)
    Obs.: o usuário renomeia pastas às vezes — se um caminho não existir, procurar
    pelo conteúdo em vez de falhar.
