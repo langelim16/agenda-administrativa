@@ -103,4 +103,13 @@ sem avisar o usuário do que mudou.
    (preservando `id` e respeitando status manuais, ver acima). Se alguma
    linha existente não corresponder a nenhum evento do PMPE mais recente,
    NÃO remover — listar como sugestão de remoção e aguardar aprovação.
-5. Bump da chave `_meta` ao final para os dispositivos sincronizarem.
+5. Atualizar `aa_lastedit_v1` (chave `nv_comissao`) com timestamp atual —
+   é o que faz o app mostrar "Última edição em…" na tabela Comissões.
+6. Bump da chave `_meta` ao final para os dispositivos sincronizarem.
+
+## Notas operacionais
+
+- Ignorar locks (`~$*`) e tratar extensões case-insensitive.
+- Pasta nova em `1. leituras/` = criar novo skill + mapeamento em
+  `scripts/vigia_leituras.sh` + entrada WatchPaths no plist
+  `~/Library/LaunchAgents/com.lucasangelim.agenda-leituras.plist` + reload.

@@ -85,4 +85,18 @@ NÃO gravar — perguntar ao usuário a data exata do abastecimento. Exemplo val
      `Abastecimento retroativo: +10000 (01/02/2026)`
      (essa sintaxe é parseada por `clgParseLanc` no index.html — manter compatível);
    - bump da chave `_meta` ao final para os dispositivos sincronizarem.
-5. Estado em jul/2026: JAN–MAR e MAI extraídos; ABR e JUN chegam depois.
+5. Estado de processamento: **comparar contra o Supabase** (o que já está
+   lançado lá é a fonte de verdade) — não manter lista de meses neste skill.
+   O vigia automático (`scripts/vigia_leituras.sh`) também registra o que já
+   processou em `.claude/leituras-estado.json`.
+
+## Notas operacionais
+
+- Extensões `.ods`/`.ODS`/`.ODS.ods` são equivalentes (o extrator já trata);
+  ignorar locks do LibreOffice (`~$*`).
+- Ao gravar, atualizar também `aa_lastedit_v1` (chave `clg_t1` para ODM,
+  `clg_t3nav`/`clg_t3emb` para GLG) com timestamp atual, junto do bump
+  `_meta` — é o que faz o app mostrar "Última edição em…" na tabela.
+- Pasta nova em `1. leituras/` = criar novo skill + mapeamento em
+  `scripts/vigia_leituras.sh` + entrada WatchPaths no plist
+  `~/Library/LaunchAgents/com.lucasangelim.agenda-leituras.plist` + reload.

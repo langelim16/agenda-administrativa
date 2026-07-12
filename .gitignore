@@ -1,2 +1,3 @@
 .DS_Store
 graphify-out/
+# runtime do vigia fica em ~/.local/agenda-vigia (fora do repo), não aqui

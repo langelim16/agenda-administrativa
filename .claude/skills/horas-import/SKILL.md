@@ -58,9 +58,26 @@ normalmente mesmo com a sugestão pendente. Deltas negativos (`revisar`)
 continuam exigindo decisão do usuário — isso não é validação de dado lido,
 é ambiguidade real da planilha.
 
-## Estado (jul/2026)
+## Estado de processamento
 
-JAN, FEV, MAR, MAI e JUN extraídos; **não há planilha de ABR** (salto
-MAR→MAI vira delta de 2 meses — confirmar com o usuário). Pendências de
-revisão conhecidas: Tocantins MCP BE (FEV, −826), Sampaio MCA BE (MAI, −69,5)
-e Xingu (MCA/MCP aparentemente trocados entre MAI/JUN, deltas de ±10.000).
+Comparar contra o Supabase (o que já está lançado lá é a fonte de verdade) —
+não manter lista de meses neste skill. O vigia automático
+(`scripts/vigia_leituras.sh`) também registra o que já processou em
+`.claude/leituras-estado.json`.
+
+## Pendências de revisão conhecidas (registradas em jul/2026)
+
+Tocantins MCP BE (FEV, −826), Sampaio MCA BE (MAI, −69,5) e Xingu (MCA/MCP
+aparentemente trocados entre MAI/JUN, deltas de ±10.000) — deltas negativos
+aguardando decisão do usuário.
+
+## Notas operacionais
+
+- Extensões `.ods`/`.ODS`/`.ODS.ods` são equivalentes (o extrator já trata);
+  ignorar locks do LibreOffice (`~$*`).
+- Ao gravar, atualizar também `aa_lastedit_v1` (chave `horas_<navio>`) com
+  timestamp atual, junto do bump `_meta` — é o que faz o app mostrar
+  "Última edição em…" na tabela.
+- Pasta nova em `1. leituras/` = criar novo skill + mapeamento em
+  `scripts/vigia_leituras.sh` + entrada WatchPaths no plist
+  `~/Library/LaunchAgents/com.lucasangelim.agenda-leituras.plist` + reload.

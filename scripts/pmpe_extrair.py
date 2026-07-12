@@ -116,8 +116,9 @@ def mes_ano_do_nome(nome):
 
 def extrair(pasta):
     resultados = []
-    arquivos = sorted(glob.glob(os.path.join(pasta, '**', 'PMPE *-*.pdf'),
-                                 recursive=True))
+    arquivos = sorted(
+        f for f in glob.glob(os.path.join(pasta, '**', '*'), recursive=True)
+        if f.lower().endswith('.pdf') and not os.path.basename(f).startswith('~$'))
     for f in arquivos:
         mes, ano = mes_ano_do_nome(os.path.basename(f))
         if not mes:
