@@ -1,3 +1,9 @@
+# Diretrizes do Projeto e Contexto
+- **Sempre utilize o grafo de conhecimento** do Graphify para localizar arquivos, em vez de ler arquivos brutos sempre que uma busca for necessária.
+- **Estilo de Resposta:** Seja direto, conciso e focado no código. Evite explicações excessivas, a menos que solicitado.
+- **Contexto simplificado:** Mantenha suas respostas limpas. Antes de iniciar edições pesadas, utilize o comando `/goal` para estabelecer a arquitetura sem usar a janela de contexto inteira.
+
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
