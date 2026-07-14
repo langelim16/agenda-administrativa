@@ -53,8 +53,11 @@ Lida via REST do Supabase: `agenda_data(key,value,updated_at)`, linha
  "comissao": "ADECOM H37", "status": "Em andamento",
  "inicio": "08/07/2026", "fim": "15/07/2026",
  "localizacao": "Rio Pará, Região dos Estreitos e Rio Amazonas-PA",
- "clg": "ODM: 22.100L\nOL: 900L\nGAS: 50L"}
+ "clg": "ODM: 22.100L\nOL: 900L\nGAS: 50L",
+ "manualFields": []}
 ```
+
+Linhas antigas sem `manualFields` são tratadas como `[]` (nada travado).
 
 - **`meio`**: chave curta, não o nome completo do artefato. Mapeamento:
   NHo Garnier Sampaio → `NHoGSampaio`; NHiB Tenente Castelo →
@@ -76,6 +79,10 @@ Lida via REST do Supabase: `agenda_data(key,value,updated_at)`, linha
   observações), formato `"PRODUTO: valorL\n..."` — um produto por linha.
 - **`id`**: `cms_pmpe` + nº do evento sem ponto, ex. `07.15` → `cms_pmpe07_15`
   (conferir padrão contra ids já existentes na tabela).
+- **`manualFields`**: array de nomes de campo (`status`, `inicio`, `fim`,
+  `localizacao`, `clg`, `comissao`, `meio`, `pmpe`) que o usuário editou
+  manualmente pela tabela do app. Presença nesse array é **hierarquicamente
+  superior** a qualquer dado do PMPE — ver "Duplicatas/atualizações".
 
 ## Escopo
 
@@ -88,10 +95,17 @@ não são comissão operativa — só lançar `PMPE`.
 
 Se um evento (`meio` + `pmpe`) já lançado aparecer de novo no PDF mais
 recente com dados diferentes (datas retificadas, área alterada), o PDF mais
-recente é a fonte de verdade — atualizar a linha existente preservando o
-`id`, exceto o campo `status` quando ele foi definido manualmente para algo
-fora do cálculo automático (ex. "A ser adiada") — nesse caso não sobrescrever
-sem avisar o usuário do que mudou.
+recente é a fonte de verdade para os campos que o usuário **nunca** editou
+manualmente pelo app — atualizar a linha existente preservando o `id`.
+
+**Regra hierárquica de `manualFields`**: antes de sobrescrever qualquer campo
+de uma linha existente, checar `row.manualFields` (array de nomes de campo).
+Se a chave do campo está em `manualFields`, **nunca sobrescrever** —
+preservar o valor atual mesmo que o PDF traga algo diferente, sem exceção e
+sem perguntar. A leitura do PMPE é puramente cadastral: só grava campos que o
+usuário nunca tocou. Editar de volta um campo travado é decisão exclusiva do
+usuário pela tabela do app — não há downgrade automático de `manualFields`
+por este skill. Isso vale para todos os campos, não só `status`.
 
 ## Fluxo de execução
 
@@ -100,9 +114,10 @@ sem avisar o usuário do que mudou.
 2. Descartar comissões já encerradas (fim < hoje).
 3. Ler `aa_navios_comissoes_v1` atual via REST do Supabase.
 4. Gravar direto — adicionar linhas novas, atualizar as existentes
-   (preservando `id` e respeitando status manuais, ver acima). Se alguma
-   linha existente não corresponder a nenhum evento do PMPE mais recente,
-   NÃO remover — listar como sugestão de remoção e aguardar aprovação.
+   (preservando `id` e nunca sobrescrevendo campos em `manualFields`, ver
+   acima). Se alguma linha existente não corresponder a nenhum evento do
+   PMPE mais recente, NÃO remover — listar como sugestão de remoção e
+   aguardar aprovação.
 5. Atualizar `aa_lastedit_v1` (chave `nv_comissao`) com timestamp atual —
    é o que faz o app mostrar "Última edição em…" na tabela Comissões.
 6. Bump da chave `_meta` ao final para os dispositivos sincronizarem.
