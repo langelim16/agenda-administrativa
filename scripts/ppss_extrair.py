@@ -7,16 +7,17 @@ Uso: python3 scripts/ppss_extrair.py [pasta]   (padrão: "1. leituras/4. ppss")
 Saída: JSON com um pedido por linha, pronto para conferência e posterior
 substituição de aa_ppss_v1 no Supabase do artefato.
 
-Regras de mapeamento (definidas com o usuário em 2026-07-14):
-- Duas planilhas por leitura: "...CORRENTE.ods" -> tipo Corrente,
-  "...PROGRAMADAS.ods" -> tipo Programada. Uma aba por navio (mesmos 4
-  nomes das duas planilhas = PPSS_NAVIOS do app).
-- Situação vem da COR DE FUNDO da linha, não de texto (a planilha usa cor
-  como o próprio dado de status). Mapeamento fixo (legenda em B2:B7 de cada
-  aba, estável entre os dois arquivos):
-    #33cccc -> Concluído          #ff0000 -> Cancelado
-    #dc85e9 -> Falta Indicar      #2cee0e -> Recurso Indicado
-    #ffcc99 -> Orçado e não Indicado   #536dfe -> Não orçado
+Layout real das colunas (linhas 8/9 do cabeçalho, spans resolvidos —
+conferido em 15/07/2026):
+  0 NAVIO | 1 N° | 2 DESCRIÇÃO | 3 OMPS | 4 DS
+  5 Orçamento FR-170 | 6 Aditamento FR-171 | 7 ADT 01
+  8-9 REC IND | 10 FALTA INDICAR | 11 ALT ESCOPO
+  12 MSG OMPS–ORÇ | 13 MSG NAV–SOL IND REC | 14 MSG COMINSUP–IND REC
+  15 MSG OMPS-TÉRMINO | 16 MSG SATISFEITO/CANCELADO
+  17 SITUAÇÃO (texto) | 18 ALTCRED P/ BNVC | 19 OBSERVAÇÕES
+
+- SITUAÇÃO: fonte primária é o TEXTO da col 17; fallback é a cor de fundo
+  da linha (legenda B2:B7). Mapeamentos abaixo.
 - Substituição total: cada leitura é o espelho do que está nas planilhas
   (upsert por navio+numero) — não acúmulo como no CLG.
 """
@@ -35,7 +36,25 @@ COR_SITUACAO = {
     '#ffcc99': 'Orçado e não Indicado',
     '#536dfe': 'Não orçado',
 }
+TEXTO_SITUACAO = {
+    'TERMINADO': 'Concluído',
+    'CONCLUÍDO': 'Concluído',
+    'CANCELADO': 'Cancelado',
+    'FALTA INDICAR': 'Falta Indicar',
+    'RECURSO INDICADO': 'Recurso Indicado',
+    'ORÇADO E NÃO INDICADO': 'Orçado e não Indicado',
+    'NÃO ORÇADO': 'Não orçado',
+}
 NAVIOS = ['NHoGSampaio', 'NHiBTenCastelo', 'AvHoFluRioTocantins', 'AvHoFluRioXingu']
+
+# (índice de coluna, rótulo) das 5 colunas de MSG e destino msgOmps/msgNav
+MSG_COLS = [
+    (12, 'OMPS ORÇ', 'msgOmps'),
+    (13, 'NAV – SOL IND REC', 'msgNav'),
+    (14, 'COMINSUP – IND REC', 'msgNav'),
+    (15, 'OMPS-TÉRMINO', 'msgOmps'),
+    (16, 'SATISFEITO/CANCELADO', 'msgNav'),
+]
 
 
 def cell_styles_bg(root):
@@ -61,18 +80,23 @@ def sheet_rows(root, sheetname, styles):
             rep_row = int(tr.get('{%s}number-rows-repeated' % NS['t']) or 1)
             cells = []
             for tc in tr:
-                if not tc.tag.endswith('}table-cell'):
+                # inclui covered-table-cell (células sob span) p/ manter alinhamento
+                if not tc.tag.endswith('table-cell'):
                     continue
                 rep = int(tc.get('{%s}number-columns-repeated' % NS['t']) or 1)
                 txt = ' '.join(''.join(p.itertext())
                                for p in tc.iter('{%s}p' % NS['x']))
                 bg = styles.get(tc.get('{%s}style-name' % NS['t']))
-                cells += [(txt, bg)] * min(rep, 20)
+                cells += [(txt, bg)] * min(rep, 25)
             if rep_row > 1 and not any(c[0] for c in cells):
                 continue
             rows.append(cells)
         return rows
     return []
+
+
+def _txt(r, i):
+    return r[i][0].strip() if len(r) > i else ''
 
 
 def extrair_arquivo(f, tipo):
@@ -84,30 +108,221 @@ def extrair_arquivo(f, tipo):
         if not rows:
             continue
         for r in rows[9:]:
-            navio_cell = r[0][0].strip() if len(r) > 0 else ''
-            numero = r[1][0].strip() if len(r) > 1 else ''
+            navio_cell = _txt(r, 0)
+            numero = _txt(r, 1)
             if not numero or numero.upper() == 'SUBTOTAL' or navio_cell.upper() == 'SUBTOTAL':
                 # SUBTOTAL fecha a tabela real de pedidos. Tudo depois dela
                 # (mini-tabela STATUS/%, células soltas de SALDO/DÍVIDA etc.)
                 # fica fora da tabela por definição — parar aqui, não só pular
-                # a linha, senão dado solto caindo sobre alguma coluna vira
-                # pedido fantasma (ver 14/07/2026, aba NHoGSampaio).
+                # a linha (ver 14/07/2026, aba NHoGSampaio).
                 if numero.upper() == 'SUBTOTAL' or navio_cell.upper() == 'SUBTOTAL':
                     break
                 continue
+            # SITUAÇÃO: texto da col 17 tem prioridade; cor da linha é fallback
             bg = r[0][1]
-            situacao = COR_SITUACAO.get(bg, '')
+            sit_txt = _txt(r, 17).upper()
+            situacao = TEXTO_SITUACAO.get(sit_txt, '') or COR_SITUACAO.get(bg, '')
+            # Aditamento = FR-171 (6) + ADT 01 (7)
+            adit = ' + '.join(v for v in (_txt(r, 6), _txt(r, 7)) if v)
+            # MSG: cada coluna vira uma linha rotulada em msgOmps/msgNav
+            msgs = {'msgOmps': [], 'msgNav': []}
+            for i, rotulo, destino in MSG_COLS:
+                v = _txt(r, i)
+                if v:
+                    msgs[destino].append('%s: %s' % (rotulo, v))
             pedidos.append({
                 'navio': navio, 'tipo': tipo,
                 'numero': numero,
-                'descricao': r[2][0].strip() if len(r) > 2 else '',
-                'omps': r[3][0].strip() if len(r) > 3 else '',
-                'ds': r[4][0].strip() if len(r) > 4 else '',
-                'orcamento': r[5][0].strip() if len(r) > 5 else '',
-                'aditamentos': r[6][0].strip() if len(r) > 6 else '',
-                'altEscopo': r[11][0].strip() if len(r) > 11 else '',
+                'descricao': _txt(r, 2),
+                'omps': _txt(r, 3),
+                'ds': _txt(r, 4),
+                'orcamento': _txt(r, 5),
+                'aditamentos': adit,
+                'recInd': _txt(r, 8) or _txt(r, 9),
+                'faltaIndicar': _txt(r, 10),
+                'altEscopo': _txt(r, 11),
+                'msgOmps': '\n'.join(msgs['msgOmps']),
+                'msgNav': '\n'.join(msgs['msgNav']),
                 'situacao': situacao,
                 'situacaoCor': bg or '',
+                'altcredBnvc': _txt(r, 18),
+            })
+    return pedidos
+
+
+NSX = '{http://schemas.openxmlformats.org/spreadsheetml/2006/main}'
+NSR = '{http://schemas.openxmlformats.org/officeDocument/2006/relationships}'
+
+
+def _col_idx(ref):
+    """'AB12' -> índice de coluna 0-based."""
+    n = 0
+    for ch in ref:
+        if not ch.isalpha():
+            break
+        n = n * 26 + (ord(ch.upper()) - 64)
+    return n - 1
+
+
+def _header_map(root, ss):
+    """Lê a linha 9 (rótulos das colunas) e devolve {rótulo: [índices]} —
+    lista porque rótulos como 'FR-170' se repetem (Orçamento e REC IND usam
+    o mesmo nome de coluna em posições diferentes).
+    O layout de colunas varia entre abas do mesmo xlsx (visto em 15/07/2026:
+    SITUAÇÃO na col S numa aba, col U noutra) — resolver pelo texto, não
+    por índice fixo."""
+    hdr = {}
+    for row in root.iter(NSX + 'row'):
+        if int(row.get('r')) != 9:
+            continue
+        for c in row.iter(NSX + 'c'):
+            v = c.find(NSX + 'v')
+            if v is None or v.text is None:
+                continue
+            txt = ss[int(v.text)] if c.get('t') == 's' else v.text
+            hdr.setdefault(txt.strip().upper(), []).append(_col_idx(c.get('r')))
+        break
+    return hdr
+
+
+def _row8_groups(root, ss):
+    """Lê a linha 8 (rótulos dos grupos de coluna: IDENTIFICAÇÃO, Orçamento,
+    Aditamento, REC IND, FALTA INDICAR, MSG, SITUAÇÃO, ALTCRED P/ BNVC,
+    OBSERVAÇÕES) e devolve {rótulo: (col_inicial, col_final)} usando os
+    merges da linha 8 para achar a largura de cada grupo. Necessário porque
+    a sub-coluna 'FR-170' se repete dentro de Orçamento E de REC IND — só
+    dá pra separar os dois pelo grupo pai, não pelo rótulo da sub-coluna."""
+    merges = {}
+    mc = root.find(NSX + 'mergeCells')
+    if mc is not None:
+        for m in mc:
+            ref = m.get('ref')
+            a, b = ref.split(':')
+            if not a[-1].isdigit() or int(''.join(ch for ch in a if ch.isdigit())) != 8:
+                continue
+            merges[_col_idx(a)] = _col_idx(b)
+    groups = {}
+    cols_seen = []
+    for row in root.iter(NSX + 'row'):
+        if int(row.get('r')) != 8:
+            continue
+        for c in row.iter(NSX + 'c'):
+            v = c.find(NSX + 'v')
+            if v is None or v.text is None:
+                continue
+            txt = (ss[int(v.text)] if c.get('t') == 's' else v.text).strip().upper()
+            col = _col_idx(c.get('r'))
+            cols_seen.append((col, txt))
+        break
+    for i, (col, txt) in enumerate(cols_seen):
+        end = merges.get(col, cols_seen[i + 1][0] - 1 if i + 1 < len(cols_seen) else col)
+        groups[txt] = (col, end)
+    return groups
+
+
+def extrair_xlsx(f, tipo):
+    """Colunas resolvidas pelos grupos da linha 8 + sub-cabeçalhos da linha 9
+    de cada aba — o layout varia de aba para aba dentro do mesmo arquivo."""
+    z = zipfile.ZipFile(f)
+    ss = [''.join(t.text or '' for t in si.iter(NSX + 't'))
+          for si in ET.fromstring(z.read('xl/sharedStrings.xml')).iter(NSX + 'si')]
+    wb = ET.fromstring(z.read('xl/workbook.xml'))
+    rels = {r.get('Id'): r.get('Target')
+            for r in ET.fromstring(z.read('xl/_rels/workbook.xml.rels'))}
+    # estilos: xf -> cor de preenchimento (fallback de situação, como no ODS)
+    st = ET.fromstring(z.read('xl/styles.xml'))
+    fills = []
+    for fl in st.find(NSX + 'fills'):
+        pf = fl.find(NSX + 'patternFill')
+        c = pf.find(NSX + 'fgColor') if pf is not None else None
+        rgb = c.get('rgb') if c is not None else None
+        fills.append(('#' + rgb[2:].lower()) if rgb else None)
+    xf_fill = [int(x.get('fillId') or 0) for x in st.find(NSX + 'cellXfs')]
+
+    def fmt_money(v):
+        try:
+            n = float(v)
+        except ValueError:
+            return v
+        if n == 0:
+            return ''
+        return ('R$ {:,.2f}'.format(n)
+                .replace(',', 'X').replace('.', ',').replace('X', '.'))
+
+    MSG_XLSX = [('OMPS – ORÇ', 'msgOmps'), ('NAV – SOL IND REC', 'msgNav'),
+                ('COMINSUP – IND REC', 'msgNav'), ('COMINSUP/NAV – IND REC', 'msgNav'),
+                ('COMINSUP/NAVIO – IND REC', 'msgNav'),
+                ('OMPS-TÉRMINO', 'msgOmps'), ('SATISFEITO / CANCELADO', 'msgNav')]
+    pedidos = []
+    for sheet in wb.iter(NSX + 'sheet'):
+        navio = sheet.get('name')
+        if navio not in NAVIOS:
+            continue
+        tgt = rels[sheet.get(NSR + 'id')]
+        root = ET.fromstring(z.read('xl/' + tgt.lstrip('/')))
+        hdr = _header_map(root, ss)
+        grp = _row8_groups(root, ss)
+
+        def group_cols(label):
+            r = grp.get(label)
+            return list(range(r[0], r[1] + 1)) if r else []
+        c_navio, c_num, c_desc = hdr.get('NAVIO', [0])[0], hdr.get('N°', [1])[0], hdr.get('DESCRIÇÃO', [2])[0]
+        c_omps, c_ds = hdr.get('OMPS', [3])[0], hdr.get('DS', [4])[0]
+        cols_orc = group_cols('ORÇAMENTO')
+        cols_adit = group_cols('ADITAMENTO')
+        cols_rec = group_cols('REC IND')
+        c_falta = grp.get('FALTA INDICAR', (None,))[0]
+        c_altesc = hdr.get('ALT ESCOPO', [None])[0]
+        c_sit = grp.get('SITUAÇÃO', (None,))[0]
+        c_altcred = grp.get('ALTCRED P/ BNVC', (None,))[0]
+        for row in root.iter(NSX + 'row'):
+            if int(row.get('r')) < 10:
+                continue
+            vals, styles_row = {}, {}
+            for c in row.iter(NSX + 'c'):
+                i = _col_idx(c.get('r'))
+                v = c.find(NSX + 'v')
+                if v is None or v.text is None:
+                    continue
+                vals[i] = ss[int(v.text)] if c.get('t') == 's' else v.text
+                styles_row[i] = int(c.get('s') or 0)
+            numero = str(vals.get(c_num, '')).strip()
+            navio_cell = str(vals.get(c_navio, '')).strip()
+            if numero.upper() == 'SUBTOTAL' or navio_cell.upper() == 'SUBTOTAL':
+                break  # mesma blindagem do ODS: nada abaixo do SUBTOTAL
+            if not numero:
+                continue
+            sit_txt = str(vals.get(c_sit, '')).strip().upper() if c_sit is not None else ''
+            bg = fills[xf_fill[styles_row.get(c_navio, 0)]] if c_navio in styles_row else None
+            situacao = TEXTO_SITUACAO.get(sit_txt, '') or COR_SITUACAO.get(bg or '', '')
+            orc = next((str(vals[i]).strip() for i in cols_orc if str(vals.get(i, '')).strip()), '')
+            adit = ' + '.join(fmt_money(str(vals.get(i, '')).strip())
+                              for i in cols_adit if str(vals.get(i, '')).strip())
+            rec = next((str(vals[i]).strip() for i in cols_rec if str(vals.get(i, '')).strip()), '')
+            msgs = {'msgOmps': [], 'msgNav': []}
+            for rotulo, destino in MSG_XLSX:
+                idxs = hdr.get(rotulo)
+                if not idxs:
+                    continue
+                v = str(vals.get(idxs[0], '')).strip()
+                if v:
+                    msgs[destino].append('%s: %s' % (rotulo, v))
+            pedidos.append({
+                'navio': navio, 'tipo': tipo,
+                'numero': numero,
+                'descricao': str(vals.get(c_desc, '')).strip(),
+                'omps': str(vals.get(c_omps, '')).strip(),
+                'ds': str(vals.get(c_ds, '')).strip(),
+                'orcamento': fmt_money(orc),
+                'aditamentos': adit,
+                'recInd': fmt_money(rec),
+                'faltaIndicar': fmt_money(str(vals.get(c_falta, '')).strip()) if c_falta is not None else '',
+                'altEscopo': str(vals.get(c_altesc, '')).strip() if c_altesc is not None else '',
+                'msgOmps': '\n'.join(msgs['msgOmps']),
+                'msgNav': '\n'.join(msgs['msgNav']),
+                'situacao': situacao,
+                'situacaoCor': bg or '',
+                'altcredBnvc': str(vals.get(c_altcred, '')).strip() if c_altcred is not None else '',
             })
     return pedidos
 
@@ -115,7 +330,7 @@ def extrair_arquivo(f, tipo):
 def extrair(pasta):
     arquivos = sorted(
         f for f in glob.glob(os.path.join(pasta, '*'))
-        if f.lower().endswith('.ods') and not os.path.basename(f).startswith('~$'))
+        if f.lower().endswith(('.ods', '.xlsx')) and not os.path.basename(f).startswith('~$'))
     pedidos = []
     ignorados = []
     for f in arquivos:
@@ -127,7 +342,10 @@ def extrair(pasta):
         else:
             ignorados.append(os.path.basename(f))
             continue
-        pedidos.extend(extrair_arquivo(f, tipo))
+        if f.lower().endswith('.xlsx'):
+            pedidos.extend(extrair_xlsx(f, tipo))
+        else:
+            pedidos.extend(extrair_arquivo(f, tipo))
     return {'pedidos': pedidos, 'arquivosIgnorados': ignorados}
 
 

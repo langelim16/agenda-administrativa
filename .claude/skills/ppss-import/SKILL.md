@@ -23,9 +23,14 @@ Duas planilhas em `1. leituras/4. ppss/`, cada uma com 4 abas (uma por
 navio: `NHoGSampaio`, `NHiBTenCastelo`, `AvHoFluRioTocantins`,
 `AvHoFluRioXingu` — mesmos nomes usados no app):
 
-1. `01-PPSS-2026-NAVIOS-CORRENTE.ods` → pedidos de **Manutenção Corrente**.
-2. `02-PPSS-2026-NAVIOS-PROGRAMADAS.ods` → pedidos de **Manutenção
-   Programada**.
+1. Arquivo com `CORRENTE` no nome → pedidos de **Manutenção Corrente**.
+2. Arquivo com `PROGRAMADA` no nome → pedidos de **Manutenção Programada**.
+
+Formato: `.ods` OU `.xlsx` (o usuário passou a mandar a PROGRAMADAS em
+xlsx em 15/07/2026; o extrator lê os dois). No xlsx o layout de colunas
+**varia por aba** — o extrator resolve pelas linhas de cabeçalho 8 (grupos
+mesclados: IDENTIFICAÇÃO/Orçamento/Aditamento/REC IND/FALTA INDICAR/MSG/
+SITUAÇÃO/ALTCRED P/ BNVC) e 9 (sub-colunas), nunca por índice fixo.
 
 Extração: `python3 scripts/ppss_extrair.py "1. leituras/4. ppss"` (JSON
 pronto para conferência).
@@ -35,9 +40,11 @@ procurar pelo conteúdo em vez de falhar.
 
 ## Regras de mapeamento
 
-- **Situação vem da cor de fundo da linha** (a planilha usa cor como o
-  próprio dado de status, não texto). O extrator já resolve isso via
-  `fo:background-color` do estilo da célula, mapeamento fixo:
+- **Situação: o TEXTO da coluna SITUAÇÃO é a fonte primária** (TERMINADO→
+  Concluído, CANCELADO, FALTA INDICAR, RECURSO INDICADO, ORÇADO E NÃO
+  INDICADO, NÃO ORÇADO). A **cor de fundo da linha é fallback** quando a
+  coluna está vazia (regra corrigida em 15/07/2026 — a cor sozinha deixava
+  a maioria sem situação). Mapeamento de cores:
   - `#33cccc` → `Concluído`
   - `#ff0000` → `Cancelado`
   - `#dc85e9` → `Falta Indicar`
@@ -57,8 +64,9 @@ procurar pelo conteúdo em vez de falhar.
   - `DS` → `ds`.
   - `Orçamento + Aditamento` → `orcamento` + `aditamentos` (ler as duas
     colunas separadas, não somar antes de gravar).
-  - `REC IND` (Recurso Indicado) → informativo, não tem coluna própria no
-    schema; usar para conferir contra `situacao`.
+  - `REC IND` (Recurso Indicado) → `recInd` (coluna própria no schema
+    desde 15/07/2026).
+  - `ALTCRED P/ BNVC` → `altcredBnvc` (coluna própria desde 15/07/2026).
   - `FALTA INDICAR` (fórmula = Orçamento − REC IND, já calculada na
     planilha) → `faltaIndicar`.
   - `MSG` → **não vai para uma coluna única**; cada mensagem tem um

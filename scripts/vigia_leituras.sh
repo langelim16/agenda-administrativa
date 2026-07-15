@@ -57,11 +57,11 @@ try:
 except Exception:
     estado = {}
 SKILLS = {'1. clg': 'clg-import', '2. pmpe': 'pmpe-import',
-          '3. horas-funcionamento': 'horas-import'}
+          '3. horas-funcionamento': 'horas-import', '4. ppss': 'ppss-import'}
 novos = []
 for root, _, files in os.walk(leituras):
     for f in files:
-        if f.startswith('~$') or not f.lower().endswith(('.ods', '.pdf')):
+        if f.startswith('~$') or not f.lower().endswith(('.ods', '.pdf', '.xlsx')):
             continue
         p = os.path.join(root, f)
         rel = os.path.relpath(p, leituras)
@@ -89,7 +89,7 @@ PY
       osascript -e 'display notification "Pasta nova em 1. leituras sem skill de importação" with title "Vigia leituras"' 2>/dev/null
     fi
 
-    for SKILL in clg-import pmpe-import horas-import; do
+    for SKILL in clg-import pmpe-import horas-import ppss-import; do
       ARQS=$(echo "$NOVOS" | awk -F'\t' -v s="$SKILL" '$1==s{print $2}')
       [ -z "$ARQS" ] && continue
       log "novos p/ $SKILL: $(echo "$ARQS" | tr '\n' ' ')"
