@@ -130,15 +130,24 @@ def extrair_arquivo(f, tipo):
                 v = _txt(r, i)
                 if v:
                     msgs[destino].append('%s: %s' % (rotulo, v))
+            orcamento = _txt(r, 5)
+            # Recurso Indicado Integral: quando a situação é "Recurso Indicado" e a
+            # planilha não repete o valor na col REC IND (preenchedor só marca a
+            # situação), o valor indicado é o próprio Orçamento (visto em
+            # AvHoFluRioTocantins #0001/#0002, 15/07/2026 — não é bug de parsing,
+            # é convenção da planilha para "indicado integral").
+            recInd = _txt(r, 8) or _txt(r, 9)
+            if not recInd and situacao == 'Recurso Indicado':
+                recInd = orcamento
             pedidos.append({
                 'navio': navio, 'tipo': tipo,
                 'numero': numero,
                 'descricao': _txt(r, 2),
                 'omps': _txt(r, 3),
                 'ds': _txt(r, 4),
-                'orcamento': _txt(r, 5),
+                'orcamento': orcamento,
                 'aditamentos': adit,
-                'recInd': _txt(r, 8) or _txt(r, 9),
+                'recInd': recInd,
                 'faltaIndicar': _txt(r, 10),
                 'altEscopo': _txt(r, 11),
                 'msgOmps': '\n'.join(msgs['msgOmps']),
@@ -299,6 +308,11 @@ def extrair_xlsx(f, tipo):
             adit = ' + '.join(fmt_money(str(vals.get(i, '')).strip())
                               for i in cols_adit if str(vals.get(i, '')).strip())
             rec = next((str(vals[i]).strip() for i in cols_rec if str(vals.get(i, '')).strip()), '')
+            # Recurso Indicado Integral: mesma convenção do ODS (ver comentário em
+            # extrair_arquivo) — situação "Recurso Indicado" com REC IND vazio na
+            # planilha significa indicado = orçado integralmente.
+            if not rec and situacao == 'Recurso Indicado':
+                rec = orc
             msgs = {'msgOmps': [], 'msgNav': []}
             for rotulo, destino in MSG_XLSX:
                 idxs = hdr.get(rotulo)

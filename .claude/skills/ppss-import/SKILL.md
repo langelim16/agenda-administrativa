@@ -65,7 +65,16 @@ procurar pelo conteúdo em vez de falhar.
   - `Orçamento + Aditamento` → `orcamento` + `aditamentos` (ler as duas
     colunas separadas, não somar antes de gravar).
   - `REC IND` (Recurso Indicado) → `recInd` (coluna própria no schema
-    desde 15/07/2026).
+    desde 15/07/2026). **Recurso Indicado Integral**: quando a situação é
+    `RECURSO INDICADO`/`INDICADO RECURSO INTEGRAL` e a célula REC IND vem
+    vazia (preenchedor só marcou a situação, não repetiu o valor), `recInd`
+    = `orcamento` (indicado integral = o próprio orçado). Aplicado no
+    extrator (`ppss_extrair.py`, `extrair_arquivo`/`extrair_xlsx`) e como
+    fallback de leitura no app (`ppssRecIndVal`, cobre registros antigos já
+    gravados sem o fallback). Bug real: 6 pedidos "Recurso Indicado" com
+    `recInd` vazio sumiam do KPI "Valor indicado" (AvHoFluRioTocantins
+    #0001/#0002/2007/2014, NHoGSampaio #0004/#0018 — achado pelo usuário em
+    15/07/2026).
   - `ALTCRED P/ BNVC` → `altcredBnvc` (coluna própria desde 15/07/2026).
   - `FALTA INDICAR` (fórmula = Orçamento − REC IND, já calculada na
     planilha) → `faltaIndicar`.
