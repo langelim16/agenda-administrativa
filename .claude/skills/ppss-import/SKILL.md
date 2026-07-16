@@ -32,6 +32,28 @@ xlsx em 15/07/2026; o extrator lê os dois). No xlsx o layout de colunas
 mesclados: IDENTIFICAÇÃO/Orçamento/Aditamento/REC IND/FALTA INDICAR/MSG/
 SITUAÇÃO/ALTCRED P/ BNVC) e 9 (sub-colunas), nunca por índice fixo.
 
+Dois problemas achados/corrigidos em 16/07/2026 (`extrair_xlsx` em
+`ppss_extrair.py`):
+- **Namespace OOXML variável**: alguns arquivos .xlsx usam
+  `http://purl.oclc.org/ooxml/...` em vez do namespace padrão
+  `schemas.openxmlformats.org` (depende do exportador que gerou o arquivo).
+  O extrator descobre o namespace real por arquivo (`_detect_ns`, lê a tag
+  raiz de `xl/workbook.xml`) em vez de assumir o padrão fixo.
+- **N° do pedido com zero-padding via formatação de célula**: em algumas
+  abas a coluna N° é numérica pura (`1`) e só vira `0001` pela formatação
+  customizada da célula (`numFmtId` custom tipo `'0000'`) — sem aplicar
+  esse formato o extrator lia `1` em vez de `0001`, quebrando o upsert por
+  `numero` contra o Supabase (gerava falso par "sumiu"/"novo" para o mesmo
+  pedido). O extrator agora lê o `numFmts` do `styles.xml` e aplica o
+  zero-padding manualmente quando a célula usa esse formato.
+- **NHoGSampaio duplicado entre CORRENTE e PROGRAMADA**: em 16/07/2026 a
+  aba `NHoGSampaio` do arquivo CORRENTE trazia os mesmos 20 pedidos
+  (mesmos números, descrições e valores) da aba `NHoGSampaio` do arquivo
+  PROGRAMADAS. Confirmado com o usuário: tratar como intencional — chave de
+  upsert é `(navio, numero, tipo)`, não `(navio, numero)`, já que o mesmo
+  N° pode existir legitimamente em Corrente E Programada para o mesmo
+  navio.
+
 Extração: `python3 scripts/ppss_extrair.py "1. leituras/4. ppss"` (JSON
 pronto para conferência).
 

@@ -173,7 +173,20 @@ def _col_idx(ref):
     return n - 1
 
 
-def _header_map(root, ss):
+def _detect_ns(workbook_bytes):
+    """Descobre o namespace OOXML real a partir da tag raiz de workbook.xml —
+    alguns exportadores (01-PPSS-2026-NAVIOS-CORRENTE.xlsx, 16/07/2026) usam
+    http://purl.oclc.org/ooxml/... em vez do padrão schemas.openxmlformats.org.
+    Retorna (nsx, nsr) para uso em todo o arquivo."""
+    root = ET.fromstring(workbook_bytes)
+    uri = root.tag[1:root.tag.index('}')] if root.tag.startswith('{') else NSX[1:-1]
+    nsx = '{%s}' % uri
+    nsr = nsx.replace('spreadsheetml/main', 'officeDocument/relationships') \
+             .replace('spreadsheetml/2006/main', 'officeDocument/2006/relationships')
+    return nsx, nsr
+
+
+def _header_map(root, ss, nsx=NSX):
     """Lê a linha 9 (rótulos das colunas) e devolve {rótulo: [índices]} —
     lista porque rótulos como 'FR-170' se repetem (Orçamento e REC IND usam
     o mesmo nome de coluna em posições diferentes).
@@ -181,11 +194,11 @@ def _header_map(root, ss):
     SITUAÇÃO na col S numa aba, col U noutra) — resolver pelo texto, não
     por índice fixo."""
     hdr = {}
-    for row in root.iter(NSX + 'row'):
+    for row in root.iter(nsx + 'row'):
         if int(row.get('r')) != 9:
             continue
-        for c in row.iter(NSX + 'c'):
-            v = c.find(NSX + 'v')
+        for c in row.iter(nsx + 'c'):
+            v = c.find(nsx + 'v')
             if v is None or v.text is None:
                 continue
             txt = ss[int(v.text)] if c.get('t') == 's' else v.text
@@ -194,7 +207,7 @@ def _header_map(root, ss):
     return hdr
 
 
-def _row8_groups(root, ss):
+def _row8_groups(root, ss, nsx=NSX):
     """Lê a linha 8 (rótulos dos grupos de coluna: IDENTIFICAÇÃO, Orçamento,
     Aditamento, REC IND, FALTA INDICAR, MSG, SITUAÇÃO, ALTCRED P/ BNVC,
     OBSERVAÇÕES) e devolve {rótulo: (col_inicial, col_final)} usando os
@@ -202,7 +215,7 @@ def _row8_groups(root, ss):
     a sub-coluna 'FR-170' se repete dentro de Orçamento E de REC IND — só
     dá pra separar os dois pelo grupo pai, não pelo rótulo da sub-coluna."""
     merges = {}
-    mc = root.find(NSX + 'mergeCells')
+    mc = root.find(nsx + 'mergeCells')
     if mc is not None:
         for m in mc:
             ref = m.get('ref')
@@ -212,11 +225,11 @@ def _row8_groups(root, ss):
             merges[_col_idx(a)] = _col_idx(b)
     groups = {}
     cols_seen = []
-    for row in root.iter(NSX + 'row'):
+    for row in root.iter(nsx + 'row'):
         if int(row.get('r')) != 8:
             continue
-        for c in row.iter(NSX + 'c'):
-            v = c.find(NSX + 'v')
+        for c in row.iter(nsx + 'c'):
+            v = c.find(nsx + 'v')
             if v is None or v.text is None:
                 continue
             txt = (ss[int(v.text)] if c.get('t') == 's' else v.text).strip().upper()
@@ -233,20 +246,47 @@ def extrair_xlsx(f, tipo):
     """Colunas resolvidas pelos grupos da linha 8 + sub-cabeçalhos da linha 9
     de cada aba — o layout varia de aba para aba dentro do mesmo arquivo."""
     z = zipfile.ZipFile(f)
-    ss = [''.join(t.text or '' for t in si.iter(NSX + 't'))
-          for si in ET.fromstring(z.read('xl/sharedStrings.xml')).iter(NSX + 'si')]
-    wb = ET.fromstring(z.read('xl/workbook.xml'))
+    wb_bytes = z.read('xl/workbook.xml')
+    nsx, nsr = _detect_ns(wb_bytes)
+    ss = [''.join(t.text or '' for t in si.iter(nsx + 't'))
+          for si in ET.fromstring(z.read('xl/sharedStrings.xml')).iter(nsx + 'si')]
+    wb = ET.fromstring(wb_bytes)
     rels = {r.get('Id'): r.get('Target')
             for r in ET.fromstring(z.read('xl/_rels/workbook.xml.rels'))}
     # estilos: xf -> cor de preenchimento (fallback de situação, como no ODS)
     st = ET.fromstring(z.read('xl/styles.xml'))
     fills = []
-    for fl in st.find(NSX + 'fills'):
-        pf = fl.find(NSX + 'patternFill')
-        c = pf.find(NSX + 'fgColor') if pf is not None else None
+    for fl in st.find(nsx + 'fills'):
+        pf = fl.find(nsx + 'patternFill')
+        c = pf.find(nsx + 'fgColor') if pf is not None else None
         rgb = c.get('rgb') if c is not None else None
         fills.append(('#' + rgb[2:].lower()) if rgb else None)
-    xf_fill = [int(x.get('fillId') or 0) for x in st.find(NSX + 'cellXfs')]
+    cellxfs = list(st.find(nsx + 'cellXfs'))
+    xf_fill = [int(x.get('fillId') or 0) for x in cellxfs]
+    # numFmts customizados (ex.: '0000' = zero-padding do N° do pedido) — sem isso a
+    # coluna N° perde o padding quando a célula é numérica pura (ex.: '1' vira '0001'
+    # só na exibição via formato da célula, visto 16/07/2026 em 01-PPSS-2026-NAVIOS-
+    # CORRENTE.xlsx: NHiBTenCastelo/AvHoFluRioTocantins/AvHoFluRioXingu usam numFmtId
+    # 166='0000', gerando falso par novo/removido no merge se não for aplicado aqui).
+    numfmts = {}
+    nf_el = st.find(nsx + 'numFmts')
+    if nf_el is not None:
+        for fmt in nf_el:
+            numfmts[int(fmt.get('numFmtId'))] = fmt.get('formatCode')
+    xf_numfmt = [int(x.get('numFmtId') or 0) for x in cellxfs]
+
+    def apply_zero_pad(raw, style_idx):
+        """Aplica um formatCode simples de zero-padding tipo '0000' a um valor
+        numérico puro. Só cobre o padrão observado (dígitos '0' repetidos); outros
+        formatCodes custom são ignorados (devolve o valor cru)."""
+        numfmtid = xf_numfmt[style_idx] if style_idx < len(xf_numfmt) else 0
+        code = numfmts.get(numfmtid)
+        if code and code.strip('0') == '' and code:
+            try:
+                return str(int(float(raw))).zfill(len(code))
+            except ValueError:
+                return raw
+        return raw
 
     def fmt_money(v):
         try:
@@ -263,14 +303,14 @@ def extrair_xlsx(f, tipo):
                 ('COMINSUP/NAVIO – IND REC', 'msgNav'),
                 ('OMPS-TÉRMINO', 'msgOmps'), ('SATISFEITO / CANCELADO', 'msgNav')]
     pedidos = []
-    for sheet in wb.iter(NSX + 'sheet'):
+    for sheet in wb.iter(nsx + 'sheet'):
         navio = sheet.get('name')
         if navio not in NAVIOS:
             continue
-        tgt = rels[sheet.get(NSR + 'id')]
+        tgt = rels[sheet.get(nsr + 'id')]
         root = ET.fromstring(z.read('xl/' + tgt.lstrip('/')))
-        hdr = _header_map(root, ss)
-        grp = _row8_groups(root, ss)
+        hdr = _header_map(root, ss, nsx)
+        grp = _row8_groups(root, ss, nsx)
 
         def group_cols(label):
             r = grp.get(label)
@@ -284,18 +324,20 @@ def extrair_xlsx(f, tipo):
         c_altesc = hdr.get('ALT ESCOPO', [None])[0]
         c_sit = grp.get('SITUAÇÃO', (None,))[0]
         c_altcred = grp.get('ALTCRED P/ BNVC', (None,))[0]
-        for row in root.iter(NSX + 'row'):
+        for row in root.iter(nsx + 'row'):
             if int(row.get('r')) < 10:
                 continue
             vals, styles_row = {}, {}
-            for c in row.iter(NSX + 'c'):
+            for c in row.iter(nsx + 'c'):
                 i = _col_idx(c.get('r'))
-                v = c.find(NSX + 'v')
+                v = c.find(nsx + 'v')
                 if v is None or v.text is None:
                     continue
                 vals[i] = ss[int(v.text)] if c.get('t') == 's' else v.text
                 styles_row[i] = int(c.get('s') or 0)
             numero = str(vals.get(c_num, '')).strip()
+            if c_num in styles_row:
+                numero = apply_zero_pad(numero, styles_row[c_num])
             navio_cell = str(vals.get(c_navio, '')).strip()
             if numero.upper() == 'SUBTOTAL' or navio_cell.upper() == 'SUBTOTAL':
                 break  # mesma blindagem do ODS: nada abaixo do SUBTOTAL
