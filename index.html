@@ -521,7 +521,7 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
 .nav-item .nav-lbl{font-size:8px;letter-spacing:.3px;text-transform:uppercase;text-align:center;line-height:1.15;padding:0 2px}
 .nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
 .nav-item.active{background:var(--c-blue);color:#fff}
-.nv-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.nv-toolbar{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 .dt-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
 .dt-section-head .dt-table-title{margin:0;text-align:left}
 .dt-section-head .nv-toolbar{margin-bottom:0}
@@ -680,8 +680,9 @@ tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .nv-table td[data-key="restricao"],.nv-table td[data-key="previsao"]{white-space:pre-line;text-align:left}
 .dt-table-title{text-align:center;font-size:14px;font-weight:700;color:var(--text);margin:0 0 8px}
 .dt-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xs);overflow-x:auto;margin-bottom:14px}
-.ferias-legend{display:flex;align-items:center;font-size:11px;color:var(--text2);margin:0 0 8px;gap:5px}
-.ferias-sw{width:13px;height:13px;border-radius:3px;display:inline-block}
+.ferias-legend{display:flex;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--text2);margin:0 0 8px;gap:5px 14px}
+.ferias-leg-item{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.ferias-sw{width:13px;height:13px;border-radius:3px;display:inline-block;flex:none}
 .ferias-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xs);overflow-x:auto;margin-bottom:14px;max-height:520px;overflow-y:auto}
 .ferias-table{border-collapse:collapse;font-size:10px}
 .ferias-table th,.ferias-table td{border:1px solid var(--border);padding:0;text-align:center}
@@ -704,6 +705,11 @@ tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .ferias-jump{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
 .ferias-jump button{background:var(--c-100);border:1px solid var(--border2);color:var(--text2);font-size:10px;padding:5px 9px;border-radius:var(--r-sm);text-transform:uppercase;letter-spacing:.3px}
 .ferias-jump button:hover{background:var(--c-blue);color:#fff;border-color:var(--c-blue)}
+/* Celular: meses em grade fixa de 4 por linha (12 meses = 3 linhas), botões preenchendo a coluna. */
+@media(max-width:640px){
+  .ferias-jump{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .ferias-jump button{padding:7px 2px;font-size:10px;letter-spacing:0;text-align:center}
+}
 .ferias-msg{font-size:11.5px;border-radius:var(--r-md);padding:7px 10px;margin-top:2px;display:none}
 .ferias-msg.info{background:var(--c-sky);color:var(--text2)}
 .ferias-msg.warn{background:var(--c-red2);color:var(--c-red);font-weight:600}
@@ -2660,7 +2666,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 <div class="pessoal-stats" id="pessoal_stats"></div>
 
 <div class="dt-section-head" style="margin-top:18px">
-  <h3 class="dt-table-title">Controle de Férias</h3>
+  <h3 class="dt-table-title">Controle de Férias/Afastamentos</h3>
   <div class="nv-toolbar">
     <button class="nv-editbtn" id="ferias_add_btn">+ Inserir período</button>
     <button class="nv-editbtn" id="ferias_edit_btn">Editar períodos lançados</button>
@@ -6603,13 +6609,8 @@ setTimeout(hideSplash,12000);
         var cls=r.pct===null?"":(r.pct>=70?"row-ok":(r.pct>=40?"row-warn":"row-bad"));
         return '<tr class="'+cls+'"><td>'+esc(r.nome)+'</td><td>'+r.acc.P+'</td><td>'+r.acc.PO+'</td><td>'+r.acc.IO+'</td><td>'+r.acc.IM+'</td><td>'+r.acc.unk+'</td><td><b>'+(r.pct===null?"—":r.pct+"%")+'</b></td></tr>';
       }).join("")+'</tbody></table></div>'+
-      '<div style="font-size:10px;color:var(--text3);margin-top:8px;font-style:italic">Dias contados de 01/01/'+y+' até '+(y===CUR_YEAR?"hoje":"31/12/"+y)+', a partir do histórico registrado. “% Operacional” = (P + PO) ÷ dias com registro.</div>'+
-      '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="nv-editbtn" id="nvoper_csv">⬇ Exportar CSV</button></div>';
+      '<div style="font-size:10px;color:var(--text3);margin-top:8px;font-style:italic">Dias contados de 01/01/'+y+' até '+(y===CUR_YEAR?"hoje":"31/12/"+y)+', a partir do histórico registrado. “% Operacional” = (P + PO) ÷ dias com registro.</div>';
     navBindYearControls("nvop");
-    document.getElementById("nvoper_csv").onclick=function(){
-      var csv="Meio;P;PO;IO;IM;Sem registro;% Operacional\n"+rows.map(function(r){return[r.nome,r.acc.P,r.acc.PO,r.acc.IO,r.acc.IM,r.acc.unk,(r.pct===null?"":r.pct+"%")].join(";");}).join("\n");
-      trigDL("operacionalidade_"+y+".csv","\uFEFF"+csv,"text/csv;charset=utf-8");
-    };
   }
   
   // Ordem/cores dos buckets de situação (compartilhada consolidado + por navio).
@@ -8687,7 +8688,7 @@ function openPpssKpiDrawer(navio,metric){
         '<tbody id="'+prefix+'_tbody"></tbody>'+
       '</table>'+
     '</div>'+
-    '<div class="nv-grid" id="'+prefix+'_grid"></div>'+
+    '<div class="nv-grid" id="'+prefix+'_grid" style="margin-top:22px"></div>'+
     '</div>';
   }
   async function horasLoadShip(s){
@@ -9696,8 +9697,8 @@ function openPpssKpiDrawer(navio,metric){
     var box=document.getElementById("ferias_legend");
     if(!box)return;
     box.innerHTML=GROUPS.map(function(g){
-      return '<span class="ferias-sw" style="background:'+g.color+'">'+g.letter+'</span> '+esc(g.label);
-    }).join(" &nbsp; ")+' &nbsp; <span class="ferias-sw" style="background:#3a3f45"></span> Antes do embarque';
+      return '<span class="ferias-leg-item"><span class="ferias-sw" style="background:'+g.color+'">'+g.letter+'</span>'+esc(g.label)+'</span>';
+    }).join("")+'<span class="ferias-leg-item"><span class="ferias-sw" style="background:#3a3f45"></span>Antes do embarque</span>';
   }
   function renderFeriasTable(){
     var table=document.getElementById("ferias_table");
