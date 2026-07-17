@@ -543,6 +543,9 @@ tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .nv-edit-actions[hidden]{display:none}
 .nv-editbtn,.nv-savebtn,.nv-cancelbtn{font-size:12px;font-weight:600;padding:7px 13px;border-radius:var(--r-md);border:1.5px solid var(--border);cursor:pointer;background:var(--surface);color:var(--text2);box-shadow:var(--sh-xs)}
 .nv-editbtn:hover:not(:disabled){border-color:var(--c-blue);color:var(--c-blue)}
+/* Ação primária (Inserir…, Gerar gráfico): azul cheio. */
+.nv-editbtn.blue{background:var(--c-blue);color:#fff;border-color:var(--c-blue)}
+.nv-editbtn.blue:hover:not(:disabled){filter:brightness(1.07);color:#fff;border-color:var(--c-blue)}
 .nv-editbtn:disabled,.nv-savebtn:disabled,.nv-cancelbtn:disabled{opacity:.4;cursor:not-allowed}
 .nv-savebtn{background:var(--c-blue);color:#fff;border-color:var(--c-blue)}
 .nv-savebtn:disabled{background:var(--c-100);color:var(--text3);border-color:var(--border)}
@@ -1898,7 +1901,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Condição de Eficiência dos Meios</h3><span class="last-edit" id="nv_table_lastedit"></span></div>
   <div class="nv-toolbar" id="nv_table_toolbar">
-  <button class="nv-editbtn" id="nv_condef_alt_btn">+ Inserir alteração</button>
+  <button class="nv-editbtn blue" id="nv_condef_alt_btn">+ Inserir alteração</button>
   <button class="nv-editbtn" id="nv_condef_edit_btn">Editar períodos lançados</button>
   <button class="nv-editbtn" id="nv_table_edit">✎ Editar tabela</button>
   <span class="nv-edit-actions" id="nv_table_edit_actions" hidden="">
@@ -1974,7 +1977,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Estoque de ODM nos Meios</h3><span class="last-edit" id="clg_t1_lastedit"></span></div>
   <div class="nv-toolbar" id="clg_t1_toolbar">
-    <button class="nv-editbtn" id="clg_consumo_btn">+ Inserir consumo/abastecimento</button>
+    <button class="nv-editbtn blue" id="clg_consumo_btn">+ Inserir consumo/abastecimento</button>
     <button class="nv-editbtn" id="clg_lanc_btn">✎ Editar lançamentos</button>
     <button class="nv-editbtn" id="clg_t1_edit">✎ Editar</button>
     <span class="nv-edit-actions" id="clg_t1_edit_actions" hidden="">
@@ -2089,7 +2092,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Horas acumuladas</h3></div>
   <div class="nv-toolbar">
-    <button class="nv-editbtn" id="horas_lanc_btn">+ Inserir horas em operação</button>
+    <button class="nv-editbtn blue" id="horas_lanc_btn">+ Inserir horas em operação</button>
     <button class="nv-editbtn" id="horas_editlanc_btn">✎ Editar lançamentos</button>
   </div>
 </div>
@@ -2160,7 +2163,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 <div class="dt-section-head" style="margin-top:18px">
   <h3 class="dt-table-title">Controle de Férias/Afastamentos</h3>
   <div class="nv-toolbar">
-    <button class="nv-editbtn" id="ferias_add_btn">+ Inserir período</button>
+    <button class="nv-editbtn blue" id="ferias_add_btn">+ Inserir período</button>
     <button class="nv-editbtn" id="ferias_edit_btn">Editar períodos lançados</button>
   </div>
 </div>
@@ -6019,7 +6022,7 @@ setTimeout(hideSplash,12000);
       '<span style="font-weight:700;font-size:13px;padding:0 4px">'+navYear+'</span>'+
       '<button type="button" class="nv-editbtn" id="'+idPrefix+'_next"'+(navYear>=maxY?' disabled':'')+' title="Próximo ano">▶</button>'+
       (navYear>=maxY?'<button type="button" class="nv-editbtn add-year" id="'+idPrefix+'_addyear">+ Ano</button>':'')+
-      (piePref?'<button type="button" class="nv-editbtn" id="'+idPrefix+'_piebtn" title="Gerar gráfico de operacionalidade (consolidado + por navio)" style="background:var(--c-blue);color:#fff;border-color:var(--c-blue)">📊 Gerar gráfico</button>':'')+
+      (piePref?'<button type="button" class="nv-editbtn blue" id="'+idPrefix+'_piebtn" title="Gerar gráfico de operacionalidade (consolidado + por navio)">📊 Gerar gráfico</button>':'')+
     '</div>';
   }
   function navBindYearControls(idPrefix){
