@@ -2345,7 +2345,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
   <button class="btn undo-btn" id="undobtn" disabled="">↩ Desfazer</button>
   <button class="btn redo-btn" id="redobtn" disabled="">↪ Refazer</button>
   <button class="btn primary" id="addbtn">+ Inserir</button>
-  <button class="btn" id="reportbtn">📋 Passagem</button>
+  <button class="btn" id="reportbtn">📋 Passagem de função</button>
   <div class="menu-wrap">
     <button class="btn" id="menuToolsBtn">🛠 Ferramentas ▾</button>
     <div class="menu-drop" id="menuToolsDrop">
@@ -2750,7 +2750,6 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 <div class="flt-bar">
   <select id="gar_f_sit"><option value="">Todas as situações</option><option value="P">P</option><option value="PO">PO</option><option value="IM">IM</option></select>
   <input id="gar_f_q" placeholder="🔍 Pesquisar placa, modelo, NIV, observação...">
-  <button class="nv-editbtn" id="gar_import_btn">⬆ Importar planilha</button>
   <button class="nv-editbtn" id="gar_report_btn">📋 Relatório mensal</button>
 </div>
 
@@ -2821,19 +2820,6 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
   </div>
 </div></div>
 
-<!-- importador de planilha (genérico, usado por PPSS/Garagem) -->
-<div class="mbg" id="impBg"><div class="modal wide"><div class="mh"><h3 id="impTitle">Importar planilha</h3><button class="mx" id="impClose">✕</button></div>
-  <div class="mbody" style="padding:16px 18px">
-    <div class="fld full"><label>Arquivo CSV</label><input type="file" id="impFile" accept=".csv,.txt"></div>
-    <div class="fld full"><label>Ou cole o conteúdo CSV aqui</label><textarea id="impPaste" rows="4" placeholder="Cole aqui o conteúdo exportado como CSV..."></textarea></div>
-    <div id="impMapWrap" style="margin-top:10px"></div>
-    <div id="impPreviewWrap"></div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
-      <button class="nv-cancelbtn" id="impCancel">Cancelar</button>
-      <button class="bsave" id="impConfirm" disabled="">Confirmar importação</button>
-    </div>
-  </div>
-</div></div>
 
 <!-- modais -->
 <div class="mbg" id="ftbg"><div class="modal"><div class="mh"><h3>Inserir período — selecione o tipo</h3><button class="mx" id="ft_close">✕</button></div><div class="mbody" id="ft_list" style="display:flex;flex-direction:column;gap:8px;padding:6px 0"></div></div></div>
@@ -3928,83 +3914,6 @@ function svgLineChart(box,series,opts){
     if(hit&&hit.p.meta)openLchartDetail(hit.p.meta);
   });
 }
-
-/* ── Importador de planilha (CSV) com confirmação — genérico.
-   cols: [{key,title}] do destino. keyFields: campos usados para casar linha existente x nova
-   (ex.: ["navio","numero"]). applyFn(rows): recebe as linhas mapeadas prontas para aplicar. ── */
-function parseCsv(text){
-  var lines=text.split(/\r?\n/).filter(function(l){return l.trim()!=="";});
-  if(!lines.length)return{headers:[],rows:[]};
-  function splitLine(l){
-    var sep=l.indexOf(";")>l.indexOf(",")?";":",";
-    return l.split(sep).map(function(c){return c.replace(/^"|"$/g,"").trim();});
-  }
-  var headers=splitLine(lines[0]);
-  var rows=lines.slice(1).map(splitLine);
-  return{headers:headers,rows:rows};
-}
-function normHdr(s){return String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");}
-function openImporter(o){
-  var bg=document.getElementById("impBg");
-  if(!bg)return;
-  document.getElementById("impTitle").textContent="Importar planilha — "+o.label;
-  document.getElementById("impFile").value="";
-  document.getElementById("impPaste").value="";
-  document.getElementById("impMapWrap").innerHTML="";
-  document.getElementById("impPreviewWrap").innerHTML="";
-  document.getElementById("impConfirm").disabled=true;
-  var parsed=null;
-  function process(text){
-    parsed=parseCsv(text);
-    if(!parsed.headers.length){toast("Não foi possível ler a planilha (CSV vazio).","info");return;}
-    var mapWrap=document.getElementById("impMapWrap");
-    mapWrap.innerHTML=o.cols.map(function(c){
-      var guess=parsed.headers.findIndex(function(h){return normHdr(h)===normHdr(c.title)||normHdr(h)===normHdr(c.key);});
-      return '<div class="imp-map-row"><span>'+esc(c.title)+'</span><select data-key="'+c.key+'"><option value="">— ignorar —</option>'+
-        parsed.headers.map(function(h,i){return '<option value="'+i+'"'+(i===guess?" selected":"")+'>'+esc(h)+'</option>';}).join("")+
-      '</select></div>';
-    }).join("");
-    renderPreview();
-    mapWrap.querySelectorAll("select").forEach(function(sel){sel.onchange=renderPreview;});
-    document.getElementById("impConfirm").disabled=false;
-  }
-  function currentMap(){
-    var map={};
-    document.getElementById("impMapWrap").querySelectorAll("select").forEach(function(sel){if(sel.value!=="")map[sel.dataset.key]=+sel.value;});
-    return map;
-  }
-  function renderPreview(){
-    if(!parsed)return;
-    var map=currentMap();
-    var cols=o.cols.filter(function(c){return map[c.key]!==undefined;});
-    var prevRows=parsed.rows.slice(0,15);
-    document.getElementById("impPreviewWrap").innerHTML='<div style="font-size:11px;color:var(--text3);margin:8px 0">Pré-visualização ('+parsed.rows.length+' linha(s) detectada(s)):</div>'+
-      '<div style="overflow-x:auto"><table class="imp-preview"><thead><tr>'+cols.map(function(c){return '<th>'+esc(c.title)+'</th>';}).join("")+'</tr></thead><tbody>'+
-      prevRows.map(function(r){return '<tr>'+cols.map(function(c){return '<td>'+esc(r[map[c.key]]||"")+'</td>';}).join("")+'</tr>';}).join("")+
-      '</tbody></table></div>';
-  }
-  document.getElementById("impFile").onchange=function(e){
-    var f=e.target.files[0];if(!f)return;
-    var reader=new FileReader();
-    reader.onload=function(){process(reader.result);};
-    reader.readAsText(f,"utf-8");
-  };
-  document.getElementById("impPaste").oninput=function(e){if(e.target.value.trim())process(e.target.value);};
-  document.getElementById("impConfirm").onclick=function(){
-    if(!parsed)return;
-    var map=currentMap();
-    var mappedRows=parsed.rows.map(function(r){
-      var obj={};
-      o.cols.forEach(function(c){if(map[c.key]!==undefined)obj[c.key]=(r[map[c.key]]||"").trim();});
-      return obj;
-    }).filter(function(o2){return Object.values(o2).some(function(v){return v;});});
-    var res=o.applyFn(mappedRows);
-    toast("✓ Importação concluída: "+res.updated+" atualizada(s), "+res.added+" nova(s)","ok");
-    closeImporter();
-  };
-  bg.classList.add("open");
-}
-function closeImporter(){var bg=document.getElementById("impBg");if(bg)bg.classList.remove("open");}
 
 function bindDataTable(cfg){
   var getArr=cfg.getArr,setArr=cfg.setArr,onSaveKey=cfg.onSaveKey,onSaveDataFn=cfg.onSaveDataFn;
@@ -6872,9 +6781,6 @@ setTimeout(hideSplash,12000);
 })();
 document.getElementById("detailDrawerClose").onclick=closeDetailDrawer;
 document.getElementById("detailDrawerBg").onclick=function(e){if(e.target.id==="detailDrawerBg")closeDetailDrawer();};
-document.getElementById("impClose").onclick=closeImporter;
-document.getElementById("impCancel").onclick=closeImporter;
-document.getElementById("impBg").onclick=function(e){if(e.target.id==="impBg")closeImporter();};
 
 /* ═══════════════════════════════════════════════════════════
    ABA: CLG — tabelas T1/T2 + cartões
@@ -8603,29 +8509,6 @@ function openPpssKpiDrawer(navio,metric){
       getCards:function(){return vtrCards;},setCards:function(v){vtrCards=v;},
       save:vtrSaveCards,pushTag:"garPush",key:function(){return VTR_CARDS_KEY;},
       label:"cartão Garagem",render:renderGaragem});
-    var impBtn=document.getElementById("gar_import_btn");
-    if(impBtn)impBtn.onclick=function(){
-      if(GLOBAL_EDIT_LOCK){toast("Finalize a edição em andamento antes de importar.","info");return;}
-      openImporter({
-        label:"Garagem",cols:VTR_FIXED,
-        applyFn:function(mapped){
-          var preTbl=JSON.parse(JSON.stringify(vtrRows));
-          var updated=0,added=0;
-          mapped.forEach(function(m){
-            var existing=m.placa&&vtrRows.find(function(r){return r.placa&&r.placa.toUpperCase()===m.placa.toUpperCase();});
-            if(existing){Object.assign(existing,m);updated++;}
-            else{var nr={id:genUid("vt")};VTR_FIXED.forEach(function(c){nr[c.key]="";});Object.assign(nr,m);vtrRows.push(nr);added++;}
-          });
-          vtrSaveRows();
-          garLogKm();
-          pushKV("garPush",VTR_KEY,vtrRows);
-          auditDiffRows("vtr_tbl",preTbl,vtrRows);
-          touchLastEdit("vtr_tbl");paintLastEdit("vtr_tbl_lastedit","vtr_tbl");
-          renderGaragem();
-          return{updated:updated,added:added};
-        }
-      });
-    };
     var usoBtn=document.getElementById("uso_open_btn");
     if(usoBtn)usoBtn.onclick=openUsoModal;
     var usoClose=document.getElementById("uso_close"),usoCancel=document.getElementById("uso_cancel");
