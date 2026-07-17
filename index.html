@@ -2507,9 +2507,28 @@ function bkSynced(){return bk==="supabase";}
    estado atual: enquanto a RLS está aberta, o app funciona anônimo; quando a RLS for
    fechada (sql/02), qualquer leitura anônima recebe 401 e o login vira obrigatório. */
 var AA_SESS_KEY="aa_session_v1";
+var AA_ACTIVITY_KEY="aa_last_activity";
+var AA_IDLE_MS=12*60*60*1000;     // expira a sessão após 12h sem interação (logar 1x/dia por dispositivo)
 var aaSession=null;               // {access_token, refresh_token, expires_at(ms), email, user_id, role}
 var aaRefreshTimer=null;
 var aaAuthRequired=false;         // marcado quando o servidor exige login (RLS fechada)
+
+/* ── Expiração por inatividade (Fase 3.6) ── */
+function aaTouchActivity(){if(aaLoggedIn()){try{localStorage.setItem(AA_ACTIVITY_KEY,String(Date.now()));}catch(e){}}}
+function aaIdleExpired(){
+  if(!aaLoggedIn())return false;
+  var last=parseInt(localStorage.getItem(AA_ACTIVITY_KEY)||"0",10)||0;
+  return last>0&&(Date.now()-last)>AA_IDLE_MS;
+}
+function aaStartIdleWatch(){
+  ["pointerdown","keydown","visibilitychange"].forEach(function(ev){
+    document.addEventListener(ev,function(){if(document.visibilityState!=="hidden")aaTouchActivity();},{passive:true});
+  });
+  aaTouchActivity();
+  setInterval(function(){
+    if(aaIdleExpired()){aaClearSession();try{localStorage.removeItem(AA_ACTIVITY_KEY);}catch(e){}toast("Sessão expirada por inatividade. Entre novamente.","info");aaAuthRequired=true;aaShowLogin(true);}
+  },60000);
+}
 
 function aaToken(){return(aaSession&&aaSession.access_token)?aaSession.access_token:null;}
 function aaLoggedIn(){return!!aaToken();}
@@ -5481,8 +5500,9 @@ setTimeout(hideSplash,12000);
     // Autenticação (Fase 3): restaura a sessão salva e renova o token se estiver perto de vencer,
     // ANTES da 1ª chamada ao Supabase — assim o health-check já usa o token válido.
     aaLoadSession();
+    if(aaIdleExpired()){aaClearSession();try{localStorage.removeItem(AA_ACTIVITY_KEY);}catch(e){}}
     if(aaLoggedIn()&&aaSession.expires_at&&(aaSession.expires_at-Date.now())<60000)await aaRefresh();
-    aaPaintAuth();
+    aaPaintAuth();aaStartIdleWatch();
     await initBk();
     // Sessão salva mas rejeitada pelo servidor (token vencido/revogado): renova uma vez e refaz o teste.
     if(aaAuthRequired&&aaLoggedIn()){
