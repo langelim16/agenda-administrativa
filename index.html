@@ -2569,8 +2569,9 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
   </div>
 </header>
 
-<div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px">
   <button class="btn primary" id="horas_add_maint">+ Inserir manutenção</button>
+  <button class="btn" id="horas_edit_maint">✎ Editar lançamentos</button>
 </div>
 
 <div class="kpis" id="horas_kpis"></div>
@@ -9120,8 +9121,58 @@ function openPpssKpiDrawer(navio,metric){
     document.getElementById("hmbg").classList.add("open");
   }
   function horasCloseMaint(){document.getElementById("hmbg").classList.remove("open");}
+  // ── Editar/verificar lançamentos de manutenção (intermediárias ou gerais) por motor ──
+  function horasMaintKind(r){
+    var t=((r.tipoRevisaoUltima||"")+" "+(r.tipoProxRevisao||"")).toLowerCase();
+    if(/geral|revis[aã]o geral|\bg\b/.test(t))return "Geral";
+    if(/interm/.test(t))return "Intermediária";
+    return "";
+  }
+  function horasCollectMaints(){
+    var out=[];
+    HORAS_SHIP_LIST.forEach(function(sk){
+      var s=horasShips[sk.key];
+      (s.rows||[]).forEach(function(r){
+        if(!(r.dataUltimaManutencao||r.tipoRevisaoUltima||r.horasManutencao))return;
+        out.push({ship:s.title,shipKey:sk.key,row:r,kind:horasMaintKind(r)});
+      });
+    });
+    return out;
+  }
+  function horasOpenMaintList(){
+    var bg=ensureModal("horasMaintListBg","Lançamentos de manutenção — motores");
+    var body=bg.querySelector(".mbody");
+    var maints=horasCollectMaints();
+    if(!maints.length){
+      body.innerHTML='<div style="font-size:12px;color:var(--text3);font-style:italic">Nenhuma manutenção registrada nos motores ainda.</div>';
+      bg.classList.add("open");return;
+    }
+    var html='<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Todas as manutenções (intermediárias ou gerais) registradas para os motores. Para alterar, use “+ Inserir manutenção”.</div>';
+    var lastShip=null;
+    maints.forEach(function(m){
+      if(m.ship!==lastShip){
+        if(lastShip!==null)html+='</div>';
+        lastShip=m.ship;
+        html+='<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin:12px 0 4px">'+esc(m.ship)+'</div><div>';
+      }
+      var r=m.row;
+      var badge=m.kind?'<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--c-100);color:var(--text2);margin-left:6px">'+esc(m.kind)+'</span>':'';
+      html+='<div style="padding:8px 0;border-bottom:1px solid var(--border)">'+
+        '<b style="font-size:12.5px;color:var(--c-teal)">'+esc(horasMotorLabel(r))+'</b>'+badge+
+        '<div style="font-size:11.5px;color:var(--text2);margin-top:2px">'+
+          'Última manut.: '+esc(r.dataUltimaManutencao||"—")+' · '+esc(r.tipoRevisaoUltima||"—")+
+          ' · Horas na manut.: '+esc(r.horasManutencao||"—")+
+          ' · Próx. revisão: '+esc(r.dataProxRevisao||"—")+(r.tipoProxRevisao?" ("+esc(r.tipoProxRevisao)+")":"")+
+        '</div></div>';
+    });
+    html+='</div>';
+    body.innerHTML=html;
+    bg.classList.add("open");
+  }
   function horasBindMaintModal(){
     document.getElementById("horas_add_maint").onclick=horasOpenMaint;
+    var editMaintBtn=document.getElementById("horas_edit_maint");
+    if(editMaintBtn)editMaintBtn.onclick=horasOpenMaintList;
     ["hm_ship","hm_tipo","hm_bordo"].forEach(function(id){document.getElementById(id).onchange=horasMaintAutofill;});
     ["hm_close","hm_cancel"].forEach(function(id){document.getElementById(id).onclick=horasCloseMaint;});
     document.getElementById("hmbg").onclick=function(e){if(e.target.id==="hmbg")horasCloseMaint();};
