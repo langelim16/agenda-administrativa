@@ -6019,18 +6019,16 @@ setTimeout(hideSplash,12000);
       '<span style="font-weight:700;font-size:13px;padding:0 4px">'+navYear+'</span>'+
       '<button type="button" class="nv-editbtn" id="'+idPrefix+'_next"'+(navYear>=maxY?' disabled':'')+' title="Próximo ano">▶</button>'+
       (navYear>=maxY?'<button type="button" class="nv-editbtn add-year" id="'+idPrefix+'_addyear">+ Ano</button>':'')+
-      (piePref?'<button type="button" class="nv-editbtn" id="'+idPrefix+'_piebtn" title="Gerar gráfico de operacionalidade (consolidado + por navio)" style="background:var(--c-blue);color:#fff;border-color:var(--c-blue)">📊 Gerar gráfico</button>':
-        '<button type="button" class="nv-editbtn" id="'+idPrefix+'_refresh" title="Recarregar com os lançamentos mais recentes">🔄 Atualizar</button>')+
+      (piePref?'<button type="button" class="nv-editbtn" id="'+idPrefix+'_piebtn" title="Gerar gráfico de operacionalidade (consolidado + por navio)" style="background:var(--c-blue);color:#fff;border-color:var(--c-blue)">📊 Gerar gráfico</button>':'')+
     '</div>';
   }
   function navBindYearControls(idPrefix){
     var prev=document.getElementById(idPrefix+"_prev"),next=document.getElementById(idPrefix+"_next"),
-      add=document.getElementById(idPrefix+"_addyear"),refresh=document.getElementById(idPrefix+"_refresh"),
+      add=document.getElementById(idPrefix+"_addyear"),
       pie=document.getElementById(idPrefix+"_piebtn");
     if(prev)prev.onclick=function(){if(navYear>NAV_YEAR_MIN)navSetYear(navYear-1);};
     if(next)next.onclick=function(){if(navYear<Math.max(navYear,CUR_YEAR))navSetYear(navYear+1);};
     if(add)add.onclick=function(){navSetYear(navYear+1);};
-    if(refresh)refresh.onclick=function(){navRenderTimeline();navRenderOperReport();toast("✓ Timeline e relatório atualizados","ok");};
     if(pie)pie.onclick=function(){openOperPieModal();};
   }
   // Resolve a entrada de condefHist correspondente a um segmento da timeline, pra abrir o
