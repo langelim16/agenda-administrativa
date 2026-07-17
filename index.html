@@ -722,6 +722,9 @@ td.dt-daterange-cell input[type="date"]{width:100%;background:var(--c-50);border
 .pstat span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .pstat b{font-size:24px;color:var(--text)}
 .pstat.pstat-total{border-color:var(--c-blue);background:var(--c-sky)}
+.oper-pie-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:640px){.oper-pie-grid{grid-template-columns:1fr 1fr}}
+@media (max-width:420px){.oper-pie-grid{grid-template-columns:1fr}}
 .pstat-pie{cursor:pointer}
 .pstat-pie svg circle{transition:opacity .15s}
 .pstat-pie:hover svg circle{opacity:.85}
@@ -6505,7 +6508,7 @@ setTimeout(hideSplash,12000);
       '<span style="font-weight:700;font-size:13px;padding:0 4px">'+navYear+'</span>'+
       '<button type="button" class="nv-editbtn" id="'+idPrefix+'_next"'+(navYear>=maxY?' disabled':'')+' title="Próximo ano">▶</button>'+
       (navYear>=maxY?'<button type="button" class="nv-editbtn add-year" id="'+idPrefix+'_addyear">+ Ano</button>':'')+
-      (piePref?'<button type="button" class="nv-editbtn" id="'+idPrefix+'_piebtn" title="Gerar gráfico de pizza da operacionalidade (4 Navios PPSS)" style="background:var(--c-blue);color:#fff;border-color:var(--c-blue)">🥧 Gerar gráfico de pizza</button>':
+      (piePref?'<button type="button" class="nv-editbtn" id="'+idPrefix+'_piebtn" title="Gerar gráfico de operacionalidade (consolidado + por navio)" style="background:var(--c-blue);color:#fff;border-color:var(--c-blue)">📊 Gerar gráfico</button>':
         '<button type="button" class="nv-editbtn" id="'+idPrefix+'_refresh" title="Recarregar com os lançamentos mais recentes">🔄 Atualizar</button>')+
     '</div>';
   }
@@ -6598,33 +6601,51 @@ setTimeout(hideSplash,12000);
     };
   }
   
-  function openOperPieModal(){
-    var navios=["NHoGSampaio","NHiBTenCastelo","AvHoFluRioTocantins","AvHoFluRioXingu"];
-    var ships=navShips.filter(function(s){return navios.indexOf(s.nome)>=0;});
+  // Ordem/cores dos buckets de situação (compartilhada consolidado + por navio).
+  var OPER_PIE_ORDER=[["P","var(--c-blue)","Pronta (P)"],["PO","var(--c-teal)","Restrição (PO)"],["IO","var(--c-amber)","Indisponível-Op (IO)"],["IM","var(--c-red)","Indisponível-Manut (IM)"],["unk","var(--c-500)","Sem registro"]];
+  function operPieAcc(ships){
     var acc={P:0,PO:0,IO:0,IM:0,unk:0};
     ships.forEach(function(s){
-      var segs=navSegsForYear(s);
-      segs.forEach(function(g){
+      navSegsForYear(s).forEach(function(g){
         var days=Math.round((g.to-g.from)/86400000);
         if(g.st===null||!(g.st in acc))acc.unk+=days;else acc[g.st]+=days;
       });
     });
+    return acc;
+  }
+  // Gera SVG (fatias) + legenda (cor + texto) de um acumulado. r/sw/fontes escalam com size.
+  function operPieSvg(acc,size){
+    var r=42,circ=2*Math.PI*r,off=0,sw=size<140?18:16;
     var grand=acc.P+acc.PO+acc.IO+acc.IM+acc.unk||1;
-    var circ=2*Math.PI*42,off=0;
-    var order=[["P","var(--c-blue)","Pronta (P)"],["PO","var(--c-teal)","Restrição (PO)"],["IO","var(--c-amber)","Indisponível-Op (IO)"],["IM","var(--c-red)","Indisponível-Manut (IM)"],["unk","var(--c-500)","Sem registro"]];
     var segs="",legend="";
-    order.forEach(function(o){
-      var key=o[0],color=o[1],label=o[2],days=acc[key],frac=days/grand,len=frac*circ;
-      if(days)segs+='<circle cx="50" cy="50" r="42" fill="none" stroke="'+color+'" stroke-width="16" stroke-dasharray="'+len+' '+(circ-len)+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90 50 50)"></circle>';
-      legend+='<div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);margin-bottom:4px"><i style="width:11px;height:11px;border-radius:50%;background:'+color+';display:inline-block;flex:none"></i>'+label+' — <b>'+days+'</b> dias ('+Math.round(frac*100)+'%)</div>';
+    OPER_PIE_ORDER.forEach(function(o){
+      var days=acc[o[0]],frac=days/grand,len=frac*circ;
+      if(days)segs+='<circle cx="50" cy="50" r="'+r+'" fill="none" stroke="'+o[1]+'" stroke-width="'+sw+'" stroke-dasharray="'+len+' '+(circ-len)+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90 50 50)"></circle>';
+      if(days)legend+='<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);margin-bottom:2px"><i style="width:9px;height:9px;border-radius:50%;background:'+o[1]+';display:inline-block;flex:none"></i>'+o[2]+' — <b>'+days+'</b>d ('+Math.round(frac*100)+'%)</div>';
       off+=len;
     });
-    var bg=ensureModal("nvOperPieBg","Gráfico de pizza — Operacionalidade (4 Navios PPSS)");
-    var body=bg.querySelector(".mbody");
-    body.innerHTML='<div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;justify-content:center">'+
-      '<svg viewBox="0 0 100 100" width="180" height="180">'+segs+'</svg>'+
-      '<div style="min-width:180px">'+legend+'</div>'+
-      '</div><div style="font-size:10px;color:var(--text3);margin-top:10px;font-style:italic">Considera apenas os 4 navios controlados na aba PPSS (NHoGSampaio, NHiBTenCastelo, AvHoFluRioTocantins, AvHoFluRioXingu) — não inclui os demais meios do CHN (AvBs e LHAIs).</div>';
+    if(!legend)legend='<div style="font-size:11px;color:var(--text3);font-style:italic">Sem dados no ano.</div>';
+    return{svg:'<svg viewBox="0 0 100 100" width="'+size+'" height="'+size+'">'+segs+'</svg>',legend:legend};
+  }
+  function openOperPieModal(){
+    var navios=["NHoGSampaio","NHiBTenCastelo","AvHoFluRioTocantins","AvHoFluRioXingu"];
+    var ships=navios.map(function(nm){return navShips.find(function(s){return s.nome===nm;});}).filter(Boolean);
+    // Consolidado (maior, no topo).
+    var cons=operPieSvg(operPieAcc(ships),200);
+    var html='<div style="text-align:center;font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px">Consolidado — '+navYear+' ('+ships.length+' navios)</div>'+
+      '<div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;justify-content:center;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:16px">'+
+        cons.svg+'<div style="min-width:180px">'+cons.legend+'</div></div>';
+    // Grid de gráficos por navio — 3 por linha, cada um com legenda de cor + texto.
+    html+='<div class="oper-pie-grid">'+
+      ships.map(function(s){
+        var p=operPieSvg(operPieAcc([s]),120);
+        return '<div style="display:flex;flex-direction:column;align-items:center;text-align:center;border:1px solid var(--border);border-radius:var(--r-md);padding:10px 8px">'+
+          '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;min-height:30px;display:flex;align-items:center">'+esc(s.nome||"—")+'</div>'+
+          p.svg+'<div style="margin-top:8px;text-align:left;align-self:stretch">'+p.legend+'</div></div>';
+      }).join("")+'</div>';
+    html+='<div style="font-size:10px;color:var(--text3);margin-top:14px;font-style:italic">Considera apenas os 4 navios controlados na aba PPSS (NHoGSampaio, NHiBTenCastelo, AvHoFluRioTocantins, AvHoFluRioXingu) — não inclui os demais meios do CHN (AvBs e LHAIs).</div>';
+    var bg=ensureModal("nvOperPieBg","Gráfico de operacionalidade — "+navYear);
+    bg.querySelector(".mbody").innerHTML=html;
     bg.classList.add("open");
   }
   function navColorTd(id,val,editing){
