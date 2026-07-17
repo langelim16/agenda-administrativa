@@ -2780,9 +2780,14 @@ async function initBk(){
 async function initBkSupabase(){
   try{
     var r=await Promise.race([fetch(SB_TABLE+"?select=key&limit=1",{headers:sbHeaders()}),new Promise(function(_,j){setTimeout(function(){j(new Error("timeout"));},5000);})]);
-    // 401/403 = a RLS está fechada e não temos sessão válida → exigir login (não é "offline").
+    // 401/403 = token ausente/inválido com RLS fechada → exigir login (não é "offline").
     if(r.status===401||r.status===403){aaAuthRequired=true;bk="local";return;}
     if(!r.ok)throw new Error("HTTP "+r.status);
+    // RLS fechada NÃO dá erro no SELECT: devolve 200 com lista VAZIA (esconde as linhas).
+    // A tabela nunca é vazia de verdade (a sentinela _meta sempre existe), então
+    // resposta vazia sem sessão = banco fechado → exigir login.
+    var rows=[];try{rows=await r.json();}catch(e){}
+    if((!rows||!rows.length)&&!aaLoggedIn()){aaAuthRequired=true;bk="local";return;}
     bk="supabase";
   }catch(e){console.warn("Supabase indisponível:",e.message);bk="local";}
 }
@@ -5636,6 +5641,12 @@ setTimeout(hideSplash,12000);
     if(aaLoggedIn()&&aaSession.expires_at&&(aaSession.expires_at-Date.now())<60000)await aaRefresh();
     aaPaintAuth();
     await initBk();
+    // Sessão salva mas rejeitada pelo servidor (token vencido/revogado): renova uma vez e refaz o teste.
+    if(aaAuthRequired&&aaLoggedIn()){
+      aaAuthRequired=false;
+      await aaRefresh();   // se a renovação falhar, a sessão é limpa e o teste abaixo cai no login
+      await initBk();
+    }
     // Se o servidor exige login (RLS fechada) e não estamos logados: para no login, sem carregar nada.
     if(aaAuthRequired&&!aaLoggedIn()){aaPaintAuth();hideSplash();aaShowLogin(true);return;}
     if(aaLoggedIn())await aaLoadRole();
