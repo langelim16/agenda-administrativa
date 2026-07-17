@@ -1,3 +1,17 @@
 .DS_Store
 graphify-out/
+
+# Dados de trabalho — ficam só na máquina, nunca no GitHub (repo é público).
+1. leituras/
+2. implementações/
+3. erros/
+
+# Estado local de ferramentas / máquina
+.tokensave/
+.claude/settings.local.json
+
 # runtime do vigia fica em ~/.local/agenda-vigia (fora do repo), não aqui
+
+# Bytecode Python
+__pycache__/
+*.pyc
