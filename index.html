@@ -3384,6 +3384,64 @@ function ensureModal(id,title){
   bg.addEventListener("click",function(e){if(e.target===bg||e.target.dataset.close)bg.classList.remove("open");});
   return bg;
 }
+/* ── Menu de lançamentos padronizado (CLG, Horas, Manutenções) ──
+   Uniformiza: modelo do menu, organização por meses (sanfonas), formato de lacunas,
+   preenchimento e botões Editar/Estornar. Cada aba só fornece os dados.
+   opts:{ modalId, title, hint, empty, filters?[{label,val,active}], onFilter?(val),
+          items:[{ord,grp,monthIdx,year, title, titleColor?, sub, onEdit?, onDel?() }] } */
+function openLancMenu(opts){
+  var bg=ensureModal(opts.modalId,opts.title);
+  var body=bg.querySelector(".mbody");
+  var html="";
+  if(opts.filters&&opts.filters.length){
+    html+='<div style="display:flex;gap:8px;margin-bottom:10px">'+opts.filters.map(function(f){
+      var on=!!f.active;
+      return '<button type="button" class="lancmenu-filter" data-v="'+esc(f.val)+'" style="flex:1;padding:7px 10px;font-size:12px;font-family:inherit;cursor:pointer;border-radius:var(--r-md);border:1.5px solid '+(on?'var(--c-blue)':'var(--border2)')+';background:'+(on?'var(--c-sky)':'var(--bg)')+';color:'+(on?'var(--c-blue)':'var(--text2)')+';font-weight:'+(on?'700':'400')+'">'+esc(f.label)+'</button>';
+    }).join("")+'</div>';
+  }
+  var items=(opts.items||[]).slice().sort(function(a,b){
+    return String(b.ord).localeCompare(String(a.ord));
+  });
+  if(!items.length){
+    html+='<div style="font-size:12px;color:var(--text3);font-style:italic">'+esc(opts.empty||"Nenhum lançamento registrado ainda.")+'</div>';
+  }else{
+    if(opts.hint)html+='<div style="font-size:11px;color:var(--text3);margin-bottom:8px">'+esc(opts.hint)+'</div>';
+    var lastGrp=null;
+    items.forEach(function(it,i){
+      if(it.grp!==lastGrp){
+        if(lastGrp!==null)html+='</div></details>';
+        lastGrp=it.grp;
+        var count=items.filter(function(x){return x.grp===it.grp;}).length;
+        var grpLbl=(it.year&&it.year!=="—"&&it.monthIdx>=0)?(ML[it.monthIdx]+' de '+it.year):(it.grp||"Sem data");
+        html+='<details style="margin:6px 0;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden">'+
+          '<summary style="cursor:pointer;padding:9px 12px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);background:var(--c-100);list-style-position:inside">'+esc(grpLbl)+' <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">· '+count+' lançamento'+(count>1?'s':'')+'</span></summary>'+
+          '<div style="padding:2px 12px 6px">';
+      }
+      var btns='';
+      if(it.onEdit)btns+='<button class="bsave lancmenu-edit" data-i="'+i+'" style="padding:4px 10px;font-size:11.5px">✎ Editar</button>';
+      if(it.onDel)btns+='<button class="bcancel lancmenu-del" data-i="'+i+'" style="padding:4px 10px;font-size:11.5px">🗑 Estornar</button>';
+      html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">'+
+        '<div style="flex:1;min-width:0"><b style="font-size:12.5px;color:'+(it.titleColor||'var(--c-teal)')+'">'+esc(it.title)+'</b>'+
+          '<div style="font-size:11.5px;color:var(--text2)">'+esc(it.sub||"")+'</div></div>'+btns+'</div>';
+    });
+    html+='</div></details>';
+  }
+  body.innerHTML=html;
+  body.querySelectorAll(".lancmenu-filter").forEach(function(btn){
+    btn.onclick=function(){if(opts.onFilter)opts.onFilter(btn.dataset.v);};
+  });
+  body.querySelectorAll(".lancmenu-edit").forEach(function(btn){
+    btn.onclick=function(){var it=items[+btn.dataset.i];if(it&&it.onEdit)it.onEdit();};
+  });
+  body.querySelectorAll(".lancmenu-del").forEach(function(btn){
+    btn.onclick=async function(){
+      if(btn.dataset.arm!=="1"){btn.dataset.arm="1";btn.textContent="Confirmar estorno?";btn.style.color="var(--c-red)";return;}
+      btn.disabled=true;
+      var it=items[+btn.dataset.i];if(it&&it.onDel)await it.onDel();
+    };
+  });
+  bg.classList.add("open");
+}
 async function pushKV(label,key,data){try{await svs(key,data);}catch(e){console.error(label,e);}}
 function reorderByIds(arr,ids){var byId={};arr.forEach(function(x){byId[x.id]=x;});return ids.map(function(id){return byId[id];}).filter(Boolean);}
 function cloneCols(cols){return cols.map(function(c){return Object.assign({},c);});}
@@ -7416,75 +7474,35 @@ document.getElementById("detailDrawerBg").onclick=function(e){if(e.target.id==="
   var clgLancFuel="odm"; // filtro lembrado enquanto o modal for reaberto na mesma sessão
   function clgOpenLancamentos(fuel){
     if(typeof fuel==="string")clgLancFuel=fuel; // guarda: onclick direto passa o event como 1º arg
-    var bg=ensureModal("clgLancBg","Lançamentos de consumo/abastecimento");
-    var body=bg.querySelector(".mbody");
-    // Ordena pela data do lançamento (não pela hora em que foi digitado): mais recente no topo,
-    // com agrupamento por mês. Empate na data → desempata pela hora de registro.
+    // Ordena pela data do lançamento (não pela hora em que foi digitado): mais recente no topo.
     function dOrd(l){var p=l.data.split("/");return p[2]+p[1]+p[0];}
-    var todos=auditLog.map(clgParseLanc).filter(Boolean).sort(function(a,b){
-      return dOrd(b).localeCompare(dOrd(a))||String(b.e.ts).localeCompare(String(a.e.ts));
-    });
-    // Filtro por tipo de combustível: ODM × Gasolina/Lubrificantes/Graxas
+    var todos=auditLog.map(clgParseLanc).filter(Boolean);
     var lancs=todos.filter(function(l){return clgLancFuel==="odm"?l.produto==="odm":l.produto!=="odm";});
     var prodLbl={odm:"ODM",gasolina:"Gasolina",lubrificantes:"Lubrificantes",graxas:"Graxas"};
-    function fuelBtn(val,label){
-      var on=clgLancFuel===val;
-      return '<button type="button" class="clg-lanc-fuel" data-f="'+val+'" style="flex:1;padding:7px 10px;font-size:12px;font-family:inherit;cursor:pointer;border-radius:var(--r-md);border:1.5px solid '+(on?'var(--c-blue)':'var(--border2)')+';background:'+(on?'var(--c-sky)':'var(--bg)')+';color:'+(on?'var(--c-blue)':'var(--text2)')+';font-weight:'+(on?'700':'400')+'">'+label+'</button>';
-    }
-    var html='<div style="display:flex;gap:8px;margin-bottom:10px">'+fuelBtn("odm","ODM")+fuelBtn("glg","Gasolina/Lubrificantes/Graxas")+'</div>';
-    if(!lancs.length){
-      html+='<div style="font-size:12px;color:var(--text3);font-style:italic">Nenhum lançamento de '+(clgLancFuel==="odm"?"ODM":"Gasolina/Lubrificantes/Graxas")+' registrado ainda.</div>';
-    }else{
-      html+='<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Clique no mês para abrir os lançamentos. Editar reabre o formulário com os valores do lançamento e substitui o efeito dele; Estornar apenas desfaz.</div>';
-      // Meses como sanfonas (<details>): comprimidos por padrão, clique no mês expande a lista.
-      var lastGrp=null;
-      lancs.forEach(function(l){
-        var p=l.data.split("/"),grp=p[1]+"/"+p[2];
-        var i=todos.indexOf(l);
-        if(grp!==lastGrp){
-          if(lastGrp!==null)html+='</div></details>';
-          lastGrp=grp;
-          var count=lancs.filter(function(x){var q=x.data.split("/");return q[1]+"/"+q[2]===grp;}).length;
-          html+='<details style="margin:6px 0;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden">'+
-            '<summary style="cursor:pointer;padding:9px 12px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);background:var(--c-100);list-style-position:inside">'+ML[+p[1]-1]+' de '+p[2]+' <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">· '+count+' lançamento'+(count>1?'s':'')+'</span></summary>'+
-            '<div style="padding:2px 12px 6px">';
-        }
+    openLancMenu({
+      modalId:"clgLancBg",title:"Lançamentos de consumo/abastecimento",
+      hint:"Clique no mês para abrir os lançamentos. Editar reabre o formulário com os valores do lançamento e substitui o efeito dele; Estornar apenas desfaz.",
+      empty:"Nenhum lançamento de "+(clgLancFuel==="odm"?"ODM":"Gasolina/Lubrificantes/Graxas")+" registrado ainda.",
+      filters:[{label:"ODM",val:"odm",active:clgLancFuel==="odm"},{label:"Gasolina/Lubrificantes/Graxas",val:"glg",active:clgLancFuel!=="odm"}],
+      onFilter:function(v){clgOpenLancamentos(v);},
+      items:lancs.map(function(l){
+        var p=l.data.split("/");
         var row=(CLG_LANC_ARRMAP()[l.e.scope]||[]).find(function(r){return r.id===l.e.rowId;});
         var meio=row?(row.meio||"—"):"(meio excluído)";
         var desc=(l.kind==="consumo"?("Consumo "+l.tipoConsumo+" · −"+l.qtd+(l.dias>1?" em "+l.dias+" dias":"")):("Abastecimento · +"+l.qtd))+" · "+(prodLbl[l.produto]||l.produto)+(l.retro?" · 📜 retroativo":"")+(l.extra?" · "+l.extra:"");
-        // Nome do meio colorido pelo tipo: consumo em vermelho (débito), abastecimento em verde (crédito).
-        var corMeio=l.kind==="consumo"?"var(--c-red)":"var(--c-teal)";
-        html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">'+
-          '<div style="flex:1;min-width:0"><b style="font-size:12.5px;color:'+corMeio+'">'+esc(meio)+'</b><b style="font-size:12.5px"> · '+esc(l.data)+'</b><div style="font-size:11.5px;color:var(--text2)">'+esc(desc)+' · lançado em '+fmtAuditTs(l.e.ts)+'</div></div>'+
-          '<button class="bsave clg-lanc-edit" data-i="'+i+'" style="padding:4px 10px;font-size:11.5px">✎ Editar</button>'+
-          '<button class="bcancel clg-lanc-del" data-i="'+i+'" style="padding:4px 10px;font-size:11.5px">🗑 Estornar</button></div>';
-      });
-      html+='</div></details>';
-    }
-    body.innerHTML=html;
-    var lancsRef=todos;
-    body.querySelectorAll(".clg-lanc-fuel").forEach(function(btn){
-      btn.onclick=function(){clgOpenLancamentos(btn.dataset.f);};
+        return {
+          ord:dOrd(l)+String(l.e.ts),grp:p[1]+"/"+p[2],monthIdx:+p[1]-1,year:p[2],
+          title:meio+" · "+l.data,titleColor:l.kind==="consumo"?"var(--c-red)":"var(--c-teal)",
+          sub:desc+" · lançado em "+fmtAuditTs(l.e.ts),
+          onEdit:row?function(){
+            document.getElementById("clgLancBg").classList.remove("open");
+            if(l.kind==="consumo")clgOpenConsumoForm(row.meio,l.produto,l.retro,l);
+            else clgOpenAbastecimentoForm(row.meio,l.produto,l.retro,l);
+          }:function(){toast("Meio não encontrado — não é possível editar.","info");},
+          onDel:async function(){await clgEstornarLanc(l);clgOpenLancamentos();}
+        };
+      })
     });
-    body.querySelectorAll(".clg-lanc-edit").forEach(function(btn){
-      btn.onclick=function(){
-        var l=lancsRef[+btn.dataset.i];
-        var row=(CLG_LANC_ARRMAP()[l.e.scope]||[]).find(function(r){return r.id===l.e.rowId;});
-        if(!row){toast("Meio não encontrado — não é possível editar.","info");return;}
-        bg.classList.remove("open");
-        if(l.kind==="consumo")clgOpenConsumoForm(row.meio,l.produto,l.retro,l);
-        else clgOpenAbastecimentoForm(row.meio,l.produto,l.retro,l);
-      };
-    });
-    body.querySelectorAll(".clg-lanc-del").forEach(function(btn){
-      btn.onclick=async function(){
-        if(btn.dataset.arm!=="1"){btn.dataset.arm="1";btn.textContent="Confirmar estorno?";btn.style.color="var(--c-red)";return;}
-        btn.disabled=true;
-        await clgEstornarLanc(lancsRef[+btn.dataset.i]);
-        clgOpenLancamentos();
-      };
-    });
-    bg.classList.add("open");
   }
   function clgFindCard(cid){return clgCards.find(function(c){return c.id===cid;});}
   clgGetState=function(){return{t1:JSON.parse(JSON.stringify(clgT1)),t2:JSON.parse(JSON.stringify(clgT2)),cards:JSON.parse(JSON.stringify(clgCards)),t1c:cloneCols(clgT1Cols),t2c:cloneCols(clgT2Cols),t3n:JSON.parse(JSON.stringify(clgT3Nav)),t3e:JSON.parse(JSON.stringify(clgT3Emb))};};
@@ -9020,57 +9038,29 @@ function openPpssKpiDrawer(navio,metric){
     }
   }
   function horasOpenLancamentos(){
-    var bg=ensureModal("horasLancListBg","Lançamentos de horas em operação");
-    var body=bg.querySelector(".mbody");
     function dOrd(l){var p=l.data.split("/");return p[2]+p[1]+p[0];}
-    var lancs=auditLog.map(horasParseLanc).filter(Boolean).sort(function(a,b){
-      return dOrd(b).localeCompare(dOrd(a))||String(b.e.ts).localeCompare(String(a.e.ts));
-    });
-    if(!lancs.length){
-      body.innerHTML='<div style="font-size:12px;color:var(--text3);font-style:italic">Nenhum lançamento de horas registrado ainda.</div>';
-      bg.classList.add("open");return;
-    }
-    var html='<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Clique no mês para abrir os lançamentos. Editar reabre o formulário e substitui o efeito do lançamento; Estornar apenas desfaz.</div>';
-    var lastGrp=null;
-    lancs.forEach(function(l,i){
-      var p=l.data.split("/"),grp=p[1]+"/"+p[2];
-      if(grp!==lastGrp){
-        if(lastGrp!==null)html+='</div></details>';
-        lastGrp=grp;
-        var count=lancs.filter(function(x){var q=x.data.split("/");return q[1]+"/"+q[2]===grp;}).length;
-        html+='<details style="margin:6px 0;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden">'+
-          '<summary style="cursor:pointer;padding:9px 12px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);background:var(--c-100);list-style-position:inside">'+ML[+p[1]-1]+' de '+p[2]+' <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0">· '+count+' lançamento'+(count>1?'s':'')+'</span></summary>'+
-          '<div style="padding:2px 12px 6px">';
-      }
-      var s=horasShips[l.key];
-      var row=s&&s.rows.find(function(r){return r.id===l.e.rowId;});
-      var nome=(s?s.title:l.key)+(row?" · "+horasMotorLabel(row):" · (motor excluído)");
-      html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">'+
-        '<div style="flex:1;min-width:0"><b style="font-size:12.5px;color:var(--c-teal)">'+esc(nome)+'</b><div style="font-size:11.5px;color:var(--text2)">+'+esc(String(l.qtd))+' h · mês ref. '+esc(l.data.slice(3))+(l.obs?' · '+esc(l.obs):'')+' · lançado em '+fmtAuditTs(l.e.ts)+'</div></div>'+
-        '<button class="bsave horas-lanc-edit" data-i="'+i+'" style="padding:4px 10px;font-size:11.5px">✎ Editar</button>'+
-        '<button class="bcancel horas-lanc-del" data-i="'+i+'" style="padding:4px 10px;font-size:11.5px">🗑 Estornar</button></div>';
-    });
-    html+='</div></details>';
-    body.innerHTML=html;
-    body.querySelectorAll(".horas-lanc-edit").forEach(function(btn){
-      btn.onclick=function(){
-        var l=lancs[+btn.dataset.i];
+    var lancs=auditLog.map(horasParseLanc).filter(Boolean);
+    openLancMenu({
+      modalId:"horasLancListBg",title:"Lançamentos de horas em operação",
+      hint:"Clique no mês para abrir os lançamentos. Editar reabre o formulário e substitui o efeito do lançamento; Estornar apenas desfaz.",
+      empty:"Nenhum lançamento de horas registrado ainda.",
+      items:lancs.map(function(l){
+        var p=l.data.split("/");
         var s=horasShips[l.key];
         var row=s&&s.rows.find(function(r){return r.id===l.e.rowId;});
-        if(!row){toast("Motor não encontrado — não é possível editar.","info");return;}
-        bg.classList.remove("open");
-        horasOpenLancForm(l.key,row.id,l);
-      };
+        var nome=(s?s.title:l.key)+(row?" · "+horasMotorLabel(row):" · (motor excluído)");
+        return {
+          ord:dOrd(l)+String(l.e.ts),grp:p[1]+"/"+p[2],monthIdx:+p[1]-1,year:p[2],
+          title:nome,sub:"+"+String(l.qtd)+" h · mês ref. "+l.data.slice(3)+(l.obs?" · "+l.obs:"")+" · lançado em "+fmtAuditTs(l.e.ts),
+          onEdit:function(){
+            if(!row){toast("Motor não encontrado — não é possível editar.","info");return;}
+            document.getElementById("horasLancListBg").classList.remove("open");
+            horasOpenLancForm(l.key,row.id,l);
+          },
+          onDel:async function(){await horasEstornarLanc(l);horasOpenLancamentos();}
+        };
+      })
     });
-    body.querySelectorAll(".horas-lanc-del").forEach(function(btn){
-      btn.onclick=async function(){
-        if(btn.dataset.arm!=="1"){btn.dataset.arm="1";btn.textContent="Confirmar estorno?";btn.style.color="var(--c-red)";return;}
-        btn.disabled=true;
-        await horasEstornarLanc(lancs[+btn.dataset.i]);
-        horasOpenLancamentos();
-      };
-    });
-    bg.classList.add("open");
   }
   function horasBindShip(key){
     var s=horasShips[key];
@@ -9140,34 +9130,27 @@ function openPpssKpiDrawer(navio,metric){
     return out;
   }
   function horasOpenMaintList(){
-    var bg=ensureModal("horasMaintListBg","Lançamentos de manutenção — motores");
-    var body=bg.querySelector(".mbody");
     var maints=horasCollectMaints();
-    if(!maints.length){
-      body.innerHTML='<div style="font-size:12px;color:var(--text3);font-style:italic">Nenhuma manutenção registrada nos motores ainda.</div>';
-      bg.classList.add("open");return;
-    }
-    var html='<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Todas as manutenções (intermediárias ou gerais) registradas para os motores. Para alterar, use “+ Inserir manutenção”.</div>';
-    var lastShip=null;
-    maints.forEach(function(m){
-      if(m.ship!==lastShip){
-        if(lastShip!==null)html+='</div>';
-        lastShip=m.ship;
-        html+='<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin:12px 0 4px">'+esc(m.ship)+'</div><div>';
-      }
-      var r=m.row;
-      var badge=m.kind?'<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--c-100);color:var(--text2);margin-left:6px">'+esc(m.kind)+'</span>':'';
-      html+='<div style="padding:8px 0;border-bottom:1px solid var(--border)">'+
-        '<b style="font-size:12.5px;color:var(--c-teal)">'+esc(horasMotorLabel(r))+'</b>'+badge+
-        '<div style="font-size:11.5px;color:var(--text2);margin-top:2px">'+
-          'Última manut.: '+esc(r.dataUltimaManutencao||"—")+' · '+esc(r.tipoRevisaoUltima||"—")+
-          ' · Horas na manut.: '+esc(r.horasManutencao||"—")+
-          ' · Próx. revisão: '+esc(r.dataProxRevisao||"—")+(r.tipoProxRevisao?" ("+esc(r.tipoProxRevisao)+")":"")+
-        '</div></div>';
+    openLancMenu({
+      modalId:"horasMaintListBg",title:"Lançamentos de manutenção — motores",
+      hint:"Todas as manutenções (intermediárias ou gerais) registradas para os motores, organizadas por mês. Para alterar, use “+ Inserir manutenção”.",
+      empty:"Nenhuma manutenção registrada nos motores ainda.",
+      items:maints.map(function(m){
+        var r=m.row;
+        // Data da manutenção em MM/AAAA → agrupamento por mês (igual aos demais menus).
+        var mm=String(r.dataUltimaManutencao||"").match(/(\d{1,2})\s*\/\s*(\d{4})/);
+        var monthIdx=mm?+mm[1]-1:11,year=mm?mm[2]:"—",grp=mm?mm[1]+"/"+mm[2]:"Sem data";
+        var ord=mm?(mm[2]+String(mm[1]).padStart(2,"0")):"0000";
+        var kindTxt=m.kind?" · "+m.kind:"";
+        return {
+          ord:ord,grp:grp,monthIdx:monthIdx,year:year,
+          title:m.ship+" · "+horasMotorLabel(r)+kindTxt,
+          sub:"Última manut.: "+(r.dataUltimaManutencao||"—")+" · "+(r.tipoRevisaoUltima||"—")+
+              " · Horas na manut.: "+(r.horasManutencao||"—")+
+              " · Próx. revisão: "+(r.dataProxRevisao||"—")+(r.tipoProxRevisao?" ("+r.tipoProxRevisao+")":"")
+        };
+      })
     });
-    html+='</div>';
-    body.innerHTML=html;
-    bg.classList.add("open");
   }
   function horasBindMaintModal(){
     document.getElementById("horas_add_maint").onclick=horasOpenMaint;
