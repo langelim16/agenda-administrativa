@@ -6613,19 +6613,28 @@ setTimeout(hideSplash,12000);
     });
     return acc;
   }
-  // Gera SVG (fatias) + legenda (cor + texto) de um acumulado. r/sw/fontes escalam com size.
+  // Gera SVG (fatias de pizza cheias) + legenda (cor + texto) de um acumulado.
   function operPieSvg(acc,size){
-    var r=42,circ=2*Math.PI*r,off=0,sw=size<140?18:16;
+    var cx=50,cy=50,r=47;
     var grand=acc.P+acc.PO+acc.IO+acc.IM+acc.unk||1;
-    var segs="",legend="";
-    OPER_PIE_ORDER.forEach(function(o){
-      var days=acc[o[0]],frac=days/grand,len=frac*circ;
-      if(days)segs+='<circle cx="50" cy="50" r="'+r+'" fill="none" stroke="'+o[1]+'" stroke-width="'+sw+'" stroke-dasharray="'+len+' '+(circ-len)+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90 50 50)"></circle>';
-      if(days)legend+='<div style="display:flex;align-items:flex-start;gap:6px;font-size:11px;line-height:1.35;color:var(--text2);margin-bottom:3px"><i style="width:9px;height:9px;border-radius:50%;background:'+o[1]+';display:inline-block;flex:none;margin-top:3px"></i><span>'+o[2]+' — <b style="white-space:nowrap">'+days+'d ('+Math.round(frac*100)+'%)</b></span></div>';
-      off+=len;
+    var drawn=OPER_PIE_ORDER.filter(function(o){return acc[o[0]]>0;});
+    var segs="",legend="",a0=-Math.PI/2;
+    drawn.forEach(function(o){
+      var days=acc[o[0]],frac=days/grand,a1=a0+frac*2*Math.PI;
+      if(drawn.length===1){
+        // Fatia única = círculo cheio (evita path com início=fim).
+        segs+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+o[1]+'"></circle>';
+      }else{
+        var x0=(cx+r*Math.cos(a0)).toFixed(3),y0=(cy+r*Math.sin(a0)).toFixed(3),
+            x1=(cx+r*Math.cos(a1)).toFixed(3),y1=(cy+r*Math.sin(a1)).toFixed(3),
+            large=(a1-a0)>Math.PI?1:0;
+        segs+='<path d="M'+cx+' '+cy+' L'+x0+' '+y0+' A'+r+' '+r+' 0 '+large+' 1 '+x1+' '+y1+' Z" fill="'+o[1]+'" stroke="var(--surface,#fff)" stroke-width="0.8" stroke-linejoin="round"></path>';
+      }
+      legend+='<div style="display:flex;align-items:flex-start;gap:6px;font-size:11px;line-height:1.35;color:var(--text2);margin-bottom:3px"><i style="width:9px;height:9px;border-radius:50%;background:'+o[1]+';display:inline-block;flex:none;margin-top:3px"></i><span>'+o[2]+' — <b style="white-space:nowrap">'+days+'d ('+Math.round(frac*100)+'%)</b></span></div>';
+      a0=a1;
     });
     if(!legend)legend='<div style="font-size:11px;color:var(--text3);font-style:italic">Sem dados no ano.</div>';
-    return{svg:'<svg viewBox="0 0 100 100" width="'+size+'" height="'+size+'">'+segs+'</svg>',legend:legend};
+    return{svg:'<svg viewBox="0 0 100 100" width="'+size+'" height="'+size+'" style="display:block">'+segs+'</svg>',legend:legend};
   }
   function openOperPieModal(){
     var navios=["NHoGSampaio","NHiBTenCastelo","AvHoFluRioTocantins","AvHoFluRioXingu"];
