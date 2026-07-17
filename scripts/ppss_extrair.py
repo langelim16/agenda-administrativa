@@ -57,6 +57,50 @@ MSG_COLS = [
     (16, 'msgSatisfCancelado'),  # SATISFEITO / CANCELADO
 ]
 
+# Reconciliação SITUAÇÃO × MSG. As etapas são escaláveis e não regridem.
+SITUACAO_STAGE = {
+    'Não orçado': 0,
+    'Orçado e não Indicado': 1,
+    'Falta Indicar': 2,
+    'Recurso Indicado': 3,
+    'Concluído': 4,
+    'Cancelado': 4,
+}
+# MSG preenchida → estágio mínimo que ela evidencia. msgOmpsTermino é neutra
+# ("nada a alterar"); msgSatisfCancelado é terminal (ambígua Concluído/Cancelado).
+MSG_STAGE = {
+    'msgOmpsOrc': 1,          # Orçado e não Indicado
+    'msgNavSolIndRec': 2,     # Falta Indicar
+    'msgCominsupIndRec': 3,   # Recurso Indicado
+    'msgSatisfCancelado': 4,  # Concluído/Cancelado (terminal)
+}
+STAGE_NOME = {0: 'Não orçado', 1: 'Orçado e não Indicado', 2: 'Falta Indicar',
+              3: 'Recurso Indicado', 4: 'Concluído/Cancelado'}
+
+
+def conflitos_situacao(pedido):
+    """Reconcilia a coluna SITUAÇÃO com as MSGs preenchidas (mecanismo anti-erro).
+    A SITUAÇÃO é a fonte primária, mas não deve ser aceita cegamente: se uma MSG
+    evidencia um estágio MAIS avançado do que a SITUAÇÃO indica, é um conflito a
+    relatar (ex.: COMINSUP–IND REC preenchida mas SITUAÇÃO=Orçado e não Indicado).
+    Retorna uma lista de avisos (strings)."""
+    avisos = []
+    sit = pedido.get('situacao', '')
+    sit_stage = SITUACAO_STAGE.get(sit)
+    ident = '%s #%s (%s)' % (pedido.get('navio', '?'), pedido.get('numero', '?'),
+                             pedido.get('tipo', '?'))
+    for chave, stage in MSG_STAGE.items():
+        if not str(pedido.get(chave, '')).strip():
+            continue
+        if sit_stage is None:
+            avisos.append('%s: SITUAÇÃO vazia, mas "%s" preenchida sugere estágio '
+                          '"%s".' % (ident, chave, STAGE_NOME[stage]))
+        elif stage > sit_stage:
+            avisos.append('%s: SITUAÇÃO="%s", porém "%s" preenchida evidencia estágio '
+                          'mais avançado "%s" — conferir/atualizar situação.'
+                          % (ident, sit, chave, STAGE_NOME[stage]))
+    return avisos
+
 
 def cell_styles_bg(root):
     """Mapa style-name -> cor de fundo (fo:background-color), só estilos de célula."""
@@ -412,9 +456,19 @@ def extrair(pasta):
             pedidos.extend(extrair_xlsx(f, tipo))
         else:
             pedidos.extend(extrair_arquivo(f, tipo))
-    return {'pedidos': pedidos, 'arquivosIgnorados': ignorados}
+    conflitos = []
+    for p in pedidos:
+        conflitos.extend(conflitos_situacao(p))
+    return {'pedidos': pedidos, 'arquivosIgnorados': ignorados, 'conflitos': conflitos}
 
 
 if __name__ == '__main__':
     pasta = sys.argv[1] if len(sys.argv) > 1 else '1. leituras/4. ppss'
-    print(json.dumps(extrair(pasta), ensure_ascii=False, indent=1))
+    resultado = extrair(pasta)
+    print(json.dumps(resultado, ensure_ascii=False, indent=1))
+    # Conflitos SITUAÇÃO × MSG vão para stderr (stdout fica só com o JSON limpo).
+    if resultado.get('conflitos'):
+        sys.stderr.write('\n⚠ CONFLITOS SITUAÇÃO × MSG (%d) — conferir antes de gravar:\n'
+                         % len(resultado['conflitos']))
+        for c in resultado['conflitos']:
+            sys.stderr.write('  - %s\n' % c)

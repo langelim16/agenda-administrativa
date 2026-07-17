@@ -111,9 +111,38 @@ procurar pelo conteúdo em vez de falhar.
     Gravar o texto de cada célula (com data/hora, ex.: `R291858Z/JAN/2026`;
     células com mais de uma mensagem têm uma por linha) na sua chave. Não
     sobrescrever o que o usuário já preencheu manualmente — só anexar o novo.
-  - `SITUAÇÃO` → `situacao`, vem da **cor de fundo da linha** (mesma dos 6
-    KPI coloridos exibidos abaixo dos KPI Programas/Correntes no app — as
-    cores e nomes já batem 1:1 com o mapeamento de `COR_SITUACAO` abaixo).
+- **Cada coluna de MSG preenchida implica um estágio de SITUAÇÃO** (as
+  etapas são escaláveis e não regridem: `Não orçado` < `Orçado e não
+  Indicado` < `Falta Indicar` < `Recurso Indicado` < `Concluído`/`Cancelado`).
+  Uma MSG preenchida é evidência de que o pedido **alcançou pelo menos**
+  aquele estágio:
+  1. `OMPS – ORÇ` (`msgOmpsOrc`) preenchida → implica **Orçado e não Indicado**.
+  2. `NAV – SOL IND REC` (`msgNavSolIndRec`) preenchida → implica **Falta Indicar**.
+  3. `COMINSUP – IND REC` (`msgCominsupIndRec`) preenchida → implica **Recurso Indicado**.
+  4. `OMPS-TÉRMINO` (`msgOmpsTermino`) preenchida → **nada a alterar** na
+     situação (sozinha não muda de estágio; é o aviso de término pela OMPS).
+  5. `SATISFEITO / CANCELADO` (`msgSatisfCancelado`) preenchida → o
+     agente/usuário **precisa decidir**: se **SATISFEITO** (serviço terminado)
+     → **Concluído**; se **CANCELADO** → **Cancelado**. Não assumir um dos
+     dois sem base — usar o texto da célula/planilha; na dúvida, perguntar.
+- **Reconciliar SITUAÇÃO × MSG de forma inteligente** (mecanismo anti-erro):
+  a coluna `SITUAÇÃO` continua a **fonte primária** (é a que norteia mais
+  facilmente), mas **nunca deve ser aceita cegamente**. Comparar o estágio da
+  `SITUAÇÃO` com o **estágio mais avançado** entre as MSGs preenchidas:
+  - Se batem → seguir a `SITUAÇÃO`.
+  - Se uma MSG indica estágio **mais avançado** que a `SITUAÇÃO` → é um
+    **conflito** (ex.: tem `COMINSUP – IND REC` preenchida, logo houve
+    indicação de recurso, mas a `SITUAÇÃO` está como `Orçado e não Indicado`).
+    **Não sobrescrever em silêncio**: sinalizar/relatar o conflito ao usuário
+    e sugerir o estágio coerente (aqui, `Recurso Indicado`) antes de gravar.
+  - `SATISFEITO / CANCELADO` preenchida mas `SITUAÇÃO` ainda ativa (não
+    terminal) → também é conflito a relatar.
+  - `SITUAÇÃO` = terminal (`Concluído`/`Cancelado`) sem nenhuma MSG das
+    etapas anteriores → aceitável (a planilha pode não ter registrado as
+    MSGs), mas vale nota no resumo de conferência.
+  - `SITUAÇÃO` → `situacao`: **texto** da coluna é primário, **cor de fundo**
+    é fallback (ver início desta seção). As cores/nomes batem 1:1 com os 6
+    KPI coloridos abaixo dos KPI Programadas/Correntes no app.
 - **Fim da tabela**: a linha `SUBTOTAL` fecha a tabela de pedidos — o
   extrator **para** ao encontrá-la, não pula linhas depois dela. Abaixo do
   SUBTOTAL a planilha às vezes tem células soltas (mini-tabela STATUS/% de
