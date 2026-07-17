@@ -1807,6 +1807,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
   <button class="nav-item" data-view="pessoal" title="Pessoal"><span class="nav-ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="7.5" r="3.2"></circle><path d="M3.5 19.5c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6"></path><circle cx="17.5" cy="8.5" r="2.4"></circle><path d="M15.3 13.7c2.4.3 4.2 2.4 4.2 5.3"></path></svg></span><span class="nav-lbl">Pessoal</span></button>
  <button class="nav-item" data-view="ppss" title="Controle de PPSS"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M6 3.5h8l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1z"></path><path d="M14 3.5v4a1 1 0 0 0 1 1h4"></path><line x1="8" y1="12.5" x2="15" y2="12.5"></line><line x1="8" y1="16" x2="13" y2="16"></line></svg></span><span class="nav-lbl">PPSS</span></button>
  <button class="nav-item" data-view="garagem" title="Garagem — Controle de Viaturas"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M2.5 6.5h10v9h-10z"></path><path d="M12.5 10h4.3l3.2 3.2v2.3h-7.5z"></path><circle cx="7" cy="17.8" r="1.8"></circle><circle cx="17" cy="17.8" r="1.8"></circle><line x1="8.8" y1="17.8" x2="15.2" y2="17.8"></line></svg></span><span class="nav-lbl">GARAGEM</span></button>
+ <button class="nav-item" data-view="importar" title="Importar planilhas mensais"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M12 3v10.5"></path><path d="M8 10l4 4 4-4"></path><path d="M4.5 16.5v2.5a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-2.5"></path></svg></span><span class="nav-lbl">IMPORTAR</span></button>
 </nav>
 <div id="toast-container"></div>
 <div class="sync-banner" id="sync_banner" role="alert">⚠ SEM SINCRONIZAÇÃO — suas alterações estão sendo salvas SOMENTE neste dispositivo e NÃO são compartilhadas com a equipe.<button type="button" onclick="location.reload()">🔄 Tentar reconectar</button></div>
@@ -2353,6 +2354,38 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 <div class="foot" id="gar_hdr_foot">Garagem</div>
 </div>
 
+<div class="wrap" id="viewImportar" style="display:none;">
+<header>
+  <div class="brand">
+    <div class="crest" style="background:none"><span style="font-size:22px">📥</span></div>
+    <div><h1>Importar</h1><div class="sub">Planilhas mensais → lançamentos no artefato</div></div>
+  </div>
+  <div class="hright">
+    <span class="synctag" id="imp_synctag" style="color:var(--c-teal)">💾 Somente local</span>
+    <button class="hbtn theme-toggle-btn">🌙 Noturno</button>
+  </div>
+</header>
+
+<div class="dt-section-head">
+  <div class="dt-title-wrap"><h3 class="dt-table-title">Horas de Funcionamento — motores</h3><span class="last-edit">Planilha mensal ODS (aba CHN4). O mês de referência vem do nome do arquivo (ex.: Ref-JUN2026); pode selecionar vários meses de uma vez.</span></div>
+</div>
+<div class="stats-card" style="flex:none;margin-bottom:18px">
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <input type="file" id="imp_horas_file" accept=".ods" multiple style="font-size:12px;max-width:100%">
+    <button class="btn primary" id="imp_horas_read">🔍 Ler e conferir</button>
+  </div>
+  <div style="font-size:10.5px;color:var(--text3);margin-top:8px">A planilha traz o <b>acumulado</b> de horas por motor no fim do mês; o lançamento proposto é a diferença para o acumulado atual do artefato. Nada é gravado antes da sua conferência.</div>
+  <div id="imp_horas_avisos" style="margin-top:10px"></div>
+  <div id="imp_horas_prev" style="margin-top:12px"></div>
+  <div id="imp_horas_actions" style="display:none;justify-content:flex-end;gap:8px;margin-top:12px">
+    <button class="btn" id="imp_horas_clear">Limpar</button>
+    <button class="btn primary" id="imp_horas_save">✓ Gravar lançamentos selecionados</button>
+  </div>
+</div>
+
+<div class="foot">Importar · Planilhas mensais ·</div>
+</div>
+
 <!-- painel lateral de detalhes (genérico, usado por PPSS/Garagem) -->
 <div class="drawer-bg" id="detailDrawerBg">
   <div class="drawer">
@@ -2463,7 +2496,7 @@ NhiBTenCastelo"></textarea></div></div>
 var clgInit,renderClgTables,renderClgCards,appSwitchTab;
 var clgT1; // exposto ao módulo Horas (horasComissaoMes cruza consumo de ODM por meio/mês)
 var clgParseLanc; // idem: horasComissaoMes lê o log de auditoria do CLG
-var clgGetState,clgSetState,navGetState,navSetState,horasGetState,horasSetState,horasInit,renderHoras;
+var clgGetState,clgSetState,navGetState,navSetState,horasGetState,horasSetState,horasInit,renderHoras,importInit;
 var pessoalInit,renderPessoal,pessoalGetState,pessoalSetState;
 var ppssInit,renderPpss,garInit,renderGaragem,ppssGetState,ppssSetState,garGetState,garSetState;
 // Cadeado de edição compartilhado por TODAS as abas (Navios/CLG/Horas/Pessoal): enquanto qualquer
@@ -6571,7 +6604,7 @@ setTimeout(hideSplash,12000);
   }
   var APPVIEW_KEY="aa_appview";
   function switchAppView(view){
-    var va=document.getElementById("viewAgenda"),vn=document.getElementById("viewNavios"),vc=document.getElementById("viewCLG"),vh=document.getElementById("viewHoras"),vp=document.getElementById("viewPessoal"),vpp=document.getElementById("viewPpss"),vg=document.getElementById("viewGaragem");
+    var va=document.getElementById("viewAgenda"),vn=document.getElementById("viewNavios"),vc=document.getElementById("viewCLG"),vh=document.getElementById("viewHoras"),vp=document.getElementById("viewPessoal"),vpp=document.getElementById("viewPpss"),vg=document.getElementById("viewGaragem"),vi=document.getElementById("viewImportar");
     if(!va||!vn)return;
     va.style.display=view==="agenda"?"":"none";
     vn.style.display=view==="navios"?"":"none";
@@ -6580,6 +6613,7 @@ setTimeout(hideSplash,12000);
     if(vp)vp.style.display=view==="pessoal"?"":"none";
     if(vpp)vpp.style.display=view==="ppss"?"":"none";
     if(vg)vg.style.display=view==="garagem"?"":"none";
+    if(vi)vi.style.display=view==="importar"?"":"none";
     document.querySelectorAll(".nav-item").forEach(function(b){b.classList.toggle("active",b.dataset.view===view);});
     try{localStorage.setItem(APPVIEW_KEY,view);}catch(e){}
     if(view==="navios"){navInit().then(function(){return navLoadPpss();}).then(function(){renderNavios();renderNaviosCards();});}
@@ -6588,6 +6622,7 @@ setTimeout(hideSplash,12000);
     if(view==="pessoal"&&typeof pessoalInit==="function"){pessoalInit().then(renderPessoal);}
     if(view==="ppss"&&typeof ppssInit==="function"){ppssInit().then(renderPpss);}
     if(view==="garagem"&&typeof garInit==="function"){garInit().then(renderGaragem);}
+    if(view==="importar"&&typeof importInit==="function"){importInit();}
   }
   appSwitchTab=switchAppView;
   document.querySelectorAll(".nav-item").forEach(function(b){
@@ -8415,6 +8450,221 @@ function openPpssKpiDrawer(navio,metric){
   };
 })();
 
+/* ═══════════════════════════════════════════════════════════
+   MOTOR DE LEITURA DE PLANILHAS (aba Importar) — ZIP/ODS/XLSX em JS puro,
+   sem dependências. Portado do harness testado nos 4 arquivos reais
+   (Horas, CLG, PPSS Corrente e Programadas).
+   ═══════════════════════════════════════════════════════════ */
+/* INFLATE — RFC 1951 */
+function rawInflate(src){
+  var pos=0,bitbuf=0,bitcnt=0;
+  var outSize=1<<16,out=new Uint8Array(outSize),outLen=0;
+  function ensure(n){if(outLen+n<=outSize)return;while(outSize<outLen+n)outSize*=2;var t=new Uint8Array(outSize);t.set(out.subarray(0,outLen));out=t;}
+  function bits(n){while(bitcnt<n){if(pos>=src.length)throw new Error("inflate: fim inesperado do stream");bitbuf|=src[pos++]<<bitcnt;bitcnt+=8;}var v=bitbuf&((1<<n)-1);bitbuf>>>=n;bitcnt-=n;return v;}
+  function buildHuff(lengths,n){
+    var counts=new Int32Array(16),offs=new Int32Array(16),symbols=new Int32Array(n),i;
+    for(i=0;i<n;i++)counts[lengths[i]]++;
+    counts[0]=0;
+    for(i=1;i<16;i++)offs[i]=offs[i-1]+counts[i-1];
+    for(i=0;i<n;i++)if(lengths[i])symbols[offs[lengths[i]]++]=i;
+    return{counts:counts,symbols:symbols};
+  }
+  function decode(h){
+    var code=0,first=0,index=0,len,count;
+    for(len=1;len<16;len++){
+      code|=bits(1);count=h.counts[len];
+      if(code-count<first)return h.symbols[index+(code-first)];
+      index+=count;first+=count;first<<=1;code<<=1;
+    }
+    throw new Error("inflate: código huffman inválido");
+  }
+  var LBASE=[3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258];
+  var LEXT=[0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0];
+  var DBASE=[1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577];
+  var DEXT=[0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13];
+  function inflateBlock(lit,dist){
+    for(;;){
+      var sym=decode(lit);
+      if(sym<256){ensure(1);out[outLen++]=sym;}
+      else if(sym===256)return;
+      else{
+        sym-=257;
+        var len=LBASE[sym]+bits(LEXT[sym]);
+        var dsym=decode(dist);
+        var d=DBASE[dsym]+bits(DEXT[dsym]);
+        if(d>outLen)throw new Error("inflate: distância além do produzido");
+        ensure(len);
+        var from=outLen-d;
+        for(var i=0;i<len;i++)out[outLen++]=out[from++];
+      }
+    }
+  }
+  var fixedLit=null,fixedDist=null;
+  function getFixed(){
+    if(fixedLit)return;
+    var l=new Uint8Array(288),i;
+    for(i=0;i<144;i++)l[i]=8;for(;i<256;i++)l[i]=9;for(;i<280;i++)l[i]=7;for(;i<288;i++)l[i]=8;
+    fixedLit=buildHuff(l,288);
+    var d=new Uint8Array(30);for(i=0;i<30;i++)d[i]=5;
+    fixedDist=buildHuff(d,30);
+  }
+  var ORDER=[16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15];
+  function dynamicTrees(){
+    var hlit=bits(5)+257,hdist=bits(5)+1,hclen=bits(4)+4;
+    var lens=new Uint8Array(19),i;
+    for(i=0;i<hclen;i++)lens[ORDER[i]]=bits(3);
+    var cl=buildHuff(lens,19);
+    var all=new Uint8Array(hlit+hdist),n=0,rep,prev;
+    while(n<hlit+hdist){
+      var sym=decode(cl);
+      if(sym<16)all[n++]=sym;
+      else if(sym===16){if(n===0)throw new Error("inflate: repetição sem anterior");prev=all[n-1];rep=3+bits(2);while(rep--)all[n++]=prev;}
+      else if(sym===17){rep=3+bits(3);while(rep--)all[n++]=0;}
+      else{rep=11+bits(7);while(rep--)all[n++]=0;}
+    }
+    return{lit:buildHuff(all.subarray(0,hlit),hlit),dist:buildHuff(all.subarray(hlit),hdist)};
+  }
+  for(;;){
+    var bfinal=bits(1),btype=bits(2);
+    if(btype===0){
+      bitbuf=0;bitcnt=0;
+      var slen=src[pos]|(src[pos+1]<<8);pos+=4;
+      ensure(slen);out.set(src.subarray(pos,pos+slen),outLen);outLen+=slen;pos+=slen;
+    }
+    else if(btype===1){getFixed();inflateBlock(fixedLit,fixedDist);}
+    else if(btype===2){var t=dynamicTrees();inflateBlock(t.lit,t.dist);}
+    else throw new Error("inflate: tipo de bloco 3 (inválido)");
+    if(bfinal)break;
+  }
+  return out.subarray(0,outLen);
+}
+/* ZIP (diretório central) */
+function zipRead(buf){
+  var u8=new Uint8Array(buf),dv=new DataView(buf);
+  var i=u8.length-22;
+  while(i>=0&&dv.getUint32(i,true)!==0x06054b50)i--;
+  if(i<0)throw new Error("ZIP: EOCD não encontrado (arquivo não é ZIP?)");
+  var count=dv.getUint16(i+10,true),p=dv.getUint32(i+16,true);
+  var files={};
+  for(var e=0;e<count;e++){
+    if(dv.getUint32(p,true)!==0x02014b50)throw new Error("ZIP: entrada de diretório inválida");
+    var method=dv.getUint16(p+10,true),csize=dv.getUint32(p+20,true);
+    var nlen=dv.getUint16(p+28,true),elen=dv.getUint16(p+30,true),clen=dv.getUint16(p+32,true);
+    var lho=dv.getUint32(p+42,true);
+    var name=new TextDecoder("utf-8").decode(u8.subarray(p+46,p+46+nlen));
+    var lnlen=dv.getUint16(lho+26,true),lelen=dv.getUint16(lho+28,true);
+    var dataOff=lho+30+lnlen+lelen;
+    files[name]={method:method,data:u8.subarray(dataOff,dataOff+csize)};
+    p+=46+nlen+elen+clen;
+  }
+  return files;
+}
+function zipFileText(files,name){
+  var f=files[name];
+  if(!f)throw new Error("ZIP: não achei "+name);
+  var raw=f.method===0?f.data:rawInflate(f.data);
+  return new TextDecoder("utf-8").decode(raw);
+}
+/* ODS → planilhas como matriz de células (número vira Number; texto vira String) */
+var ODS_TNS="urn:oasis:names:tc:opendocument:xmlns:table:1.0";
+var ODS_OFNS="urn:oasis:names:tc:opendocument:xmlns:office:1.0";
+var ODS_TXNS="urn:oasis:names:tc:opendocument:xmlns:text:1.0";
+function odsSheets(xmlText){
+  var doc=new DOMParser().parseFromString(xmlText,"text/xml");
+  if(doc.getElementsByTagName("parsererror").length)throw new Error("ODS: XML corrompido");
+  var tables=doc.getElementsByTagNameNS(ODS_TNS,"table"),sheets=[];
+  for(var t=0;t<tables.length;t++){
+    var rowsOut=[],rows=tables[t].getElementsByTagNameNS(ODS_TNS,"table-row");
+    for(var r=0;r<rows.length;r++){
+      var row=rows[r];
+      var rrep=parseInt(row.getAttributeNS(ODS_TNS,"number-rows-repeated")||"1",10);
+      if(rrep>1000)rrep=1;
+      var cells=[],cn=row.childNodes;
+      for(var c=0;c<cn.length;c++){
+        var cell=cn[c];
+        if(cell.nodeType!==1)continue;
+        if(cell.localName!=="table-cell"&&cell.localName!=="covered-table-cell")continue;
+        var crep=parseInt(cell.getAttributeNS(ODS_TNS,"number-columns-repeated")||"1",10);
+        if(crep>500)crep=1;
+        var val="";
+        if(cell.localName==="table-cell"){
+          var vtype=cell.getAttributeNS(ODS_OFNS,"value-type");
+          if(vtype==="float"||vtype==="percentage"||vtype==="currency"){val=parseFloat(cell.getAttributeNS(ODS_OFNS,"value"));}
+          else if(vtype==="date"){val=cell.getAttributeNS(ODS_OFNS,"date-value");}
+          else if(vtype==="boolean"){val=cell.getAttributeNS(ODS_OFNS,"boolean-value")==="true";}
+          else{
+            var ps=cell.getElementsByTagNameNS(ODS_TXNS,"p"),txt=[];
+            for(var pi=0;pi<ps.length;pi++)txt.push(ps[pi].textContent);
+            val=txt.join("\n");
+          }
+        }
+        for(var k=0;k<crep;k++)cells.push(val);
+      }
+      for(var k2=0;k2<rrep;k2++)rowsOut.push(cells.slice());
+    }
+    while(rowsOut.length&&rowsOut[rowsOut.length-1].every(function(x){return x===""||x===undefined;}))rowsOut.pop();
+    sheets.push({name:tables[t].getAttributeNS(ODS_TNS,"name"),rows:rowsOut});
+  }
+  return sheets;
+}
+/* XLSX → planilhas como matriz de células */
+var XLSX_RNS="http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+function xlsxSheets(files){
+  var wb=new DOMParser().parseFromString(zipFileText(files,"xl/workbook.xml"),"text/xml");
+  var rels=new DOMParser().parseFromString(zipFileText(files,"xl/_rels/workbook.xml.rels"),"text/xml");
+  var relMap={},rl=rels.getElementsByTagName("Relationship");
+  for(var i=0;i<rl.length;i++)relMap[rl[i].getAttribute("Id")]=rl[i].getAttribute("Target");
+  var shared=[];
+  if(files["xl/sharedStrings.xml"]){
+    var sd=new DOMParser().parseFromString(zipFileText(files,"xl/sharedStrings.xml"),"text/xml");
+    var sis=sd.getElementsByTagName("si");
+    for(var s=0;s<sis.length;s++){
+      var ts=sis[s].getElementsByTagName("t"),acc="";
+      for(var t2=0;t2<ts.length;t2++)acc+=ts[t2].textContent;
+      shared.push(acc);
+    }
+  }
+  var sheets=[],shEls=wb.getElementsByTagName("sheet");
+  for(var sh=0;sh<shEls.length;sh++){
+    var rid=shEls[sh].getAttributeNS(XLSX_RNS,"id")||shEls[sh].getAttribute("r:id");
+    var target=relMap[rid];
+    if(!target)continue;
+    target=target.replace(/^\//,"");
+    if(target.indexOf("xl/")!==0)target="xl/"+target;
+    var sx=new DOMParser().parseFromString(zipFileText(files,target),"text/xml");
+    var rowsOut=[],rowEls=sx.getElementsByTagName("row");
+    for(var r=0;r<rowEls.length;r++){
+      var cEls=rowEls[r].getElementsByTagName("c");
+      var rowIdx=parseInt(rowEls[r].getAttribute("r"),10)-1;
+      var cells=[];
+      for(var c=0;c<cEls.length;c++){
+        var ce=cEls[c],m=(ce.getAttribute("r")||"").match(/^([A-Z]+)(\d+)$/);
+        if(!m)continue;
+        var col=0,cs=m[1];
+        for(var ci=0;ci<cs.length;ci++)col=col*26+(cs.charCodeAt(ci)-64);
+        col-=1;
+        var type=ce.getAttribute("t")||"n",v="",vEl=ce.getElementsByTagName("v")[0];
+        if(type==="s"){v=shared[parseInt(vEl?vEl.textContent:"0",10)];if(v===undefined)v="";}
+        else if(type==="inlineStr"){var tEl=ce.getElementsByTagName("t")[0];v=tEl?tEl.textContent:"";}
+        else if(type==="str"){v=vEl?vEl.textContent:"";}
+        else{v=vEl?vEl.textContent:"";if(v!==""&&!isNaN(v))v=parseFloat(v);}
+        cells[col]=v;
+      }
+      rowsOut[rowIdx]=cells;
+    }
+    for(var r2=0;r2<rowsOut.length;r2++)if(!rowsOut[r2])rowsOut[r2]=[];
+    sheets.push({name:shEls[sh].getAttribute("name"),rows:rowsOut});
+  }
+  return sheets;
+}
+/* Arquivo (File do input) → planilhas, decidindo ODS × XLSX pelo conteúdo do ZIP */
+async function planilhaSheets(file){
+  var files=zipRead(await file.arrayBuffer());
+  if(files["content.xml"])return odsSheets(zipFileText(files,"content.xml"));
+  if(files["xl/workbook.xml"])return xlsxSheets(files);
+  throw new Error("formato não reconhecido (nem ODS nem XLSX)");
+}
+
 /* MODULE_HORAS_PLACEHOLDER */
 /* ═══════════════════════════════════════════════════════════
    ABA: HORAS MOTORES — tabelas por embarcação + manutenção + cartões
@@ -8848,17 +9098,12 @@ function openPpssKpiDrawer(navio,metric){
     document.getElementById("hl_save").onclick=function(){horasSaveLanc(key,rowId,bg,editLanc);};
     bg.classList.add("open");
   }
-  async function horasSaveLanc(key,rowId,bg,editLanc){
-    var errEl=document.getElementById("hl_err");
-    var qtd=horasParseNum(document.getElementById("hl_qtd").value);
-    if(isNaN(qtd)||qtd<=0){errEl.textContent="Informe um número de horas válido (maior que zero).";errEl.style.display="block";return;}
-    var mes=document.getElementById("hl_mes").value;
-    if(!/^\d{4}-\d{2}$/.test(mes)){errEl.textContent="Informe o mês de referência.";errEl.style.display="block";return;}
-    errEl.style.display="none";
-    var obs=(document.getElementById("hl_obs").value||"").trim();
-    if(editLanc)await horasEstornarLanc(editLanc,true);
+  /* Núcleo do lançamento mensal — usado pelo formulário manual e pela aba Importar.
+     A quantidade vai para a auditoria com vírgula decimal ("+69,5 h") para que
+     horasParseLanc/horasParseNum leiam o valor de volta corretamente no estorno. */
+  async function horasApplyLanc(key,rowId,qtd,mes,obs){
     var s=horasShips[key],row=s.rows.find(function(r){return r.id===rowId;});
-    if(!row)return;
+    if(!row)return false;
     var y=+mes.slice(0,4),m=+mes.slice(5,7);
     var fim=new Date(y,m,0);fim.setHours(0,0,0,0); // último dia do mês
     var dataFmt=String(fim.getDate()).padStart(2,"0")+"/"+String(m).padStart(2,"0")+"/"+y;
@@ -8877,8 +9122,21 @@ function openPpssKpiDrawer(navio,metric){
     if(arr.length>200)arr.splice(0,arr.length-200);
     horasSaveHist();
     horasLogReadings(key);
-    auditPushOne("horas_"+key,row.id,"Lançamento de horas: +"+qtd+" h ("+dataFmt+")"+(obs?" · "+obs:""));
+    auditPushOne("horas_"+key,row.id,"Lançamento de horas: +"+String(qtd).replace(".",",")+" h ("+dataFmt+")"+(obs?" · "+obs:""));
     touchLastEdit("horas_"+key);paintLastEdit("horas_"+key+"_lastedit","horas_"+key);
+    return true;
+  }
+  async function horasSaveLanc(key,rowId,bg,editLanc){
+    var errEl=document.getElementById("hl_err");
+    var qtd=horasParseNum(document.getElementById("hl_qtd").value);
+    if(isNaN(qtd)||qtd<=0){errEl.textContent="Informe um número de horas válido (maior que zero).";errEl.style.display="block";return;}
+    var mes=document.getElementById("hl_mes").value;
+    if(!/^\d{4}-\d{2}$/.test(mes)){errEl.textContent="Informe o mês de referência.";errEl.style.display="block";return;}
+    errEl.style.display="none";
+    var obs=(document.getElementById("hl_obs").value||"").trim();
+    if(editLanc)await horasEstornarLanc(editLanc,true);
+    var ok=await horasApplyLanc(key,rowId,qtd,mes,obs);
+    if(!ok)return;
     bg.classList.remove("open");
     toast("✓ Horas registradas — acumulado e gráfico atualizados","ok");
     renderHoras();
@@ -9087,6 +9345,186 @@ function openPpssKpiDrawer(navio,metric){
     horasBindMaintModal();
     var tag=document.getElementById("horas_synctag");
     paintSyncTag(tag);
+  };
+  /* ── ABA IMPORTAR — Horas de Funcionamento (planilha ODS mensal → lançamentos) ──
+     Modelo acumulado→delta: cada planilha (aba CHN4) traz o ACUMULADO por motor no
+     fim do mês de referência; o lançamento proposto é acumulado(planilha) − acumulado
+     atual do artefato. Motor sem acumulado no artefato = baseline (define o acumulado,
+     não gera lançamento). Delta negativo é fisicamente impossível (acumulado não
+     diminui) → vai para revisão e nunca é gravado. Nada é gravado sem conferência:
+     a prévia lista tudo e só o botão Gravar aplica os itens selecionados. ── */
+  var IMP_MESES={JAN:1,FEV:2,MAR:3,ABR:4,MAI:5,JUN:6,JUL:7,AGO:8,SET:9,OUT:10,NOV:11,DEZ:12};
+  var IMP_SHIP_PATTERNS=[["nsampaio",/sampaio/],["castelo",/castelo/],["tocantins",/tocantins/],["xingu",/xingu/],["vega",/vega/],["denebola",/den[eé]bola/],["regulus",/r[eé]gulus/],["boto",/boto/]];
+  function impShipKey(meio){var m=String(meio||"").toLowerCase();for(var i=0;i<IMP_SHIP_PATTERNS.length;i++){if(IMP_SHIP_PATTERNS[i][1].test(m))return IMP_SHIP_PATTERNS[i][0];}return null;}
+  function impTxt(v){return String(v==null?"":v).trim();}
+  function impPad2(n){return String(n).padStart(2,"0");}
+  function impNum(v){
+    if(typeof v==="number")return isNaN(v)?null:v;
+    var s=impTxt(v);
+    if(!s||s==="-"||s==="NA")return null;
+    s=s.replace(/\./g,"").replace(/,/g,".");
+    var n=parseFloat(s);
+    return isNaN(n)?null:n;
+  }
+  function impFmtH(n){
+    var neg=n<0;n=Math.abs(Math.round(n*10)/10);
+    var i=Math.floor(n),d=Math.round((n-i)*10);
+    return (neg?"−":"")+horasFmtNum(i)+(d?","+d:"");
+  }
+  function impMesRe(str){var m=/([A-Z]{3})\s*(\d{4})/.exec(String(str||"").toUpperCase());return(m&&IMP_MESES[m[1]])?{mes:IMP_MESES[m[1]],ano:+m[2]}:null;}
+  /* Uma planilha → {mês/ano de referência, motores com acumulado}. O mês vem do NOME
+     do arquivo (Ref-MAI2026); o título interno às vezes fica desatualizado e, se
+     divergir, vira aviso. */
+  function impParseHorasFile(sheets,fileName){
+    var chn=null;
+    sheets.forEach(function(s){if(s.name==="CHN4")chn=s;});
+    if(!chn){impHorasAvisos.push(fileName+": aba CHN4 não encontrada");return null;}
+    var doNome=impMesRe(fileName),doTitulo=null;
+    for(var i=0;i<Math.min(chn.rows.length,4)&&!doTitulo;i++){
+      for(var j=0;j<chn.rows[i].length;j++){var t=impMesRe(chn.rows[i][j]);if(t){doTitulo=t;break;}}
+    }
+    var ref=doNome||doTitulo;
+    if(!ref){impHorasAvisos.push(fileName+": mês de referência não identificado");return null;}
+    if(doNome&&doTitulo&&(doNome.mes!==doTitulo.mes||doNome.ano!==doTitulo.ano))
+      impHorasAvisos.push(fileName+": o título interno indica "+impPad2(doTitulo.mes)+"/"+doTitulo.ano+", mas o nome do arquivo indica "+impPad2(doNome.mes)+"/"+doNome.ano+" — usando o nome do arquivo");
+    var motores=[];
+    chn.rows.forEach(function(r){
+      if(r.length<10)return;
+      var key=impShipKey(r[0]);
+      if(!key)return;
+      var acum=impNum(r[8]);
+      if(acum==null)return;
+      motores.push({navio:key,meio:impTxt(r[0]),tipo:impTxt(r[3]).toUpperCase(),bordo:impTxt(r[4]).toUpperCase(),numSerie:impTxt(r[7]),acum:acum});
+    });
+    return{mes:ref.mes,ano:ref.ano,refKey:ref.ano+"-"+impPad2(ref.mes),motores:motores,arquivo:fileName};
+  }
+  var impHorasItens=[],impHorasAvisos=[];
+  /* Vários meses de uma vez: processa em ordem cronológica; o acumulado "projetado"
+     (virt) encadeia as propostas — o delta de JUL considera o lançamento proposto de JUN. */
+  function impHorasMontar(parsedFiles){
+    impHorasItens=[];
+    parsedFiles.sort(function(a,b){return a.refKey<b.refKey?-1:1;});
+    var virt={};
+    parsedFiles.forEach(function(pf){
+      var mesInput=pf.ano+"-"+impPad2(pf.mes),mesLbl=impPad2(pf.mes)+"/"+pf.ano;
+      pf.motores.forEach(function(mo){
+        var s=horasShips[mo.navio];
+        var rows=horasMatchRows(mo.navio,mo.tipo,mo.bordo);
+        var it={shipKey:mo.navio,shipTitle:s?s.title:mo.navio,motor:mo.tipo+(mo.bordo&&mo.bordo!=="NA"?" "+mo.bordo:""),mesLbl:mesLbl,mesInput:mesInput,acumArq:mo.acum,acumAtual:null,delta:null,sel:false};
+        if(rows.length!==1){
+          it.kind="semmotor";it.info=rows.length?"mais de um motor casa com tipo+bordo":"motor não cadastrado na aba Horas";
+          impHorasItens.push(it);return;
+        }
+        var row=rows[0];
+        it.rowId=row.id;it.motor=horasMotorLabel(row);
+        if(mo.numSerie&&impTxt(row.numSerie)&&mo.numSerie!==impTxt(row.numSerie))
+          impHorasAvisos.push(pf.arquivo+": nº de série divergente em "+it.shipTitle+" · "+it.motor+" (planilha "+mo.numSerie+" × artefato "+impTxt(row.numSerie)+") — confira o casamento antes de gravar");
+        var atual=(row.id in virt)?virt[row.id]:horasParseNum(row.horasOperacao);
+        if(isNaN(atual)){
+          it.kind="baseline";it.sel=true;
+          virt[row.id]=mo.acum;
+        }else{
+          it.acumAtual=atual;
+          var delta=Math.round((mo.acum-atual)*10)/10;
+          it.delta=delta;
+          if(delta>0){it.kind="lanc";it.sel=true;virt[row.id]=mo.acum;}
+          else if(delta===0)it.kind="emdia";
+          else it.kind="revisar";
+        }
+        impHorasItens.push(it);
+      });
+    });
+  }
+  var IMP_KIND={
+    lanc:{lbl:"Lançar",cor:"var(--c-teal)"},
+    baseline:{lbl:"Baseline — define o acumulado inicial, sem lançamento",cor:"var(--c-purple)"},
+    emdia:{lbl:"Já em dia",cor:"var(--text3)"},
+    revisar:{lbl:"REVISAR — acumulado diminuiu (erro na planilha?)",cor:"var(--c-red)"},
+    semmotor:{lbl:"Sem correspondência",cor:"var(--c-gold)"}
+  };
+  function impHorasRender(){
+    var prev=document.getElementById("imp_horas_prev"),av=document.getElementById("imp_horas_avisos"),act=document.getElementById("imp_horas_actions");
+    if(!prev)return;
+    av.innerHTML=impHorasAvisos.map(function(a){return '<div class="ferias-msg warn" style="margin-top:6px">⚠ '+esc(a)+'</div>';}).join("");
+    if(!impHorasItens.length){prev.innerHTML="";act.style.display="none";return;}
+    prev.innerHTML='<div class="dt-table-wrap"><table class="dt-table"><thead><tr>'+
+      '<th style="width:26px"></th><th>Mês ref.</th><th>Navio</th><th>Motor</th><th>Acum. artefato</th><th>Acum. planilha</th><th>Lançamento</th><th>Situação</th>'+
+      '</tr></thead><tbody>'+
+      impHorasItens.map(function(it,i){
+        var k=IMP_KIND[it.kind];
+        var chk=(it.kind==="lanc"||it.kind==="baseline")?'<input type="checkbox" data-i="'+i+'"'+(it.sel?" checked":"")+'>':"";
+        var deltaTxt=it.kind==="lanc"?"+"+impFmtH(it.delta)+" h":(it.kind==="baseline"?impFmtH(it.acumArq)+" h":(it.kind==="revisar"?impFmtH(it.delta)+" h":"—"));
+        return '<tr><td>'+chk+'</td><td>'+esc(it.mesLbl)+'</td><td>'+esc(it.shipTitle)+'</td><td>'+esc(it.motor)+'</td><td>'+(it.acumAtual==null?"—":impFmtH(it.acumAtual)+" h")+'</td><td>'+impFmtH(it.acumArq)+' h</td><td style="color:'+k.cor+';white-space:nowrap">'+deltaTxt+'</td><td style="color:'+k.cor+'">'+esc(k.lbl+(it.info?" — "+it.info:""))+'</td></tr>';
+      }).join("")+'</tbody></table></div>';
+    prev.querySelectorAll('input[type="checkbox"][data-i]').forEach(function(c){c.onchange=function(){impHorasItens[+c.dataset.i].sel=c.checked;};});
+    act.style.display="flex";
+    document.getElementById("imp_horas_save").disabled=!impHorasItens.some(function(it){return it.kind==="lanc"||it.kind==="baseline";});
+  }
+  async function impHorasLer(){
+    var inp=document.getElementById("imp_horas_file");
+    var files=Array.prototype.slice.call(inp.files||[]);
+    impHorasAvisos=[];impHorasItens=[];
+    if(!files.length){toast("Selecione ao menos um arquivo ODS de Horas.","info");impHorasRender();return;}
+    await horasInit(); // garante os dados da aba Horas carregados mesmo sem ela ter sido aberta
+    var parsed=[];
+    for(var i=0;i<files.length;i++){
+      try{
+        var sheets=await planilhaSheets(files[i]);
+        var pf=impParseHorasFile(sheets,files[i].name);
+        if(pf){if(pf.motores.length)parsed.push(pf);else impHorasAvisos.push(files[i].name+": nenhum motor reconhecido na aba CHN4");}
+      }catch(e){impHorasAvisos.push(files[i].name+": "+e.message);}
+    }
+    impHorasMontar(parsed);
+    impHorasRender();
+  }
+  /* Baseline: grava o acumulado direto (sem "Lançamento de horas" na auditoria — o
+     texto não casa com horasParseLanc de propósito, para não aparecer como estornável). */
+  async function impHorasBaseline(it){
+    var s=horasShips[it.shipKey],row=s.rows.find(function(r){return r.id===it.rowId;});
+    if(!row)return false;
+    var y=+it.mesInput.slice(0,4),m=+it.mesInput.slice(5,7);
+    var fim=new Date(y,m,0);fim.setHours(0,0,0,0);
+    var dataFmt=String(fim.getDate()).padStart(2,"0")+"/"+impPad2(m)+"/"+y;
+    row.horasOperacao=horasFmtNum(it.acumArq);
+    horasRecalcRow(row);
+    horasSaveShip(s);
+    await pushKV("horasPush",s.rowsKey,s.rows);
+    var arr=horasHist[row.id]||(horasHist[row.id]=[]);
+    var t=fim.getTime();
+    if(!arr.some(function(p){return p.t===t;}))arr.push({t:t,v:it.acumArq});
+    arr.sort(function(a,b){return a.t-b.t;});
+    horasSaveHist();
+    horasLogReadings(it.shipKey);
+    auditPushOne("horas_"+it.shipKey,row.id,"Importação: acumulado inicial definido em "+impFmtH(it.acumArq)+" h ("+dataFmt+")");
+    touchLastEdit("horas_"+it.shipKey);paintLastEdit("horas_"+it.shipKey+"_lastedit","horas_"+it.shipKey);
+    return true;
+  }
+  async function impHorasGravar(){
+    var sel=impHorasItens.filter(function(it){return it.sel&&(it.kind==="lanc"||it.kind==="baseline");});
+    if(!sel.length){toast("Nenhum lançamento selecionado.","info");return;}
+    var btn=document.getElementById("imp_horas_save");
+    btn.disabled=true;btn.textContent="Gravando…";
+    var nL=0,nB=0;
+    for(var i=0;i<sel.length;i++){
+      var it=sel[i];
+      if(it.kind==="lanc"){if(await horasApplyLanc(it.shipKey,it.rowId,it.delta,it.mesInput,"importado da planilha de "+it.mesLbl))nL++;}
+      else{if(await impHorasBaseline(it))nB++;}
+    }
+    btn.disabled=false;btn.textContent="✓ Gravar lançamentos selecionados";
+    impHorasItens=[];impHorasAvisos=[];impHorasRender();
+    document.getElementById("imp_horas_file").value="";
+    renderHoras();
+    toast("✓ Importação concluída: "+nL+" lançamento(s)"+(nB?" e "+nB+" acumulado(s) inicial(is)":"")+" gravado(s)","ok");
+  }
+  var impBound=false;
+  importInit=async function(){
+    paintSyncTag(document.getElementById("imp_synctag"));
+    if(impBound)return;
+    impBound=true;
+    document.getElementById("imp_horas_read").onclick=impHorasLer;
+    document.getElementById("imp_horas_save").onclick=impHorasGravar;
+    document.getElementById("imp_horas_clear").onclick=function(){impHorasItens=[];impHorasAvisos=[];impHorasRender();document.getElementById("imp_horas_file").value="";};
+    horasInit(); // pré-carrega os dados de Horas em segundo plano
   };
 })();
 
@@ -10091,7 +10529,7 @@ function openPpssKpiDrawer(navio,metric){
    destino e aplica uma classe de animação proporcional à intensidade.
    Não interfere em switchAppView/renderAll — apenas observa os cliques. */
 (function(){
-  var NAV_ORDER=["config","agenda","navios","clg","horas","pessoal","ppss","garagem"];
+  var NAV_ORDER=["config","agenda","navios","clg","horas","pessoal","ppss","garagem","importar"];
   var navFromIdx=1;
   document.addEventListener("pointerdown",function(e){
     var item=e.target.closest("#appnav .nav-item");
