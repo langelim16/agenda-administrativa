@@ -2670,10 +2670,10 @@ function aaPaintAuth(){
     var who=aaSession.email||"conta";var short=who.length>18?who.slice(0,17)+"…":who;
     b.style.display="";b.textContent="⏻ "+short;b.title="Sair ("+who+")"+(aaIsAdmin()?" · admin":"");
     b.onclick=function(){if(confirm("Sair da conta "+who+"?"))aaLogout();};
-  }else if(aaAuthRequired){
-    b.style.display="";b.textContent="🔑 Entrar";b.title="Fazer login";b.onclick=function(){aaShowLogin(true);};
   }else{
-    b.style.display="none";b.onclick=null;
+    // Não logado: mostra "Entrar" sempre (mesmo com RLS aberta) para permitir login voluntário.
+    // Quando a RLS for fechada, o boot já força a tela de login antes de carregar o app.
+    b.style.display="";b.textContent="🔑 Entrar";b.title="Fazer login";b.onclick=function(){aaShowLogin(true);};
   }
 }
 (function aaWireLoginForm(){
