@@ -769,6 +769,15 @@ input.nv-comissao-date{width:100%;border:none;background:transparent;font:inheri
 .nv-condef[data-st=""]{background:var(--c-100);color:var(--text3);border-color:var(--border)}
 select.nv-condef{appearance:none;-webkit-appearance:none;cursor:pointer;outline:none}
 select.nv-condef:disabled{opacity:1;cursor:default}
+/* Mobile: colunas coladas ao conteúdo (sem esticar), evitando rolagem horizontal desnecessária.
+   min-width:max(...,100%) forçava a tabela a ocupar 100% da largura no celular, esticando as
+   colunas e criando espaços enormes entre elas. No mobile a tabela passa a ter width:max-content
+   e cada coluna hugs o próprio texto (larguras percentuais do .nv-table são neutralizadas). */
+@media(max-width:640px){
+  .dt-table,.nv-table{min-width:0;width:max-content}
+  .dt-table th,.dt-table td,.nv-table th,.nv-table td{padding:6px 5px}
+  .nv-table th,.nv-table td{width:auto!important}
+}
 .nv-table td:nth-child(1){font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.2px}
 .nv-table td:nth-child(3){font-weight:600}
 .nv-table td.nv-cell{cursor:text}
