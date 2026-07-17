@@ -1798,6 +1798,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 <nav class="appnav" id="appnav">
   <button class="nav-item" id="nav_admin" style="display:none" title="Administração — visível somente para o administrador"><span class="nav-ic" style="font-size:26px">⚙</span><span class="nav-lbl">ADMIN</span></button>
   <div class="nav-sep" id="nav_admin_sep" aria-hidden="true" style="display:none"></div>
+  <button class="nav-item" data-view="importar" title="Importar planilhas mensais"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M12 3v10.5"></path><path d="M8 10l4 4 4-4"></path><path d="M4.5 16.5v2.5a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-2.5"></path></svg></span><span class="nav-lbl">IMPORTAR</span></button>
   <button class="nav-item active" data-view="agenda" title="Agenda Administrativa"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="18" rx="2"></rect><path d="M9 3.5V2.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"></path><line x1="8.5" y1="9" x2="15.5" y2="9"></line><line x1="8.5" y1="12.5" x2="15.5" y2="12.5"></line><line x1="8.5" y1="16" x2="13" y2="16"></line></svg></span><span class="nav-lbl">Agenda</span></button>
   <div class="nav-sep" aria-hidden="true"></div>
   <div class="nav-grp" aria-hidden="true">Setores</div>
@@ -1807,7 +1808,6 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
   <button class="nav-item" data-view="pessoal" title="Pessoal"><span class="nav-ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="7.5" r="3.2"></circle><path d="M3.5 19.5c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6"></path><circle cx="17.5" cy="8.5" r="2.4"></circle><path d="M15.3 13.7c2.4.3 4.2 2.4 4.2 5.3"></path></svg></span><span class="nav-lbl">Pessoal</span></button>
  <button class="nav-item" data-view="ppss" title="Controle de PPSS"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M6 3.5h8l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-16a1 1 0 0 1 1-1z"></path><path d="M14 3.5v4a1 1 0 0 0 1 1h4"></path><line x1="8" y1="12.5" x2="15" y2="12.5"></line><line x1="8" y1="16" x2="13" y2="16"></line></svg></span><span class="nav-lbl">PPSS</span></button>
  <button class="nav-item" data-view="garagem" title="Garagem — Controle de Viaturas"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M2.5 6.5h10v9h-10z"></path><path d="M12.5 10h4.3l3.2 3.2v2.3h-7.5z"></path><circle cx="7" cy="17.8" r="1.8"></circle><circle cx="17" cy="17.8" r="1.8"></circle><line x1="8.8" y1="17.8" x2="15.2" y2="17.8"></line></svg></span><span class="nav-lbl">GARAGEM</span></button>
- <button class="nav-item" data-view="importar" title="Importar planilhas mensais"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M12 3v10.5"></path><path d="M8 10l4 4 4-4"></path><path d="M4.5 16.5v2.5a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-2.5"></path></svg></span><span class="nav-lbl">IMPORTAR</span></button>
 </nav>
 <div id="toast-container"></div>
 <div class="sync-banner" id="sync_banner" role="alert">⚠ SEM SINCRONIZAÇÃO — suas alterações estão sendo salvas SOMENTE neste dispositivo e NÃO são compartilhadas com a equipe.<button type="button" onclick="location.reload()">🔄 Tentar reconectar</button></div>
@@ -10529,7 +10529,7 @@ async function planilhaSheets(file){
    destino e aplica uma classe de animação proporcional à intensidade.
    Não interfere em switchAppView/renderAll — apenas observa os cliques. */
 (function(){
-  var NAV_ORDER=["config","agenda","navios","clg","horas","pessoal","ppss","garagem","importar"];
+  var NAV_ORDER=["config","importar","agenda","navios","clg","horas","pessoal","ppss","garagem"];
   var navFromIdx=1;
   document.addEventListener("pointerdown",function(e){
     var item=e.target.closest("#appnav .nav-item");
