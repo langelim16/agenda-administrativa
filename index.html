@@ -2757,7 +2757,7 @@ async function sbGetDoc(){
     var r=await fetch(SB_TABLE+"?select=key,value,updated_at&key=neq.ag_config",{headers:sbHeaders()});
     if(!r.ok)return dc;
     var rows=await r.json();
-    rows.forEach(function(row){dc[row.key]=row.value;docUpdateTimes[row.key]=row.updated_at;});
+    rows.forEach(function(row){dc[row.key]=row.value;docUpdateTimes[row.key]=row.updated_at;if(row.updated_at>lastMaxUpdatedAt)lastMaxUpdatedAt=row.updated_at;});
   }catch(e){}
   return dc;
 }
@@ -2774,7 +2774,7 @@ async function sbFlushKey(k){
       var rc=await fetch(url,{method:"PATCH",headers:sbHeaders({"Content-Type":"application/json",Prefer:"return=representation"}),body:JSON.stringify({value:dc[k],updated_at:nowIso})});
       if(rc.ok){
         var jc=await rc.json();
-        if(jc&&jc.length){docUpdateTimes[k]=jc[0].updated_at;sbBumpMeta();return;}
+        if(jc&&jc.length){docUpdateTimes[k]=jc[0].updated_at;if(jc[0].updated_at>lastMaxUpdatedAt)lastMaxUpdatedAt=jc[0].updated_at;sbBumpMeta();return;}
         // 0 linhas: confirma se é conflito REAL (servidor tem versão diferente) antes de avisar.
         // Se a versão do servidor ainda for a nossa (ex.: filtro de timestamp não casou por formato),
         // NÃO é conflito → segue para o upsert normal, para não travar o salvamento com falso alarme.
@@ -2785,7 +2785,7 @@ async function sbFlushKey(k){
     }
     var body=[{key:k,value:dc[k],updated_at:nowIso}];
     var r=await fetch(SB_TABLE,{method:"POST",headers:sbHeaders({"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=representation"}),body:JSON.stringify(body)});
-    if(r.ok){var j=await r.json();if(j[0])docUpdateTimes[k]=j[0].updated_at;}
+    if(r.ok){var j=await r.json();if(j[0]){docUpdateTimes[k]=j[0].updated_at;if(j[0].updated_at>lastMaxUpdatedAt)lastMaxUpdatedAt=j[0].updated_at;}}
     sbBumpMeta();
   }catch(e){console.error("sbFlushKey",k,e);}
 }
@@ -2797,10 +2797,13 @@ async function sbFetchUpdatedAt(k){
     return(rows&&rows[0])?rows[0].updated_at:null;
   }catch(e){return null;}
 }
-// Conflito de escrita: em vez de gravar por cima, puxa a versão nova (mesma via do sync
-// normal, que re-renderiza todas as abas) e avisa o operador para refazer a alteração.
+// Conflito de escrita: em vez de gravar por cima, puxa a versão nova DESSA chave
+// (independe do incremental) e re-renderiza, avisando o operador para refazer.
 async function sbHandleConflict(k){
-  try{await sbFetchFullAndApply();}catch(e){}
+  try{
+    var r=await fetch(SB_TABLE+"?select=value,updated_at&key=eq."+encodeURIComponent(k)+"&limit=1",{headers:sbHeaders()});
+    if(r.ok){var rows=await r.json();if(rows&&rows[0]){dc[k]=rows[0].value;docUpdateTimes[k]=rows[0].updated_at;if(rows[0].updated_at>lastMaxUpdatedAt)lastMaxUpdatedAt=rows[0].updated_at;applyDcToState();}}
+  }catch(e){}
   if(typeof toast==="function")toast("⚠ Esta seção foi alterada por outra pessoa. Sua tela foi atualizada — refaça a alteração.","err");
 }
 function schedFlushKey(k){
@@ -2824,6 +2827,7 @@ async function gtj(k){var v=await gts(k);try{return v?JSON.parse(v):null;}catch(
    da coleção inteira a cada ciclo (esgotava cota de leitura na Firestore; no Supabase, estouraria o
    limite de egress do free tier do mesmo jeito se reaplicado sem essa otimização). */
 var lastSeenMetaTs=0,metaBumpTimer=null;
+var lastMaxUpdatedAt=""; // maior updated_at (do servidor) já aplicado — base do sync incremental
 function sbBumpMeta(){
   clearTimeout(metaBumpTimer);
   metaBumpTimer=setTimeout(function(){
@@ -2852,15 +2856,21 @@ function applyDcToState(){
   renderAll();
   if(navRemoteHook)navRemoteHook(dc);
 }
+// Sync INCREMENTAL (Fase 4.2): busca só as chaves alteradas desde o último updated_at aplicado,
+// em vez das ~72 chaves inteiras a cada sinal de sync (economiza egress do free tier). O primeiro
+// carregamento completo é feito por sbGetDoc; daí em diante, só o delta.
 async function sbFetchFullAndApply(){
   try{
-    var r=await fetch(SB_TABLE+"?select=key,value,updated_at&key=neq.ag_config",{headers:sbHeaders()});
+    var q=SB_TABLE+"?select=key,value,updated_at&key=neq.ag_config";
+    if(lastMaxUpdatedAt)q+="&updated_at=gt."+encodeURIComponent(lastMaxUpdatedAt);
+    var r=await fetch(q,{headers:sbHeaders()});
     if(!r.ok)return;
     var rows=await r.json();
     var changed=false;
     if(!dc)dc={};
     rows.forEach(function(row){
       var k=row.key;
+      if(row.updated_at>lastMaxUpdatedAt)lastMaxUpdatedAt=row.updated_at; // avança a marca (inclui _meta)
       if(k==="_meta")return;
       if(flushTimers[k])return;
       if(docUpdateTimes[k]===row.updated_at)return;
