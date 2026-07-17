@@ -1176,6 +1176,25 @@ body{padding-left:64px}
 .sync-banner.on{display:flex}
 .sync-banner button{background:#fff;color:var(--c-red);border:none;border-radius:var(--r-sm);padding:6px 14px;font-weight:700;font-family:var(--sans);font-size:13px;cursor:pointer;flex-shrink:0}
 .sync-banner button:hover{opacity:.88}
+/* ── Login (Fase 3): overlay no mesmo padrão visual, dark mode incluso ── */
+.aa-login{display:none;position:fixed;inset:0;z-index:9500;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse 60% 55% at 50% 0%,color-mix(in srgb,var(--header-bg) 55%,transparent),transparent 70%),var(--bg)}
+.aa-login.on{display:flex}
+.aa-login-card{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--sh-lg);overflow:hidden}
+.aa-login-top{background:var(--header-bg);padding:26px 24px 20px;text-align:center;color:#fff}
+.aa-login-top .aa-crest{width:52px;height:52px;margin:0 auto 10px;border-radius:14px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:22px}
+.aa-login-top h2{font-family:var(--sans);font-size:19px;font-weight:700;letter-spacing:1px;margin:0}
+.aa-login-top .aa-sub{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;opacity:.7;margin-top:4px}
+.aa-login-body{padding:22px 24px 24px}
+.aa-login-body label{display:block;font-size:11px;font-weight:700;letter-spacing:.4px;color:var(--text2);text-transform:uppercase;margin:0 0 5px}
+.aa-login-body input{width:100%;box-sizing:border-box;padding:11px 13px;font-family:var(--sans);font-size:14px;background:var(--bg-base);color:var(--text);border:1px solid var(--border2);border-radius:var(--r-md);margin-bottom:14px}
+.aa-login-body input:focus{outline:none;border-color:var(--c-blue)}
+.aa-login-btn{width:100%;padding:12px;font-family:var(--sans);font-size:14px;font-weight:700;letter-spacing:.5px;color:#fff;background:var(--c-blue);border:none;border-radius:var(--r-md);cursor:pointer}
+.aa-login-btn:hover:not(:disabled){background:color-mix(in srgb,var(--c-blue) 85%,#000)}
+.aa-login-btn:disabled{opacity:.6;cursor:default}
+.aa-login-err{display:none;background:var(--c-red2);color:var(--c-red);font-size:12.5px;font-weight:600;padding:9px 12px;border-radius:var(--r-sm);margin-bottom:14px}
+.aa-login-err.on{display:block}
+.aa-login-hint{font-size:11px;color:var(--text3);text-align:center;margin-top:14px;line-height:1.5}
+.hbtn.aa-authbtn{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btn.redo-btn{border-color:var(--c-blue);color:var(--c-blue)}
 .btn.redo-btn:hover{background:var(--c-sky)}
 .btn.redo-btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
@@ -1799,6 +1818,20 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 </nav>
 <div id="toast-container"></div>
 <div class="sync-banner" id="sync_banner" role="alert">⚠ SEM SINCRONIZAÇÃO — suas alterações estão sendo salvas SOMENTE neste dispositivo e NÃO são compartilhadas com a equipe.<button type="button" onclick="location.reload()">🔄 Tentar reconectar</button></div>
+<div class="aa-login" id="aa_login">
+  <form class="aa-login-card" id="aa_login_form" autocomplete="on">
+    <div class="aa-login-top"><div class="aa-crest">⚓</div><h2>AGENDA ADMINISTRATIVA</h2><div class="aa-sub">Acesso restrito · CHN-4</div></div>
+    <div class="aa-login-body">
+      <div class="aa-login-err" id="aa_login_err"></div>
+      <label for="aa_login_email">E-mail</label>
+      <input id="aa_login_email" type="email" autocomplete="username" required placeholder="voce@marinha.mil.br">
+      <label for="aa_login_pw">Senha</label>
+      <input id="aa_login_pw" type="password" autocomplete="current-password" required placeholder="••••••••">
+      <button class="aa-login-btn" id="aa_login_submit" type="submit">Entrar</button>
+      <div class="aa-login-hint" id="aa_login_hint">A conta é criada pelo administrador. Esqueceu a senha? Fale com o administrador.</div>
+    </div>
+  </form>
+</div>
 <div id="splash" class="splash">
 <div class="splash-waves"><svg class="w1" viewBox="0 0 1600 200" preserveAspectRatio="none"><path d="M0,110 C200,150 200,70 400,110 C600,150 600,70 800,110 C1000,150 1000,70 1200,110 C1400,150 1400,70 1600,110 L1600,200 L0,200 Z" fill="rgba(255,255,255,.55)"></path></svg><svg class="w2" viewBox="0 0 1600 200" preserveAspectRatio="none"><path d="M0,130 C200,90 200,160 400,130 C600,90 600,160 800,130 C1000,90 1000,160 1200,130 C1400,90 1400,160 1600,130 L1600,200 L0,200 Z" fill="rgba(255,255,255,.45)"></path></svg></div>
 <div class="splash-bubbles">
@@ -1838,6 +1871,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
   </div>
   <div class="hright">
     <span class="synctag" id="backend_tag" title="Estado de gravação" style="background-color: rgba(247, 247, 247, 0.94); opacity: 0.8">⏳ verificando…</span>
+    <button class="hbtn aa-authbtn" id="authbtn" style="display:none"></button>
     <button class="hbtn theme-toggle-btn" id="themebtn">🌙 Noturno</button>
     <select class="yearsel" id="yearsel" style="font-size: 12px"><option value="2026" selected="">2026</option></select>
     <button class="hbtn add-year" id="addyearbtn">+ Ano</button><button class="hbtn" id="delyearbtn" title="Excluir ano selecionado" style="background:rgba(168,85,75,.25);border-color:rgba(168,85,75,.5)">✕ Ano</button>
@@ -2486,8 +2520,137 @@ if(!window.storage){
     list:async function(prefix){return Object.keys(localStorage).filter(function(k){return!prefix||k.indexOf(prefix)===0;}).map(function(k){return{key:k,value:localStorage.getItem(k)};});}
   };
 }
-function sbHeaders(extra){var h={apikey:SB_KEY,Authorization:"Bearer "+SB_KEY};if(extra)Object.assign(h,extra);return h;}
+function sbHeaders(extra){var tok=aaToken();var bearer=tok?tok:SB_KEY;var h={apikey:SB_KEY,Authorization:"Bearer "+bearer};if(extra)Object.assign(h,extra);return h;}
 function bkSynced(){return bk==="supabase";}
+
+/* ═══════════ AUTENTICAÇÃO (Fase 3) — Supabase Auth via REST, fetch puro ═══════════
+   Sessão persistida no localStorage com refresh automático do token. Compatível com o
+   estado atual: enquanto a RLS está aberta, o app funciona anônimo; quando a RLS for
+   fechada (sql/02), qualquer leitura anônima recebe 401 e o login vira obrigatório. */
+var AA_SESS_KEY="aa_session_v1";
+var aaSession=null;               // {access_token, refresh_token, expires_at(ms), email, user_id, role}
+var aaRefreshTimer=null;
+var aaAuthRequired=false;         // marcado quando o servidor exige login (RLS fechada)
+
+function aaToken(){return(aaSession&&aaSession.access_token)?aaSession.access_token:null;}
+function aaLoggedIn(){return!!aaToken();}
+function aaIsAdmin(){return!!(aaSession&&aaSession.role==="admin");}
+
+function aaLoadSession(){
+  try{var raw=localStorage.getItem(AA_SESS_KEY);if(!raw)return;var s=JSON.parse(raw);if(s&&s.access_token){aaSession=s;aaScheduleRefresh();}}catch(e){}
+}
+function aaSaveSession(s){aaSession=s;try{localStorage.setItem(AA_SESS_KEY,JSON.stringify(s));}catch(e){}aaScheduleRefresh();aaPaintAuth();}
+function aaClearSession(){aaSession=null;try{localStorage.removeItem(AA_SESS_KEY);}catch(e){}clearTimeout(aaRefreshTimer);aaPaintAuth();}
+
+function aaSessionFromAuth(j){
+  var prevEmail=aaSession?aaSession.email:"";
+  var prevId=aaSession?aaSession.user_id:"";
+  var prevRole=aaSession?aaSession.role:"";
+  return{
+    access_token:j.access_token,
+    refresh_token:j.refresh_token,
+    expires_at:Date.now()+((j.expires_in||3600)*1000),
+    email:(j.user&&j.user.email)||prevEmail||"",
+    user_id:(j.user&&j.user.id)||prevId||"",
+    role:prevRole||""
+  };
+}
+
+function aaAuthMsgPt(raw,status){
+  var m=(raw||"").toLowerCase();
+  if(m.indexOf("invalid login")>=0||m.indexOf("invalid credentials")>=0)return"E-mail ou senha incorretos.";
+  if(m.indexOf("email not confirmed")>=0)return"Conta ainda não confirmada. Fale com o administrador.";
+  if(m.indexOf("rate limit")>=0||status===429)return"Muitas tentativas. Aguarde um instante e tente de novo.";
+  if(status===0||m.indexOf("failed to fetch")>=0||m.indexOf("networkerror")>=0)return"Sem conexão com o servidor. Verifique a rede.";
+  return raw||("Falha no login ("+status+").");
+}
+async function aaLogin(email,password){
+  var r;
+  try{r=await fetch(SB_URL+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json"},body:JSON.stringify({email:email,password:password})});}
+  catch(e){throw new Error(aaAuthMsgPt("failed to fetch",0));}
+  var j={};try{j=await r.json();}catch(e){}
+  if(!r.ok)throw new Error(aaAuthMsgPt(j.error_description||j.msg||j.error||j.error_code,r.status));
+  aaSaveSession(aaSessionFromAuth(j));
+  await aaLoadRole();
+  return true;
+}
+
+async function aaRefresh(){
+  if(!aaSession||!aaSession.refresh_token)return false;
+  try{
+    var r=await fetch(SB_URL+"/auth/v1/token?grant_type=refresh_token",{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json"},body:JSON.stringify({refresh_token:aaSession.refresh_token})});
+    var j=await r.json();
+    if(!r.ok)throw new Error("refresh");
+    aaSaveSession(aaSessionFromAuth(j));
+    return true;
+  }catch(e){aaClearSession();return false;}
+}
+
+function aaScheduleRefresh(){
+  clearTimeout(aaRefreshTimer);
+  if(!aaSession||!aaSession.expires_at)return;
+  var ms=aaSession.expires_at-Date.now()-60000; // renova 1 min antes de expirar
+  if(ms<0)ms=0;if(ms>2147483000)ms=2147483000;
+  aaRefreshTimer=setTimeout(function(){aaRefresh();},ms);
+}
+
+// Papel (admin/operador) vem SEMPRE do servidor (tabela app_roles), nunca do que o cliente declara.
+async function aaLoadRole(){
+  if(!aaLoggedIn()||!aaSession.user_id){return;}
+  try{
+    var r=await fetch(SB_TABLE.replace("agenda_data","app_roles")+"?select=role&user_id=eq."+encodeURIComponent(aaSession.user_id),{headers:sbHeaders()});
+    if(!r.ok)return; // tabela ainda não existe (404) → segue como operador
+    var rows=await r.json();
+    aaSession.role=(rows[0]&&rows[0].role)||"operador";
+    try{localStorage.setItem(AA_SESS_KEY,JSON.stringify(aaSession));}catch(e){}
+    aaPaintAuth();
+  }catch(e){}
+}
+
+async function aaLogout(){
+  var tok=aaToken();
+  try{if(tok)await fetch(SB_URL+"/auth/v1/logout",{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+tok}});}catch(e){}
+  aaClearSession();
+  location.reload();
+}
+
+/* ── UI do login ── */
+function aaShowLogin(force){var el=document.getElementById("aa_login");if(!el)return;el.classList.add("on");var em=document.getElementById("aa_login_email");if(em)setTimeout(function(){em.focus();},50);}
+function aaHideLogin(){var el=document.getElementById("aa_login");if(el)el.classList.remove("on");}
+function aaLoginError(msg){var e=document.getElementById("aa_login_err");if(!e)return;if(msg){e.textContent=msg;e.classList.add("on");}else{e.textContent="";e.classList.remove("on");}}
+function aaPaintAuth(){
+  var b=document.getElementById("authbtn");if(!b)return;
+  if(aaLoggedIn()){
+    var who=aaSession.email||"conta";var short=who.length>18?who.slice(0,17)+"…":who;
+    b.style.display="";b.textContent="⏻ "+short;b.title="Sair ("+who+")"+(aaIsAdmin()?" · admin":"");
+    b.onclick=function(){if(confirm("Sair da conta "+who+"?"))aaLogout();};
+  }else if(aaAuthRequired){
+    b.style.display="";b.textContent="🔑 Entrar";b.title="Fazer login";b.onclick=function(){aaShowLogin(true);};
+  }else{
+    b.style.display="none";b.onclick=null;
+  }
+}
+(function aaWireLoginForm(){
+  document.addEventListener("DOMContentLoaded",function(){
+    var f=document.getElementById("aa_login_form");if(!f)return;
+    f.addEventListener("submit",async function(ev){
+      ev.preventDefault();
+      var btn=document.getElementById("aa_login_submit");
+      var email=(document.getElementById("aa_login_email").value||"").trim();
+      var pw=document.getElementById("aa_login_pw").value||"";
+      if(!email||!pw)return;
+      aaLoginError("");btn.disabled=true;btn.textContent="Entrando…";
+      try{
+        await aaLogin(email,pw);
+        // Sessão válida: recarrega a página já autenticada (boot limpo com token).
+        location.reload();
+      }catch(e){
+        aaLoginError(e.message||"Não foi possível entrar.");
+        btn.disabled=false;btn.textContent="Entrar";
+      }
+    });
+  });
+})();
 
 
 // Supabase é a única fonte de verdade — se falhar, cai pro modo local (sem sync).
@@ -2498,6 +2661,8 @@ async function initBk(){
 async function initBkSupabase(){
   try{
     var r=await Promise.race([fetch(SB_TABLE+"?select=key&limit=1",{headers:sbHeaders()}),new Promise(function(_,j){setTimeout(function(){j(new Error("timeout"));},5000);})]);
+    // 401/403 = a RLS está fechada e não temos sessão válida → exigir login (não é "offline").
+    if(r.status===401||r.status===403){aaAuthRequired=true;bk="local";return;}
     if(!r.ok)throw new Error("HTTP "+r.status);
     bk="supabase";
   }catch(e){console.warn("Supabase indisponível:",e.message);bk="local";}
@@ -5346,7 +5511,15 @@ var SPLASH_MIN_MS=6000;
 setTimeout(hideSplash,12000);
 (async function(){
   try{
+    // Autenticação (Fase 3): restaura a sessão salva e renova o token se estiver perto de vencer,
+    // ANTES da 1ª chamada ao Supabase — assim o health-check já usa o token válido.
+    aaLoadSession();
+    if(aaLoggedIn()&&aaSession.expires_at&&(aaSession.expires_at-Date.now())<60000)await aaRefresh();
+    aaPaintAuth();
     await initBk();
+    // Se o servidor exige login (RLS fechada) e não estamos logados: para no login, sem carregar nada.
+    if(aaAuthRequired&&!aaLoggedIn()){aaPaintAuth();hideSplash();aaShowLogin(true);return;}
+    if(aaLoggedIn())await aaLoadRole();
     var tag0=document.getElementById("backend_tag");
     paintSyncTag(tag0);
     paintSyncBanner();
