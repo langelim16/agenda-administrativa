@@ -7750,11 +7750,13 @@ function openPpssKpiDrawer(navio,metric){
   if(!bg)return;
   var rows=ppssRows.filter(function(r){return r.navio===navio;});
   var valFn=function(r){return metric==="orcado"?moneyVal(r.orcamento):ppssRecIndVal(r);};
-  var prog=rows.filter(function(r){return r.tipo==="Programada";});
-  var corr=rows.filter(function(r){return r.tipo==="Corrente";});
+  // Só os PPSS que de fato entram na métrica (orçado>0, ou recurso indicado>0).
+  var prog=rows.filter(function(r){return r.tipo==="Programada"&&valFn(r)>0;});
+  var corr=rows.filter(function(r){return r.tipo==="Corrente"&&valFn(r)>0;});
   var progTotal=prog.reduce(function(a,r){return a+valFn(r);},0);
   var corrTotal=corr.reduce(function(a,r){return a+valFn(r);},0);
   var metricLabel=metric==="orcado"?"orçado":"indicado";
+  var alvoLabel=metric==="orcado"?"orçados":"com recurso indicado";
   function rowCard(r){
     var indicado=ppssRecIndVal(r);
     var fallback=(!moneyVal(r.recInd)&&r.situacao==="Recurso Indicado");
@@ -7771,19 +7773,25 @@ function openPpssKpiDrawer(navio,metric){
       '</div>'+
     '</div>';
   }
+  function groupSection(titulo,arr,cor){
+    if(!arr.length)return'';
+    return '<div style="margin-bottom:14px"><div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px"><i style="width:10px;height:10px;border-radius:3px;background:'+cor+';display:inline-block"></i>'+titulo+' ('+arr.length+')</div>'+arr.map(rowCard).join("")+'</div>';
+  }
   document.getElementById("detailDrawerTitle").textContent=navio;
   document.getElementById("detailDrawerBody").innerHTML=
     '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);font-weight:700;margin-bottom:8px">Memória de cálculo — Valor '+metricLabel+'</div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'+
       '<div style="background:var(--c-50);border:1px solid var(--border);border-radius:10px;padding:10px 12px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);font-weight:700;margin-bottom:3px">Total '+metricLabel+'</div><div style="font-size:19px;font-weight:800">'+fmtBRLFull(progTotal+corrTotal)+'</div></div>'+
-      '<div style="background:var(--c-50);border:1px solid var(--border);border-radius:10px;padding:10px 12px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);font-weight:700;margin-bottom:3px">Pedidos (PPSS)</div><div style="font-size:19px;font-weight:800">'+rows.length+'</div></div>'+
+      '<div style="background:var(--c-50);border:1px solid var(--border);border-radius:10px;padding:10px 12px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);font-weight:700;margin-bottom:3px">Pedidos '+alvoLabel+'</div><div style="font-size:19px;font-weight:800">'+(prog.length+corr.length)+'</div></div>'+
     '</div>'+
     '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px dashed var(--border)"><span style="display:inline-flex;align-items:center;gap:6px;color:var(--text2)"><i style="width:10px;height:10px;border-radius:3px;background:var(--c-blue);display:inline-block"></i>Programada ('+prog.length+' pedidos)</span><b>'+fmtBRLFull(progTotal)+'</b></div>'+
       '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px dashed var(--border)"><span style="display:inline-flex;align-items:center;gap:6px;color:var(--text2)"><i style="width:10px;height:10px;border-radius:3px;background:var(--c-teal);display:inline-block"></i>Corrente ('+corr.length+' pedidos)</span><b>'+fmtBRLFull(corrTotal)+'</b></div>'+
     '</div>'+
-    '<div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-bottom:8px">Detalhamento por pedido</div>'+
-    (rows.length?rows.map(rowCard).join(""):'<div style="font-size:12px;color:var(--text3);font-style:italic">Nenhum pedido encontrado para este navio.</div>');
+    '<div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-bottom:8px">PPSS '+alvoLabel+' — Programadas, depois Correntes</div>'+
+    groupSection("Programadas",prog,"var(--c-blue)")+
+    groupSection("Correntes",corr,"var(--c-teal)")+
+    ((prog.length+corr.length)?"":'<div style="font-size:12px;color:var(--text3);font-style:italic">Nenhum PPSS '+alvoLabel+' para este navio.</div>');
   bg.classList.add("open");
 }
   window.openPpssKpiDrawer=openPpssKpiDrawer;
@@ -7936,17 +7944,90 @@ function openPpssKpiDrawer(navio,metric){
     return"#1e3a6e";
   }
   var PPSS_SITUS=["Concluído","Cancelado","Falta Indicar","Recurso Indicado","Orçado e não Indicado","Não orçado"];
+  // ── Alteração de SITUAÇÃO via janela obrigatória ──────────────────────────
+  // Estágios de progressão (escaláveis, não regridem). Cancelado é terminal como Concluído.
+  var PPSS_STAGE={"Não orçado":0,"Orçado e não Indicado":1,"Falta Indicar":2,"Recurso Indicado":3,"Concluído":4,"Cancelado":4};
+  // Situação-alvo → coluna de MSG e coluna de valor a preencher (chaves = colunas da tabela).
+  var PPSS_SIT_META={
+    "Não orçado":{},
+    "Orçado e não Indicado":{msg:"msgOmpsOrc",msgLabel:"MSG · OMPS – ORÇ",val:"orcamento",valLabel:"Valor do orçamento (R$)"},
+    "Falta Indicar":{msg:"msgNavSolIndRec",msgLabel:"MSG · NAV – SOL IND REC",val:"recInd",valLabel:"Valor do recurso indicado parcial (R$)"},
+    "Recurso Indicado":{msg:"msgCominsupIndRec",msgLabel:"MSG · COMINSUP – IND REC",val:"recInd",valLabel:"Valor do recurso indicado integral (R$)"},
+    "Concluído":{msg:"msgSatisfCancelado",msgLabel:"MSG · SATISFEITO / CANCELADO"},
+    "Cancelado":{msg:"msgSatisfCancelado",msgLabel:"MSG · SATISFEITO / CANCELADO"}
+  };
+  function ppssStageOf(s){var v=PPSS_STAGE[s||""];return v===undefined?null:v;}
+  // Aplica a mudança (situação + colunas), salva, audita e re-renderiza.
+  function ppssApplyStatus(r,val,changes,regressObs){
+    var pre=JSON.parse(JSON.stringify(ppssRows));
+    var antes=r.situacao||"—";
+    r.situacao=val;
+    Object.keys(changes||{}).forEach(function(k){r[k]=changes[k];});
+    ppssSaveRows();
+    pushKV("ppssPush",PPSS_KEY,ppssRows).then(function(){toast("✓ Situação atualizada","ok");});
+    auditDiffRows("ppss_tbl",pre,ppssRows);
+    if(regressObs)auditPushOne("ppss_tbl",r.id,"⚠ Regressão de fase: "+antes+" → "+val+" · Motivo: "+regressObs);
+    touchLastEdit("ppss_tbl");paintLastEdit("ppss_tbl_lastedit","ppss_tbl");
+    renderPpss();
+  }
+  function ppssOpenStatusModal(r,val,regress){
+    var meta=PPSS_SIT_META[val]||{};
+    var bg=ensureModal("ppssStatusBg","Alterar situação — "+(r.navio||"—")+" #"+(r.numero||"s/n"));
+    var body=bg.querySelector(".mbody");
+    var curOrc=moneyVal(r.orcamento);
+    var html='<div style="font-size:11px;color:var(--text3);margin-bottom:4px">'+esc(r.navio||"—")+' · Pedido '+esc(r.numero||"s/n")+' · '+esc(r.tipo||"—")+'</div>'+
+      '<div style="font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:10px">'+esc(r.descricao||"—")+'</div>'+
+      '<div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:12px"><span class="sit-badge" style="background:'+ppssSituColor(r)+'">'+esc(r.situacao||"—")+'</span><span style="color:var(--text3)">→</span><span class="sit-badge" style="background:'+ppssSituColor({situacao:val})+'">'+esc(val)+'</span></div>';
+    if(regress)html+='<div style="background:color-mix(in srgb,var(--c-red) 12%,var(--surface));border:1px solid var(--c-red);border-radius:8px;padding:8px 10px;font-size:11.5px;color:var(--c-red);margin-bottom:12px">⚠ <b>Regressão de fase.</b> As etapas normalmente só avançam. Explique o motivo abaixo.</div>';
+    html+='<div class="mgrid">';
+    if(meta.val)html+='<div class="fld full"><label>'+meta.valLabel+'</label><input id="ppssm_val" inputmode="decimal" value="'+esc(r[meta.val]||"")+'" placeholder="Ex: 150.000,00"></div>';
+    if(meta.msg)html+='<div class="fld full"><label>'+meta.msgLabel+' *</label><textarea id="ppssm_msg" rows="2" placeholder="Ex: R291858Z/JAN/2026">'+esc(r[meta.msg]||"")+'</textarea></div>';
+    if(regress)html+='<div class="fld full"><label>Observação — motivo da regressão *</label><textarea id="ppssm_obs" rows="2" placeholder="Ex: Estorno do valor e futuro cancelamento do PS"></textarea></div>';
+    if(!meta.msg&&!meta.val&&!regress)html+='<div class="fld full" style="font-size:12px;color:var(--text3)">Sem campos a preencher para esta situação.</div>';
+    html+='</div>';
+    html+='<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn" data-close="1">Cancelar</button><button class="btn primary" id="ppssm_save">Confirmar alteração</button></div>';
+    body.innerHTML=html;
+    document.getElementById("ppssm_save").onclick=function(){
+      var changes={};
+      if(meta.val){
+        var raw=(document.getElementById("ppssm_val").value||"").trim();
+        var v=moneyVal(raw);
+        if(!raw||v<=0){toast("Informe um valor válido (maior que zero).","info");return;}
+        // Falta Indicar = indicação PARCIAL: o valor tem de ser menor que o orçado.
+        if(val==="Falta Indicar"&&curOrc>0&&v>=curOrc){toast("Valor ≥ orçado indica indicação INTEGRAL. Use “Recurso Indicado”.","info");return;}
+        // Recurso Indicado = INTEGRAL: não pode exceder o orçado; se menor, confirmar.
+        if(val==="Recurso Indicado"&&curOrc>0){
+          if(v>curOrc){toast("Valor indicado não pode exceder o orçado ("+fmtBRLFull(curOrc)+").","info");return;}
+          if(v<curOrc&&!confirm("O valor indicado ("+fmtBRLFull(v)+") é menor que o orçado ("+fmtBRLFull(curOrc)+"), o que caracteriza indicação PARCIAL (Falta Indicar).\n\nConfirmar mesmo assim como Recurso Indicado?"))return;
+        }
+        changes[meta.val]=fmtBRLFull(v);
+      }
+      if(meta.msg){
+        var msg=(document.getElementById("ppssm_msg").value||"").trim();
+        if(!msg){toast("Preencha a MSG de referência da alteração.","info");return;}
+        changes[meta.msg]=msg;
+      }
+      var obs="";
+      if(regress){
+        obs=(document.getElementById("ppssm_obs").value||"").trim();
+        if(!obs){toast("Descreva o motivo da regressão de fase.","info");return;}
+      }
+      bg.classList.remove("open");
+      ppssApplyStatus(r,val,changes,obs);
+    };
+    bg.classList.add("open");
+  }
   function ppssQuickStatus(id,val){
     if(GLOBAL_EDIT_LOCK){toast("Finalize a edição em andamento antes de alterar situações.","info");return;}
     var r=ppssRows.find(function(x){return x.id===id;});
     if(!r||r.situacao===val)return;
-    var pre=JSON.parse(JSON.stringify(ppssRows));
-    r.situacao=val;
-    ppssSaveRows();
-    pushKV("ppssPush",PPSS_KEY,ppssRows).then(function(){toast("✓ Situação atualizada","ok");});
-    auditDiffRows("ppss_tbl",pre,ppssRows);
-    touchLastEdit("ppss_tbl");paintLastEdit("ppss_tbl_lastedit","ppss_tbl");
-    renderPpss();
+    var meta=PPSS_SIT_META[val]||{};
+    var curStage=ppssStageOf(r.situacao),newStage=ppssStageOf(val);
+    var regress=(curStage!==null&&newStage!==null&&newStage<curStage);
+    // Sem nada a preencher e sem regressão (ex.: marcar "Não orçado" num pedido sem status) → aplica direto.
+    if(!meta.msg&&!meta.val&&!regress){ppssApplyStatus(r,val,{});return;}
+    if(regress&&!confirm("⚠ REGRESSÃO DE FASE\n\n"+(r.situacao||"—")+"  →  "+val+"\n\nAs etapas de um PPSS normalmente só avançam. Tem certeza de que deseja regredir a situação?"))return;
+    ppssOpenStatusModal(r,val,regress);
   }
   function ppssSituRank(r){
     var k=ppssStatusKey(r);
