@@ -6621,7 +6621,7 @@ setTimeout(hideSplash,12000);
     OPER_PIE_ORDER.forEach(function(o){
       var days=acc[o[0]],frac=days/grand,len=frac*circ;
       if(days)segs+='<circle cx="50" cy="50" r="'+r+'" fill="none" stroke="'+o[1]+'" stroke-width="'+sw+'" stroke-dasharray="'+len+' '+(circ-len)+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90 50 50)"></circle>';
-      if(days)legend+='<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);margin-bottom:2px"><i style="width:9px;height:9px;border-radius:50%;background:'+o[1]+';display:inline-block;flex:none"></i>'+o[2]+' — <b>'+days+'</b>d ('+Math.round(frac*100)+'%)</div>';
+      if(days)legend+='<div style="display:flex;align-items:flex-start;gap:6px;font-size:11px;line-height:1.35;color:var(--text2);margin-bottom:3px"><i style="width:9px;height:9px;border-radius:50%;background:'+o[1]+';display:inline-block;flex:none;margin-top:3px"></i><span>'+o[2]+' — <b style="white-space:nowrap">'+days+'d ('+Math.round(frac*100)+'%)</b></span></div>';
       off+=len;
     });
     if(!legend)legend='<div style="font-size:11px;color:var(--text3);font-style:italic">Sem dados no ano.</div>';
