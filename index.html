@@ -2388,9 +2388,9 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
   <span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-teal)"></span>"PO" — Operando com restrição</span>
 </div>
 
-<div class="dt-section-head"><h3 class="dt-table-title">Condição de Eficiência dos Meios</h3></div>
-<div class="nv-toolbar" id="nv_table_toolbar">
-  <span class="last-edit" id="nv_table_lastedit"></span>
+<div class="dt-section-head">
+  <div class="dt-title-wrap"><h3 class="dt-table-title">Condição de Eficiência dos Meios</h3><span class="last-edit" id="nv_table_lastedit"></span></div>
+  <div class="nv-toolbar" id="nv_table_toolbar">
   <button class="nv-editbtn" id="nv_condef_alt_btn">+ Inserir alteração</button>
   <button class="nv-editbtn" id="nv_condef_edit_btn">Editar períodos lançados</button>
   <button class="nv-editbtn" id="nv_table_edit">✎ Editar tabela</button>
@@ -2399,6 +2399,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
     <button class="nv-savebtn" id="nv_table_save" disabled="">✓ Salvar</button>
     <button class="nv-cancelbtn" id="nv_table_cancel">Cancelar</button>
   </span>
+  </div>
 </div>
 <div class="nv-table-wrap">
   <table class="nv-table">
@@ -2863,6 +2864,7 @@ Etapa 2"></textarea></div></div></div><div class="mfoot"><button class="brestore
   <div class="fld"><label>Tipo da revisão</label><input id="hm_tiporev" placeholder="Ex: REV. 6.000hs"></div>
   <div class="fld"><label>Data da manutenção</label><input id="hm_data" placeholder="MM/AAAA"></div>
   <div class="fld"><label>Data da próxima revisão</label><input id="hm_dataprox" placeholder="Ex: 06/2027"></div>
+  <div class="fld"><label>Tipo da próxima revisão</label><input id="hm_tipoprox" placeholder="Ex: 3000H — atualiza o Cronograma"></div>
 </div></div><div class="mfoot"><button class="bcancel" id="hm_cancel">Cancelar</button><button class="bsave" id="hm_save">Registrar manutenção</button></div></div></div>
 
 <div class="mbg" id="mbg"><div class="modal"><div class="mh"><h3 id="m_title">Tarefa</h3><button class="mx" id="m_close">✕</button></div><div class="mbody"><div class="mgrid">
@@ -9137,7 +9139,7 @@ function openPpssKpiDrawer(navio,metric){
     if(GLOBAL_EDIT_LOCK){toast("Finalize a edição da tabela antes de inserir manutenção.","info");return;}
     var sel=document.getElementById("hm_ship");
     sel.innerHTML='<option value="">— selecionar —</option>'+HORAS_SHIP_LIST.map(function(sk){return '<option value="'+sk.key+'">'+esc(horasShips[sk.key].title)+'</option>';}).join("");
-    ["hm_tipo","hm_bordo","hm_fab","hm_mod","hm_ns","hm_horas","hm_tiporev","hm_data","hm_dataprox"].forEach(function(id){document.getElementById(id).value="";});
+    ["hm_tipo","hm_bordo","hm_fab","hm_mod","hm_ns","hm_horas","hm_tiporev","hm_data","hm_dataprox","hm_tipoprox"].forEach(function(id){document.getElementById(id).value="";});
     document.getElementById("hmbg").classList.add("open");
   }
   function horasCloseMaint(){document.getElementById("hmbg").classList.remove("open");}
@@ -9196,12 +9198,16 @@ function openPpssKpiDrawer(navio,metric){
       if(!rows.length){toast("Nenhum motor correspondente encontrado.","info");return;}
       var horas=document.getElementById("hm_horas").value.trim(),tiporev=document.getElementById("hm_tiporev").value.trim();
       var data=document.getElementById("hm_data").value.trim(),dataprox=document.getElementById("hm_dataprox").value.trim();
+      var tipoprox=document.getElementById("hm_tipoprox").value.trim();
+      var cronoNum=horasParseNum(tipoprox); // "3000H"/"3000 horas"/"3.000" → 3000 (só o número)
       var s=horasShips[shipKey],snap=JSON.parse(JSON.stringify(s.rows));
       rows.forEach(function(r){
         if(horas){r.horasManutencao=horas;r.horasOperacao=horas;}
         if(tiporev)r.tipoRevisaoUltima=tiporev;
         if(data)r.dataUltimaManutencao=data;
         if(dataprox)r.dataProxRevisao=dataprox;
+        if(tipoprox)r.tipoProxRevisao=tipoprox;
+        if(!isNaN(cronoNum))r.cronograma=horasFmtNum(cronoNum); // altera coluna CRONOGRAMA do navio
         horasRecalcRow(r);
       });
       horasSaveShip(s);
