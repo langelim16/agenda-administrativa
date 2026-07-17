@@ -10431,6 +10431,8 @@ button:not(:disabled):active,.tab:active,.segbtn:active,.vtbtn:active{transform:
 .tabs .tab{scroll-snap-align:center}
 
 /* fades de rolagem em tabelas largas */
+/* Garagem/visões gerais: obs com nowrap forçava a grade além da tela — permite encolher e aplicar o ellipsis */
+.ovw-grid>*{min-width:0;max-width:100%}
 .nv-table-wrap,.dt-table-wrap,.ferias-wrap,.nv-card-wide,.tl-wrap{-webkit-overflow-scrolling:touch}
 .mpx-fade-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
 .mpx-fade-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 40px);mask-image:linear-gradient(90deg,transparent,#000 40px)}
