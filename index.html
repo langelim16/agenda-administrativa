@@ -2764,11 +2764,44 @@ async function sbGetDoc(){
 
 async function sbFlushKey(k){
   try{
-    var body=[{key:k,value:dc[k],updated_at:new Date().toISOString()}];
+    var known=docUpdateTimes[k];
+    var nowIso=new Date().toISOString();
+    // Proteção contra sobrescrita (P6): se já conhecemos a versão do servidor, gravamos
+    // CONDICIONADO a ela (updated_at=eq.<conhecida>). Se ninguém mexeu, atualiza; se o
+    // servidor já tem versão mais nova, o PATCH afeta 0 linhas → conflito (não grava por cima).
+    if(known){
+      var url=SB_TABLE+"?key=eq."+encodeURIComponent(k)+"&updated_at=eq."+encodeURIComponent(known);
+      var rc=await fetch(url,{method:"PATCH",headers:sbHeaders({"Content-Type":"application/json",Prefer:"return=representation"}),body:JSON.stringify({value:dc[k],updated_at:nowIso})});
+      if(rc.ok){
+        var jc=await rc.json();
+        if(jc&&jc.length){docUpdateTimes[k]=jc[0].updated_at;sbBumpMeta();return;}
+        // 0 linhas: confirma se é conflito REAL (servidor tem versão diferente) antes de avisar.
+        // Se a versão do servidor ainda for a nossa (ex.: filtro de timestamp não casou por formato),
+        // NÃO é conflito → segue para o upsert normal, para não travar o salvamento com falso alarme.
+        var cur=await sbFetchUpdatedAt(k);
+        if(cur&&cur!==known){await sbHandleConflict(k);return;}
+      }
+      // erro HTTP ou falso-conflito: cai para o upsert normal, para não perder o dado do usuário
+    }
+    var body=[{key:k,value:dc[k],updated_at:nowIso}];
     var r=await fetch(SB_TABLE,{method:"POST",headers:sbHeaders({"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=representation"}),body:JSON.stringify(body)});
     if(r.ok){var j=await r.json();if(j[0])docUpdateTimes[k]=j[0].updated_at;}
     sbBumpMeta();
   }catch(e){console.error("sbFlushKey",k,e);}
+}
+async function sbFetchUpdatedAt(k){
+  try{
+    var r=await fetch(SB_TABLE+"?select=updated_at&key=eq."+encodeURIComponent(k)+"&limit=1",{headers:sbHeaders()});
+    if(!r.ok)return null;
+    var rows=await r.json();
+    return(rows&&rows[0])?rows[0].updated_at:null;
+  }catch(e){return null;}
+}
+// Conflito de escrita: em vez de gravar por cima, puxa a versão nova (mesma via do sync
+// normal, que re-renderiza todas as abas) e avisa o operador para refazer a alteração.
+async function sbHandleConflict(k){
+  try{await sbFetchFullAndApply();}catch(e){}
+  if(typeof toast==="function")toast("⚠ Esta seção foi alterada por outra pessoa. Sua tela foi atualizada — refaça a alteração.","err");
 }
 function schedFlushKey(k){
   clearTimeout(flushTimers[k]);
