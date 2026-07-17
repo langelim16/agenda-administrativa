@@ -2951,7 +2951,7 @@ var clgT1; // exposto ao módulo Horas (horasComissaoMes cruza consumo de ODM po
 var clgParseLanc; // idem: horasComissaoMes lê o log de auditoria do CLG
 var clgGetState,clgSetState,navGetState,navSetState,horasGetState,horasSetState,horasInit,renderHoras;
 var pessoalInit,renderPessoal,pessoalGetState,pessoalSetState;
-var ppssInit,renderPpss,garInit,renderGaragem;
+var ppssInit,renderPpss,garInit,renderGaragem,ppssGetState,ppssSetState,garGetState,garSetState;
 // Cadeado de edição compartilhado por TODAS as abas (Navios/CLG/Horas/Pessoal): enquanto qualquer
 // tabela ou cartão estiver em edição não salva, nenhuma outra seção do app pode iniciar edição —
 // evita sobreposição de dados entre abas. Cada módulo só troca seu cadeado local por este.
@@ -3199,8 +3199,8 @@ async function loadAll(){
 
 /* ── TOAST / UNDO ── */
 function toast(msg,tp){var t=document.createElement("div");t.className="toast "+(tp||"info");t.textContent=msg;document.getElementById("toast-container").appendChild(t);setTimeout(function(){t.remove();},3500);}
-function snapState(){return JSON.stringify({st:ovStatus,sh:ovShips,ed:ovEdit,ie:ovInstEdit,us:userTasks,dn:ovDone,hi:ovHist,np:ovNup,sb:ovSubsids,sub:ovSubtasks,tsh:ovTaskShips,ord:ovOrder,sp:spots,clg:clgGetState?clgGetState():null,nav:navGetState?navGetState():null,horas:horasGetState?horasGetState():null,pessoal:pessoalGetState?pessoalGetState():null});}
-async function restoreState(j){var d=JSON.parse(j);ovStatus=d.st;ovShips=d.sh;ovEdit=d.ed;ovInstEdit=d.ie||{};userTasks=d.us;ovDone=d.dn;ovHist=d.hi;ovNup=d.np;ovSubsids=d.sb;ovSubtasks=d.sub;ovTaskShips=d.tsh;ovOrder=d.ord;spots=d.sp;await svs(K.st,ovStatus);await svs(K.sh,ovShips);await svs(K.ed,ovEdit);await svs(K.ie,ovInstEdit);await svs(K.us,userTasks);await svs(K.dn,ovDone);await svs(K.hi,ovHist);await svs(K.np,ovNup);await svs(K.sb,ovSubsids);await svs(K.sub,ovSubtasks);await svs(K.tsh,ovTaskShips);await svs(K.ord,ovOrder);await svs(K.sp,spots);if(d.clg&&clgSetState)await clgSetState(d.clg);if(d.nav&&navSetState)await navSetState(d.nav);if(d.horas&&horasSetState)await horasSetState(d.horas);if(d.pessoal&&pessoalSetState)await pessoalSetState(d.pessoal);}
+function snapState(){return JSON.stringify({st:ovStatus,sh:ovShips,ed:ovEdit,ie:ovInstEdit,us:userTasks,dn:ovDone,hi:ovHist,np:ovNup,sb:ovSubsids,sub:ovSubtasks,tsh:ovTaskShips,ord:ovOrder,sp:spots,clg:clgGetState?clgGetState():null,nav:navGetState?navGetState():null,horas:horasGetState?horasGetState():null,pessoal:pessoalGetState?pessoalGetState():null,ppss:ppssGetState?ppssGetState():null,gar:garGetState?garGetState():null});}
+async function restoreState(j){var d=JSON.parse(j);ovStatus=d.st;ovShips=d.sh;ovEdit=d.ed;ovInstEdit=d.ie||{};userTasks=d.us;ovDone=d.dn;ovHist=d.hi;ovNup=d.np;ovSubsids=d.sb;ovSubtasks=d.sub;ovTaskShips=d.tsh;ovOrder=d.ord;spots=d.sp;await svs(K.st,ovStatus);await svs(K.sh,ovShips);await svs(K.ed,ovEdit);await svs(K.ie,ovInstEdit);await svs(K.us,userTasks);await svs(K.dn,ovDone);await svs(K.hi,ovHist);await svs(K.np,ovNup);await svs(K.sb,ovSubsids);await svs(K.sub,ovSubtasks);await svs(K.tsh,ovTaskShips);await svs(K.ord,ovOrder);await svs(K.sp,spots);if(d.clg&&clgSetState)await clgSetState(d.clg);if(d.nav&&navSetState)await navSetState(d.nav);if(d.horas&&horasSetState)await horasSetState(d.horas);if(d.pessoal&&pessoalSetState)await pessoalSetState(d.pessoal);if(d.ppss&&ppssSetState)await ppssSetState(d.ppss);if(d.gar&&garSetState)await garSetState(d.gar);}
 function updHist(){document.querySelectorAll(".undo-btn").forEach(function(u){u.disabled=!undoStack.length;u.title=undoStack.length?"Desfazer: "+undoStack[undoStack.length-1].d:"Nada para desfazer";});document.querySelectorAll(".redo-btn").forEach(function(r){r.disabled=!redoStack.length;r.title=redoStack.length?"Refazer: "+redoStack[redoStack.length-1].d:"Nada para refazer";});}
 function pushUndo(d,fn){undoStack.push({d:d,fn:fn});if(undoStack.length>30)undoStack.shift();redoStack=[];updHist();}
 function renderCurrentView(){var vn=document.getElementById("viewNavios"),vc=document.getElementById("viewCLG"),vh=document.getElementById("viewHoras"),vp=document.getElementById("viewPessoal");if(vn&&vn.style.display!=="none"){renderNavios();renderNaviosCards();}else if(vc&&vc.style.display!=="none"){renderClgTables();renderClgCards();}else if(vh&&vh.style.display!=="none"&&typeof renderHoras==="function"){renderHoras();}else if(vp&&vp.style.display!=="none"&&typeof renderPessoal==="function"){renderPessoal();}else renderAll();}
@@ -5032,7 +5032,7 @@ function bindTDrag(){
     // Só permite reordenar dentro do mesmo dia de prazo — mudar o prazo em si só é
     // possível editando a tarefa, nunca arrastando-a para o grupo de outro dia.
     card.ondragover=function(e){if(!tdKey||card.dataset.day!==tdDay)return;e.preventDefault();};
-    card.ondrop=async function(e){e.preventDefault();if(!tdKey||card.dataset.key===tdKey||card.dataset.day!==tdDay)return;var group=[...document.querySelectorAll('.task[data-day="'+CSS.escape(tdDay)+'"]')].map(function(c){return c.dataset.key;});var fi=group.indexOf(tdKey),ti=group.indexOf(card.dataset.key);if(fi<0||ti<0)return;var prev=Object.assign({},ovOrder);var r=[...group];r.splice(fi,1);r.splice(ti,0,tdKey);r.forEach(function(k,idx){ovOrder[k]=idx;});await svs(K.ord,ovOrder);pushUndo("Reordenar",async function(){ovOrder=prev;await svs(K.ord,ovOrder);});tdKey=null;tdDay=null;renderAll();};
+    card.ondrop=async function(e){e.preventDefault();if(!tdKey||card.dataset.key===tdKey||card.dataset.day!==tdDay)return;var group=[...document.querySelectorAll('.task[data-day="'+CSS.escape(tdDay)+'"]')].map(function(c){return c.dataset.key;});var fi=group.indexOf(tdKey),ti=group.indexOf(card.dataset.key);if(fi<0||ti<0)return;var prev=Object.assign({},ovOrder);var r=[...group];r.splice(fi,1);r.splice(ti,0,tdKey);r.forEach(function(k,idx){ovOrder[k]=idx;});await svs(K.ord,ovOrder);pushUndo("Reordenar tarefa",async function(){ovOrder=prev;await svs(K.ord,ovOrder);});tdKey=null;tdDay=null;renderAll();};
   });
 }
 
@@ -5097,7 +5097,7 @@ function bindEv(){
   document.querySelectorAll(".subtask-inp").forEach(function(inp){inp.onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();inp.nextElementSibling.click();}};});
   document.querySelectorAll(".sub-chk").forEach(function(c){c.onchange=async function(e){e.stopPropagation();var k=e.target.dataset.key,si=+e.target.dataset.si;var prev=JSON.parse(JSON.stringify(ovSubtasks));ovSubtasks[k][si].done=c.checked;await svs(K.sub,ovSubtasks);pushUndo("Subtarefa",async function(){ovSubtasks=prev;await svs(K.sub,ovSubtasks);});openPanels.add(k);openPanels.add(k+"_st");renderAll();};});
   document.querySelectorAll(".sub-del").forEach(function(b){b.onclick=async function(e){e.stopPropagation();var k=b.dataset.key,si=+b.dataset.si;var prev=JSON.parse(JSON.stringify(ovSubtasks));ovSubtasks[k].splice(si,1);await svs(K.sub,ovSubtasks);pushUndo("Remover subtarefa",async function(){ovSubtasks=prev;await svs(K.sub,ovSubtasks);});openPanels.add(k);openPanels.add(k+"_st");renderAll();};});
-  document.querySelectorAll(".sbtn").forEach(function(b){b.onclick=async function(e){e.stopPropagation();var k=b.dataset.key,v=b.dataset.st,i=findI(k);if(!i)return;var was=isDone(i),prev=ovStatus[k];if(v==="NONE")delete ovStatus[k];else ovStatus[k]=v;await svs(K.st,ovStatus);syncDone(findI(k),was);pushUndo("Status",async function(){if(prev!==undefined)ovStatus[k]=prev;else delete ovStatus[k];await svs(K.st,ovStatus);});toast(v==="CONCLUIDO"?"✓ Concluída":v==="PENDENTE"?"⏳ Pendente":"Limpo","ok");renderAll();};});
+  document.querySelectorAll(".sbtn").forEach(function(b){b.onclick=async function(e){e.stopPropagation();var k=b.dataset.key,v=b.dataset.st,i=findI(k);if(!i)return;var was=isDone(i),prev=ovStatus[k];if(v==="NONE")delete ovStatus[k];else ovStatus[k]=v;await svs(K.st,ovStatus);syncDone(findI(k),was);pushUndo("Status → "+(v==="CONCLUIDO"?"Concluída":v==="PENDENTE"?"Pendente":"Limpa"),async function(){if(prev!==undefined)ovStatus[k]=prev;else delete ovStatus[k];await svs(K.st,ovStatus);});toast(v==="CONCLUIDO"?"✓ Concluída":v==="PENDENTE"?"⏳ Pendente":"Limpo","ok");renderAll();};});
   document.querySelectorAll(".doneinput").forEach(function(inp){
     inp.onclick=function(e){e.stopPropagation();};
     inp.onchange=function(e){
@@ -7959,6 +7959,7 @@ function openPpssKpiDrawer(navio,metric){
   function ppssStageOf(s){var v=PPSS_STAGE[s||""];return v===undefined?null:v;}
   // Aplica a mudança (situação + colunas), salva, audita e re-renderiza.
   function ppssApplyStatus(r,val,changes,regressObs){
+    var snap=snapState();
     var pre=JSON.parse(JSON.stringify(ppssRows));
     var antes=r.situacao||"—";
     r.situacao=val;
@@ -7968,6 +7969,7 @@ function openPpssKpiDrawer(navio,metric){
     auditDiffRows("ppss_tbl",pre,ppssRows);
     if(regressObs)auditPushOne("ppss_tbl",r.id,"⚠ Regressão de fase: "+antes+" → "+val+" · Motivo: "+regressObs);
     touchLastEdit("ppss_tbl");paintLastEdit("ppss_tbl_lastedit","ppss_tbl");
+    pushUndo("Situação PPSS "+(r.navio||"")+" #"+(r.numero||"s/n")+": "+antes+" → "+val,async function(){await restoreState(snap);});
     renderPpss();
   }
   function ppssOpenStatusModal(r,val,regress){
@@ -8192,6 +8194,9 @@ function openPpssKpiDrawer(navio,metric){
     bindMasonryCardDrag(grid,function(){return ppssCards;},function(v){ppssCards=v;},ppssSaveCards,PPSS_CARDS_KEY,renderPpssCards,"Reordenar cartões PPSS",function(){return!!GLOBAL_EDIT_LOCK;});
     bindItemDragGeneric(grid,ppssFindCard,function(v){ppssCardSt.dirty=v;},renderPpssCards);
   }
+  // Snapshot para undo/redo global (snapState/restoreState).
+  ppssGetState=function(){return{rows:JSON.parse(JSON.stringify(ppssRows)),cols:cloneCols(ppssCols),cards:JSON.parse(JSON.stringify(ppssCards))};};
+  ppssSetState=async function(s){ppssRows=s.rows||[];ppssCols=s.cols||ppssColsDefault();ppssCards=s.cards||[];ppssSaveRows();ppssSaveCols();ppssSaveCards();await pushKV("ppssPush",PPSS_KEY,ppssRows);await pushKV("ppssPush",PPSS_COLS_KEY,ppssCols);await pushKV("ppssPush",PPSS_CARDS_KEY,ppssCards);};
   renderPpss=function(){renderPpssKpis();renderPpssWorklist();renderPpssMacro();renderPpssStats();renderPpssTable();renderPpssCards();};
   ppssInit=async function(){
     if(ppssBound){return;}
@@ -8509,6 +8514,7 @@ function openPpssKpiDrawer(navio,metric){
     pushKV("garPush",VTR_KEY,vtrRows).then(function(){toast("✓ "+VTR_USO_META[r.usoStatus].lbl,"ok");});
     auditDiffRows("vtr_tbl",pre,vtrRows);
     touchLastEdit("vtr_tbl");paintLastEdit("vtr_tbl_lastedit","vtr_tbl");
+    pushUndo("Uso viatura "+(r.modelo||r.placa||"")+": → "+VTR_USO_META[r.usoStatus].lbl,async function(){vtrRows=pre;vtrSaveRows();await pushKV("garPush",VTR_KEY,vtrRows);renderGaragem();});
     renderGarFleet();
   }
   /* ── Registro de uso da viatura — preenche a coluna Observações automaticamente e
@@ -8588,6 +8594,7 @@ function openPpssKpiDrawer(navio,metric){
     pushKV("garPush",VTR_KEY,vtrRows).then(function(){toast("✓ "+VTR_USO_META[r.usoStatus].lbl,"ok");});
     auditDiffRows("vtr_tbl",pre,vtrRows);
     touchLastEdit("vtr_tbl");paintLastEdit("vtr_tbl_lastedit","vtr_tbl");
+    pushUndo("Uso viatura "+(r.modelo||r.placa||"")+": → "+VTR_USO_META[r.usoStatus].lbl,async function(){vtrRows=pre;vtrSaveRows();await pushKV("garPush",VTR_KEY,vtrRows);renderGaragem();});
     renderGaragem();
     closeUsoModal();
   }
@@ -8642,6 +8649,9 @@ function openPpssKpiDrawer(navio,metric){
     bindMasonryCardDrag(grid,function(){return vtrCards;},function(v){vtrCards=v;},vtrSaveCards,VTR_CARDS_KEY,renderGarCards,"Reordenar cartões Garagem",function(){return!!GLOBAL_EDIT_LOCK;});
     bindItemDragGeneric(grid,garFindCard,function(v){garCardSt.dirty=v;},renderGarCards);
   }
+  // Snapshot para undo/redo global (snapState/restoreState).
+  garGetState=function(){return{rows:JSON.parse(JSON.stringify(vtrRows)),cols:cloneCols(vtrCols),cards:JSON.parse(JSON.stringify(vtrCards))};};
+  garSetState=async function(s){vtrRows=s.rows||[];vtrCols=s.cols||vtrCols;vtrCards=s.cards||[];vtrSaveRows();vtrSaveCols();vtrSaveCards();await pushKV("garPush",VTR_KEY,vtrRows);await pushKV("garPush",VTR_COLS_KEY,vtrCols);await pushKV("garPush",VTR_CARDS_KEY,vtrCards);};
   renderGaragem=function(){renderGarKpis();renderGarFleet();renderGarStats();renderGarTable();renderGarCards();};
   garInit=async function(){
     if(garBound){return;}
