@@ -10476,6 +10476,17 @@ button:not(:disabled):active,.tab:active,.segbtn:active,.vtbtn:active{transform:
   }
   .drawer-bg.open .drawer{transform:translateY(0)}
   .drawer::before{content:"";display:block;width:40px;height:5px;border-radius:99px;background:var(--border2);margin:10px auto 2px;flex:none}
+  /* pares de tabelas (Estoque Navios / Embarcações etc.) empilhados */
+  .dt-table-row{flex-direction:column;gap:20px}
+  .dt-table-row>div{width:100%}
+  /* cards de estatística (Valor Orçado / Valor Indicado) empilhados */
+  .stats-grid{flex-direction:column}
+  .stats-grid .stats-card{min-width:0;width:100%}
+  /* barras do PPSS: nome + valor na 1ª linha, barra em largura total na 2ª */
+  .ppss-kpi-bar-row{flex-wrap:wrap!important;row-gap:3px!important;padding:6px 4px!important}
+  .ppss-kpi-bar-row>span{width:auto!important;flex:1 1 auto!important;min-width:0!important;order:1}
+  .ppss-kpi-bar-row>b{width:auto!important;flex:0 0 auto!important;order:2}
+  .ppss-kpi-bar-track{flex:1 1 100%!important;order:3}
 }
 
 /* ═══ iPad (769–1024px · retrato e paisagem) ═══ */
