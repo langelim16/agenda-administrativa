@@ -1171,6 +1171,11 @@ body{padding-left:64px}
 @media print{.wrap{display:none!important}#rbg{position:static!important;display:block!important;background:#fff!important;padding:0!important;overflow:visible!important}#rbg .modal{max-width:100%!important;box-shadow:none!important;border:none!important}.noprint{display:none!important}.mbody{padding:0!important}}
 
 .synctag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.94);border-radius:99px;padding:5px 12px;font-size:11px;font-weight:700;letter-spacing:.4px;color:var(--c-amber);box-shadow:0 1px 4px rgba(0,0,0,.18);white-space:nowrap}
+/* Banner de contingência: sem sincronização com o servidor, edições ficam só neste dispositivo */
+.sync-banner{display:none;position:fixed;left:0;right:0;bottom:0;z-index:9000;background:var(--c-red);color:#fff;padding:10px 16px;text-align:center;font-weight:700;font-size:14px;letter-spacing:.3px;box-shadow:0 -2px 14px rgba(0,0,0,.3);align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.sync-banner.on{display:flex}
+.sync-banner button{background:#fff;color:var(--c-red);border:none;border-radius:var(--r-sm);padding:6px 14px;font-weight:700;font-family:var(--sans);font-size:13px;cursor:pointer;flex-shrink:0}
+.sync-banner button:hover{opacity:.88}
 .btn.redo-btn{border-color:var(--c-blue);color:var(--c-blue)}
 .btn.redo-btn:hover{background:var(--c-sky)}
 .btn.redo-btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
@@ -1793,6 +1798,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
  <button class="nav-item" data-view="garagem" title="Garagem — Controle de Viaturas"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M2.5 6.5h10v9h-10z"></path><path d="M12.5 10h4.3l3.2 3.2v2.3h-7.5z"></path><circle cx="7" cy="17.8" r="1.8"></circle><circle cx="17" cy="17.8" r="1.8"></circle><line x1="8.8" y1="17.8" x2="15.2" y2="17.8"></line></svg></span><span class="nav-lbl">GARAGEM</span></button>
 </nav>
 <div id="toast-container"></div>
+<div class="sync-banner" id="sync_banner" role="alert">⚠ SEM SINCRONIZAÇÃO — suas alterações estão sendo salvas SOMENTE neste dispositivo e NÃO são compartilhadas com a equipe.<button type="button" onclick="location.reload()">🔄 Tentar reconectar</button></div>
 <div id="splash" class="splash">
 <div class="splash-waves"><svg class="w1" viewBox="0 0 1600 200" preserveAspectRatio="none"><path d="M0,110 C200,150 200,70 400,110 C600,150 600,70 800,110 C1000,150 1000,70 1200,110 C1400,150 1400,70 1600,110 L1600,200 L0,200 Z" fill="rgba(255,255,255,.55)"></path></svg><svg class="w2" viewBox="0 0 1600 200" preserveAspectRatio="none"><path d="M0,130 C200,90 200,160 400,130 C600,90 600,160 800,130 C1000,90 1000,160 1200,130 C1400,90 1400,160 1600,130 L1600,200 L0,200 Z" fill="rgba(255,255,255,.45)"></path></svg></div>
 <div class="splash-bubbles">
@@ -2694,6 +2700,14 @@ async function loadAll(){
 
 /* ── TOAST / UNDO ── */
 function paintSyncTag(el){if(!el)return;el.textContent=bkSynced()?"☁ Sincronizado":"💾 Somente local";el.style.color=bkSynced()?"var(--c-teal)":"var(--c-amber)";}
+/* Sem sync = impossível não notar: banner vermelho fixo enquanto bk!=="supabase".
+   Fica oculto no modo de teste explícito (aa_backend_override="local"), que é escolha deliberada. */
+function paintSyncBanner(){
+  var b=document.getElementById("sync_banner");
+  if(!b)return;
+  var show=!bkSynced()&&BACKEND_OVERRIDE!=="local";
+  if(show)b.classList.add("on");else b.classList.remove("on");
+}
 function actionsTd(editing,id){return '<td class="dt-actions dt-actions-col">'+(editing?'<span class="row-dh" title="Arrastar para reordenar">⠿</span><button class="nv-delrow" data-id="'+id+'" title="Excluir">🗑</button>':'')+'</td>';}
 function toast(msg,tp){var t=document.createElement("div");t.className="toast "+(tp||"info");t.textContent=msg;document.getElementById("toast-container").appendChild(t);setTimeout(function(){t.remove();},3500);}
 function snapState(){return JSON.stringify({st:ovStatus,sh:ovShips,ed:ovEdit,ie:ovInstEdit,us:userTasks,dn:ovDone,hi:ovHist,np:ovNup,sb:ovSubsids,sub:ovSubtasks,tsh:ovTaskShips,ord:ovOrder,sp:spots,clg:clgGetState?clgGetState():null,nav:navGetState?navGetState():null,horas:horasGetState?horasGetState():null,pessoal:pessoalGetState?pessoalGetState():null,ppss:ppssGetState?ppssGetState():null,gar:garGetState?garGetState():null});}
@@ -5335,6 +5349,7 @@ setTimeout(hideSplash,12000);
     await initBk();
     var tag0=document.getElementById("backend_tag");
     paintSyncTag(tag0);
+    paintSyncBanner();
     try{updCache();}catch(e){}
     await loadAll();
     await loadLastEdits();
