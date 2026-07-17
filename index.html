@@ -1195,6 +1195,28 @@ body{padding-left:64px}
 .aa-login-err.on{display:block}
 .aa-login-hint{font-size:11px;color:var(--text3);text-align:center;margin-top:14px;line-height:1.5}
 .hbtn.aa-authbtn{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ── Painel de administração (Fase 3b) ── */
+.aa-admin{display:none;position:fixed;inset:0;z-index:9400;align-items:flex-start;justify-content:center;padding:40px 16px;background:rgba(20,24,30,.55);overflow:auto}
+.aa-admin.on{display:flex}
+.aa-admin-card{width:100%;max-width:720px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-lg)}
+.aa-admin-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--header-bg);color:#fff;border-radius:var(--r-lg) var(--r-lg) 0 0}
+.aa-admin-head h2{margin:0;font-size:16px;font-weight:700;letter-spacing:.5px}
+.aa-admin-x{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:var(--r-sm);width:28px;height:28px;cursor:pointer;font-size:14px}
+.aa-admin-body{padding:18px 20px}
+.aa-admin-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.aa-admin-msg{font-size:12.5px;padding:8px 12px;border-radius:var(--r-sm);margin-bottom:12px;display:none}
+.aa-admin-msg.on{display:block}
+.aa-admin-msg.err{background:var(--c-red2);color:var(--c-red);font-weight:600}
+.aa-admin-msg.ok{background:var(--c-teal2);color:var(--c-teal);font-weight:600}
+.aa-admin-utable{width:100%;border-collapse:collapse;font-size:13px}
+.aa-admin-utable th,.aa-admin-utable td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--border)}
+.aa-admin-utable th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3)}
+.aa-admin-utable .u-off{opacity:.5}
+.aa-admin-utable button{font-size:11px;padding:3px 7px;margin:0 2px 2px 0}
+.aa-admin-form{border-top:1px solid var(--border);margin-top:14px;padding-top:14px}
+.aa-admin-form h3{margin:0 0 10px;font-size:14px}
+.aa-admin-form label{display:block;font-size:12px;color:var(--text2);margin-bottom:10px}
+.aa-admin-form input,.aa-admin-form select{width:100%;box-sizing:border-box;padding:8px 10px;margin-top:3px;font-family:var(--sans);font-size:13px;background:var(--bg-base);color:var(--text);border:1px solid var(--border2);border-radius:var(--r-sm)}
 .btn.redo-btn{border-color:var(--c-blue);color:var(--c-blue)}
 .btn.redo-btn:hover{background:var(--c-sky)}
 .btn.redo-btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
@@ -1832,6 +1854,28 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
     </div>
   </form>
 </div>
+<div class="aa-admin" id="aa_admin">
+  <div class="aa-admin-card">
+    <div class="aa-admin-head"><h2>⚙ Administração</h2><button class="aa-admin-x" id="aa_admin_close" title="Fechar">✕</button></div>
+    <div class="aa-admin-body">
+      <div class="aa-admin-row">
+        <button class="btn" id="aa_admin_reload">↻ Atualizar lista</button>
+        <button class="btn primary" id="aa_admin_new">+ Nova conta</button>
+      </div>
+      <div class="aa-admin-msg" id="aa_admin_msg"></div>
+      <div id="aa_admin_list"></div>
+      <form class="aa-admin-form" id="aa_admin_newform" style="display:none">
+        <h3>Nova conta</h3>
+        <label>E-mail <input id="aa_new_email" type="email" autocomplete="off" required></label>
+        <label>Senha provisória (mín. 8) <input id="aa_new_pw" type="text" autocomplete="off" required></label>
+        <label>Papel
+          <select id="aa_new_role"><option value="operador">Operador</option><option value="admin">Administrador</option></select>
+        </label>
+        <div class="aa-admin-row"><button class="btn" type="button" id="aa_new_cancel">Cancelar</button><button class="btn primary" type="submit">Criar conta</button></div>
+      </form>
+    </div>
+  </div>
+</div>
 <div id="splash" class="splash">
 <div class="splash-waves"><svg class="w1" viewBox="0 0 1600 200" preserveAspectRatio="none"><path d="M0,110 C200,150 200,70 400,110 C600,150 600,70 800,110 C1000,150 1000,70 1200,110 C1400,150 1400,70 1600,110 L1600,200 L0,200 Z" fill="rgba(255,255,255,.55)"></path></svg><svg class="w2" viewBox="0 0 1600 200" preserveAspectRatio="none"><path d="M0,130 C200,90 200,160 400,130 C600,90 600,160 800,130 C1000,90 1000,160 1200,130 C1400,90 1400,160 1600,130 L1600,200 L0,200 Z" fill="rgba(255,255,255,.45)"></path></svg></div>
 <div class="splash-bubbles">
@@ -1871,6 +1915,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
   </div>
   <div class="hright">
     <span class="synctag" id="backend_tag" title="Estado de gravação" style="background-color: rgba(247, 247, 247, 0.94); opacity: 0.8">⏳ verificando…</span>
+    <button class="hbtn" id="adminbtn" style="display:none" title="Administração">⚙ Admin</button>
     <button class="hbtn aa-authbtn" id="authbtn" style="display:none"></button>
     <button class="hbtn theme-toggle-btn" id="themebtn">🌙 Noturno</button>
     <select class="yearsel" id="yearsel" style="font-size: 12px"><option value="2026" selected="">2026</option></select>
@@ -2619,6 +2664,7 @@ function aaShowLogin(force){var el=document.getElementById("aa_login");if(!el)re
 function aaHideLogin(){var el=document.getElementById("aa_login");if(el)el.classList.remove("on");}
 function aaLoginError(msg){var e=document.getElementById("aa_login_err");if(!e)return;if(msg){e.textContent=msg;e.classList.add("on");}else{e.textContent="";e.classList.remove("on");}}
 function aaPaintAuth(){
+  var ab=document.getElementById("adminbtn");if(ab)ab.style.display=aaIsAdmin()?"":"none";
   var b=document.getElementById("authbtn");if(!b)return;
   if(aaLoggedIn()){
     var who=aaSession.email||"conta";var short=who.length>18?who.slice(0,17)+"…":who;
@@ -2648,6 +2694,88 @@ function aaPaintAuth(){
         aaLoginError(e.message||"Não foi possível entrar.");
         btn.disabled=false;btn.textContent="Entrar";
       }
+    });
+  });
+})();
+
+/* ═══════════ PAINEL ADMIN (Fase 3b) — chama a Edge Function admin-users ═══════════ */
+var AA_ADMIN_FN=SB_URL+"/functions/v1/admin-users";
+function aaEsc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function aaAdminMsg(text,kind){var m=document.getElementById("aa_admin_msg");if(!m)return;if(!text){m.className="aa-admin-msg";m.textContent="";return;}m.className="aa-admin-msg on "+(kind||"");m.textContent=text;}
+async function aaAdminCall(action,payload){
+  var tok=aaToken();
+  if(!tok)throw new Error("Sessão expirada — entre novamente.");
+  var b={action:action};if(payload)Object.assign(b,payload);
+  var r;
+  try{r=await fetch(AA_ADMIN_FN,{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+tok,"Content-Type":"application/json"},body:JSON.stringify(b)});}
+  catch(e){throw new Error("Sem conexão com o servidor de administração.");}
+  if(r.status===404)throw new Error("A função de administração ainda não foi publicada (ver COMO-PUBLICAR.md).");
+  var j={};try{j=await r.json();}catch(e){}
+  if(!r.ok)throw new Error(j.error||("Erro "+r.status));
+  return j;
+}
+function aaAdminRenderList(users){
+  var box=document.getElementById("aa_admin_list");if(!box)return;
+  if(!users||!users.length){box.innerHTML='<p style="color:var(--text3);font-size:13px">Nenhum usuário.</p>';return;}
+  var h='<table class="aa-admin-utable"><thead><tr><th>E-mail</th><th>Papel</th><th>Status</th><th>Ações</th></tr></thead><tbody>';
+  users.forEach(function(u){
+    var off=u.disabled;
+    h+='<tr class="'+(off?"u-off":"")+'"><td>'+aaEsc(u.email)+'</td>'
+      +'<td>'+(u.role==="admin"?"Administrador":"Operador")+'</td>'
+      +'<td>'+(off?"Desativado":"Ativo")+'</td>'
+      +'<td>'
+      +'<button class="btn" data-act="reset" data-id="'+aaEsc(u.id)+'" data-email="'+aaEsc(u.email)+'">Resetar senha</button>'
+      +'<button class="btn" data-act="toggle" data-id="'+aaEsc(u.id)+'" data-dis="'+(off?"0":"1")+'">'+(off?"Reativar":"Desativar")+'</button>'
+      +'<button class="btn" data-act="role" data-id="'+aaEsc(u.id)+'" data-role="'+(u.role==="admin"?"operador":"admin")+'">'+(u.role==="admin"?"↓ Operador":"↑ Admin")+'</button>'
+      +'</td></tr>';
+  });
+  h+='</tbody></table>';
+  box.innerHTML=h;
+  box.querySelectorAll("button[data-act]").forEach(function(b){b.addEventListener("click",aaAdminAction);});
+}
+async function aaAdminReload(){
+  aaAdminMsg("Carregando…");
+  try{var j=await aaAdminCall("list");aaAdminMsg("");aaAdminRenderList(j.users);}
+  catch(e){aaAdminMsg(e.message,"err");document.getElementById("aa_admin_list").innerHTML="";}
+}
+async function aaAdminAction(ev){
+  var b=ev.currentTarget;var act=b.getAttribute("data-act");var id=b.getAttribute("data-id");
+  try{
+    if(act==="reset"){
+      var np=prompt("Nova senha provisória para "+b.getAttribute("data-email")+" (mín. 8):");
+      if(!np)return;if(np.length<8){aaAdminMsg("Senha muito curta.","err");return;}
+      await aaAdminCall("reset_password",{user_id:id,password:np});
+      aaAdminMsg("Senha redefinida.","ok");
+    }else if(act==="toggle"){
+      var dis=b.getAttribute("data-dis")==="1";
+      await aaAdminCall("set_disabled",{user_id:id,disabled:dis});
+      aaAdminMsg(dis?"Conta desativada.":"Conta reativada.","ok");await aaAdminReload();
+    }else if(act==="role"){
+      var role=b.getAttribute("data-role");
+      if(!confirm("Mudar papel para "+role+"?"))return;
+      await aaAdminCall("set_role",{user_id:id,role:role});
+      aaAdminMsg("Papel atualizado.","ok");await aaAdminReload();
+    }
+  }catch(e){aaAdminMsg(e.message,"err");}
+}
+function aaAdminOpen(){var el=document.getElementById("aa_admin");if(!el)return;el.classList.add("on");aaAdminMsg("");document.getElementById("aa_admin_newform").style.display="none";aaAdminReload();}
+function aaAdminClose(){var el=document.getElementById("aa_admin");if(el)el.classList.remove("on");}
+(function aaWireAdmin(){
+  document.addEventListener("DOMContentLoaded",function(){
+    var ab=document.getElementById("adminbtn");if(ab)ab.addEventListener("click",aaAdminOpen);
+    var cx=document.getElementById("aa_admin_close");if(cx)cx.addEventListener("click",aaAdminClose);
+    var rl=document.getElementById("aa_admin_reload");if(rl)rl.addEventListener("click",aaAdminReload);
+    var nw=document.getElementById("aa_admin_new");if(nw)nw.addEventListener("click",function(){document.getElementById("aa_admin_newform").style.display="";});
+    var nc=document.getElementById("aa_new_cancel");if(nc)nc.addEventListener("click",function(){document.getElementById("aa_admin_newform").style.display="none";});
+    var nf=document.getElementById("aa_admin_newform");
+    if(nf)nf.addEventListener("submit",async function(ev){
+      ev.preventDefault();
+      var email=(document.getElementById("aa_new_email").value||"").trim();
+      var pw=document.getElementById("aa_new_pw").value||"";
+      var role=document.getElementById("aa_new_role").value;
+      if(!email||pw.length<8){aaAdminMsg("E-mail e senha (mín. 8) obrigatórios.","err");return;}
+      try{await aaAdminCall("create",{email:email,password:pw,role:role});aaAdminMsg("Conta criada: "+email,"ok");nf.reset();nf.style.display="none";await aaAdminReload();}
+      catch(e){aaAdminMsg(e.message,"err");}
     });
   });
 })();
