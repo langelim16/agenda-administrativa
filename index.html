@@ -7799,14 +7799,41 @@ function openPpssKpiDrawer(navio,metric){
     {key:"aditamentos",title:"Aditamento FR-171"},
     {key:"recInd",title:"REC IND"},
     {key:"faltaIndicar",title:"Falta Indicar"},
-    {key:"msgOmps",title:"MSG OMPS"},
-    {key:"msgNav",title:"MSG NAV"},
+    {key:"msgOmpsOrc",title:"OMPS – ORÇ"},
+    {key:"msgNavSolIndRec",title:"NAV – SOL IND REC"},
+    {key:"msgCominsupIndRec",title:"COMINSUP – IND REC"},
+    {key:"msgOmpsTermino",title:"OMPS-TÉRMINO"},
+    {key:"msgSatisfCancelado",title:"SATISFEITO / CANCELADO"},
     {key:"situacao",title:"Situação",type:"choice",options:["Concluído","Cancelado","Falta Indicar","Recurso Indicado","Orçado e não Indicado","Não orçado"]},
     {key:"altcredBnvc",title:"ALTCRED P/ BNVC"}
   ];
   // "navio"+"numero" protegidos: juntos identificam o pedido para reconciliação/importação.
   var PPSS_FIXED_KEYS=["navio","numero"];
   function ppssColsDefault(){return PPSS_FIXED.map(function(c){var o={key:c.key,title:c.title};if(c.type)o.type=c.type;if(c.options)o.options=c.options;return o;});}
+  // As 5 colunas de MSG da planilha PPSS (grupo "MSG"), na ordem em que aparecem lá.
+  // Os agentes de importação (scripts/ppss_extrair.py) leem/gravam por estas chaves.
+  var PPSS_MSG_KEYS=["msgOmpsOrc","msgNavSolIndRec","msgCominsupIndRec","msgOmpsTermino","msgSatisfCancelado"];
+  // Migração: o schema antigo tinha só "MSG OMPS"/"MSG NAV" (2 colunas, valores concatenados).
+  // Renomeia as chaves antigas para as novas e garante que as 5 colunas fixas existam, em ordem.
+  function ppssReconcileCols(cols,rows){
+    var RENAME={msgOmps:{key:"msgOmpsOrc",title:"OMPS – ORÇ"},msgNav:{key:"msgNavSolIndRec",title:"NAV – SOL IND REC"}};
+    cols.forEach(function(c){var rn=RENAME[c.key];if(rn){c.key=rn.key;c.title=rn.title;}});
+    rows.forEach(function(r){Object.keys(RENAME).forEach(function(oldK){var nk=RENAME[oldK].key;if(r[oldK]!==undefined){if(!r[nk])r[nk]=r[oldK];delete r[oldK];}});});
+    var byKey={};PPSS_FIXED.forEach(function(c){byKey[c.key]=c;});
+    var have={};cols.forEach(function(c){have[c.key]=true;});
+    var prevKey="faltaIndicar";
+    PPSS_MSG_KEYS.forEach(function(k){
+      if(!have[k]){
+        var f=byKey[k],keys=cols.map(function(c){return c.key;});
+        var idx=keys.indexOf(prevKey);
+        if(idx<0){idx=keys.indexOf("situacao");idx=(idx<0?cols.length:idx);}else{idx=idx+1;}
+        cols.splice(idx,0,{key:f.key,title:f.title});
+      }
+      prevKey=k;
+    });
+    rows.forEach(function(r){PPSS_MSG_KEYS.forEach(function(k){if(r[k]===undefined)r[k]="";});});
+    return cols;
+  }
   var ppssRows=[],ppssCols=ppssColsDefault(),ppssCards=[],ppssBound=false;
   var ppssEditing=false,ppssDirty=false,ppssSnapshot=null,ppssColsSnapshot=null;
   var ppssCardSt={editingId:null,dirty:false,snapshot:null};
@@ -7817,7 +7844,7 @@ function openPpssKpiDrawer(navio,metric){
     try{r=await gtj(PPSS_KEY);}catch(e){}
     ppssRows=(r&&r.length)?r:[];
     try{c=await gtj(PPSS_COLS_KEY);}catch(e){}
-    ppssCols=migrateCols(c,PPSS_FIXED,ppssRows);
+    ppssCols=ppssReconcileCols(migrateCols(c,PPSS_FIXED,ppssRows),ppssRows);
     ppssCols.forEach(function(col){var f=PPSS_FIXED.find(function(x){return x.key===col.key;});if(f&&f.options){col.type=f.type;col.options=f.options;}});
     try{cd=await gtj(PPSS_CARDS_KEY);}catch(e){}
     ppssCards=(cd&&cd.length)?cd:[];
@@ -7970,7 +7997,7 @@ function openPpssKpiDrawer(navio,metric){
         '<div class="ps-main">'+
           '<div class="ps-num">Pedido '+esc(r.numero||"s/n")+' · '+esc(r.omps||"—")+(r.ds?" · DS "+esc(r.ds):"")+'</div>'+
           '<div class="ps-desc">'+esc(r.descricao||"—")+'</div>'+
-          '<div class="ps-meta">'+orc+(r.msgOmps?" · MSG OMPS: "+esc(r.msgOmps):"")+'</div>'+
+          '<div class="ps-meta">'+orc+(r.msgOmpsOrc?" · OMPS – ORÇ: "+esc(r.msgOmpsOrc):"")+'</div>'+
         '</div>'+
         '<div class="ps-chips">'+chips+'</div>'+
       '</div>';
@@ -8106,7 +8133,7 @@ function openPpssKpiDrawer(navio,metric){
       getEditing:function(){return ppssEditing;},setEditing:function(v){ppssEditing=v;},
       getDirty:function(){return ppssDirty;},setDirty:function(v){ppssDirty=v;},
       getSnap:function(){return ppssSnapshot;},setSnap:function(v){ppssSnapshot=v;},
-      newRowFn:function(){return{id:genUid("ps"),navio:"",tipo:"",numero:"",descricao:"",omps:"",ds:"",orcamento:"",aditamentos:"",faltaIndicar:"",altEscopo:"",msgOmps:"",msgNav:"",situacao:""};},
+      newRowFn:function(){return{id:genUid("ps"),navio:"",tipo:"",numero:"",descricao:"",omps:"",ds:"",orcamento:"",aditamentos:"",recInd:"",faltaIndicar:"",msgOmpsOrc:"",msgNavSolIndRec:"",msgCominsupIndRec:"",msgOmpsTermino:"",msgSatisfCancelado:"",situacao:"",altcredBnvc:""};},
       addRowBtnId:"ppss_tbl_addrow",
       getTitles:function(){return ppssCols;},setTitles:function(v){ppssCols=v;},
       saveTitlesFn:ppssSaveCols,titlesKey:PPSS_COLS_KEY,

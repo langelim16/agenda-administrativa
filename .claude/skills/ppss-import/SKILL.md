@@ -100,19 +100,17 @@ procurar pelo conteúdo em vez de falhar.
   - `ALTCRED P/ BNVC` → `altcredBnvc` (coluna própria desde 15/07/2026).
   - `FALTA INDICAR` (fórmula = Orçamento − REC IND, já calculada na
     planilha) → `faltaIndicar`.
-  - `MSG` → **não vai para uma coluna única**; cada mensagem tem um
-    DATAHORA — incluir cada uma separadamente no resumo do PPSS (painel
-    lateral direito do app), listada por data/hora. Gravar em `msgOmps`
-    (mensagens da OMPS) e `msgNav` (mensagens do Navio) conforme a origem
-    indicada na planilha, preservando o texto com data/hora de cada
-    lançamento (não sobrescrever o que o usuário já tiver preenchido
-    manualmente — só anexar o que for novo).
-  - `OMPS ORÇ` (Orçamento da OMPS), `NAV - SOL IND REC` (Navio solicitando
-    Indicação de Recurso), `COMIMSUP - IND REC` (Indicação de Recurso pelo
-    COMIMSUP), `OMPS - TÉRMINO` (término do serviço pela OMPS),
-    `SATISFEITO/CANCELADO` (pelo Navio) → sem coluna própria no schema
-    ainda; tratar como contexto para o resumo lateral (mesmo tratamento de
-    `MSG`, com datas quando houver) até o usuário definir campos formais.
+  - `MSG` → grupo com **5 colunas dedicadas** (desde 17/07/2026), uma chave
+    por coluna da planilha, na ordem em que aparecem:
+    - `OMPS – ORÇ` (Orçamento da OMPS) → `msgOmpsOrc`
+    - `NAV – SOL IND REC` (Navio solicitando Indicação de Recurso) → `msgNavSolIndRec`
+    - `COMINSUP – IND REC` (Indicação de Recurso pelo COMINSUP; variantes
+      `COMINSUP/NAV – IND REC`, `COMINSUP/NAVIO – IND REC` caem na mesma) → `msgCominsupIndRec`
+    - `OMPS-TÉRMINO` (término do serviço pela OMPS) → `msgOmpsTermino`
+    - `SATISFEITO / CANCELADO` (pelo Navio) → `msgSatisfCancelado`
+    Gravar o texto de cada célula (com data/hora, ex.: `R291858Z/JAN/2026`;
+    células com mais de uma mensagem têm uma por linha) na sua chave. Não
+    sobrescrever o que o usuário já preencheu manualmente — só anexar o novo.
   - `SITUAÇÃO` → `situacao`, vem da **cor de fundo da linha** (mesma dos 6
     KPI coloridos exibidos abaixo dos KPI Programas/Correntes no app — as
     cores e nomes já batem 1:1 com o mapeamento de `COR_SITUACAO` abaixo).
@@ -132,8 +130,9 @@ procurar pelo conteúdo em vez de falhar.
 2. Buscar o estado atual de `aa_ppss_v1` no Supabase.
 3. Para cada pedido do extrator: upsert por `navio`+`numero` (atualiza se já
    existe, insere se novo). **Preservar campos manuais do app não presentes
-   na planilha** (ex.: `msgOmps`, `msgNav` se o usuário já os preencheu
-   manualmente) — só sobrescrever os campos que a planilha de fato traz.
+   na planilha** (ex.: as 5 colunas de MSG — `msgOmpsOrc`, `msgNavSolIndRec`,
+   `msgCominsupIndRec`, `msgOmpsTermino`, `msgSatisfCancelado` — se o usuário
+   já os preencheu) — só sobrescrever os campos que a planilha de fato traz.
 4. Pedidos que existem em `aa_ppss_v1` mas não apareceram na extração atual
    (removidos da planilha) → listar como sugestão de remoção, aguardar
    aprovação antes de excluir.

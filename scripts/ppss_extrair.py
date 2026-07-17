@@ -47,13 +47,14 @@ TEXTO_SITUACAO = {
 }
 NAVIOS = ['NHoGSampaio', 'NHiBTenCastelo', 'AvHoFluRioTocantins', 'AvHoFluRioXingu']
 
-# (índice de coluna, rótulo) das 5 colunas de MSG e destino msgOmps/msgNav
+# (índice de coluna, chave-destino) das 5 colunas do grupo "MSG" da planilha PPSS.
+# Cada coluna vira uma coluna dedicada na tabela do app (chaves espelham index.html).
 MSG_COLS = [
-    (12, 'OMPS ORÇ', 'msgOmps'),
-    (13, 'NAV – SOL IND REC', 'msgNav'),
-    (14, 'COMINSUP – IND REC', 'msgNav'),
-    (15, 'OMPS-TÉRMINO', 'msgOmps'),
-    (16, 'SATISFEITO/CANCELADO', 'msgNav'),
+    (12, 'msgOmpsOrc'),          # OMPS – ORÇ
+    (13, 'msgNavSolIndRec'),     # NAV – SOL IND REC
+    (14, 'msgCominsupIndRec'),   # COMINSUP – IND REC
+    (15, 'msgOmpsTermino'),      # OMPS-TÉRMINO
+    (16, 'msgSatisfCancelado'),  # SATISFEITO / CANCELADO
 ]
 
 
@@ -124,12 +125,8 @@ def extrair_arquivo(f, tipo):
             situacao = TEXTO_SITUACAO.get(sit_txt, '') or COR_SITUACAO.get(bg, '')
             # Aditamento = FR-171 (6) + ADT 01 (7)
             adit = ' + '.join(v for v in (_txt(r, 6), _txt(r, 7)) if v)
-            # MSG: cada coluna vira uma linha rotulada em msgOmps/msgNav
-            msgs = {'msgOmps': [], 'msgNav': []}
-            for i, rotulo, destino in MSG_COLS:
-                v = _txt(r, i)
-                if v:
-                    msgs[destino].append('%s: %s' % (rotulo, v))
+            # MSG: cada coluna do grupo "MSG" vai para sua própria chave dedicada.
+            msgs = {key: _txt(r, i) for i, key in MSG_COLS}
             orcamento = _txt(r, 5)
             # Recurso Indicado Integral: quando a situação é "Recurso Indicado" e a
             # planilha não repete o valor na col REC IND (preenchedor só marca a
@@ -150,8 +147,11 @@ def extrair_arquivo(f, tipo):
                 'recInd': recInd,
                 'faltaIndicar': _txt(r, 10),
                 'altEscopo': _txt(r, 11),
-                'msgOmps': '\n'.join(msgs['msgOmps']),
-                'msgNav': '\n'.join(msgs['msgNav']),
+                'msgOmpsOrc': msgs['msgOmpsOrc'],
+                'msgNavSolIndRec': msgs['msgNavSolIndRec'],
+                'msgCominsupIndRec': msgs['msgCominsupIndRec'],
+                'msgOmpsTermino': msgs['msgOmpsTermino'],
+                'msgSatisfCancelado': msgs['msgSatisfCancelado'],
                 'situacao': situacao,
                 'situacaoCor': bg or '',
                 'altcredBnvc': _txt(r, 18),
@@ -298,10 +298,16 @@ def extrair_xlsx(f, tipo):
         return ('R$ {:,.2f}'.format(n)
                 .replace(',', 'X').replace('.', ',').replace('X', '.'))
 
-    MSG_XLSX = [('OMPS – ORÇ', 'msgOmps'), ('NAV – SOL IND REC', 'msgNav'),
-                ('COMINSUP – IND REC', 'msgNav'), ('COMINSUP/NAV – IND REC', 'msgNav'),
-                ('COMINSUP/NAVIO – IND REC', 'msgNav'),
-                ('OMPS-TÉRMINO', 'msgOmps'), ('SATISFEITO / CANCELADO', 'msgNav')]
+    # (rótulo do cabeçalho na planilha, chave-destino dedicada). As variantes de
+    # COMINSUP caem todas em msgCominsupIndRec.
+    MSG_XLSX = [('OMPS – ORÇ', 'msgOmpsOrc'), ('NAV – SOL IND REC', 'msgNavSolIndRec'),
+                ('COMINSUP – IND REC', 'msgCominsupIndRec'),
+                ('COMINSUP/NAV – IND REC', 'msgCominsupIndRec'),
+                ('COMINSUP/NAVIO – IND REC', 'msgCominsupIndRec'),
+                ('OMPS-TÉRMINO', 'msgOmpsTermino'),
+                ('SATISFEITO / CANCELADO', 'msgSatisfCancelado')]
+    MSG_KEYS = ['msgOmpsOrc', 'msgNavSolIndRec', 'msgCominsupIndRec',
+                'msgOmpsTermino', 'msgSatisfCancelado']
     pedidos = []
     for sheet in wb.iter(nsx + 'sheet'):
         navio = sheet.get('name')
@@ -355,14 +361,15 @@ def extrair_xlsx(f, tipo):
             # planilha significa indicado = orçado integralmente.
             if not rec and situacao == 'Recurso Indicado':
                 rec = orc
-            msgs = {'msgOmps': [], 'msgNav': []}
+            msgs = {k: [] for k in MSG_KEYS}
             for rotulo, destino in MSG_XLSX:
                 idxs = hdr.get(rotulo)
                 if not idxs:
                     continue
                 v = str(vals.get(idxs[0], '')).strip()
                 if v:
-                    msgs[destino].append('%s: %s' % (rotulo, v))
+                    msgs[destino].append(v)
+            msgs = {k: '\n'.join(v) for k, v in msgs.items()}
             pedidos.append({
                 'navio': navio, 'tipo': tipo,
                 'numero': numero,
@@ -374,8 +381,11 @@ def extrair_xlsx(f, tipo):
                 'recInd': fmt_money(rec),
                 'faltaIndicar': fmt_money(str(vals.get(c_falta, '')).strip()) if c_falta is not None else '',
                 'altEscopo': str(vals.get(c_altesc, '')).strip() if c_altesc is not None else '',
-                'msgOmps': '\n'.join(msgs['msgOmps']),
-                'msgNav': '\n'.join(msgs['msgNav']),
+                'msgOmpsOrc': msgs['msgOmpsOrc'],
+                'msgNavSolIndRec': msgs['msgNavSolIndRec'],
+                'msgCominsupIndRec': msgs['msgCominsupIndRec'],
+                'msgOmpsTermino': msgs['msgOmpsTermino'],
+                'msgSatisfCancelado': msgs['msgSatisfCancelado'],
                 'situacao': situacao,
                 'situacaoCor': bg or '',
                 'altcredBnvc': str(vals.get(c_altcred, '')).strip() if c_altcred is not None else '',
