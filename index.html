@@ -2418,6 +2418,23 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
   </div>
 </div>
 
+<div class="dt-section-head">
+  <div class="dt-title-wrap"><h3 class="dt-table-title">PMPE — Comissões (PDF → tabela Comissões do CONDEF)</h3><span class="last-edit">Use o PDF <b>mais recente</b> (ex.: PMPE JUL-2026 PARTE I.pdf). Só entram comissões em andamento ou previstas dos meios do CHN-4 — as já encerradas são descartadas.</span></div>
+</div>
+<div class="stats-card" style="flex:none;margin-bottom:18px">
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <input type="file" id="imp_pmpe_file" accept=".pdf" multiple style="font-size:12px;max-width:100%">
+    <button class="btn primary" id="imp_pmpe_read">🔍 Ler e conferir</button>
+  </div>
+  <div style="font-size:10.5px;color:var(--text3);margin-top:8px">Campos que você editou manualmente na tabela Comissões (travados) <b>nunca</b> são sobrescritos, e status como "A ser adiada" é decisão sua — o importador não mexe. Comissão que sumiu do PMPE vira <b>sugestão</b> de remoção, nunca pré-marcada. Nada é gravado antes da sua conferência.</div>
+  <div id="imp_pmpe_avisos" style="margin-top:10px"></div>
+  <div id="imp_pmpe_prev" style="margin-top:12px"></div>
+  <div id="imp_pmpe_actions" style="display:none;justify-content:flex-end;gap:8px;margin-top:12px">
+    <button class="btn" id="imp_pmpe_clear">Limpar</button>
+    <button class="btn primary" id="imp_pmpe_save">✓ Gravar itens selecionados</button>
+  </div>
+</div>
+
 <div class="foot">Importar · Planilhas mensais ·</div>
 </div>
 
@@ -2537,6 +2554,7 @@ var navGetComissoes; // tabela Comissões do CONDEF p/ o importador de CLG (dias
 var pessoalInit,renderPessoal,pessoalGetState,pessoalSetState;
 var ppssInit,renderPpss,garInit,renderGaragem,ppssGetState,ppssSetState,garGetState,garSetState;
 var ppssImportBind; // liga o bloco PPSS da aba Importar (definido no módulo PPSS, chamado pelo importInit)
+var pmpeImportBind; // liga o bloco PMPE da aba Importar (definido no módulo CONDEF, chamado pelo importInit)
 // Cadeado de edição compartilhado por TODAS as abas (Navios/CLG/Horas/Pessoal): enquanto qualquer
 // tabela ou cartão estiver em edição não salva, nenhuma outra seção do app pode iniciar edição —
 // evita sobreposição de dados entre abas. Cada módulo só troca seu cadeado local por este.
@@ -6529,6 +6547,317 @@ setTimeout(hideSplash,12000);
   navGetState=function(){return{ships:JSON.parse(JSON.stringify(navShips)),cards:JSON.parse(JSON.stringify(navCards)),cols:cloneCols(navCols)};};
   // Consulta das comissões pelo importador de CLG sem precisar abrir a aba CONDEF (carrega sob demanda).
   navGetComissoes=async function(){if(!navComissoes.length)await navLoadComissoes();return navComissoes;};
+  /* ── ABA IMPORTAR — PMPE (PDF → tabela Comissões do CONDEF) ──
+     Extração POSICIONAL validada contra os PDFs reais: cada página é uma tabela sem
+     bordas; as colunas vêm dos centros dos rótulos do cabeçalho (linhas 8/9 visuais)
+     e as linhas (eventos) das células da coluna EVENTO — o código NN.NN fica no FUNDO
+     da célula, as referências "EVT …" acima. Runs contíguos na mesma linha visual são
+     pré-fundidos (senão um hífen solto cai na coluna vizinha e quebra a de-hifenização).
+     Regras do skill pmpe-import: só eventos PMPE (ADM fora); comissão encerrada
+     (fim < hoje) NUNCA é lançada; campos em manualFields NUNCA são sobrescritos;
+     status "A ser adiada"/"Cancelada" é decisão manual — o automático só troca entre
+     Em andamento/Prevista/Concluída; linha sumida do PMPE vira sugestão de remoção,
+     nunca pré-marcada. ── */
+  var PMPE_IMP_MESES={JAN:1,FEV:2,MAR:3,ABR:4,MAI:5,JUN:6,JUL:7,AGO:8,SET:9,OUT:10,NOV:11,DEZ:12};
+  var PMPE_IMP_DISTINTIVO=[["garnier sampaio","NHoGSampaio"],["tenente castelo","NHiBTenCastelo"],["rio tocantins","AvHoFluRioTocantins"],["rio xingu","AvHoFluRioXingu"],["vega","AvBVega"],["denebola","AvBDenébola"],["denébola","AvBDenébola"],["regulus","AvBRégulus"],["régulus","AvBRégulus"],["boto","AvBBoto"]];
+  function pmpeImpMeio(unidade){
+    var u=String(unidade||"").toLowerCase();
+    for(var i=0;i<PMPE_IMP_DISTINTIVO.length;i++)if(u.indexOf(PMPE_IMP_DISTINTIVO[i][0])>=0)return PMPE_IMP_DISTINTIVO[i][1];
+    return null;
+  }
+  function pmpeImpCellLines(runs){
+    var lines=[];
+    runs.slice().sort(function(a,b){return b.y-a.y||a.x-b.x;}).forEach(function(r){
+      var last=lines[lines.length-1];
+      if(last&&Math.abs(last.y-r.y)<2)last.text+=" "+r.text;
+      else lines.push({y:r.y,text:r.text});
+    });
+    return lines.map(function(l){return l.text.replace(/\s+/g," ").trim();}).filter(Boolean);
+  }
+  function pmpeImpJoinLines(lines){
+    var out="";
+    lines.forEach(function(l){
+      if(/-$/.test(out))out=out.replace(/-$/,"")+l; // hifenização quebrada entre linhas
+      else out+=(out?" ":"")+l;
+    });
+    return out.replace(/[“”]/g,'"').replace(/\s+/g," ").trim();
+  }
+  function pmpeImpPeriodo(txt,mesRef,anoRef){
+    var t=String(txt||"").replace(/\s+/g,"").toUpperCase();
+    function d(dia,mes,ano){return String(dia).padStart(2,"0")+"/"+String(mes).padStart(2,"0")+"/"+ano;}
+    var m=/^(\d{1,2})A(\d{1,2})$/.exec(t);
+    if(m)return[d(+m[1],mesRef,anoRef),d(+m[2],mesRef,anoRef)];
+    m=/^(\d{1,2})([A-ZÇ]{3})?A(\d{1,2})([A-ZÇ]{3})?$/.exec(t);
+    if(m){
+      var m1=m[2]?PMPE_IMP_MESES[m[2]]:mesRef,m2=m[4]?PMPE_IMP_MESES[m[4]]:mesRef;
+      if(!m1||!m2)return[null,null];
+      return[d(+m[1],m1,anoRef),d(+m[3],m2,(m2>=m1)?anoRef:anoRef+1)];
+    }
+    return[null,null];
+  }
+  function pmpeImpEventos(pages,mesRef,anoRef,avisos){
+    var eventos=[];
+    var HDRS=[["EVENTO","evento"],["GRUPAMENTO","gpt"],["UNIDADE","unidade"],["PERÍODO","periodo"],["ÁREA/PORTO","area"],["OPERAÇÕES/EXERCÍCIO","oper"],["OBSERVAÇÕES","obs"]];
+    pages.forEach(function(pg){
+      var cols=[],hdrY=null;
+      HDRS.forEach(function(h){
+        var r=pg.runs.find(function(x){return x.text.trim().toUpperCase()===h[0];});
+        if(r){cols.push({key:h[1],cx:r.x+r.w/2});if(h[1]==="evento")hdrY=r.y;}
+      });
+      if(cols.length<6||hdrY==null)return; // página sem a tabela (capa etc.)
+      cols.sort(function(a,b){return a.cx-b.cx;});
+      function colOf(run){
+        var cx=run.x+(run.w||0)/2,best=null,bd=1e9;
+        cols.forEach(function(c){var d=Math.abs(cx-c.cx);if(d<bd){bd=d;best=c.key;}});
+        return best;
+      }
+      var JUNK=/DOCUMENTO PREPARAT|Art\. 3|^[-\s]*\d+\s+de\s+\d+[-\s]*$|MARINHA DO BRASIL|COMANDO DO|Programa de Movi|M[ÊE]S:/;
+      // pré-fusão de runs contíguos na mesma linha visual (vão < 2.5pt)
+      var merged=[];
+      pg.runs.filter(function(r){return r.y<hdrY-6;})
+        .sort(function(a,b){return b.y-a.y||a.x-b.x;})
+        .forEach(function(r){
+          var last=merged[merged.length-1];
+          if(last&&Math.abs(last.y-r.y)<2&&(r.x-(last.x+last.w))<2.5){last.text+=r.text;last.w=(r.x+r.w)-last.x;}
+          else merged.push({x:r.x,y:r.y,w:r.w||0,text:r.text});
+        });
+      var body=merged.filter(function(r){return !JUNK.test(r.text.trim());});
+      // células da coluna EVENTO → clusters por vão vertical; vãos internos chegam a
+      // ~31pt (parágrafos entre referências), entre linhas o vão é ≥60 → limiar 45
+      var evRuns=body.filter(function(r){return colOf(r)==="evento";}).sort(function(a,b){return b.y-a.y;});
+      var clusters=[];
+      evRuns.forEach(function(r){
+        var cur=clusters[clusters.length-1];
+        if(cur&&(cur.bottom-r.y)<45){cur.runs.push(r);cur.bottom=Math.min(cur.bottom,r.y);}
+        else clusters.push({top:r.y,bottom:r.y,runs:[r]});
+      });
+      // um cluster pode conter MAIS de um evento (células quase encostadas): divide
+      // pelos códigos — cada bloco vai até o "(PMPE)"/"(ADM)" do seu código
+      var rows=[];
+      clusters.forEach(function(cl){
+        var rs=cl.runs,blockStart=0;
+        for(var i2=0;i2<rs.length;i2++){
+          if(!/^\d{2}\.\d{2}$/.test(rs[i2].text.trim()))continue;
+          var endI=i2;
+          if(endI+1<rs.length&&/^\((PMPE|ADM)\)$/.test(rs[endI+1].text.trim()))endI++;
+          rows.push({top:rs[blockStart].y,code:rs[i2]});
+          blockStart=endI+1;
+        }
+      });
+      rows.sort(function(a,b){return b.top-a.top;});
+      rows.forEach(function(rw,ci){
+        var cr=rw.code;
+        // +12: a 1ª linha das células vizinhas fica alguns pontos acima do 1º run da célula EVENTO
+        var topo=rw.top+12;
+        var fundo=(ci+1<rows.length)?rows[ci+1].top+12:-1e9;
+        var band=body.filter(function(r){return r.y<=topo&&r.y>fundo;});
+        var tipoRun=band.find(function(r){return /^\((PMPE|ADM)\)$/.test(r.text.trim())&&colOf(r)==="evento";});
+        var tipo=tipoRun?tipoRun.text.replace(/[()]/g,""):"PMPE";
+        var cell={};
+        band.forEach(function(r){var k2=colOf(r);(cell[k2]||(cell[k2]=[])).push(r);});
+        var unidade=pmpeImpJoinLines(pmpeImpCellLines(cell.unidade||[]));
+        var meio=pmpeImpMeio(unidade);
+        if(!meio)return; // não é meio do artefato
+        var periodoTxt=pmpeImpJoinLines(pmpeImpCellLines(cell.periodo||[]));
+        var per=pmpeImpPeriodo(periodoTxt,mesRef,anoRef);
+        var area=pmpeImpJoinLines(pmpeImpCellLines(cell.area||[]));
+        var operLines=pmpeImpCellLines(cell.oper||[]);
+        // operação = linhas iniciais TODAS EM CAIXA-ALTA; o resto é o propósito
+        var opNome=[];
+        for(var li=0;li<operLines.length;li++){
+          var l=operLines[li];
+          if(l===l.toUpperCase()&&/[A-ZÀ-Ü]/.test(l))opNome.push(l);
+          else break;
+        }
+        var operacao=pmpeImpJoinLines(opNome).replace(/\.$/,"");
+        var obsLines=pmpeImpCellLines(cell.obs||[]);
+        var clg=[];
+        obsLines.forEach(function(l){
+          var mm=/^\(?\d?\)?\s*([A-ZÇ]{2,6}):\s*([\d.,]+)\s*L\.?$/.exec(l.trim());
+          if(mm&&mm[1]!=="TOTAL")clg.push(mm[1]+": "+mm[2]+"L");
+        });
+        var dm=/Dura[çc][ãa]o:\s*(\d+)\s*DC/i.exec(pmpeImpJoinLines(obsLines));
+        if(per[0]==null&&avisos)avisos.push("evento "+cr.text.trim()+" ("+meio+"): período \""+periodoTxt+"\" não reconhecido — informe as datas na prévia");
+        eventos.push({nEvt:cr.text.trim(),tipo:tipo,meio:meio,inicio:per[0],fim:per[1],periodoTexto:periodoTxt,area:area,operacao:operacao,clg:clg.join("\n"),duracao:dm?+dm[1]:null});
+      });
+    });
+    return eventos;
+  }
+  var impPmpeItens=[],impPmpeAvisos=[];
+  function pmpeImpDate(s){
+    var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s||"").trim());
+    if(m)return new Date(+m[1],+m[2]-1,+m[3]).getTime();
+    m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(s||"").trim());
+    if(m)return new Date(+m[3],+m[2]-1,+m[1]).getTime();
+    return null;
+  }
+  function pmpeImpStatusAuto(iniT,fimT){
+    var hoje=new Date();hoje.setHours(0,0,0,0);var t=hoje.getTime();
+    if(iniT!=null&&t<iniT)return"Prevista";
+    if(fimT!=null&&t>fimT)return"Concluída";
+    return"Em andamento";
+  }
+  // status que o importador PODE trocar; "A ser adiada"/"Cancelada" são decisões manuais
+  var PMPE_IMP_STATUS_AUTO={"":1,"Em andamento":1,"Prevista":1,"Concluída":1};
+  function impPmpeMontar(eventos){
+    impPmpeItens=[];
+    var hoje=new Date();hoje.setHours(0,0,0,0);var tHoje=hoje.getTime();
+    var vistos={},descartadas=0;
+    eventos.forEach(function(e){
+      if(e.tipo==="ADM")return; // ADM não é comissão operativa
+      vistos[e.meio+"|"+e.nEvt]=true;
+      var fimT=pmpeImpDate(e.fim);
+      if(fimT!=null&&fimT<tHoje){descartadas++;return;} // encerrada: nunca lançar
+      var row=navComissoes.find(function(r){return String(r.meio||"").trim()===e.meio&&String(r.pmpe||"").trim()===e.nEvt;});
+      var it={e:e,meio:e.meio,pmpe:e.nEvt,comissao:e.operacao,inicio:e.inicio,fim:e.fim,sel:false,info:""};
+      if(!row){
+        it.kind="novo";
+        if(e.inicio==null){it.status="datas";it.info="período \""+e.periodoTexto+"\" não reconhecido — informe início e fim";}
+        else{it.sel=true;it.info=e.area.slice(0,60);}
+        impPmpeItens.push(it);return;
+      }
+      it.rowId=row.id;
+      var manual=Array.isArray(row.manualFields)?row.manualFields:[];
+      var muda=[],travados=[];
+      var novo={comissao:e.operacao,inicio:e.inicio,fim:e.fim,localizacao:e.area,clg:e.clg};
+      Object.keys(novo).forEach(function(k){
+        if(novo[k]==null||novo[k]==="")return; // nunca apaga com vazio
+        var atual=String(row[k]||"");
+        var igual=(k==="inicio"||k==="fim")?(pmpeImpDate(atual)===pmpeImpDate(novo[k])):(atual===String(novo[k]));
+        if(igual)return;
+        if(manual.indexOf(k)>=0){travados.push(k);return;}
+        muda.push(k);
+      });
+      var stAuto=pmpeImpStatusAuto(pmpeImpDate(e.inicio),fimT);
+      if(e.inicio!=null&&manual.indexOf("status")<0&&PMPE_IMP_STATUS_AUTO[String(row.status||"")]&&String(row.status||"")!==stAuto)muda.push("status");
+      if(muda.length){it.kind="upd";it.sel=true;it.muda=muda;it.stAuto=stAuto;it.info=muda.join(", ")+(travados.length?" · travados preservados: "+travados.join(", "):"");}
+      else{it.kind="emdia";it.info=travados.length?"travados preservados: "+travados.join(", "):"";}
+      impPmpeItens.push(it);
+    });
+    // linhas não-terminais que não constam mais do PMPE lido → SUGESTÃO de remoção
+    navComissoes.forEach(function(r){
+      var st=String(r.status||"");
+      if(st==="Concluída"||st==="Cancelada")return;
+      if(vistos[String(r.meio||"").trim()+"|"+String(r.pmpe||"").trim()])return;
+      impPmpeItens.push({kind:"remover",rowId:r.id,meio:r.meio,pmpe:r.pmpe,comissao:r.comissao||"",inicio:r.inicio,fim:r.fim,sel:false,info:"não consta no PMPE lido — remova só se tiver certeza"});
+    });
+    if(descartadas)impPmpeAvisos.push(descartadas+" comissão(ões) do PDF já encerrada(s) (fim antes de hoje) — descartada(s), nunca são lançadas");
+  }
+  var PMPE_IMP_K={
+    novo:{lbl:"Nova comissão",cor:"var(--c-teal)"},
+    upd:{lbl:"Atualizar",cor:"var(--c-blue)"},
+    emdia:{lbl:"Em dia",cor:"var(--text3)"},
+    datas:{lbl:"Informe as datas",cor:"var(--c-gold)"},
+    remover:{lbl:"REMOVER? sumiu do PMPE",cor:"var(--c-red)"}
+  };
+  function pmpeImpPronto(it){
+    if(it.kind==="novo"&&it.status==="datas")return !!(it.inicio&&it.fim);
+    return it.kind!=="emdia";
+  }
+  function impPmpeRender(){
+    var prev=document.getElementById("imp_pmpe_prev"),av=document.getElementById("imp_pmpe_avisos"),act=document.getElementById("imp_pmpe_actions");
+    if(!prev)return;
+    av.innerHTML=impPmpeAvisos.map(function(a){return '<div class="ferias-msg warn" style="margin-top:6px">⚠ '+esc(a)+'</div>';}).join("");
+    if(!impPmpeItens.length){prev.innerHTML="";act.style.display="none";return;}
+    prev.innerHTML='<div class="dt-table-wrap"><table class="dt-table"><thead><tr>'+
+      '<th style="width:26px"></th><th>Meio</th><th>PMPE</th><th>Comissão</th><th>Início</th><th>Fim</th><th>Ação</th><th>Detalhe</th>'+
+      '</tr></thead><tbody>'+
+      impPmpeItens.map(function(it,i){
+        var st=(it.kind==="novo"&&it.status==="datas")?PMPE_IMP_K.datas:PMPE_IMP_K[it.kind];
+        var selecionavel=it.kind!=="emdia";
+        var chk=selecionavel?'<input type="checkbox" data-i="'+i+'"'+(it.sel?" checked":"")+(pmpeImpPronto(it)?"":" disabled")+'>':"";
+        var iniTd=(it.kind==="novo"&&it.status==="datas")?'<input type="date" data-pmpei="'+i+'">':esc(it.inicio||"—");
+        var fimTd=(it.kind==="novo"&&it.status==="datas")?'<input type="date" data-pmpef="'+i+'">':esc(it.fim||"—");
+        return '<tr><td>'+chk+'</td><td>'+esc(it.meio)+'</td><td>'+esc(it.pmpe)+'</td><td>'+esc(it.comissao||"—")+'</td><td style="white-space:nowrap">'+iniTd+'</td><td style="white-space:nowrap">'+fimTd+'</td><td style="color:'+st.cor+';white-space:nowrap">'+esc(st.lbl)+'</td><td style="font-size:11px">'+esc(it.info)+'</td></tr>';
+      }).join("")+'</tbody></table></div>';
+    prev.querySelectorAll('input[type="checkbox"][data-i]').forEach(function(c){c.onchange=function(){impPmpeItens[+c.dataset.i].sel=c.checked;};});
+    prev.querySelectorAll('input[data-pmpei]').forEach(function(inp){
+      inp.oninput=function(){
+        var it=impPmpeItens[+inp.dataset.pmpei];
+        it.inicio=/^\d{4}-\d{2}-\d{2}$/.test(inp.value)?inp.value.split("-").reverse().join("/"):null;
+        var chk=prev.querySelector('input[type="checkbox"][data-i="'+inp.dataset.pmpei+'"]');
+        if(chk){chk.disabled=!pmpeImpPronto(it);if(chk.disabled){chk.checked=false;it.sel=false;}else{chk.checked=true;it.sel=true;}}
+      };
+    });
+    prev.querySelectorAll('input[data-pmpef]').forEach(function(inp){
+      inp.oninput=function(){
+        var it=impPmpeItens[+inp.dataset.pmpef];
+        it.fim=/^\d{4}-\d{2}-\d{2}$/.test(inp.value)?inp.value.split("-").reverse().join("/"):null;
+        var chk=prev.querySelector('input[type="checkbox"][data-i="'+inp.dataset.pmpef+'"]');
+        if(chk){chk.disabled=!pmpeImpPronto(it);if(chk.disabled){chk.checked=false;it.sel=false;}else{chk.checked=true;it.sel=true;}}
+      };
+    });
+    act.style.display="flex";
+    document.getElementById("imp_pmpe_save").disabled=!impPmpeItens.some(function(it){return it.kind!=="emdia";});
+  }
+  async function impPmpeLer(){
+    var inp=document.getElementById("imp_pmpe_file");
+    var files=Array.prototype.slice.call(inp.files||[]);
+    impPmpeAvisos=[];impPmpeItens=[];
+    if(!files.length){toast("Selecione o PDF do PMPE mais recente.","info");impPmpeRender();return;}
+    await navGetComissoes();
+    // vários PDFs: processa em ordem cronológica; o mais recente prevalece por meio+evento
+    var lidos=[];
+    for(var i=0;i<files.length;i++){
+      var nome=files[i].name;
+      var mm=/([A-ZÇ]{3})[\s._-]*(\d{4})/i.exec(nome.toUpperCase());
+      if(!mm||!PMPE_IMP_MESES[mm[1]]){impPmpeAvisos.push(nome+": mês/ano não identificados no nome (esperado algo como PMPE JUL-2026)");continue;}
+      try{
+        var pages=pdfTextRuns(await files[i].arrayBuffer());
+        var evs=pmpeImpEventos(pages,PMPE_IMP_MESES[mm[1]],+mm[2],impPmpeAvisos);
+        if(!evs.length)impPmpeAvisos.push(nome+": nenhum evento de meio do artefato encontrado");
+        lidos.push({refKey:mm[2]+"-"+String(PMPE_IMP_MESES[mm[1]]).padStart(2,"0"),evs:evs});
+      }catch(e){impPmpeAvisos.push(nome+": "+e.message);}
+    }
+    lidos.sort(function(a,b){return a.refKey<b.refKey?-1:1;});
+    var porChave={};
+    lidos.forEach(function(l){l.evs.forEach(function(e){porChave[e.meio+"|"+e.nEvt]=e;});});
+    impPmpeMontar(Object.keys(porChave).map(function(k){return porChave[k];}));
+    impPmpeRender();
+  }
+  async function impPmpeGravar(){
+    var sel=impPmpeItens.filter(function(it){return it.sel&&pmpeImpPronto(it);});
+    if(!sel.length){toast("Nenhum item selecionado.","info");return;}
+    var btn=document.getElementById("imp_pmpe_save");
+    btn.disabled=true;btn.textContent="Gravando…";
+    var nN=0,nU=0,nR=0;
+    sel.forEach(function(it){
+      if(it.kind==="novo"){
+        var st=pmpeImpStatusAuto(pmpeImpDate(it.inicio),pmpeImpDate(it.fim));
+        var r={id:genUid("cms"),meio:it.meio,comissao:it.e.operacao,inicio:it.inicio,fim:it.fim,localizacao:it.e.area,clg:it.e.clg,pmpe:it.pmpe,status:st,manualFields:[]};
+        navComissoes.push(r);
+        auditPushOne("nv_comissao",r.id,"Comissão importada do PMPE: "+r.meio+" · PMPE "+r.pmpe+" · "+(r.comissao||"—")+" ("+r.inicio+" a "+r.fim+")");
+        nN++;
+      }else if(it.kind==="upd"){
+        var row=navComissoes.find(function(x){return x.id===it.rowId;});
+        if(!row)return;
+        var novo={comissao:it.e.operacao,inicio:it.e.inicio,fim:it.e.fim,localizacao:it.e.area,clg:it.e.clg,status:it.stAuto};
+        it.muda.forEach(function(k){row[k]=novo[k];});
+        auditPushOne("nv_comissao",row.id,"Comissão atualizada pelo PMPE: "+row.meio+" · PMPE "+row.pmpe+" · campos: "+it.muda.join(", "));
+        nU++;
+      }else if(it.kind==="remover"){
+        var idx=navComissoes.findIndex(function(x){return x.id===it.rowId;});
+        if(idx<0)return;
+        var rr=navComissoes[idx];
+        navComissoes.splice(idx,1);
+        auditPushOne("nv_comissao",rr.id,"Comissão removida na importação do PMPE (não consta mais): "+rr.meio+" · PMPE "+rr.pmpe);
+        nR++;
+      }
+    });
+    navSaveComissoes();
+    await pushKV("navPush",NAVIOS_COMISSAO_KEY,navComissoes);
+    touchLastEdit("nv_comissao");paintLastEdit("nv_comissao_lastedit","nv_comissao");
+    btn.disabled=false;btn.textContent="✓ Gravar itens selecionados";
+    impPmpeItens=[];impPmpeAvisos=[];impPmpeRender();
+    document.getElementById("imp_pmpe_file").value="";
+    navRenderComissoes();
+    toast("✓ Importação do PMPE concluída: "+nN+" nova(s), "+nU+" atualizada(s)"+(nR?", "+nR+" removida(s)":""),"ok");
+  }
+  pmpeImportBind=function(){
+    document.getElementById("imp_pmpe_read").onclick=impPmpeLer;
+    document.getElementById("imp_pmpe_save").onclick=impPmpeGravar;
+    document.getElementById("imp_pmpe_clear").onclick=function(){impPmpeItens=[];impPmpeAvisos=[];impPmpeRender();document.getElementById("imp_pmpe_file").value="";};
+  };
   navSetState=async function(s){navShips=s.ships;navCards=s.cards;navCols=s.cols||navColsDefault();navSaveShips();navSaveCards();navSaveCols();await pushKV("navPush",NAVIOS_KEY,navShips);await pushKV("navPush",NAVIOS_CARDS_KEY,navCards);await pushKV("navPush",NAVIOS_COLS_KEY,navCols);};
   async function navInit(){
     if(navBound)return;
@@ -9368,6 +9697,275 @@ async function planilhaSheets(file){
   throw new Error("formato não reconhecido (nem ODS nem XLSX)");
 }
 
+/* ═══════════ Motor de PDF (texto posicionado) — alvo: PDFs do PMPE (LibreOffice) ═══════════
+   Estratégia: varre "N 0 obj … endobj" no arquivo inteiro (geração única, sem object
+   streams), monta dicionários rasos, decomprime streams FlateDecode com o rawInflate,
+   decodifica strings via ToUnicode das fontes (com /Widths p/ largura real dos runs) e
+   interpreta os operadores de texto (BT, Td, TD, Tm, T-estrela, Tf, Tj, TJ) guardando a
+   posição de cada run. Devolve páginas de runs {x,y,w,size,text}. */
+function pdfLatin(u8,a,b){var s="";for(var i=a;i<b;i++)s+=String.fromCharCode(u8[i]);return s;}
+function pdfScanObjects(u8){
+  var txt=pdfLatin(u8,0,u8.length);
+  var objs={},re=/(\d+)\s+0\s+obj\b/g,m;
+  var marks=[];
+  while((m=re.exec(txt)))marks.push([+m[1],m.index,re.lastIndex]);
+  for(var i=0;i<marks.length;i++){
+    var end=txt.indexOf("endobj",marks[i][2]);
+    if(end<0)end=txt.length;
+    objs[marks[i][0]]={start:marks[i][2],end:end};
+  }
+  return{txt:txt,objs:objs};
+}
+function pdfParseValue(s,i){
+  while(i<s.length&&/[\s]/.test(s[i]))i++;
+  var m;
+  if(s.substr(i,2)==="<<"){
+    var dict={},j=i+2;
+    for(;;){
+      while(j<s.length&&/[\s]/.test(s[j]))j++;
+      if(s.substr(j,2)===">>")return[dict,j+2];
+      if(s[j]!=="/")throw new Error("PDF: chave de dicionário esperada em "+j);
+      var km=/^\/([^\s\/\[\]<>()]+)/.exec(s.slice(j,j+64));
+      var key=km[1];j+=km[0].length;
+      var pv=pdfParseValue(s,j);
+      dict[key]=pv[0];j=pv[1];
+    }
+  }
+  if(s[i]==="["){
+    var arr=[],j2=i+1;
+    for(;;){
+      while(j2<s.length&&/[\s]/.test(s[j2]))j2++;
+      if(s[j2]==="]")return[arr,j2+1];
+      var pv2=pdfParseValue(s,j2);
+      arr.push(pv2[0]);j2=pv2[1];
+    }
+  }
+  if(s[i]==="/"){m=/^\/([^\s\/\[\]<>()]*)/.exec(s.slice(i,i+128));return[{name:m[1]},i+m[0].length];}
+  if(s[i]==="("){
+    var j3=i+1,depth=1,out="";
+    while(j3<s.length&&depth>0){
+      var c=s[j3];
+      if(c==="\\"){out+=s[j3+1];j3+=2;continue;}
+      if(c==="(")depth++;else if(c===")"){depth--;if(!depth)break;}
+      out+=c;j3++;
+    }
+    return[{str:out},j3+1];
+  }
+  if(s[i]==="<"){m=/^<([0-9A-Fa-f\s]*)>/.exec(s.slice(i));return[{hex:m[1].replace(/\s/g,"")},i+m[0].length];}
+  m=/^(\d+)\s+0\s+R\b/.exec(s.slice(i,i+32));
+  if(m)return[{ref:+m[1]},i+m[0].length];
+  m=/^[-+]?[\d.]+/.exec(s.slice(i,i+32));
+  if(m)return[parseFloat(m[0]),i+m[0].length];
+  m=/^(true|false|null)/.exec(s.slice(i,i+8));
+  if(m)return[m[1]==="true",i+m[0].length];
+  throw new Error("PDF: valor inesperado em "+i);
+}
+function pdfObjDict(scan,num){
+  var o=scan.objs[num];
+  if(!o)return null;
+  var head=scan.txt.slice(o.start,Math.min(o.end,o.start+4096));
+  var di=head.indexOf("<<");
+  if(di<0)return{};
+  try{return pdfParseValue(head,di)[0];}catch(e){return{};}
+}
+function pdfDeref(scan,v){return(v&&typeof v==="object"&&"ref"in v)?pdfObjDict(scan,v.ref):v;}
+function pdfStreamData(u8,scan,num){
+  var o=scan.objs[num];
+  var seg=scan.txt.slice(o.start,o.end);
+  var si=seg.indexOf("stream");
+  if(si<0)return null;
+  var dataStart=o.start+si+6;
+  if(scan.txt[dataStart]==="\r")dataStart++;
+  if(scan.txt[dataStart]==="\n")dataStart++;
+  var ei=seg.lastIndexOf("endstream");
+  var dataEnd=o.start+ei;
+  while(dataEnd>dataStart&&(scan.txt[dataEnd-1]==="\n"||scan.txt[dataEnd-1]==="\r"))dataEnd--;
+  var dict=pdfObjDict(scan,num);
+  var raw=u8.subarray(dataStart,dataEnd);
+  var filt=dict&&dict.Filter;
+  var isFlate=filt&&((filt.name==="FlateDecode")||(Array.isArray(filt)&&filt.some(function(f){return f.name==="FlateDecode";})));
+  if(isFlate){
+    var off=(raw[0]===0x78)?2:0; // pula o cabeçalho zlib e infla o deflate cru
+    return rawInflate(raw.subarray(off));
+  }
+  return raw;
+}
+function pdfParseToUnicode(text){
+  var map={},codeBytes=1,m;
+  var reRange=/beginbfrange([\s\S]*?)endbfrange/g,reChar=/beginbfchar([\s\S]*?)endbfchar/g;
+  function hex2str(h){
+    var out="";
+    for(var i=0;i+4<=h.length;i+=4)out+=String.fromCharCode(parseInt(h.substr(i,4),16));
+    if(h.length%4===2)out+=String.fromCharCode(parseInt(h.substr(h.length-2),16));
+    return out;
+  }
+  var cs=/begincodespacerange\s*<([0-9A-Fa-f]+)>/.exec(text);
+  if(cs)codeBytes=cs[1].length/2;
+  while((m=reChar.exec(text))){
+    var body=m[1],re2=/<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>/g,mm;
+    while((mm=re2.exec(body)))map[parseInt(mm[1],16)]=hex2str(mm[2]);
+  }
+  while((m=reRange.exec(text))){
+    var body2=m[1];
+    var re3=/<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*(<([0-9A-Fa-f]+)>|\[([^\]]*)\])/g,m3;
+    while((m3=re3.exec(body2))){
+      var lo=parseInt(m3[1],16),hi=parseInt(m3[2],16);
+      if(m3[4]){
+        var base=m3[4],baseNum=parseInt(base,16);
+        for(var c=lo;c<=hi;c++)map[c]=hex2str((baseNum+(c-lo)).toString(16).padStart(base.length,"0"));
+      }else if(m3[5]){
+        var items=m3[5].match(/<([0-9A-Fa-f]+)>/g)||[];
+        for(var c2=lo;c2<=hi&&(c2-lo)<items.length;c2++)map[c2]=hex2str(items[c2-lo].replace(/[<>]/g,""));
+      }
+    }
+  }
+  return{map:map,codeBytes:codeBytes};
+}
+function pdfTextRuns(buf){
+  var u8=new Uint8Array(buf);
+  var scan=pdfScanObjects(u8);
+  var pages=[];
+  Object.keys(scan.objs).forEach(function(num){
+    var d=pdfObjDict(scan,+num);
+    if(!d||!d.Type||d.Type.name!=="Page")return;
+    pages.push({num:+num,dict:d});
+  });
+  var fontCache={};
+  function fontFor(ref){
+    if(fontCache[ref])return fontCache[ref];
+    var fd=pdfObjDict(scan,ref);
+    var tu=fd&&fd.ToUnicode;
+    var parsed={map:{},codeBytes:1};
+    if(tu&&"ref"in tu){
+      var data=pdfStreamData(u8,scan,tu.ref);
+      if(data)parsed=pdfParseToUnicode(pdfLatin(data,0,data.length));
+    }
+    parsed.first=fd&&fd.FirstChar||0;
+    var w=fd&&fd.Widths;
+    if(w&&"ref"in w)w=pdfObjDict(scan,w.ref);
+    parsed.widths=Array.isArray(w)?w:null;
+    fontCache[ref]=parsed;
+    return parsed;
+  }
+  var out=[];
+  pages.sort(function(a,b){return a.num-b.num;});
+  pages.forEach(function(pg){
+    var res=pdfDeref(scan,pg.dict.Resources)||{};
+    var fontsDict=pdfDeref(scan,res.Font)||{};
+    var fonts={};
+    Object.keys(fontsDict).forEach(function(k){
+      var v=fontsDict[k];
+      if(v&&"ref"in v)fonts[k]=fontFor(v.ref);
+    });
+    var contents=pg.dict.Contents;
+    var streamRefs=[];
+    if(contents&&"ref"in contents)streamRefs=[contents.ref];
+    else if(Array.isArray(contents))contents.forEach(function(c){if(c&&"ref"in c)streamRefs.push(c.ref);});
+    var content="";
+    streamRefs.forEach(function(r){
+      var data=pdfStreamData(u8,scan,r);
+      if(data)content+=pdfLatin(data,0,data.length)+"\n";
+    });
+    var runs=[];
+    var font=null,size=0,x=0,y=0,lineX=0,lineY=0,TL=0,inBT=false;
+    var i=0,n=content.length;
+    var tokens=[];
+    while(i<n){
+      while(i<n&&/[\s]/.test(content[i]))i++;
+      if(i>=n)break;
+      var c=content[i];
+      if(c==="%"){while(i<n&&content[i]!=="\n")i++;continue;}
+      if(c==="("){
+        var s="",depth=1;i++;
+        while(i<n&&depth>0){
+          var ch=content[i];
+          if(ch==="\\"){
+            var nx=content[i+1];
+            if(nx==="n")s+="\n";else if(nx==="r")s+="\r";else if(nx==="t")s+="\t";
+            else if(/[0-7]/.test(nx)){var oct=/^[0-7]{1,3}/.exec(content.slice(i+1))[0];s+=String.fromCharCode(parseInt(oct,8));i+=oct.length-1;}
+            else s+=nx;
+            i+=2;continue;
+          }
+          if(ch==="(")depth++;
+          else if(ch===")"){depth--;if(!depth){i++;break;}}
+          s+=ch;i++;
+        }
+        tokens.push({t:"str",v:s});continue;
+      }
+      if(c==="<"&&content[i+1]!=="<"){
+        var j=content.indexOf(">",i);
+        tokens.push({t:"hex",v:content.slice(i+1,j).replace(/\s/g,"")});
+        i=j+1;continue;
+      }
+      if(c==="<"&&content[i+1]==="<"){
+        var d2=2,j2=i+2;
+        while(j2<n&&d2>0){if(content.substr(j2,2)==="<<"){d2+=2;j2+=2;}else if(content.substr(j2,2)===">>"){d2-=2;j2+=2;}else j2++;}
+        i=j2;tokens.push({t:"op",v:"%dict"});continue;
+      }
+      if(c==="["){tokens.push({t:"["});i++;continue;}
+      if(c==="]"){tokens.push({t:"]"});i++;continue;}
+      if(c==="/"){var mN=/^\/[^\s\/\[\]<>()]*/.exec(content.slice(i));tokens.push({t:"name",v:mN[0].slice(1)});i+=mN[0].length;continue;}
+      var mNum=/^[-+]?[\d.]+/.exec(content.slice(i));
+      if(mNum&&mNum[0]!=="."&&mNum[0]!=="-"){tokens.push({t:"num",v:parseFloat(mNum[0])});i+=mNum[0].length;continue;}
+      var mOp=/^[A-Za-z'"*]+/.exec(content.slice(i));
+      if(mOp){tokens.push({t:"op",v:mOp[0]});i+=mOp[0].length;continue;}
+      i++;
+    }
+    function decodeStr(tok){
+      if(!font)return{s:"",w:0};
+      var bytes=[];
+      if(tok.t==="hex"){for(var h=0;h+2<=tok.v.length;h+=2)bytes.push(parseInt(tok.v.substr(h,2),16));}
+      else{for(var h2=0;h2<tok.v.length;h2++)bytes.push(tok.v.charCodeAt(h2)&0xff);}
+      var s="",w=0,cb=font.codeBytes;
+      for(var b=0;b+cb<=bytes.length;b+=cb){
+        var code=cb===1?bytes[b]:(bytes[b]<<8)|bytes[b+1];
+        s+=(font.map[code]!==undefined)?font.map[code]:"";
+        if(font.widths){var wi=font.widths[code-font.first];if(typeof wi==="number")w+=wi;}
+        else w+=500;
+      }
+      return{s:s,w:w/1000*size};
+    }
+    var stack=[];
+    for(var k=0;k<tokens.length;k++){
+      var tk=tokens[k];
+      if(tk.t==="op"){
+        var op=tk.v;
+        if(op==="BT"){inBT=true;x=y=lineX=lineY=0;}
+        else if(op==="ET")inBT=false;
+        else if(op==="Tf"){var fname=stack[stack.length-2];size=stack[stack.length-1];font=(fname&&fonts[fname.v])||null;}
+        else if(op==="Td"){lineX+=stack[stack.length-2];lineY+=stack[stack.length-1];x=lineX;y=lineY;}
+        else if(op==="TD"){TL=-stack[stack.length-1];lineX+=stack[stack.length-2];lineY+=stack[stack.length-1];x=lineX;y=lineY;}
+        else if(op==="TL")TL=stack[stack.length-1];
+        else if(op==="T*"){lineY-=TL;x=lineX;y=lineY;}
+        else if(op==="Tm"){lineX=stack[stack.length-2];lineY=stack[stack.length-1];x=lineX;y=lineY;}
+        else if(op==="Tj"||op==="'"||op==='"'){
+          if(op!=="Tj"){lineY-=TL;x=lineX;y=lineY;}
+          var st=null;
+          for(var b2=stack.length-1;b2>=0;b2--){if(stack[b2]&&stack[b2].t){st=stack[b2];break;}}
+          if(st&&inBT){var dec=decodeStr(st);if(dec.s)runs.push({x:x,y:y,w:dec.w,size:size,text:dec.s});}
+        }
+        else if(op==="TJ"){
+          var parts=[],depth3=0,b3;
+          for(b3=stack.length-1;b3>=0;b3--){
+            if(stack[b3]&&stack[b3].t==="]"){depth3++;continue;}
+            if(stack[b3]&&stack[b3].t==="["){depth3--;if(depth3<=0)break;continue;}
+            parts.push(stack[b3]);
+          }
+          parts.reverse();
+          var txt2="",w2=0;
+          parts.forEach(function(p){if(p&&(p.t==="str"||p.t==="hex")){var dec2=decodeStr(p);txt2+=dec2.s;w2+=dec2.w;}});
+          if(txt2&&inBT)runs.push({x:x,y:y,w:w2,size:size,text:txt2});
+        }
+        stack.length=0;
+      }else if(tk.t==="num")stack.push(tk.v);
+      else stack.push(tk);
+    }
+    var mb=pg.dict.MediaBox||[0,0,595,842];
+    out.push({width:mb[2],height:mb[3],runs:runs});
+  });
+  return out;
+}
+
 /* MODULE_HORAS_PLACEHOLDER */
 /* ═══════════════════════════════════════════════════════════
    ABA: HORAS MOTORES — tabelas por embarcação + manutenção + cartões
@@ -10229,6 +10827,7 @@ async function planilhaSheets(file){
     document.getElementById("imp_horas_clear").onclick=function(){impHorasItens=[];impHorasAvisos=[];impHorasRender();document.getElementById("imp_horas_file").value="";};
     if(typeof clgImportBind==="function")clgImportBind();
     if(typeof ppssImportBind==="function")ppssImportBind();
+    if(typeof pmpeImportBind==="function")pmpeImportBind();
     horasInit(); // pré-carrega os dados de Horas em segundo plano
     if(typeof clgInit==="function")clgInit(); // idem para CLG
     if(typeof ppssInit==="function")ppssInit(); // idem para PPSS
