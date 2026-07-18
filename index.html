@@ -404,8 +404,8 @@
 }
 </style>
 <style>
-:root{--c-red:#bb4f3f;--c-red2:color-mix(in srgb,var(--c-red) 13%,#fff);--c-blue:#3f6cae;--c-sky:color-mix(in srgb,var(--c-blue) 12%,#fff);--c-amber:#ad8226;--c-amber2:color-mix(in srgb,var(--c-amber) 16%,#fff);--c-teal:#47906c;--c-teal2:color-mix(in srgb,var(--c-teal) 15%,#fff);--c-gold:#9c7a2e;--c-purple:#7758c9;--c-purple2:color-mix(in srgb,var(--c-purple) 14%,#fff);--c-500:#767c83;--c-900:#262a2e;--c-700:#474d54;--c-200:#e4e3df;--c-100:#efeee9;--c-50:#f8f7f3;--bg:var(--c-50);--bg-base:#ffffff;--surface:#fff;--border:var(--c-200);--border2:#cdccc5;--text:var(--c-900);--text2:var(--c-700);--text3:var(--c-500);--header-bg:#2f3a44;--sans:'Josefin Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'Josefin Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--sh-xs:0 1px 2px rgba(38,42,46,.06);--sh-sm:0 2px 8px rgba(38,42,46,.09);--sh-lg:0 14px 40px rgba(38,42,46,.13);--r-sm:4px;--r-md:8px;--r-lg:12px;--r-xl:16px;}
-[data-theme="dark"]{--bg:#0b1118;--bg-base:#000000;--surface:#141d2b;--border:#1e293b;--border2:#2d3f55;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--c-sky:#1e3a5f;--c-amber2:#3d2a00;--c-teal2:#053330;--c-red2:#3a0a0a;--c-purple2:#1e1433;--c-100:#1e293b;--c-50:#141d2b;--c-200:#1e293b;}
+:root{--c-red:#bb4f3f;--c-red2:color-mix(in srgb,var(--c-red) 13%,#fff);--c-blue:#3f6cae;--c-sky:color-mix(in srgb,var(--c-blue) 12%,#fff);--c-amber:#ad8226;--c-amber2:color-mix(in srgb,var(--c-amber) 16%,#fff);--c-teal:#47906c;--c-teal2:color-mix(in srgb,var(--c-teal) 15%,#fff);--c-gold:#9c7a2e;--c-purple:#7758c9;--c-purple2:color-mix(in srgb,var(--c-purple) 14%,#fff);--c-500:#767c83;--c-900:#262a2e;--c-700:#474d54;--c-200:#e4e3df;--c-100:#efeee9;--c-50:#f8f7f3;--bg:var(--c-50);--bg-base:#ffffff;--surface:#fff;--border:var(--c-200);--border2:#cdccc5;--text:var(--c-900);--text2:#3d444b;--text3:#4e565f;--header-bg:#2f3a44;--sans:'Josefin Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'Josefin Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--sh-xs:0 1px 2px rgba(38,42,46,.06);--sh-sm:0 2px 8px rgba(38,42,46,.09);--sh-lg:0 14px 40px rgba(38,42,46,.13);--r-sm:4px;--r-md:8px;--r-lg:12px;--r-xl:16px;}
+[data-theme="dark"]{--bg:#0b1118;--bg-base:#000000;--surface:#141d2b;--border:#1e293b;--border2:#2d3f55;--text:#e2e8f0;--text2:#a9b7c9;--text3:#8b9aae;--c-sky:#1e3a5f;--c-amber2:#3d2a00;--c-teal2:#053330;--c-red2:#3a0a0a;--c-purple2:#1e1433;--c-100:#1e293b;--c-50:#141d2b;--c-200:#1e293b;}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{overflow-x:hidden;max-width:100vw}
 body{
@@ -712,7 +712,7 @@ select.nv-condef:disabled{opacity:1;cursor:default}
 .nv-addrow-tr td{padding:0;border-bottom:none}
 .nv-addrow{width:100%;background:var(--c-100);border:none;color:var(--text2);font-size:12px;padding:10px;text-align:center;cursor:pointer}
 .nv-addrow:hover{background:var(--border)}
-.nv-grid{display:flex;flex-direction:column;gap:12px}
+.nv-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:26px}
 .nv-grid-cols{display:flex;gap:12px;align-items:flex-start}
 .nv-grid-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px}
 .nv-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xs);padding:14px 16px;display:flex;flex-direction:column}
@@ -1173,6 +1173,10 @@ body{padding-left:64px}
 /* ── Login (Fase 3): overlay no mesmo padrão visual, dark mode incluso ── */
 .aa-login{display:none;position:fixed;inset:0;z-index:9500;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse 60% 55% at 50% 0%,color-mix(in srgb,var(--header-bg) 55%,transparent),transparent 70%)}
 .aa-login.on{display:flex}
+body.aa-login-open{overflow:hidden!important;height:100dvh}
+body.aa-login-open > :not(#aa_login):not(#app_sea):not(#toast-container):not(script):not(style){visibility:hidden!important}
+body.aa-login-open #app_sea{visibility:visible}
+.aa-login{overscroll-behavior:contain}
 .aa-login-card{display:grid;grid-template-columns:1.05fr .95fr;width:100%;max-width:920px;min-height:560px;background:transparent;border:none;border-radius:28px;box-shadow:0 34px 90px rgba(0,10,20,.5),0 10px 28px rgba(0,10,20,.32);overflow:hidden}
 .aa-lg-form{padding:48px 44px;display:flex;flex-direction:column;justify-content:center;background:color-mix(in srgb,var(--surface) 62%,transparent);backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2);border-radius:28px 0 0 28px}
 .aa-lg-brand{display:flex;align-items:center;gap:11px;margin-bottom:30px}
@@ -1199,8 +1203,17 @@ body{padding-left:64px}
 .aa-bio-btn.on{display:block}
 .aa-bio-btn:hover{background:color-mix(in srgb,var(--header-bg) 10%,transparent)}
 [data-theme="dark"] .aa-bio-btn{color:#b9cfc0;border-color:rgba(185,207,192,.4)}
-#app_sea{position:fixed;inset:0;width:100vw;height:100vh;display:block;filter:blur(12px) saturate(1.12);transform:scale(1.06);z-index:-1;pointer-events:none}
-[data-theme="dark"] #app_sea{filter:blur(14px) saturate(.7) brightness(.3)}
+/* ── Inputs de arquivo: botão translúcido no padrão do artefato ── */
+.file-btn{display:inline-flex;align-items:center;gap:7px;font-family:var(--sans);font-size:12.5px;font-weight:700;letter-spacing:.3px;color:var(--header-bg);background:color-mix(in srgb,var(--header-bg) 12%,transparent);backdrop-filter:blur(8px) saturate(1.2);-webkit-backdrop-filter:blur(8px) saturate(1.2);border:1.5px solid color-mix(in srgb,var(--header-bg) 30%,transparent);border-radius:12px;padding:9px 16px;cursor:pointer;transition:background .15s;white-space:nowrap;user-select:none;-webkit-user-select:none}
+.file-btn:hover{background:color-mix(in srgb,var(--header-bg) 22%,transparent)}
+.file-btn:active{background:color-mix(in srgb,var(--header-bg) 30%,transparent)}
+.file-lbl{flex:1;min-width:180px;font-size:12px;color:var(--text3);line-height:1.5}
+.file-lbl.has{color:var(--text);font-weight:600}
+[data-theme="dark"] .file-btn{color:#b9cfc0;border-color:rgba(185,207,192,.35);background:rgba(185,207,192,.12)}
+#app_sea{position:fixed;inset:0;width:100vw;height:100vh;display:block;filter:blur(26px) saturate(.95);opacity:.72;transform:scale(1.08);z-index:-1;pointer-events:none}
+[data-theme="dark"] #app_sea{filter:blur(28px) saturate(.6) brightness(.3)}
+body.aa-login-open #app_sea{filter:blur(12px) saturate(1.12);opacity:1;transform:scale(1.06)}
+[data-theme="dark"] body.aa-login-open #app_sea{filter:blur(14px) saturate(.7) brightness(.3)}
 .aa-login-card{position:relative;z-index:1}
 .aa-lg-visual{position:relative;border-radius:0 28px 28px 0;background:linear-gradient(180deg,rgba(46,107,74,.78),rgba(21,46,32,.84));backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:44px 30px;overflow:hidden}
 .aa-lg-visual::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 80% 45% at 50% -5%,rgba(255,255,255,.17),transparent 70%)}
@@ -2415,6 +2428,18 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 <div class="dt-section-head"><h3 class="dt-table-title">Frota</h3><button class="nv-editbtn" id="uso_open_btn">+ Uso da viatura</button></div>
 <div class="ovw-grid" id="gar_fleet"></div>
 
+<div class="dt-section-head" style="margin-top:18px">
+  <div class="dt-title-wrap"><h3 class="dt-table-title">Calendário de Uso · Empréstimos</h3></div>
+  <div class="nv-toolbar">
+    <button class="nv-editbtn" id="gar_cal_add">+ Inserir uso da viatura</button>
+    <button class="nv-editbtn" id="gar_cal_edit">✎ Editar lançamentos</button>
+  </div>
+</div>
+<div class="stats-card" style="flex:none;margin-bottom:18px"><div id="gar_cal"></div></div>
+
+<div class="dt-section-head"><div class="dt-title-wrap"><h3 class="dt-table-title">Disponibilidade no mês — linha do tempo</h3></div></div>
+<div id="gar_tl" style="margin-bottom:18px"></div>
+
 <button class="nv-editbtn sec-toggle" id="vtr_tbl_toggle">📋 Ver / editar tabela completa</button>
 <div id="vtr_tbl_section" hidden="">
 <div class="dt-section-head">
@@ -2462,8 +2487,10 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 </div>
 <div class="stats-card" style="flex:none;margin-bottom:18px">
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-    <input type="file" id="imp_horas_file" accept=".ods" multiple style="font-size:12px;max-width:100%">
-    <button class="btn primary" id="imp_horas_read">🔍 Ler e conferir</button>
+    <input type="file" id="imp_horas_file" accept=".ods" multiple style="display:none">
+    <label for="imp_horas_file" class="file-btn">📂 Escolher arquivos</label>
+    <span class="file-lbl" id="imp_horas_file_lbl" data-empty="Importar a Planilha de Horas de Funcionamento do último envio ao Com4°DN"></span>
+    <button class="btn primary" id="imp_horas_read" style="margin-left:auto">🔍 Ler e conferir</button>
   </div>
   <div style="font-size:10.5px;color:var(--text3);margin-top:8px">A planilha traz o <b>acumulado</b> de horas por motor no fim do mês; o lançamento proposto é a diferença para o acumulado atual do artefato. Nada é gravado antes da sua conferência.</div>
   <div id="imp_horas_avisos" style="margin-top:10px"></div>
@@ -2479,8 +2506,10 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 </div>
 <div class="stats-card" style="flex:none;margin-bottom:18px">
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-    <input type="file" id="imp_clg_file" accept=".ods" multiple style="font-size:12px;max-width:100%">
-    <button class="btn primary" id="imp_clg_read">🔍 Ler e conferir</button>
+    <input type="file" id="imp_clg_file" accept=".ods" multiple style="display:none">
+    <label for="imp_clg_file" class="file-btn">📂 Escolher arquivos</label>
+    <span class="file-lbl" id="imp_clg_file_lbl" data-empty="Importar a Planilha de CLG do último envio ao Com4°DN"></span>
+    <button class="btn primary" id="imp_clg_read" style="margin-left:auto">🔍 Ler e conferir</button>
   </div>
   <div style="font-size:10.5px;color:var(--text3);margin-top:8px">Consumos viram lançamentos retroativos no <b>último dia do mês</b> (dias de comissão buscados na tabela Comissões do CONDEF pelo nº do evento PMPE); abastecimentos são <b>inferidos</b> comparando o estoque físico de fim do mês com o saldo calculado. Nada é gravado antes da sua conferência.</div>
   <div id="imp_clg_avisos" style="margin-top:10px"></div>
@@ -2496,8 +2525,10 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 </div>
 <div class="stats-card" style="flex:none;margin-bottom:18px">
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-    <input type="file" id="imp_ppss_file" accept=".ods,.xlsx" multiple style="font-size:12px;max-width:100%">
-    <button class="btn primary" id="imp_ppss_read">🔍 Ler e conferir</button>
+    <input type="file" id="imp_ppss_file" accept=".ods,.xlsx" multiple style="display:none">
+    <label for="imp_ppss_file" class="file-btn">📂 Escolher arquivos</label>
+    <span class="file-lbl" id="imp_ppss_file_lbl" data-empty="Importar a Planilha de PPSS compilado dos Navios"></span>
+    <button class="btn primary" id="imp_ppss_read" style="margin-left:auto">🔍 Ler e conferir</button>
   </div>
   <div style="font-size:10.5px;color:var(--text3);margin-top:8px">A SITUAÇÃO vem do texto da coluna (cor de fundo da linha como reserva) e é conferida contra as MSGs preenchidas — conflitos viram avisos. As colunas de MSG só <b>anexam</b> conteúdo novo, nunca apagam o que já está no artefato. Nada é gravado antes da sua conferência.</div>
   <div id="imp_ppss_avisos" style="margin-top:10px"></div>
@@ -2513,8 +2544,10 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 </div>
 <div class="stats-card" style="flex:none;margin-bottom:18px">
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-    <input type="file" id="imp_pmpe_file" accept=".pdf" multiple style="font-size:12px;max-width:100%">
-    <button class="btn primary" id="imp_pmpe_read">🔍 Ler e conferir</button>
+    <input type="file" id="imp_pmpe_file" accept=".pdf" multiple style="display:none">
+    <label for="imp_pmpe_file" class="file-btn">📂 Escolher arquivos</label>
+    <span class="file-lbl" id="imp_pmpe_file_lbl" data-empty="Importar o PDF do PMPE mais recente"></span>
+    <button class="btn primary" id="imp_pmpe_read" style="margin-left:auto">🔍 Ler e conferir</button>
   </div>
   <div style="font-size:10.5px;color:var(--text3);margin-top:8px">Campos que você editou manualmente na tabela Comissões (travados) <b>nunca</b> são sobrescritos, e status como "A ser adiada" é decisão sua — o importador não mexe. Comissão que sumiu do PMPE vira <b>sugestão</b> de remoção, nunca pré-marcada. Nada é gravado antes da sua conferência.</div>
   <div id="imp_pmpe_avisos" style="margin-top:10px"></div>
@@ -2546,6 +2579,16 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
     </select></div>
     <div class="fld full"><label>Viatura</label><select id="uso_viatura"></select></div>
     <div id="uso_motivo_wrap">
+      <div class="fld full"><label>Período</label><select id="uso_periodo_tipo">
+        <option value="dia" selected="">Um único dia</option>
+        <option value="multi">Mais de um dia</option>
+      </select></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div class="fld" style="flex:1;min-width:130px"><label id="uso_data_lbl">Data</label><input type="date" id="uso_data_main"></div>
+        <div class="fld" id="uso_tempo_wrap" style="flex:1;min-width:130px"><label>Tempo</label><select id="uso_tempo"><option value="1º tempo">1° tempo</option><option value="2º tempo">2° tempo</option><option value="Dia todo" selected="">Dia todo</option></select></div>
+        <div class="fld" id="uso_fim_wrap" style="flex:1;min-width:130px;display:none"><label>Fim</label><input type="date" id="uso_data_fim"></div>
+        <div class="fld" id="uso_dev_wrap" style="flex:1;min-width:150px;display:none"><label>Devolução</label><select id="uso_devolucao"><option value="1º tempo">No 1° tempo</option><option value="2º tempo" selected="">No 2° tempo</option></select></div>
+      </div>
       <div class="fld full"><label>Motivo de uso</label><select id="uso_motivo">
         <option value="navio">Empréstimo para Navio</option>
         <option value="om">Empréstimo outra OM</option>
@@ -2793,8 +2836,8 @@ async function aaLogout(){
 }
 
 /* ── UI do login ── */
-function aaShowLogin(force){var el=document.getElementById("aa_login");if(!el)return;el.classList.add("on");var em=document.getElementById("aa_login_email");if(em)setTimeout(function(){em.focus();},50);}
-function aaHideLogin(){var el=document.getElementById("aa_login");if(el)el.classList.remove("on");}
+function aaShowLogin(force){var el=document.getElementById("aa_login");if(!el)return;el.classList.add("on");try{document.body.classList.add("aa-login-open");window.scrollTo(0,0);}catch(e){}var em=document.getElementById("aa_login_email");if(em)setTimeout(function(){em.focus();},50);}
+function aaHideLogin(){var el=document.getElementById("aa_login");if(el)el.classList.remove("on");try{document.body.classList.remove("aa-login-open");}catch(e){}}
 function aaLoginError(msg){var e=document.getElementById("aa_login_err");if(!e)return;if(msg){e.textContent=msg;e.classList.add("on");}else{e.textContent="";e.classList.remove("on");}}
 function aaPaintAuth(){
   // Item ADMIN do menu lateral (ex-lugar da CONFIG OM): só aparece para o administrador.
@@ -8853,10 +8896,30 @@ function openPpssKpiDrawer(navio,metric){
         };
       }).filter(function(p){return p.azul||p.verde;});
     }
-    var porOrcado=porNavioDuo(function(r){return moneyVal(r.orcamento);});
-    var porRecInd=porNavioDuo(ppssRecIndVal);
-    el.innerHTML='<div class="stats-card"><h4>Valor orçado — Programadas/Corrente</h4>'+svgBarChartDuo(porOrcado,"orcado")+'<div style="font-size:9px;color:var(--text3);margin-top:2px">Clique numa barra para ver a memória de cálculo do navio.</div></div>'+
-      '<div class="stats-card"><h4>Valor indicado — Programadas/Corrente</h4>'+svgBarChartDuo(porRecInd,"indicado")+'<div style="font-size:9px;color:var(--text3);margin-top:2px">Clique numa barra para ver a memória de cálculo do navio.</div></div>';
+    function porNavio(tipo,valueFn){
+      return PPSS_NAVIOS.map(function(n){
+        return{k:n,v:ppssRows.filter(function(r){return r.navio===n&&r.tipo===tipo;}).reduce(function(a,r){return a+valueFn(r);},0)};
+      }).filter(function(p){return p.v;});
+    }
+    function barsSingle(pairs,metric,cor,tipoLbl){
+      if(!pairs.length)return '<div style="font-size:11px;color:var(--text3);font-style:italic;padding:8px 0">Sem dados.</div>';
+      var max=Math.max.apply(null,pairs.map(function(p){return p.v;}))||1;
+      return '<div>'+pairs.map(function(p){
+        return '<div class="ppss-kpi-bar-row" data-navio="'+esc(p.k)+'" data-metric="'+metric+'" style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:10px;cursor:pointer;padding:3px 4px;border-radius:6px;transition:background-color .15s">'+
+          '<span style="width:100px;flex:none;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(p.k)+'">'+esc(p.k)+'</span>'+
+          '<div class="ppss-kpi-bar-track" style="flex:1;background:var(--c-100);border-radius:6px;height:11px;overflow:hidden;display:flex;transition:box-shadow .15s">'+
+            '<div title="'+tipoLbl+': '+fmtBRLFull(p.v)+'" style="width:'+(p.v/max*100)+'%;height:100%;background:'+cor+'"></div>'+
+          '</div>'+
+          '<b style="width:150px;flex:none;text-align:right;white-space:nowrap;font-size:10px">'+fmtBRLFull(p.v)+'</b>'+
+        '</div>';
+      }).join("")+'</div>';
+    }
+    var orcFn=function(r){return moneyVal(r.orcamento);};
+    var hint='<div style="font-size:9px;color:var(--text3);margin-top:2px">Clique numa barra para ver a memória de cálculo do navio.</div>';
+    el.innerHTML='<div class="stats-card"><h4>Valor orçado — Programadas</h4>'+barsSingle(porNavio("Programada",orcFn),"orcado","var(--c-blue)","Programada")+hint+'</div>'+
+      '<div class="stats-card"><h4>Valor orçado — Corrente</h4>'+barsSingle(porNavio("Corrente",orcFn),"orcado","var(--c-teal)","Corrente")+hint+'</div>'+
+      '<div class="stats-card"><h4>Valor indicado — Programadas</h4>'+barsSingle(porNavio("Programada",ppssRecIndVal),"indicado","var(--c-blue)","Programada")+hint+'</div>'+
+      '<div class="stats-card"><h4>Valor indicado — Corrente</h4>'+barsSingle(porNavio("Corrente",ppssRecIndVal),"indicado","var(--c-teal)","Corrente")+hint+'</div>';
     el.querySelectorAll(".ppss-kpi-bar-row").forEach(function(row){
       row.onclick=function(){openPpssKpiDrawer(row.dataset.navio,row.dataset.metric);};
     });
@@ -9310,15 +9373,14 @@ function openPpssKpiDrawer(navio,metric){
   function vtrSaveRows(){try{localStorage.setItem(VTR_KEY,JSON.stringify(vtrRows));}catch(e){}}
   function vtrSaveCols(){try{localStorage.setItem(VTR_COLS_KEY,JSON.stringify(vtrCols));}catch(e){}}
   function vtrSaveCards(){try{localStorage.setItem(VTR_CARDS_KEY,JSON.stringify(vtrCards));}catch(e){}}
-  function garIsLivre(r){return(r.usoStatus||"disponivel")!=="em_uso";}
+  function garIsLivre(r){return garEffUso(r).st!=="em_uso"&&garEffUso(r).st!=="im";}
   function garMatch(r){
     if(garFlt.sit&&r.sit!==garFlt.sit)return false;
     if(garFlt.kpi==="pronto"&&r.sit!=="P"&&r.sit!=="PO")return false;
     if(garFlt.kpi==="imposs"&&r.sit!=="IM")return false;
-    if(garFlt.kpi==="livre"&&!garIsLivre(r))return false;
-    if(garFlt.kpi==="extra"&&r.dotacao!=="EXTRA")return false;
-    if(garFlt.kpi==="falta"&&r.existencia!=="0")return false;
-    if(garFlt.kpi==="alerta"&&!garTemAlerta(r))return false;
+    if(garFlt.kpi==="livre"&&garEffUso(r).st!=="disponivel")return false;
+    if(garFlt.kpi==="prev"&&garEffUso(r).st!=="saida_prevista")return false;
+    if(garFlt.kpi==="emuso"&&garEffUso(r).st!=="em_uso")return false;
     if(garFlt.q){
       var q=garFlt.q.toLowerCase();
       var hit=vtrCols.some(function(c){return String(r[c.key]||"").toLowerCase().indexOf(q)>=0;});
@@ -9339,12 +9401,13 @@ function openPpssKpiDrawer(navio,metric){
     var tot=frota.length;
     var pronto=frota.filter(function(r){return r.sit==="P"||r.sit==="PO";}).length;
     var imposs=frota.filter(function(r){return r.sit==="IM";}).length;
-    var livre=frota.filter(garIsLivre).length;
-    var extra=frota.filter(function(r){return r.dotacao==="EXTRA";}).length;
-    var falta=vtrRows.filter(function(r){return r.existencia==="0";}).length;
-    var alerta=frota.filter(garTemAlerta).length;
+    var livre=frota.filter(function(r){return garEffUso(r).st==="disponivel";}).length;
+    var prev=frota.filter(function(r){return garEffUso(r).st==="saida_prevista";}).length;
+    var emuso=frota.filter(function(r){return garEffUso(r).st==="em_uso";}).length;
     function kpi(k,cls,n,t){return '<div class="kpi '+cls+(garFlt.kpi===k&&k?" active":"")+'" data-k="'+k+'"><div class="kpi-n">'+n+'</div><div class="kpi-t">'+t+'</div></div>';}
-    el.innerHTML=kpi("","k-purple",tot,"Viaturas")+kpi("pronto","k-teal",pronto,"Prontas para operar")+kpi("imposs","k-red",imposs,"Impossibilitadas")+kpi("livre","k-gold",livre,"Disponíveis")+kpi("extra","k-blue",extra,"Fora de dotação")+kpi("falta","k-amber",falta,"Dotação a preencher")+kpi("alerta","k-red",alerta,"Docs / óleo a vencer");
+    el.style.gridTemplateColumns="repeat(3,1fr)";
+    el.innerHTML=kpi("","k-purple",tot,"Viaturas")+kpi("pronto","k-teal",pronto,"Prontas para operar")+kpi("imposs","k-red",imposs,"Impossibilitadas")+
+      kpi("livre","k-gold",livre,"Disponíveis")+kpi("prev","k-amber",prev,"Saída prevista")+kpi("emuso","k-red",emuso,"Em uso");
     el.querySelectorAll(".kpi[data-k]").forEach(function(b){
       b.onclick=function(){var k=b.dataset.k;garFlt.kpi=(garFlt.kpi===k?"":k);renderGaragem();};
     });
@@ -9467,40 +9530,243 @@ function openPpssKpiDrawer(navio,metric){
     var start=before.length?before[before.length-1].v:inMonth[0].v;
     return Math.max(0,inMonth[inMonth.length-1].v-start);
   }
+  /* ── Lançamentos de uso/empréstimo → calendário da Garagem (acumulam mês a mês) ── */
+  var VTR_USO_KEY="aa_vtr_uso_v1";
+  var vtrUsoLog=[];
+  var _gcN=new Date();
+  var garCalRef={y:_gcN.getFullYear(),m:_gcN.getMonth()};
+  var usoEditId=null,garUsoLstFil=null;
+  var USO_MOTIVO_LBL={navio:"Empréstimo p/ Navio",om:"Empréstimo outra OM",comissao:"Comissão",rotina:"Uso de rotina pela OM"};
+  var USO_ACAO_LBL={em_uso:"Em uso",previsao:"Previsão de uso"};
+  async function garLoadUso(){var h=null;try{h=await gtj(VTR_USO_KEY);}catch(e){}if(!h){try{h=JSON.parse(localStorage.getItem(VTR_USO_KEY));}catch(e){}}vtrUsoLog=Array.isArray(h)?h:[];}
+  function garSaveUso(){try{localStorage.setItem(VTR_USO_KEY,JSON.stringify(vtrUsoLog));}catch(e){}pushKV("garPush",VTR_USO_KEY,vtrUsoLog);}
+  function usoUid(){return "u"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+  function usoDateStr(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+  function usoBR(s){var p=(s||"").split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:(s||"—");}
+  function usoQuemE(e){if(e.motivo==="navio")return e.navio||"—";if(e.motivo==="om")return e.om||"—";if(e.motivo==="comissao")return e.destino||e.militar||"—";return"Rotina (rancho CeIMBe)";}
+  function usoInMonth(e,y,m){if(!e.data)return false;var p=e.data.split("-");return +p[0]===y&&+p[1]===m+1;}
+  function usoFim(e){return e.dataFim&&e.dataFim>=e.data?e.dataFim:e.data;}
+  function usoCovers(e,ds){return !!e.data&&e.data<=ds&&ds<=usoFim(e);}
+  function garUsoAtivo(r,ds){
+    var em=null,pv=null;
+    vtrUsoLog.forEach(function(e){
+      if(e.vid!==r.id)return;
+      if(usoCovers(e,ds)){if(e.acao==="em_uso")em=e;else if(e.acao==="previsao")pv=e;}
+    });
+    return{em:em,pv:pv};
+  }
+  /* Estado efetivo do LED: IM trava vermelho; lançamentos do calendário no dia mandam; senão vale o status manual. */
+  function garEffUso(r){
+    if(r.sit==="IM")return{st:"im",cor:"#ff2626",lbl:"Impossibilitada (IM)"};
+    var a=garUsoAtivo(r,usoDateStr(new Date()));
+    if(a.em)return{st:"em_uso",cor:VTR_USO_META.em_uso.cor,lbl:"Em uso — "+usoQuemE(a.em)};
+    if(a.pv)return{st:"saida_prevista",cor:VTR_USO_META.saida_prevista.cor,lbl:"Saída prevista — "+usoQuemE(a.pv)};
+    var st=VTR_USO_META[r.usoStatus]?r.usoStatus:"disponivel";
+    return{st:st,cor:VTR_USO_META[st].cor,lbl:VTR_USO_META[st].lbl};
+  }
+  function renderGarCal(){
+    var el=document.getElementById("gar_cal");if(!el)return;
+    var y=garCalRef.y,m=garCalRef.m;
+    var firstDay=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate();
+    var today=new Date(),isCur=(today.getFullYear()===y&&today.getMonth()===m);
+    var byDay={},tot=0;
+    var pm=String(m+1).padStart(2,"0");
+    var mFirst=y+"-"+pm+"-01",mLast=y+"-"+pm+"-"+String(dim).padStart(2,"0");
+    vtrUsoLog.forEach(function(e){
+      if(!e.data)return;
+      if(e.data>mLast||usoFim(e)<mFirst)return;
+      tot++;
+      for(var dd=1;dd<=dim;dd++){var ds0=y+"-"+pm+"-"+String(dd).padStart(2,"0");if(usoCovers(e,ds0))(byDay[dd]||(byDay[dd]=[])).push(e);}
+    });
+    Object.keys(byDay).forEach(function(k){byDay[k].sort(function(a,b){return (a.h1||"").localeCompare(b.h1||"");});});
+    var dows=["DOM","SEG","TER","QUA","QUI","SEX","SÁB"];
+    var html='<div class="cal-wrap"><div class="cal-month-hdr"><div style="display:flex;align-items:center;gap:9px"><button class="nv-editbtn" id="gar_cal_prev" title="Mês anterior" style="padding:3px 11px">‹</button><h3>'+ML[m]+' de '+y+'</h3><button class="nv-editbtn" id="gar_cal_next" title="Próximo mês" style="padding:3px 11px">›</button></div><small>'+tot+' lançamento'+(tot!==1?'s':'')+' neste mês</small></div>';
+    html+='<div class="cal-grid">'+dows.map(function(d){return'<div class="cal-dow">'+d+'</div>';}).join("");
+    for(var b=0;b<firstDay;b++)html+='<div class="cal-day other"></div>';
+    for(var d=1;d<=dim;d++){
+      var items=byDay[d]||[];
+      var dow=(firstDay+d-1)%7,wknd=(dow===0||dow===6);
+      var cls="cal-day has-tasks"+(isCur&&d===today.getDate()?" today":"")+(wknd?" weekend":"");
+      var chips=items.slice(0,3).map(function(e){
+        var tshort=(e.dataFim&&e.dataFim!==e.data)?"⇤⇥ ":(e.tempo==="1º tempo"?"1ºT ":e.tempo==="2º tempo"?"2ºT ":"");
+        var lbl=tshort+(e.placa||e.modelo||"?");
+        return'<button class="cal-chip '+(e.acao==="previsao"?"prox":"venc")+'" data-uid="'+e.id+'" title="'+esc((e.placa||e.modelo||"?")+" — "+(USO_ACAO_LBL[e.acao]||e.acao)+" · "+(USO_MOTIVO_LBL[e.motivo]||"")+" · "+usoQuemE(e))+'">'+esc(lbl)+'</button>';
+      }).join("");
+      var more=items.length>3?'<div class="cal-more">+'+(items.length-3)+' mais</div>':"";
+      html+='<div class="'+cls+'" data-gday="'+d+'" title="Clique para ver/inserir lançamentos"><div class="cal-dn">'+d+'</div>'+chips+more+'</div>';
+    }
+    var rem=(firstDay+dim)%7?7-((firstDay+dim)%7):0;
+    for(var a2=0;a2<rem;a2++)html+='<div class="cal-day other"></div>';
+    html+='</div><div class="cal-legend"><div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--c-red)"></div>Em uso / Empréstimo</div><div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--c-amber)"></div>Previsão de uso</div><div class="cal-legend-item" style="margin-left:auto;font-style:italic">Clique num dia para detalhar ou inserir</div></div></div>';
+    el.innerHTML=html;
+    document.getElementById("gar_cal_prev").onclick=function(){garCalRef.m--;if(garCalRef.m<0){garCalRef.m=11;garCalRef.y--;}renderGarCal();};
+    document.getElementById("gar_cal_next").onclick=function(){garCalRef.m++;if(garCalRef.m>11){garCalRef.m=0;garCalRef.y++;}renderGarCal();};
+    el.querySelectorAll(".cal-chip[data-uid]").forEach(function(ch){ch.onclick=function(ev){ev.stopPropagation();usoOpenEdit(ch.dataset.uid);};});
+    el.querySelectorAll(".cal-day[data-gday]").forEach(function(cell){
+      cell.onclick=function(ev){
+        if(ev.target.closest(".cal-chip"))return;
+        var dd=+cell.dataset.gday;
+        var ds=y+"-"+String(m+1).padStart(2,"0")+"-"+String(dd).padStart(2,"0");
+        if((byDay[dd]||[]).length)garDayChooser(ds);
+        else openUsoModal({date:ds});
+      };
+    });
+    renderGarTl();
+  }
+  function garDayChooser(ds){
+    var bg=ensureModal("garDayChBg","Dia "+usoBR(ds));
+    var body=bg.querySelector(".mbody");
+    body.innerHTML='<div style="display:flex;gap:10px;justify-content:center;padding:16px 6px;flex-wrap:wrap">'+
+      '<button class="btn primary" id="gdc_add" style="padding:14px 22px">+ Inserir uso</button>'+
+      '<button class="btn primary" id="gdc_edit" style="padding:14px 22px">✎ Editar lançamentos</button></div>';
+    document.getElementById("gdc_add").onclick=function(){bg.classList.remove("open");openUsoModal({date:ds});};
+    document.getElementById("gdc_edit").onclick=function(){bg.classList.remove("open");garUsoList({date:ds});};
+    bg.classList.add("open");
+  }
+  /* Linha do tempo do mês: disponibilidade micro por viatura/dia (mesma linguagem da timeline da Agenda) */
+  function renderGarTl(){
+    var el=document.getElementById("gar_tl");if(!el)return;
+    var y=garCalRef.y,m=garCalRef.m,dim=new Date(y,m+1,0).getDate();
+    var frota=vtrRows.filter(function(r){return r.existencia!=="0";});
+    if(!frota.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);font-style:italic">Nenhuma viatura cadastrada.</div>';return;}
+    var todayDs=usoDateStr(new Date());
+    var pm=String(m+1).padStart(2,"0");
+    var html='<div class="tl-legend-top">'+
+      '<span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-red)"></span>Em uso / IM</span>'+
+      '<span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-amber)"></span>Saída prevista</span>'+
+      '<span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-teal)"></span>Disponível</span>'+
+      '<span class="tl-leg-item" style="font-style:italic">'+ML[m]+' de '+y+' — clique numa célula para inserir ou editar</span></div>';
+    html+='<div class="tl-wrap"><div class="tl-header"><div class="tl-label-col">Viatura</div><div class="tl-days">';
+    for(var d=1;d<=dim;d++){
+      var dt=new Date(y,m,d),wk=(dt.getDay()===0||dt.getDay()===6);
+      var ds1=y+"-"+pm+"-"+String(d).padStart(2,"0");
+      html+='<div class="tl-day-head'+(ds1===todayDs?" today":"")+(wk?" weekend":"")+'" style="min-width:26px">'+d+'</div>';
+    }
+    html+='</div></div>';
+    frota.forEach(function(r){
+      var im=r.sit==="IM";
+      html+='<div class="tl-row"><div class="tl-name" title="'+esc((r.placa||"")+" — "+(r.modelo||""))+'"><div class="tl-dot" style="background:'+(im?"var(--c-red)":"var(--c-teal)")+'"></div>'+esc(r.placa||r.modelo||"—")+'</div><div class="tl-cells">';
+      for(var d2=1;d2<=dim;d2++){
+        var dt2=new Date(y,m,d2),wk2=(dt2.getDay()===0||dt2.getDay()===6);
+        var ds=y+"-"+pm+"-"+String(d2).padStart(2,"0");
+        var ent=null,cor="";
+        if(im)cor="var(--c-red)";
+        else{
+          for(var i3=0;i3<vtrUsoLog.length;i3++){
+            var e3=vtrUsoLog[i3];
+            if(e3.vid===r.id&&usoCovers(e3,ds)){
+              if(e3.acao==="em_uso"){ent=e3;cor="var(--c-red)";break;}
+              if(!ent){ent=e3;cor="var(--c-amber)";}
+            }
+          }
+        }
+        var isT=ds===todayDs;
+        html+='<div class="tl-cell'+(isT?" today":"")+(wk2?" weekend":"")+'" data-vid="'+r.id+'" data-ds="'+ds+'"'+(ent?' data-uid="'+ent.id+'"':'')+' style="cursor:pointer;min-width:26px;height:27px" title="'+esc((r.placa||r.modelo||"")+" · "+usoBR(ds)+(im?" — IM (impossibilitada)":ent?" — "+(USO_ACAO_LBL[ent.acao]||"")+" · "+usoQuemE(ent):" — Disponível"))+'">'+
+          (cor?'<div style="position:absolute;inset:3px;border-radius:5px;background:'+cor+';opacity:'+(im?".5":".85")+'"></div>':'')+
+          (isT?'<div class="tl-today-line"></div>':'')+'</div>';
+      }
+      html+='</div></div>';
+    });
+    html+='</div>';
+    el.innerHTML=html;
+    el.querySelectorAll(".tl-cell[data-vid]").forEach(function(c){
+      c.onclick=function(){
+        if(c.dataset.uid)usoOpenEdit(c.dataset.uid);
+        else openUsoModal({date:c.dataset.ds,vid:c.dataset.vid});
+      };
+    });
+  }
+  function usoOpenEdit(id){
+    var e=vtrUsoLog.find(function(x){return x.id===id;});
+    if(!e){toast("Lançamento não encontrado.","info");return;}
+    openUsoModal({edit:e});
+  }
+  function garUsoList(fil){
+    garUsoLstFil=fil||{y:garCalRef.y,m:garCalRef.m};fil=garUsoLstFil;
+    var title=fil.date?("Lançamentos — "+usoBR(fil.date)):("Lançamentos — "+ML[fil.m]+" de "+fil.y);
+    var bg=ensureModal("garUsoLstBg",title);
+    var body=bg.querySelector(".mbody");
+    var list=vtrUsoLog.filter(function(e){
+      if(fil.date)return usoCovers(e,fil.date);
+      var pm2=String(fil.m+1).padStart(2,"0");
+      return e.data<=fil.y+"-"+pm2+"-31"&&usoFim(e)>=fil.y+"-"+pm2+"-01";
+    })
+      .sort(function(a,b){return ((a.data||"")+(a.h1||"")).localeCompare((b.data||"")+(b.h1||""));});
+    body.innerHTML=(list.length?list.map(function(e){
+      var per=usoBR(e.data)+((e.dataFim&&e.dataFim!==e.data)?" – "+usoBR(e.dataFim)+(e.devolucao?" · devolução no "+e.devolucao:""):(e.tempo?" · "+e.tempo:""));
+      return'<div style="display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:10px;padding:8px 11px;margin-bottom:7px">'+
+        '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;color:var(--text)">'+per+' · '+esc(e.placa||e.modelo||"?")+'</div>'+
+        '<div style="font-size:11px;color:var(--text2)">'+(USO_ACAO_LBL[e.acao]||e.acao)+' — '+(USO_MOTIVO_LBL[e.motivo]||"—")+' · '+esc(usoQuemE(e))+(e.motorista?' · Motorista: '+esc(e.motorista):"")+'</div></div>'+
+        '<button class="nv-editbtn" data-ed="'+e.id+'" title="Editar">✎</button>'+
+        '<button class="nv-cancelbtn" data-del="'+e.id+'" title="Excluir">✕</button></div>';
+    }).join(""):'<div style="font-size:12px;color:var(--text3);font-style:italic;padding:8px 0">Nenhum lançamento no período.</div>')+
+      '<div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="nv-editbtn" id="garuso_add">+ Inserir uso'+(fil.date?" em "+usoBR(fil.date):"")+'</button></div>';
+    body.querySelectorAll("[data-ed]").forEach(function(b){b.onclick=function(){bg.classList.remove("open");usoOpenEdit(b.dataset.ed);};});
+    body.querySelectorAll("[data-del]").forEach(function(b){b.onclick=function(){
+      var e=vtrUsoLog.find(function(x){return x.id===b.dataset.del;});
+      if(!e||!confirm("Excluir o lançamento de "+usoBR(e.data)+" ("+(e.placa||e.modelo||"?")+")?"))return;
+      var pre=JSON.parse(JSON.stringify(vtrUsoLog));
+      vtrUsoLog=vtrUsoLog.filter(function(x){return x.id!==e.id;});
+      garSaveUso();renderGarCal();garUsoList(garUsoLstFil);
+      pushUndo("Excluir lançamento de uso",async function(){vtrUsoLog=pre;garSaveUso();renderGarCal();});
+      toast("Lançamento excluído.","ok");
+    };});
+    var add=document.getElementById("garuso_add");
+    if(add)add.onclick=function(){bg.classList.remove("open");openUsoModal({date:fil.date||usoDateStr(new Date())});};
+    bg.classList.add("open");
+  }
   function garMonthlyReport(){
-    var bg=ensureModal("garRepBg","Relatório mensal da frota");
+    var bg=ensureModal("garRepBg","Relatório da frota — mensal · anual · período");
     var body=bg.querySelector(".mbody");
     var now=new Date();
-    var opts=[];
-    for(var i=0;i<12;i++){
-      var d=new Date(now.getFullYear(),now.getMonth()-i,1);
-      opts.push({y:d.getFullYear(),m:d.getMonth(),lbl:ML[d.getMonth()]+" de "+d.getFullYear()});
+    var years={};years[now.getFullYear()]=1;
+    Object.keys(vtrKmHist).forEach(function(k){(vtrKmHist[k]||[]).forEach(function(p){years[new Date(p.t).getFullYear()]=1;});});
+    vtrUsoLog.forEach(function(e){if(e.data)years[+e.data.split("-")[0]]=1;});
+    var yearList=Object.keys(years).map(Number).sort(function(a,b){return b-a;});
+    var selY=now.getFullYear(),selM={};selM[now.getMonth()]=1;
+    function selMonths(){return Object.keys(selM).map(Number).sort(function(a,b){return a-b;});}
+    function periodLbl(){
+      var ms=selMonths();
+      if(ms.length===12)return"Ano de "+selY;
+      return ms.map(function(m){return MONTHS[m];}).join(", ")+" de "+selY;
     }
-    function render(y,m){
+    function render(){
+      var ms=selMonths();
       var frota=vtrRows.filter(function(r){return r.existencia!=="0";});
       var rows=frota.map(function(r){
-        return{placa:r.placa||"—",modelo:r.modelo||"—",kmAtual:r.km||"—",kmMes:garMonthKm(r,y,m),manut:garManutTotal(r),comb:moneyVal(r.custoComb),docs:garDocAlerts(r)};
+        var km=null;
+        ms.forEach(function(m){var v=garMonthKm(r,selY,m);if(v!==null)km=(km||0)+v;});
+        var usos=vtrUsoLog.filter(function(e){if(e.vid!==r.id||!e.data)return false;var p=e.data.split("-");return +p[0]===selY&&ms.indexOf(+p[1]-1)>=0;}).length;
+        return{placa:r.placa||"—",modelo:r.modelo||"—",kmAtual:r.km||"—",kmMes:km,usos:usos,manut:garManutTotal(r),comb:moneyVal(r.custoComb),docs:garDocAlerts(r)};
       });
       var totKm=rows.reduce(function(a,x){return a+(x.kmMes||0);},0);
+      var totUsos=rows.reduce(function(a,x){return a+x.usos;},0);
       var totCusto=rows.reduce(function(a,x){return a+x.manut+x.comb;},0);
-      var selHtml='<div class="flt-bar" style="margin-bottom:10px"><select id="garrep_month">'+opts.map(function(o,oi){return '<option value="'+oi+'"'+(o.y===y&&o.m===m?" selected":"")+'>'+o.lbl+'</option>';}).join("")+'</select><span style="font-size:11px;color:var(--text3)">Total do mês: <b>'+totKm.toLocaleString("pt-BR")+' km</b> · Custo acumulado da frota (manut. + comb.): <b>'+fmtBRL(totCusto)+'</b></span></div>';
-      body.innerHTML=selHtml+
-        '<div class="dt-table-wrap" style="margin-bottom:0;max-height:52vh;overflow-y:auto"><table class="dt-table"><thead><tr><th>Placa</th><th>Modelo</th><th>Odômetro</th><th>Km no mês</th><th>Manutenção (R$)</th><th>Combustível (R$)</th><th>Docs</th></tr></thead><tbody>'+
+      function chip(m){return'<button class="dt-colbtn" data-mi="'+m+'" style="min-width:44px'+(selM[m]?';background:var(--header-bg);color:#fff;border-color:var(--header-bg)':'')+'">'+MONTHS[m]+'</button>';}
+      body.innerHTML=
+        '<div class="flt-bar" style="margin-bottom:8px"><select id="garrep_year">'+yearList.map(function(yy){return'<option value="'+yy+'"'+(yy===selY?" selected":"")+'>'+yy+'</option>';}).join("")+'</select>'+
+        '<button class="nv-editbtn" id="garrep_cur">Mês atual</button><button class="nv-editbtn" id="garrep_all">Ano completo</button></div>'+
+        '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">'+[0,1,2,3,4,5,6,7,8,9,10,11].map(chip).join("")+'</div>'+
+        '<div style="font-size:11px;color:var(--text2);margin-bottom:10px"><b>'+periodLbl()+'</b> · Km no período: <b>'+totKm.toLocaleString("pt-BR")+' km</b> · Usos/empréstimos: <b>'+totUsos+'</b> · Custo acumulado da frota (manut. + comb.): <b>'+fmtBRL(totCusto)+'</b></div>'+
+        '<div class="dt-table-wrap" style="margin-bottom:0;max-height:46vh;overflow-y:auto"><table class="dt-table"><thead><tr><th>Placa</th><th>Modelo</th><th>Odômetro</th><th>Km no período</th><th>Usos</th><th>Manutenção (R$)</th><th>Combustível (R$)</th><th>Docs</th></tr></thead><tbody>'+
         rows.map(function(x){
           var docsTxt=x.docs.length?x.docs.map(function(dd){return dd.doc+(dd.lvl==="over"?" vencido":" ≤30d");}).join(", "):"ok";
-          return '<tr'+(x.docs.length?' class="row-warn"':'')+'><td>'+esc(x.placa)+'</td><td>'+esc(x.modelo)+'</td><td>'+esc(String(x.kmAtual))+'</td><td>'+(x.kmMes===null?"—":x.kmMes.toLocaleString("pt-BR")+" km")+'</td><td>'+fmtBRL(x.manut)+'</td><td>'+fmtBRL(x.comb)+'</td><td>'+esc(docsTxt)+'</td></tr>';
+          return '<tr'+(x.docs.length?' class="row-warn"':'')+'><td>'+esc(x.placa)+'</td><td>'+esc(x.modelo)+'</td><td>'+esc(String(x.kmAtual))+'</td><td>'+(x.kmMes===null?"—":x.kmMes.toLocaleString("pt-BR")+" km")+'</td><td>'+x.usos+'</td><td>'+fmtBRL(x.manut)+'</td><td>'+fmtBRL(x.comb)+'</td><td>'+esc(docsTxt)+'</td></tr>';
         }).join("")+'</tbody></table></div>'+
-        '<div style="font-size:10px;color:var(--text3);margin-top:8px;font-style:italic">“Km no mês” usa o histórico de leituras do odômetro (registrado a cada salvamento da tabela). Sem leituras no mês, aparece “—”.</div>'+
+        '<div style="font-size:10px;color:var(--text3);margin-top:8px;font-style:italic">Clique nos meses para somar períodos — km e usos ficam acumulados mês a mês. “Km no período” usa o histórico de leituras do odômetro; “Usos” conta os lançamentos do calendário. Manutenção e combustível são os acumulados atuais da tabela.</div>'+
         '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="nv-editbtn" id="garrep_csv">⬇ Exportar CSV</button></div>';
-      document.getElementById("garrep_month").onchange=function(){var o=opts[+this.value];render(o.y,o.m);};
+      document.getElementById("garrep_year").onchange=function(){selY=+this.value;render();};
+      document.getElementById("garrep_cur").onclick=function(){selY=now.getFullYear();selM={};selM[now.getMonth()]=1;render();};
+      document.getElementById("garrep_all").onclick=function(){selM={};for(var i2=0;i2<12;i2++)selM[i2]=1;render();};
+      body.querySelectorAll("[data-mi]").forEach(function(b){b.onclick=function(){var mi=+b.dataset.mi;if(selM[mi]){if(selMonths().length>1)delete selM[mi];}else selM[mi]=1;render();};});
       document.getElementById("garrep_csv").onclick=function(){
-        var csv="Placa;Modelo;Odômetro;Km no mês;Manutenção (R$);Combustível (R$);Docs\n"+rows.map(function(x){
-          return[x.placa,x.modelo,x.kmAtual,(x.kmMes===null?"":x.kmMes),Math.round(x.manut),Math.round(x.comb),(x.docs.length?x.docs.map(function(dd){return dd.doc+(dd.lvl==="over"?" vencido":" a vencer");}).join(", "):"ok")].join(";");
+        var csv="Período;"+periodLbl()+"\nPlaca;Modelo;Odômetro;Km no período;Usos;Manutenção (R$);Combustível (R$);Docs\n"+rows.map(function(x){
+          return[x.placa,x.modelo,x.kmAtual,(x.kmMes===null?"":x.kmMes),x.usos,Math.round(x.manut),Math.round(x.comb),(x.docs.length?x.docs.map(function(dd){return dd.doc+(dd.lvl==="over"?" vencido":" a vencer");}).join(", "):"ok")].join(";");
         }).join("\n");
-        trigDL("frota_"+ML[m].toLowerCase()+"_"+y+".csv","\uFEFF"+csv,"text/csv;charset=utf-8");
+        trigDL("frota_"+selY+"_"+selMonths().map(function(m){return MONTHS[m].toLowerCase();}).join("-")+".csv","\uFEFF"+csv,"text/csv;charset=utf-8");
       };
     }
-    render(now.getFullYear(),now.getMonth());
+    render();
     bg.classList.add("open");
   }
   /* ── LED de disponibilidade (emprestada a navios × fainas administrativas): estado próprio,
@@ -9512,14 +9778,16 @@ function openPpssKpiDrawer(navio,metric){
     em_uso:{cor:"#ff2626",lbl:"Em uso"}
   };
   function garLedHtml(r){
-    var st=VTR_USO_META[r.usoStatus]?r.usoStatus:"disponivel";
-    var m=VTR_USO_META[st];
-    return '<span class="fleet-led" data-rid="'+r.id+'" title="'+esc(m.lbl)+' — clique para alterar" style="--led-c:'+m.cor+'"></span>';
+    var m=garEffUso(r);
+    return '<span class="fleet-led" data-rid="'+r.id+'" title="'+esc(m.lbl)+(m.st==="im"?"":" — clique para alterar")+'" style="--led-c:'+m.cor+'"></span>';
   }
   function garCycleUso(id){
     if(GLOBAL_EDIT_LOCK){toast("Finalize a edição em andamento antes de alterar o status.","info");return;}
     var r=vtrRows.find(function(x){return x.id===id;});
     if(!r)return;
+    if(r.sit==="IM"){toast("Viatura IM — LED travado em vermelho até a situação mudar.","info");return;}
+    var a0=garUsoAtivo(r,usoDateStr(new Date()));
+    if(a0.em||a0.pv){toast("LED controlado por lançamento do calendário ("+(a0.em?"em uso":"saída prevista")+" hoje). Edite o lançamento para alterar.","info");return;}
     var cur=VTR_USO_CYCLE.indexOf(r.usoStatus)+1;
     var pre=JSON.parse(JSON.stringify(vtrRows));
     r.usoStatus=VTR_USO_CYCLE[cur%VTR_USO_CYCLE.length];
@@ -9537,29 +9805,19 @@ function openPpssKpiDrawer(navio,metric){
   function usoOcupadas(){return vtrRows.filter(function(r){return r.existencia!=="0"&&!garIsLivre(r);});}
   function usoFieldsHtml(motivo){
     if(motivo==="navio")return''+
-      '<div class="fld"><label>Início</label><input type="time" id="uso_h1"></div>'+
-      '<div class="fld"><label>Fim</label><input type="time" id="uso_h2"></div>'+
-      '<div class="fld full"><label>Navio solicitante</label><select id="uso_navio">'+GAR_NAVIOS_LIST.map(function(n){return '<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join("")+'</select></div>'+
-      '<div class="fld full"><label>Militar solicitante</label><input id="uso_militar" list="uso_militares_dl"></div>'+
-      '<div class="fld full"><label>Motorista designado</label><input id="uso_motorista" list="uso_militares_dl"></div>';
+      '<div class="fld full"><label>Navio solicitante</label><input id="uso_navio" placeholder="Ex.: NHoGSampaio"></div>'+
+      '<div class="fld full"><label>Militar solicitante</label><input id="uso_militar"></div>'+
+      '<div class="fld full"><label>Motorista designado</label><input id="uso_motorista"></div>';
     if(motivo==="om")return''+
-      '<div class="fld"><label>Data</label><input type="date" id="uso_data"></div>'+
-      '<div class="fld"><label>Início</label><input type="time" id="uso_h1"></div>'+
-      '<div class="fld"><label>Fim</label><input type="time" id="uso_h2"></div>'+
       '<div class="fld full"><label>OM solicitante</label><input id="uso_om"></div>'+
-      '<div class="fld full"><label>Militar solicitante</label><input id="uso_militar" list="uso_militares_dl"></div>'+
-      '<div class="fld full"><label>Motorista designado</label><input id="uso_motorista" list="uso_militares_dl"></div>';
+      '<div class="fld full"><label>Militar solicitante</label><input id="uso_militar"></div>'+
+      '<div class="fld full"><label>Motorista designado</label><input id="uso_motorista"></div>';
     if(motivo==="comissao")return''+
-      '<div class="fld"><label>Data</label><input type="date" id="uso_data"></div>'+
-      '<div class="fld"><label>Início</label><input type="time" id="uso_h1"></div>'+
-      '<div class="fld"><label>Fim</label><input type="time" id="uso_h2"></div>'+
       '<div class="fld full"><label>Destino da comissão</label><input id="uso_destino"></div>'+
-      '<div class="fld full"><label>Militar/Divisão solicitante</label><input id="uso_militar" list="uso_militares_dl"></div>'+
-      '<div class="fld full"><label>Motorista designado</label><input id="uso_motorista" list="uso_militares_dl"></div>';
+      '<div class="fld full"><label>Militar/Divisão solicitante</label><input id="uso_militar"></div>'+
+      '<div class="fld full"><label>Motorista designado</label><input id="uso_motorista"></div>';
     return''+ // rotina
-      '<div class="fld"><label>Início</label><input type="time" id="uso_h1"></div>'+
-      '<div class="fld"><label>Fim</label><input type="time" id="uso_h2"></div>'+
-      '<div class="fld full"><label>Motorista escalado (rancho CeIMBe)</label><input id="uso_motorista" list="uso_militares_dl"></div>';
+      '<div class="fld full"><label>Motorista escalado (rancho CeIMBe)</label><input id="uso_motorista"></div>';
   }
   /* Identifica o Navio/OM/Divisão do pedido, conforme o motivo, para compor o texto de Observações. */
   function usoQuem(motivo,g){
@@ -9573,33 +9831,98 @@ function openPpssKpiDrawer(navio,metric){
     var quem=usoQuem(motivo,g);
     return(acao==="previsao"?"Previsão de Uso pelo Navio/OM/Divisão ":"Em uso pelo Navio/OM/Divisão ")+quem;
   }
-  function openUsoModal(){
+  function openUsoModal(opt){
+    if(opt&&(opt.target||opt.type))opt=null;
+    opt=opt||{};
+    var edit=opt.edit||null;usoEditId=edit?edit.id:null;
     var bg=document.getElementById("usoBg");
     if(!bg)return;
-    var dl=document.getElementById("uso_militares_dl");
-    if(dl&&typeof pessoalGetState==="function")dl.innerHTML=pessoalGetState().rows.map(function(r){return r.nome?'<option value="'+esc(r.nome)+'">':"";}).join("");
     var acaoSel=document.getElementById("uso_acao"),vSel=document.getElementById("uso_viatura"),motivoSel=document.getElementById("uso_motivo"),motivoWrap=document.getElementById("uso_motivo_wrap");
     function refreshViaturas(){
       var lista=acaoSel.value==="tornar_disponivel"?usoOcupadas():usoLivres();
       vSel.innerHTML=lista.length?lista.map(function(r){return '<option value="'+r.id+'">'+esc(r.placa||r.modelo)+" — "+esc(r.modelo||"")+'</option>';}).join(""):'<option value="">— nenhuma viatura nessa condição —</option>';
     }
     function refreshFields(){document.getElementById("uso_fields_dynamic").innerHTML=usoFieldsHtml(motivoSel.value);}
-    function refreshAll(){motivoWrap.hidden=acaoSel.value==="tornar_disponivel";refreshViaturas();if(!motivoWrap.hidden)refreshFields();}
+    function refreshPeriodo(){
+      var t=document.getElementById("uso_periodo_tipo").value;
+      document.getElementById("uso_tempo_wrap").style.display=t==="dia"?"":"none";
+      document.getElementById("uso_fim_wrap").style.display=t==="multi"?"":"none";
+      document.getElementById("uso_dev_wrap").style.display=t==="multi"?"":"none";
+      document.getElementById("uso_data_lbl").textContent=t==="dia"?"Data":"Início";
+    }
+    function refreshAll(){motivoWrap.hidden=acaoSel.value==="tornar_disponivel";refreshViaturas();if(!motivoWrap.hidden){refreshFields();refreshPeriodo();}}
     acaoSel.onchange=refreshAll;
     motivoSel.onchange=refreshFields;
-    acaoSel.value="em_uso";motivoSel.value="navio";refreshAll();
+    document.getElementById("uso_periodo_tipo").onchange=refreshPeriodo;
+    acaoSel.value=edit?(edit.acao||"em_uso"):"em_uso";motivoSel.value=edit?(edit.motivo||"navio"):"navio";
+    document.getElementById("uso_periodo_tipo").value=(edit&&edit.dataFim&&edit.dataFim!==edit.data)?"multi":"dia";
+    refreshAll();
+    var dEl=document.getElementById("uso_data_main");
+    if(dEl)dEl.value=(edit&&edit.data)||opt.date||usoDateStr(new Date());
+    var fEl=document.getElementById("uso_data_fim");
+    if(fEl)fEl.value=(edit&&edit.dataFim)||"";
+    var tEl=document.getElementById("uso_tempo");
+    if(tEl)tEl.value=(edit&&edit.tempo)||"Dia todo";
+    var dvEl=document.getElementById("uso_devolucao");
+    if(dvEl)dvEl.value=(edit&&edit.devolucao)||"2º tempo";
+    if(edit){
+      if(!Array.prototype.some.call(vSel.options,function(o){return o.value===edit.vid;}))vSel.insertAdjacentHTML("beforeend",'<option value="'+esc(edit.vid)+'">'+esc(edit.placa||edit.modelo||"?")+(edit.modelo?" — "+esc(edit.modelo):"")+'</option>');
+      vSel.value=edit.vid;
+      var sv=function(id,v){var el2=document.getElementById(id);if(el2&&v!=null)el2.value=v;};
+      sv("uso_navio",edit.navio);sv("uso_om",edit.om);sv("uso_destino",edit.destino);sv("uso_militar",edit.militar);sv("uso_motorista",edit.motorista);
+    }else if(opt.vid){
+      if(!Array.prototype.some.call(vSel.options,function(o){return o.value===opt.vid;})){
+        var rv0=vtrRows.find(function(x){return x.id===opt.vid;});
+        if(rv0)vSel.insertAdjacentHTML("beforeend",'<option value="'+esc(opt.vid)+'">'+esc(rv0.placa||rv0.modelo||"?")+" — "+esc(rv0.modelo||"")+'</option>');
+      }
+      vSel.value=opt.vid;
+    }
+    var h3=bg.querySelector(".mh h3");if(h3)h3.textContent=edit?"✎ Editar lançamento de uso":"+ Uso da viatura";
+    var cf=document.getElementById("uso_confirm");if(cf)cf.textContent=edit?"Salvar alterações":"Registrar uso";
     bg.classList.add("open");
   }
-  function closeUsoModal(){var bg=document.getElementById("usoBg");if(bg)bg.classList.remove("open");}
+  function closeUsoModal(){usoEditId=null;var bg=document.getElementById("usoBg");if(bg)bg.classList.remove("open");}
+  function usoCollectPeriodo(g){
+    var pt=document.getElementById("uso_periodo_tipo");
+    var multi=pt&&pt.value==="multi";
+    var data=g("uso_data_main")||usoDateStr(new Date());
+    var fim=multi?g("uso_data_fim"):"";
+    if(multi&&fim&&fim<data){toast("A data de fim não pode ser anterior ao início.","info");return null;}
+    return{data:data,dataFim:multi?(fim||data):"",tempo:multi?"":g("uso_tempo"),devolucao:multi?g("uso_devolucao"):""};
+  }
   function confirmUso(){
     var vId=document.getElementById("uso_viatura").value;
     if(!vId){toast("Selecione uma viatura.","info");return;}
     if(GLOBAL_EDIT_LOCK){toast("Finalize a edição em andamento antes de registrar o uso.","info");return;}
-    var r=vtrRows.find(function(x){return x.id===vId;});
-    if(!r)return;
     var acao=document.getElementById("uso_acao").value;
     var motivo=document.getElementById("uso_motivo").value;
     function g(id){var el=document.getElementById(id);return el?el.value.trim():"";}
+    var per=usoCollectPeriodo(g);
+    if(!per)return;
+    if(usoEditId){
+      var e=vtrUsoLog.find(function(x){return x.id===usoEditId;});
+      if(!e){toast("Lançamento não encontrado.","info");closeUsoModal();return;}
+      var preL=JSON.parse(JSON.stringify(vtrUsoLog));
+      var rv=vtrRows.find(function(x){return x.id===vId;});
+      e.vid=vId;if(rv){e.placa=rv.placa||"";e.modelo=rv.modelo||"";}
+      var mw=document.getElementById("uso_motivo_wrap");
+      if(mw&&!mw.hidden){
+        if(acao!=="tornar_disponivel")e.acao=acao;
+        e.motivo=motivo;
+        e.data=per.data;e.dataFim=per.dataFim;e.tempo=per.tempo;e.devolucao=per.devolucao;
+        delete e.h1;delete e.h2;
+        e.navio=g("uso_navio");e.om=g("uso_om");e.destino=g("uso_destino");e.militar=g("uso_militar");e.motorista=g("uso_motorista");
+      }
+      garSaveUso();renderGarKpis();renderGarFleet();renderGarCal();
+      pushUndo("Editar lançamento de uso",async function(){vtrUsoLog=preL;garSaveUso();renderGaragem();});
+      toast("✓ Lançamento atualizado","ok");
+      closeUsoModal();
+      var lst=document.getElementById("garUsoLstBg");
+      if(garUsoLstFil&&lst&&lst.classList.contains("open"))garUsoList(garUsoLstFil);
+      return;
+    }
+    var r=vtrRows.find(function(x){return x.id===vId;});
+    if(!r)return;
     var pre=JSON.parse(JSON.stringify(vtrRows));
     r.obs=usoSummary(acao,motivo,g);
     r.usoStatus=acao==="tornar_disponivel"?"disponivel":(acao==="previsao"?"saida_prevista":"em_uso");
@@ -9608,6 +9931,10 @@ function openPpssKpiDrawer(navio,metric){
     auditDiffRows("vtr_tbl",pre,vtrRows);
     touchLastEdit("vtr_tbl");paintLastEdit("vtr_tbl_lastedit","vtr_tbl");
     pushUndo("Uso viatura "+(r.modelo||r.placa||"")+": → "+VTR_USO_META[r.usoStatus].lbl,async function(){vtrRows=pre;vtrSaveRows();await pushKV("garPush",VTR_KEY,vtrRows);renderGaragem();});
+    if(acao!=="tornar_disponivel"){
+      vtrUsoLog.push({id:usoUid(),vid:r.id,placa:r.placa||"",modelo:r.modelo||"",acao:acao,motivo:motivo,data:per.data,dataFim:per.dataFim,tempo:per.tempo,devolucao:per.devolucao,navio:g("uso_navio"),om:g("uso_om"),destino:g("uso_destino"),militar:g("uso_militar"),motorista:g("uso_motorista"),ts:Date.now()});
+      garSaveUso();
+    }
     renderGaragem();
     closeUsoModal();
   }
@@ -9665,15 +9992,19 @@ function openPpssKpiDrawer(navio,metric){
   // Snapshot para undo/redo global (snapState/restoreState).
   garGetState=function(){return{rows:JSON.parse(JSON.stringify(vtrRows)),cols:cloneCols(vtrCols),cards:JSON.parse(JSON.stringify(vtrCards))};};
   garSetState=async function(s){vtrRows=s.rows||[];vtrCols=s.cols||vtrCols;vtrCards=s.cards||[];vtrSaveRows();vtrSaveCols();vtrSaveCards();await pushKV("garPush",VTR_KEY,vtrRows);await pushKV("garPush",VTR_COLS_KEY,vtrCols);await pushKV("garPush",VTR_CARDS_KEY,vtrCards);};
-  renderGaragem=function(){renderGarKpis();renderGarFleet();renderGarStats();renderGarTable();renderGarCards();};
+  renderGaragem=function(){renderGarKpis();renderGarFleet();renderGarCal();renderGarStats();renderGarTable();renderGarCards();};
   garInit=async function(){
     if(garBound){return;}
     garBound=true;
     await garLoad();
-    await garLoadKm();
+    await Promise.all([garLoadKm(),garLoadUso()]);
     garLogKm();
     var repBtn=document.getElementById("gar_report_btn");
     if(repBtn)repBtn.onclick=garMonthlyReport;
+    var calAdd=document.getElementById("gar_cal_add");
+    if(calAdd)calAdd.onclick=function(){openUsoModal({date:usoDateStr(new Date())});};
+    var calEd=document.getElementById("gar_cal_edit");
+    if(calEd)calEd.onclick=function(){garUsoList({y:garCalRef.y,m:garCalRef.m});};
     var tag=document.getElementById("gar_synctag");
     paintSyncTag(tag);
     var selSit=document.getElementById("gar_f_sit");
@@ -12430,6 +12761,25 @@ syncTheme();
     if(reduced()){size();draw();}
     kick();
   }
+})();
+/* ── Rótulo dos inputs de arquivo (Importar) ── */
+(function(){
+  var KS=["imp_horas","imp_clg","imp_ppss","imp_pmpe"];
+  function paint(k){
+    var inp=document.getElementById(k+"_file"),lbl=document.getElementById(k+"_file_lbl");
+    if(!inp||!lbl)return;
+    var fs=inp.files,n=fs?fs.length:0;
+    if(!n){lbl.textContent=lbl.getAttribute("data-empty")||"";lbl.classList.remove("has");}
+    else{lbl.textContent=(n>1?"("+n+") ":"")+Array.prototype.map.call(fs,function(f){return f.name;}).join(", ");lbl.classList.add("has");}
+  }
+  document.addEventListener("DOMContentLoaded",function(){
+    KS.forEach(function(k){
+      var inp=document.getElementById(k+"_file");if(!inp)return;
+      inp.addEventListener("change",function(){paint(k);});
+      ["_clear","_save"].forEach(function(sfx){var b=document.getElementById(k+sfx);if(b)b.addEventListener("click",function(){setTimeout(function(){paint(k);},80);});});
+      paint(k);
+    });
+  });
 })();
 </script>
 </body></html>
