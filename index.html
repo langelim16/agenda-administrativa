@@ -832,6 +832,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-bottom:12px}
 @media(max-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:520px){.kpis{grid-template-columns:repeat(2,1fr)}}
+#gar_kpis.kpis{grid-template-columns:repeat(3,1fr)}
 .kpi{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:13px 13px 11px;position:relative;overflow:hidden;cursor:pointer;box-shadow:var(--sh-xs)}
 .kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--kpi-c)}
 .kpi:hover{transform:translateY(-2px);box-shadow:var(--sh-sm)}
@@ -1164,7 +1165,7 @@ body{padding-left:64px}
 }
 @media print{.wrap{display:none!important}#rbg{position:static!important;display:block!important;background:#fff!important;padding:0!important;overflow:visible!important}#rbg .modal{max-width:100%!important;box-shadow:none!important;border:none!important}.noprint{display:none!important}.mbody{padding:0!important}}
 
-.synctag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.94);border-radius:99px;padding:5px 12px;font-size:11px;font-weight:700;letter-spacing:.4px;color:var(--c-amber);box-shadow:0 1px 4px rgba(0,0,0,.18);white-space:nowrap}
+.synctag{display:none} /* aviso de sincronização já existe no rodapé (sync-banner) */
 /* Banner de contingência: sem sincronização com o servidor, edições ficam só neste dispositivo */
 .sync-banner{display:none;position:fixed;left:0;right:0;bottom:0;z-index:9000;background:var(--c-red);color:#fff;padding:10px 16px;text-align:center;font-weight:700;font-size:14px;letter-spacing:.3px;box-shadow:0 -2px 14px rgba(0,0,0,.3);align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
 .sync-banner.on{display:flex}
@@ -1210,7 +1211,7 @@ body.aa-login-open #app_sea{visibility:visible}
 .file-lbl{flex:1;min-width:180px;font-size:12px;color:var(--text3);line-height:1.5}
 .file-lbl.has{color:var(--text);font-weight:600}
 [data-theme="dark"] .file-btn{color:#b9cfc0;border-color:rgba(185,207,192,.35);background:rgba(185,207,192,.12)}
-#app_sea{position:fixed;inset:0;width:100vw;height:100vh;display:block;filter:blur(26px) saturate(.95);opacity:.72;transform:scale(1.08);z-index:-1;pointer-events:none}
+#app_sea{position:fixed;inset:0;width:100vw;height:100vh;display:block;filter:blur(30px) saturate(.55) brightness(1.22);opacity:.55;transform:scale(1.08);z-index:-1;pointer-events:none}
 [data-theme="dark"] #app_sea{filter:blur(28px) saturate(.6) brightness(.3)}
 body.aa-login-open #app_sea{filter:blur(12px) saturate(1.12);opacity:1;transform:scale(1.06)}
 [data-theme="dark"] body.aa-login-open #app_sea{filter:blur(14px) saturate(.7) brightness(.3)}
@@ -1908,7 +1909,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 <div class="aa-login" id="aa_login">
   <form class="aa-login-card" id="aa_login_form" autocomplete="on">
     <div class="aa-lg-form">
-      <div class="aa-lg-brand"><span class="aa-crest"><img src="data:image/png;base64,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" alt=""></span><b>Sistema de Gestão · CHN-4</b></div>
+      <div class="aa-lg-brand"><span class="aa-crest"><img src="data:image/png;base64,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" alt=""></span><b>Sistema de Gestão e Logística do CHN-4</b></div>
       <h2>Bem-vindo a bordo!</h2>
       <p class="aa-lg-sub">Entre com sua conta para acessar ao sistema.</p>
       <div class="aa-login-err" id="aa_login_err"></div>
@@ -1972,7 +1973,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 <div class="splash-welcome">Bem-vindo à</div>
 <div class="splash-title">Agenda Administrativa</div>
 <div class="splash-title-rule"></div>
-<div class="splash-sub">Sistema de gestão · CHN-4</div>
+<div class="splash-sub">Sistema de Gestão e Logística do CHN-4</div>
 <div class="splash-bar-wrap">
 <div class="splash-bar"><div class="splash-bar-fill" id="splashFill"></div></div>
 <div class="splash-meta"><span class="splash-stage" id="splashStage">Inicializando…</span><span class="splash-pct" id="splashPct">0%</span></div>
@@ -2042,6 +2043,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
   </div>
   <div class="hright">
     <span class="synctag" id="nv_synctag" style="color:var(--c-teal)">💾 Somente local</span>
+    <button class="hbtn aa-authbtn" style="display:none"></button>
     <button class="btn undo-btn" disabled="">↩ Desfazer</button>
     <button class="btn redo-btn" disabled="">↪ Refazer</button>
     <button class="hbtn theme-toggle-btn">🌙 Noturno</button>
@@ -2125,6 +2127,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
   </div>
   <div class="hright">
     <span class="synctag" id="clg_synctag" style="color:var(--c-teal)">💾 Somente local</span>
+    <button class="hbtn aa-authbtn" style="display:none"></button>
     <button class="btn undo-btn" disabled="">↩ Desfazer</button>
     <button class="btn redo-btn" disabled="">↪ Refazer</button>
     <button class="hbtn theme-toggle-btn">🌙 Noturno</button>
@@ -2234,6 +2237,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
   </div>
   <div class="hright">
     <span class="synctag" id="horas_synctag" style="color:var(--c-teal)">💾 Somente local</span>
+    <button class="hbtn aa-authbtn" style="display:none"></button>
     <button class="btn undo-btn" disabled="">↩ Desfazer</button>
     <button class="btn redo-btn" disabled="">↪ Refazer</button>
     <button class="hbtn theme-toggle-btn">🌙 Noturno</button>
@@ -2275,6 +2279,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
   </div>
   <div class="hright">
     <span class="synctag" id="pessoal_synctag" style="color:var(--c-teal)">💾 Somente local</span>
+    <button class="hbtn aa-authbtn" style="display:none"></button>
     <button class="btn undo-btn" disabled="">↩ Desfazer</button>
     <button class="btn redo-btn" disabled="">↪ Refazer</button>
     <button class="hbtn theme-toggle-btn">🌙 Noturno</button>
@@ -2345,6 +2350,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
   </div>
   <div class="hright">
     <span class="synctag" id="ppss_synctag" style="color:var(--c-teal)">💾 Somente local</span>
+    <button class="hbtn aa-authbtn" style="display:none"></button>
     <button class="btn undo-btn" disabled="">↩ Desfazer</button>
     <button class="btn redo-btn" disabled="">↪ Refazer</button>
     <button class="hbtn theme-toggle-btn">🌙 Noturno</button>
@@ -2405,6 +2411,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
   </div>
   <div class="hright">
     <span class="synctag" id="gar_synctag" style="color:var(--c-teal)">💾 Somente local</span>
+    <button class="hbtn aa-authbtn" style="display:none"></button>
     <button class="btn undo-btn" disabled="">↩ Desfazer</button>
     <button class="btn redo-btn" disabled="">↪ Refazer</button>
     <button class="hbtn theme-toggle-btn">🌙 Noturno</button>
@@ -2425,11 +2432,11 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
   <button class="nv-editbtn" id="gar_report_btn">📋 Relatório mensal</button>
 </div>
 
-<div class="dt-section-head"><h3 class="dt-table-title">Frota</h3><button class="nv-editbtn" id="uso_open_btn">+ Uso da viatura</button></div>
+<div class="dt-section-head"><h3 class="dt-table-title">Frota</h3></div>
 <div class="ovw-grid" id="gar_fleet"></div>
 
 <div class="dt-section-head" style="margin-top:18px">
-  <div class="dt-title-wrap"><h3 class="dt-table-title">Calendário de Uso · Empréstimos</h3></div>
+  <div class="dt-title-wrap"><h3 class="dt-table-title">Calendário de uso de viaturas</h3></div>
   <div class="nv-toolbar">
     <button class="nv-editbtn" id="gar_cal_add">+ Inserir uso da viatura</button>
     <button class="nv-editbtn" id="gar_cal_edit">✎ Editar lançamentos</button>
@@ -2437,10 +2444,13 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 </div>
 <div class="stats-card" style="flex:none;margin-bottom:18px"><div id="gar_cal"></div></div>
 
-<div class="dt-section-head"><div class="dt-title-wrap"><h3 class="dt-table-title">Disponibilidade no mês — linha do tempo</h3></div></div>
+<div class="dt-section-head"><div class="dt-title-wrap"><h3 class="dt-table-title">Disponibilidade da frota — linha do tempo</h3></div></div>
 <div id="gar_tl" style="margin-bottom:18px"></div>
 
-<button class="nv-editbtn sec-toggle" id="vtr_tbl_toggle">📋 Ver / editar tabela completa</button>
+<div class="dt-section-head" style="margin-top:18px"><h3 class="dt-table-title">Indicadores</h3></div>
+<div class="stats-grid" id="gar_stats"></div>
+
+<button class="nv-editbtn sec-toggle" id="vtr_tbl_toggle" style="margin-top:18px">📋 Ver / editar tabela completa</button>
 <div id="vtr_tbl_section" hidden="">
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Viaturas</h3><span class="last-edit" id="vtr_tbl_lastedit"></span></div>
@@ -2461,9 +2471,6 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 </div>
 </div>
 
-<div class="dt-section-head" style="margin-top:18px"><h3 class="dt-table-title">Indicadores</h3></div>
-<div class="stats-grid" id="gar_stats"></div>
-
 <div class="dt-section-head" style="margin-top:18px"><h3 class="dt-table-title">Cartões</h3></div>
 <div class="nv-grid" id="gar_grid"></div>
 
@@ -2478,6 +2485,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
   </div>
   <div class="hright">
     <span class="synctag" id="imp_synctag" style="color:var(--c-teal)">💾 Somente local</span>
+    <button class="hbtn aa-authbtn" style="display:none"></button>
     <button class="hbtn theme-toggle-btn">🌙 Noturno</button>
   </div>
 </header>
@@ -2844,16 +2852,16 @@ function aaPaintAuth(){
   var na=document.getElementById("nav_admin"),ns=document.getElementById("nav_admin_sep");
   if(na)na.style.display=aaIsAdmin()?"":"none";
   if(ns)ns.style.display=aaIsAdmin()?"":"none";
-  var b=document.getElementById("authbtn");if(!b)return;
-  if(aaLoggedIn()){
-    var who=aaSession.email||"conta";var short=who.length>18?who.slice(0,17)+"…":who;
-    b.style.display="";b.textContent="⏻ "+short;b.title="Sair ("+who+")"+(aaIsAdmin()?" · admin":"");
-    b.onclick=function(){if(confirm("Sair da conta "+who+"?"))aaLogout();};
-  }else{
-    // Não logado: mostra "Entrar" sempre (mesmo com RLS aberta) para permitir login voluntário.
-    // Quando a RLS for fechada, o boot já força a tela de login antes de carregar o app.
-    b.style.display="";b.textContent="🔑 Entrar";b.title="Fazer login";b.onclick=function(){aaShowLogin(true);};
-  }
+  var btns=document.querySelectorAll(".aa-authbtn");if(!btns.length)return;
+  btns.forEach(function(b){
+    if(aaLoggedIn()){
+      var who=aaSession.email||"conta";var short=who.length>18?who.slice(0,17)+"…":who;
+      b.style.display="";b.textContent="⏻ "+short;b.title="Sair ("+who+")"+(aaIsAdmin()?" · admin":"");
+      b.onclick=function(){if(confirm("Sair da conta "+who+"?"))aaLogout();};
+    }else{
+      b.style.display="";b.textContent="🔑 Entrar";b.title="Fazer login";b.onclick=function(){aaShowLogin(true);};
+    }
+  });
 }
 (function aaWireLoginForm(){
   document.addEventListener("DOMContentLoaded",function(){
@@ -9405,7 +9413,6 @@ function openPpssKpiDrawer(navio,metric){
     var prev=frota.filter(function(r){return garEffUso(r).st==="saida_prevista";}).length;
     var emuso=frota.filter(function(r){return garEffUso(r).st==="em_uso";}).length;
     function kpi(k,cls,n,t){return '<div class="kpi '+cls+(garFlt.kpi===k&&k?" active":"")+'" data-k="'+k+'"><div class="kpi-n">'+n+'</div><div class="kpi-t">'+t+'</div></div>';}
-    el.style.gridTemplateColumns="repeat(3,1fr)";
     el.innerHTML=kpi("","k-purple",tot,"Viaturas")+kpi("pronto","k-teal",pronto,"Prontas para operar")+kpi("imposs","k-red",imposs,"Impossibilitadas")+
       kpi("livre","k-gold",livre,"Disponíveis")+kpi("prev","k-amber",prev,"Saída prevista")+kpi("emuso","k-red",emuso,"Em uso");
     el.querySelectorAll(".kpi[data-k]").forEach(function(b){
@@ -9623,58 +9630,72 @@ function openPpssKpiDrawer(navio,metric){
     document.getElementById("gdc_edit").onclick=function(){bg.classList.remove("open");garUsoList({date:ds});};
     bg.classList.add("open");
   }
-  /* Linha do tempo do mês: disponibilidade micro por viatura/dia (mesma linguagem da timeline da Agenda) */
+  /* Linha do tempo anual: disponibilidade por viatura/dia, 12 meses (mesma linguagem da timeline da Agenda) */
   function renderGarTl(){
     var el=document.getElementById("gar_tl");if(!el)return;
-    var y=garCalRef.y,m=garCalRef.m,dim=new Date(y,m+1,0).getDate();
+    var y=garCalRef.y;
     var frota=vtrRows.filter(function(r){return r.existencia!=="0";});
     if(!frota.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);font-style:italic">Nenhuma viatura cadastrada.</div>';return;}
+    function pesoSit(r){return r.sit==="PO"?0:r.sit==="P"?1:r.sit==="IM"?3:2;}
+    frota=frota.slice().sort(function(a,b){return pesoSit(a)-pesoSit(b)||String(a.modelo||"").localeCompare(String(b.modelo||""));});
     var todayDs=usoDateStr(new Date());
-    var pm=String(m+1).padStart(2,"0");
+    var days=[];
+    for(var m0=0;m0<12;m0++){
+      var dimM=new Date(y,m0+1,0).getDate(),pmM=String(m0+1).padStart(2,"0");
+      for(var dD=1;dD<=dimM;dD++){
+        var dtD=new Date(y,m0,dD);
+        days.push({ds:y+"-"+pmM+"-"+String(dD).padStart(2,"0"),d:dD,m:m0,wk:(dtD.getDay()===0||dtD.getDay()===6),ms:dD===1});
+      }
+    }
+    var CW=22;
     var html='<div class="tl-legend-top">'+
       '<span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-red)"></span>Em uso / IM</span>'+
       '<span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-amber)"></span>Saída prevista</span>'+
       '<span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-teal)"></span>Disponível</span>'+
-      '<span class="tl-leg-item" style="font-style:italic">'+ML[m]+' de '+y+' — clique numa célula para inserir ou editar</span></div>';
-    html+='<div class="tl-wrap"><div class="tl-header"><div class="tl-label-col">Viatura</div><div class="tl-days">';
-    for(var d=1;d<=dim;d++){
-      var dt=new Date(y,m,d),wk=(dt.getDay()===0||dt.getDay()===6);
-      var ds1=y+"-"+pm+"-"+String(d).padStart(2,"0");
-      html+='<div class="tl-day-head'+(ds1===todayDs?" today":"")+(wk?" weekend":"")+'" style="min-width:26px">'+d+'</div>';
-    }
+      '<span class="tl-leg-item" style="font-style:italic">Ano de '+y+' — os 12 meses; clique numa célula para inserir ou editar</span></div>';
+    html+='<div class="tl-wrap"><div class="tl-header"><div class="tl-label-col" style="position:sticky;left:0;z-index:3">Viatura</div><div class="tl-days">';
+    days.forEach(function(dy){
+      html+='<div class="tl-day-head'+(dy.ds===todayDs?" today":"")+(dy.wk?" weekend":"")+(dy.ms?" month-start":"")+'" style="min-width:'+CW+'px;flex:none">'+(dy.ms?'<span class="tl-month-label">'+MONTHS[dy.m]+'</span>':'')+dy.d+'</div>';
+    });
     html+='</div></div>';
     frota.forEach(function(r){
       var im=r.sit==="IM";
-      html+='<div class="tl-row"><div class="tl-name" title="'+esc((r.placa||"")+" — "+(r.modelo||""))+'"><div class="tl-dot" style="background:'+(im?"var(--c-red)":"var(--c-teal)")+'"></div>'+esc(r.placa||r.modelo||"—")+'</div><div class="tl-cells">';
-      for(var d2=1;d2<=dim;d2++){
-        var dt2=new Date(y,m,d2),wk2=(dt2.getDay()===0||dt2.getDay()===6);
-        var ds=y+"-"+pm+"-"+String(d2).padStart(2,"0");
+      var nome=(r.modelo||r.placa||"—");
+      html+='<div class="tl-row"><div class="tl-name" style="position:sticky;left:0;z-index:2;background:var(--surface)" title="'+esc((r.modelo||"")+(r.placa?" — "+r.placa:"")+(im?" · IM":r.sit?" · "+r.sit:""))+'"><div class="tl-dot" style="background:'+(im?"var(--c-red)":r.sit==="PO"?"var(--c-teal)":"var(--c-blue)")+'"></div>'+esc(nome)+'</div><div class="tl-cells">';
+      days.forEach(function(dy){
         var ent=null,cor="";
         if(im)cor="var(--c-red)";
         else{
           for(var i3=0;i3<vtrUsoLog.length;i3++){
             var e3=vtrUsoLog[i3];
-            if(e3.vid===r.id&&usoCovers(e3,ds)){
+            if(e3.vid===r.id&&usoCovers(e3,dy.ds)){
               if(e3.acao==="em_uso"){ent=e3;cor="var(--c-red)";break;}
               if(!ent){ent=e3;cor="var(--c-amber)";}
             }
           }
         }
-        var isT=ds===todayDs;
-        html+='<div class="tl-cell'+(isT?" today":"")+(wk2?" weekend":"")+'" data-vid="'+r.id+'" data-ds="'+ds+'"'+(ent?' data-uid="'+ent.id+'"':'')+' style="cursor:pointer;min-width:26px;height:27px" title="'+esc((r.placa||r.modelo||"")+" · "+usoBR(ds)+(im?" — IM (impossibilitada)":ent?" — "+(USO_ACAO_LBL[ent.acao]||"")+" · "+usoQuemE(ent):" — Disponível"))+'">'+
-          (cor?'<div style="position:absolute;inset:3px;border-radius:5px;background:'+cor+';opacity:'+(im?".5":".85")+'"></div>':'')+
+        var isT=dy.ds===todayDs;
+        html+='<div class="tl-cell'+(isT?" today":"")+(dy.wk?" weekend":"")+(dy.ms?" month-start":"")+'" data-vid="'+r.id+'" data-ds="'+dy.ds+'"'+(ent?' data-uid="'+ent.id+'"':'')+(im?' data-im="1"':'')+' style="cursor:pointer;min-width:'+CW+'px;flex:none;height:27px" title="'+esc(nome+" · "+usoBR(dy.ds)+(im?" — IM (impossibilitada)":ent?" — "+(USO_ACAO_LBL[ent.acao]||"")+" · "+usoQuemE(ent):" — Disponível"))+'">'+
+          (cor?'<div style="position:absolute;inset:3px;border-radius:5px;background:'+cor+';opacity:'+(im?".45":".85")+'"></div>':'')+
           (isT?'<div class="tl-today-line"></div>':'')+'</div>';
-      }
+      });
       html+='</div></div>';
     });
     html+='</div>';
     el.innerHTML=html;
     el.querySelectorAll(".tl-cell[data-vid]").forEach(function(c){
       c.onclick=function(){
-        if(c.dataset.uid)usoOpenEdit(c.dataset.uid);
-        else openUsoModal({date:c.dataset.ds,vid:c.dataset.vid});
+        if(c.dataset.uid){usoOpenEdit(c.dataset.uid);return;}
+        if(c.dataset.im){toast("Viatura IM — não pode receber lançamento de uso.","info");return;}
+        openUsoModal({date:c.dataset.ds,vid:c.dataset.vid});
       };
     });
+    var wrap=el.querySelector(".tl-wrap");
+    if(wrap){
+      var idx=0;
+      for(var i4=0;i4<days.length;i4++){if(days[i4].m===garCalRef.m){idx=i4;break;}}
+      wrap.scrollLeft=Math.max(0,idx*CW-40);
+    }
   }
   function usoOpenEdit(id){
     var e=vtrUsoLog.find(function(x){return x.id===id;});
@@ -12706,7 +12727,19 @@ syncTheme();
   document.addEventListener("DOMContentLoaded",function(){
     if(wasLocked)setTimeout(function(){aaBioBtnPaint();if(typeof aaShowLogin==="function")aaShowLogin(true);},600);
     var eye=$("aa_pw_eye"),pw=$("aa_login_pw");
-    if(eye&&pw)eye.addEventListener("click",function(){var show=pw.type==="password";pw.type=show?"text":"password";eye.textContent=show?"🙈":"👁";});
+    if(eye&&pw){
+      // Só permite revelar a senha que a pessoa digita agora — nunca uma senha salva/autopreenchida pelo navegador.
+      pw.dataset.typed="";
+      pw.addEventListener("keydown",function(e){if(e.key&&e.key.length===1||e.key==="Backspace"||e.key==="Delete")pw.dataset.typed="1";});
+      pw.addEventListener("input",function(){if(!pw.value)pw.dataset.typed="";});
+      pw.addEventListener("blur",function(){if(pw.type==="text"){pw.type="password";eye.textContent="👁";}});
+      eye.addEventListener("click",function(){
+        if(pw.type==="password"){
+          if(!pw.value||!pw.dataset.typed){toast("A senha só pode ser exibida enquanto você a digita.","info");return;}
+          pw.type="text";eye.textContent="🙈";
+        }else{pw.type="password";eye.textContent="👁";}
+      });
+    }
     var submit=$("aa_login_submit");
     if(submit){
       var btn=document.createElement("button");
@@ -12743,7 +12776,7 @@ syncTheme();
     gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
     var loc=gl.getAttribLocation(pr,"p");gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
     var uT=gl.getUniformLocation(pr,"t"),uR=gl.getUniformLocation(pr,"r");
-    function draw(){gl.uniform1f(uT,(performance.now()-t0)/1000);gl.uniform2f(uR,cv.width,cv.height);gl.drawArrays(gl.TRIANGLES,0,3);}
+    function draw(){gl.uniform1f(uT,(performance.now()-t0)/620);gl.uniform2f(uR,cv.width,cv.height);gl.drawArrays(gl.TRIANGLES,0,3);}
     function frame(ts){
       if(!active()){running=false;return;}
       if(ts-lastF<33){requestAnimationFrame(frame);return;}
