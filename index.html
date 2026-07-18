@@ -365,6 +365,12 @@
   
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<!-- black-translucent: a página desenha ATRÁS da barra de status/Dynamic Island (o fundo do app
+     preenche o topo); o conteúdo começa abaixo via env(safe-area-inset-top) no .wrap -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Agenda Administrativa">
 <title>Agenda Administrativa</title>
 
 <style>
@@ -430,6 +436,10 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
 .nav-item.active{background:var(--c-blue);color:#fff}
 .nv-toolbar{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 .dt-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+/* Seções com um único botão (Editar tabela): título quebra linha e o botão fica sempre no canto superior direito, em qualquer largura */
+.dt-section-head:has(>.nv-toolbar>button:only-of-type){flex-wrap:nowrap;align-items:flex-start}
+.dt-section-head:has(>.nv-toolbar>button:only-of-type) .dt-title-wrap{flex:1;min-width:0}
+.dt-section-head:has(>.nv-toolbar>button:only-of-type)>.nv-toolbar{flex:none}
 .dt-section-head .dt-table-title{margin:0;text-align:left}
 .dt-section-head .nv-toolbar{margin-bottom:0}
 .dt-title-wrap{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px}
@@ -619,6 +629,8 @@ tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 @media(max-width:640px){
   .ferias-jump{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
   .ferias-jump button{padding:7px 2px;font-size:10px;letter-spacing:0;text-align:center}
+  /* Abas de ano (DEZ/25-NOV/26 · + Ano) alinhadas à esquerda, abaixo de "+ Inserir período" */
+  #pessoal_year_tabs{justify-content:flex-start}
 }
 .ferias-msg{font-size:11.5px;border-radius:var(--r-md);padding:7px 10px;margin-top:2px;display:none}
 .ferias-msg.info{background:var(--c-sky);color:var(--text2)}
@@ -690,7 +702,7 @@ select.nv-condef:disabled{opacity:1;cursor:default}
    colunas e criando espaços enormes entre elas. No mobile a tabela passa a ter width:max-content
    e cada coluna hugs o próprio texto (larguras percentuais do .nv-table são neutralizadas). */
 @media(max-width:640px){
-  .dt-table,.nv-table{min-width:0;width:max-content}
+  .dt-table,.nv-table{min-width:100%;width:max-content}
   .dt-table th,.dt-table td,.nv-table th,.nv-table td{padding:6px 5px}
   /* Larguras de coluna arrastadas no desktop ficam inline (width+max-width em px) e esmagavam
      as colunas no celular (uma letra por linha). Aqui as duas são neutralizadas: cada coluna
@@ -2004,7 +2016,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Comissões</h3><span class="last-edit" id="nv_comissao_lastedit"></span></div>
   <div class="nv-toolbar" id="nv_comissao_toolbar">
-    <button class="nv-editbtn" id="nv_comissao_edit">✎ Editar</button>
+    <button class="nv-editbtn" id="nv_comissao_edit">✎ Editar tabela</button>
     <span class="nv-edit-actions" id="nv_comissao_edit_actions" hidden="">
       <button class="dt-colbtn" id="nv_comissao_addcol">+ coluna</button>
       <button class="nv-savebtn" id="nv_comissao_save" disabled="">✓ Salvar</button>
@@ -2047,7 +2059,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
   <div class="nv-toolbar" id="clg_t1_toolbar">
     <button class="nv-editbtn blue" id="clg_consumo_btn">+ Inserir consumo/abastecimento</button>
     <button class="nv-editbtn" id="clg_lanc_btn">✎ Editar lançamentos</button>
-    <button class="nv-editbtn" id="clg_t1_edit">✎ Editar</button>
+    <button class="nv-editbtn" id="clg_t1_edit">✎ Editar tabela</button>
     <span class="nv-edit-actions" id="clg_t1_edit_actions" hidden="">
       <button class="dt-colbtn" id="clg_t1_addcol">+ coluna</button>
       <button class="nv-savebtn" id="clg_t1_save" disabled="">✓ Salvar</button>
@@ -2076,7 +2088,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Abastecimento de ODM dos Meios</h3><span class="last-edit" id="clg_t2_lastedit"></span></div>
   <div class="nv-toolbar" id="clg_t2_toolbar">
-    <button class="nv-editbtn" id="clg_t2_edit">✎ Editar</button>
+    <button class="nv-editbtn" id="clg_t2_edit">✎ Editar tabela</button>
     <span class="nv-edit-actions" id="clg_t2_edit_actions" hidden="">
       <button class="dt-colbtn" id="clg_t2_addcol">+ coluna</button>
       <button class="nv-savebtn" id="clg_t2_save" disabled="">✓ Salvar</button>
@@ -2098,7 +2110,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
     <div class="dt-section-head">
       <div class="dt-title-wrap"><h3 class="dt-table-title">Estoque de Gasolina, Lubrificantes e Graxas - Navios</h3><span class="last-edit" id="clg_t3nav_lastedit"></span></div>
       <div class="nv-toolbar" id="clg_t3nav_toolbar">
-        <button class="nv-editbtn" id="clg_t3nav_edit">✎ Editar</button>
+        <button class="nv-editbtn" id="clg_t3nav_edit">✎ Editar tabela</button>
         <span class="nv-edit-actions" id="clg_t3nav_edit_actions" hidden="">
           <button class="nv-savebtn" id="clg_t3nav_save" disabled="">✓ Salvar</button>
           <button class="nv-cancelbtn" id="clg_t3nav_cancel">Cancelar</button>
@@ -2116,7 +2128,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
     <div class="dt-section-head">
       <div class="dt-title-wrap"><h3 class="dt-table-title">Estoque de Gasolina, Lubrificantes e Graxas - Embarcações</h3><span class="last-edit" id="clg_t3emb_lastedit"></span></div>
       <div class="nv-toolbar" id="clg_t3emb_toolbar">
-        <button class="nv-editbtn" id="clg_t3emb_edit">✎ Editar</button>
+        <button class="nv-editbtn" id="clg_t3emb_edit">✎ Editar tabela</button>
         <span class="nv-edit-actions" id="clg_t3emb_edit_actions" hidden="">
           <button class="nv-savebtn" id="clg_t3emb_save" disabled="">✓ Salvar</button>
           <button class="nv-cancelbtn" id="clg_t3emb_cancel">Cancelar</button>
@@ -2209,7 +2221,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Militares do Departamento</h3><span class="last-edit" id="pessoal_tbl_lastedit"></span></div>
   <div class="nv-toolbar" id="pessoal_tbl_toolbar">
-    <button class="nv-editbtn" id="pessoal_tbl_edit">✎ Editar</button>
+    <button class="nv-editbtn" id="pessoal_tbl_edit">✎ Editar tabela</button>
     <span class="nv-edit-actions" id="pessoal_tbl_edit_actions" hidden="">
       <button class="dt-colbtn" id="pessoal_tbl_addcol">+ coluna</button>
       <button class="nv-savebtn" id="pessoal_tbl_save" disabled="">✓ Salvar</button>
@@ -2286,7 +2298,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Pedidos de Serviço</h3><span class="last-edit" id="ppss_tbl_lastedit"></span></div>
   <div class="nv-toolbar" id="ppss_tbl_toolbar">
-    <button class="nv-editbtn" id="ppss_tbl_edit">✎ Editar</button>
+    <button class="nv-editbtn" id="ppss_tbl_edit">✎ Editar tabela</button>
     <span class="nv-edit-actions" id="ppss_tbl_edit_actions" hidden="">
       <button class="dt-colbtn" id="ppss_tbl_addcol">+ coluna</button>
       <button class="nv-savebtn" id="ppss_tbl_save" disabled="">✓ Salvar</button>
@@ -2344,7 +2356,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Viaturas</h3><span class="last-edit" id="vtr_tbl_lastedit"></span></div>
   <div class="nv-toolbar" id="vtr_tbl_toolbar">
-    <button class="nv-editbtn" id="vtr_tbl_edit">✎ Editar</button>
+    <button class="nv-editbtn" id="vtr_tbl_edit">✎ Editar tabela</button>
     <span class="nv-edit-actions" id="vtr_tbl_edit_actions" hidden="">
       <button class="dt-colbtn" id="vtr_tbl_addcol">+ coluna</button>
       <button class="nv-savebtn" id="vtr_tbl_save" disabled="">✓ Salvar</button>
@@ -10211,7 +10223,7 @@ function pdfTextRuns(buf){
       '<div class="dt-title-wrap"><h3 class="dt-table-title">'+esc(s.title)+'</h3>'+((s.key==="regulus"||s.key==="boto")?'<span class="last-edit">Embarcação em processo de LVAD.</span>':'')+'<span class="last-edit" id="'+prefix+'_lastedit"></span></div>'+
       '<div class="nv-toolbar" id="'+prefix+'_toolbar">'+
         ((s.key==="regulus"||s.key==="boto")?'<button class="dt-colbtn" id="'+prefix+'_toggle">▸ Detalhes</button>':'')+
-        '<button class="nv-editbtn" id="'+prefix+'_edit">✎ Editar</button>'+
+        '<button class="nv-editbtn" id="'+prefix+'_edit">✎ Editar tabela</button>'+
         '<span class="nv-edit-actions" id="'+prefix+'_edit_actions" hidden>'+
           '<button class="dt-colbtn" id="'+prefix+'_addcol">+ coluna</button>'+
           '<button class="nv-savebtn" id="'+prefix+'_save" disabled>✓ Salvar</button>'+
@@ -12157,7 +12169,7 @@ button:not(:disabled):active,.tab:active,.segbtn:active,.vtbtn:active{transform:
   .nav-sep{display:none}
   .nav-item{width:auto;min-width:48px;flex:1 0 auto;height:54px;border-radius:20px;gap:2px}
   .nav-item .nav-lbl{font-size:7.5px}
-  .wrap{padding:14px 12px calc(112px + env(safe-area-inset-bottom,0px))}
+  .wrap{padding:calc(14px + env(safe-area-inset-top,0px)) 12px calc(112px + env(safe-area-inset-bottom,0px))}
   input[type="text"],input[type="search"],input[type="number"],input[type="date"],input[type="time"],select,textarea{font-size:16px;min-height:44px}
   #toast-container{left:14px;right:14px;bottom:calc(96px + env(safe-area-inset-bottom,0px));align-items:center}
   .toast{max-width:100%}
