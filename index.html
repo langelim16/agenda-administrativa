@@ -922,6 +922,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .dias-lbl{font-size:8px;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);font-weight:600;display:block;line-height:1;margin-bottom:2px}
 .dias-val{font-family:var(--mono);font-weight:700;font-size:13px;display:block;line-height:1}
 .tprazo{text-align:right}.tprazo .pd{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text)}.tprazo .pl{font-size:8px;color:var(--text3);text-transform:uppercase}
+.tsub{margin-top:2px;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--c-blue);letter-spacing:.3px}
 .pill{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:99px;font-size:10px;font-family:var(--mono);font-weight:500;border:1px solid transparent;white-space:nowrap}
 .pill-venc{background:var(--c-red2);color:var(--c-red);border-color:rgba(168,85,75,.2)}.pill-prox{background:var(--c-amber2);color:var(--c-amber);border-color:rgba(151,123,67,.2)}
 .pill-fut{background:var(--c-sky);color:var(--c-blue);border-color:rgba(65,97,140,.15)}.pill-ok{background:var(--c-teal2);color:var(--c-teal);border-color:rgba(85,122,102,.2)}.pill-sem{background:var(--c-100);color:var(--c-500);border-color:var(--border)}
@@ -3256,8 +3257,9 @@ function shRecv(i){return tShips(i).reduce(function(a,n){return a+(sState(i,n).r
 function subsOf(i){return ovSubsids[i.key]||[];}
 function stksOf(i){return ovSubtasks[i.key]||[];}
 function stkPct(i){var s=stksOf(i);if(!s.length)return null;return Math.round(s.filter(function(x){return x.done;}).length/s.length*100);}
-function isDone(i){var s=statusOf(i);if(s==="PENDENTE")return false;if(i.cat==="NAVIOS")return s==="CONCLUIDO"?true:(tShips(i).length>0&&shRecv(i)===tShips(i).length);if(s==="CONCLUIDO")return ovStatus[i.key]==="CONCLUIDO"||!!nupOf(i);return false;}
-function canConc(i){if(i.cat==="NAVIOS")return shRecv(i)===tShips(i).length&&tShips(i).length>0;return!!nupOf(i);}
+function stksPend(i){var s=stksOf(i);return s.length>0&&s.some(function(x){return!x.done;});}
+function isDone(i){var s=statusOf(i);if(s==="PENDENTE")return false;if(stksPend(i))return false;if(i.cat==="NAVIOS")return s==="CONCLUIDO"?true:(tShips(i).length>0&&shRecv(i)===tShips(i).length);if(s==="CONCLUIDO")return ovStatus[i.key]==="CONCLUIDO"||!!nupOf(i);return false;}
+function canConc(i){if(stksPend(i))return false;if(i.cat==="NAVIOS")return shRecv(i)===tShips(i).length&&tShips(i).length>0;return!!nupOf(i);}
 function daysTo(i){if(!i.deadline)return null;var done=isDone(i),di=doneAt(i);if(done&&di){var dd=new Date(di);dd.setHours(0,0,0,0);return Math.round((i.deadline-dd)/86400000);}return Math.round((i.deadline-TODAY)/86400000);}
 function dlbl(i){var done=isDone(i),d=daysTo(i);if(d===null)return{lbl:"Sem prazo",val:"—",col:"var(--text3)"};if(done){if(d===0)return{lbl:"No prazo",val:"0d",col:"var(--c-teal)"};if(d>0)return{lbl:d+"d antes",val:"+"+d+"d",col:"var(--c-teal)"};return{lbl:Math.abs(d)+"d após",val:d+"d",col:"var(--c-amber)"};}if(d<0)return{lbl:Math.abs(d)+"d em atraso",val:d+"d",col:"var(--c-red)"};if(d===0)return{lbl:"Vence hoje",val:"hoje",col:"var(--c-red)"};if(d<=7)return{lbl:"Faltam "+d+"d",val:"+"+d+"d",col:"var(--c-amber)"};return{lbl:"Faltam "+d+"d",val:"+"+d+"d",col:"var(--text2)"};}
 function sit(i){if(isDone(i))return"ok";if(!i.deadline)return"sem";var d=Math.round((i.deadline-TODAY)/86400000);if(d<0)return"venc";if(d<=7)return"prox";return"fut";}
@@ -4418,7 +4420,7 @@ function taskHTML(i){
   var recL=KL[i.kind]+(i.kind==="SEMANAL"?"·"+WD[i.weekday!==undefined?i.weekday:5]:"");
   var mr=i.atraves||"—";
   var pill=done?'<span class="selo">✓ Concluída</span>':isNav?'<span class="pill '+(rc>0?"pill-prox":"pill-venc")+'">'+rc+"/"+ships.length+"</span>":'<span class="pill '+S.c+'">'+S.l+"</span>";
-  var subMini=stks.length?'<span class="recbadge" style="color:var(--c-blue)">☑ '+skD+"/"+stks.length+"</span>":"";
+  var subMini=stks.length?'<div class="tsub" title="Subtarefas concluídas">'+skD+"/"+stks.length+"</div>":"";
   var subsMini=subs.length?'<span class="recbadge" style="color:var(--c-blue)">📋 '+sDone+"/"+subs.length+"</span>":"";
 
   var det='<div class="detail'+(isOpen?" open":"")+'" id="'+detId+'"><div class="dmeta"><div><span class="dk">Mil/Servidor Responsável</span><span class="dv">'+esc(i.resp||"—")+'</span></div><div><span class="dk">Referência</span><span class="dv">'+esc(i.ref||"—")+'</span></div><div><span class="dk">Divisão</span><span class="dv">'+esc(i.divisao||"—")+'</span></div><div><span class="dk">Destino</span><span class="dv">'+esc(i.destino||"—")+'</span></div><div><span class="dk">Modelo de resposta</span><span class="dv" style="color:var(--c-blue);font-weight:600">'+esc(mr)+"</span></div>"+(i.msg?'<div><span class="dk">MSG/Obs</span><span class="dv">'+esc(i.msg)+"</span></div>":"")+"</div>";
@@ -4450,8 +4452,8 @@ function taskHTML(i){
       '<span class="task-dh" title="Reordenar">⠿</span>'+
       '<span class="sit-dot '+S.dot+'"></span>'+
       '<div class="tinfo"><div class="tt">'+(done?'<span class="tt-icon">✓</span>':'')+'<span class="tt-text">'+esc(i.tarefa)+'</span><span class="tt-flags">'+(hasInstEd(i)?'<span class="flag flag-inst">personaliz.</span>':'')+(isEd(i)?'<span class="flag flag-edited">editado</span>':'')+(isUsr(i)?'<span class="flag flag-new">novo</span>':'')+'</span></div>'+
-      '<div class="tm"><span class="catchip'+(isNav?" cc-nav":" cc-div")+'">'+(isNav?"SUBSÍDIO":"PRÓPRIA")+'</span><span class="recbadge">'+recL+'</span><span class="tag '+tgCls(i.assunto)+'">'+esc(i.assunto)+'</span><span style="color:var(--text3);font-size:10px">'+esc(i.resp)+"</span>"+subMini+subsMini+"</div></div>"+
-      '<div class="tprazo"><div class="pd">'+fmtD(i.deadline)+'</div><div class="pl">prazo</div></div>'+
+      '<div class="tm"><span class="catchip'+(isNav?" cc-nav":" cc-div")+'">'+(isNav?"SUBSÍDIO":"PRÓPRIA")+'</span><span class="recbadge">'+recL+'</span><span class="tag '+tgCls(i.assunto)+'">'+esc(i.assunto)+'</span><span style="color:var(--text3);font-size:10px">'+esc(i.resp)+"</span>"+subsMini+"</div></div>"+
+      '<div class="tprazo"><div class="pd">'+fmtD(i.deadline)+'</div><div class="pl">prazo</div>'+subMini+'</div>'+
       '<div class="dias-col" title="'+dl.lbl+'"><span class="dias-lbl">'+(isDone(i)?(daysTo(i)>=0?"antes":"após")+" prazo":"dias")+'</span><span class="dias-val" style="color:'+dl.col+'">'+dl.val+"</span></div>"+
       pill+
       '<button class="editb" data-edit="'+esc(i.id)+'" data-editkey="'+esc(i.key)+'" title="Editar">✎</button>'+
@@ -4996,7 +4998,7 @@ function bindEv(){
   document.querySelectorAll(".subtask-head").forEach(function(h){h.onclick=function(e){e.stopPropagation();var k=h.dataset.stkey,sk=k+"_st";if(openPanels.has(sk))openPanels.delete(sk);else openPanels.add(sk);h.nextElementSibling.classList.toggle("open");};});
   document.querySelectorAll(".subtask-btn").forEach(function(b){b.onclick=async function(e){e.stopPropagation();var k=b.dataset.key,inp=b.previousElementSibling,val=inp.value.trim();if(!val)return;var prev=JSON.parse(JSON.stringify(ovSubtasks));if(!ovSubtasks[k])ovSubtasks[k]=[];ovSubtasks[k].push({t:val,done:false});await svs(K.sub,ovSubtasks);pushUndo("Subtarefa",async function(){ovSubtasks=prev;await svs(K.sub,ovSubtasks);});inp.value="";openPanels.add(k);openPanels.add(k+"_st");renderAll();};});
   document.querySelectorAll(".subtask-inp").forEach(function(inp){inp.onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();inp.nextElementSibling.click();}};});
-  document.querySelectorAll(".sub-chk").forEach(function(c){c.onchange=async function(e){e.stopPropagation();var k=e.target.dataset.key,si=+e.target.dataset.si;var prev=JSON.parse(JSON.stringify(ovSubtasks));ovSubtasks[k][si].done=c.checked;await svs(K.sub,ovSubtasks);pushUndo("Subtarefa",async function(){ovSubtasks=prev;await svs(K.sub,ovSubtasks);});openPanels.add(k);openPanels.add(k+"_st");renderAll();};});
+  document.querySelectorAll(".sub-chk").forEach(function(c){c.onchange=async function(e){e.stopPropagation();var k=e.target.dataset.key,si=+e.target.dataset.si;var was=isDone(findI(k));var prev=JSON.parse(JSON.stringify(ovSubtasks));ovSubtasks[k][si].done=c.checked;await svs(K.sub,ovSubtasks);syncDone(findI(k),was);pushUndo("Subtarefa",async function(){ovSubtasks=prev;await svs(K.sub,ovSubtasks);});openPanels.add(k);openPanels.add(k+"_st");renderAll();};});
   document.querySelectorAll(".sub-del").forEach(function(b){b.onclick=async function(e){e.stopPropagation();var k=b.dataset.key,si=+b.dataset.si;var prev=JSON.parse(JSON.stringify(ovSubtasks));ovSubtasks[k].splice(si,1);await svs(K.sub,ovSubtasks);pushUndo("Remover subtarefa",async function(){ovSubtasks=prev;await svs(K.sub,ovSubtasks);});openPanels.add(k);openPanels.add(k+"_st");renderAll();};});
   document.querySelectorAll(".sbtn").forEach(function(b){b.onclick=async function(e){e.stopPropagation();var k=b.dataset.key,v=b.dataset.st,i=findI(k);if(!i)return;var was=isDone(i),prev=ovStatus[k];if(v==="NONE")delete ovStatus[k];else ovStatus[k]=v;await svs(K.st,ovStatus);syncDone(findI(k),was);pushUndo("Status → "+(v==="CONCLUIDO"?"Concluída":v==="PENDENTE"?"Pendente":"Limpa"),async function(){if(prev!==undefined)ovStatus[k]=prev;else delete ovStatus[k];await svs(K.st,ovStatus);});toast(v==="CONCLUIDO"?"✓ Concluída":v==="PENDENTE"?"⏳ Pendente":"Limpo","ok");renderAll();};});
   document.querySelectorAll(".doneinput").forEach(function(inp){
