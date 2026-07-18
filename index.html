@@ -2419,7 +2419,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 </div>
 
 <div class="dt-section-head">
-  <div class="dt-title-wrap"><h3 class="dt-table-title">PMPE — Comissões (PDF → tabela Comissões do CONDEF)</h3><span class="last-edit">Use o PDF <b>mais recente</b> (ex.: PMPE JUL-2026 PARTE I.pdf). Só entram comissões em andamento ou previstas dos meios do CHN-4 — as já encerradas são descartadas.</span></div>
+  <div class="dt-title-wrap"><h3 class="dt-table-title">PMPE — Comissões (PDF → tabela Comissões do CONDEF)</h3><span class="last-edit">Use o PDF <b>mais recente</b> (ex.: PMPE JUL-2026 PARTE I.pdf). Todas as comissões dos meios do CHN-4 entram — as de data passada viram histórico "Concluída".</span></div>
 </div>
 <div class="stats-card" style="flex:none;margin-bottom:18px">
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -6553,8 +6553,9 @@ setTimeout(hideSplash,12000);
      e as linhas (eventos) das células da coluna EVENTO — o código NN.NN fica no FUNDO
      da célula, as referências "EVT …" acima. Runs contíguos na mesma linha visual são
      pré-fundidos (senão um hífen solto cai na coluna vizinha e quebra a de-hifenização).
-     Regras do skill pmpe-import: só eventos PMPE (ADM fora); comissão encerrada
-     (fim < hoje) NUNCA é lançada; campos em manualFields NUNCA são sobrescritos;
+     Regras do skill pmpe-import: só eventos PMPE (ADM fora); TODAS as comissões
+     são conciliadas (nenhuma é descartada por data — encerradas viram histórico
+     "Concluída", verde/tachada); campos em manualFields NUNCA são sobrescritos;
      status "A ser adiada"/"Cancelada" é decisão manual — o automático só troca entre
      Em andamento/Prevista/Concluída; linha sumida do PMPE vira sugestão de remoção,
      nunca pré-marcada. ── */
@@ -6701,13 +6702,11 @@ setTimeout(hideSplash,12000);
   var PMPE_IMP_STATUS_AUTO={"":1,"Em andamento":1,"Prevista":1,"Concluída":1};
   function impPmpeMontar(eventos){
     impPmpeItens=[];
-    var hoje=new Date();hoje.setHours(0,0,0,0);var tHoje=hoje.getTime();
-    var vistos={},descartadas=0;
+    var vistos={};
     eventos.forEach(function(e){
       if(e.tipo==="ADM")return; // ADM não é comissão operativa
       vistos[e.meio+"|"+e.nEvt]=true;
-      var fimT=pmpeImpDate(e.fim);
-      if(fimT!=null&&fimT<tHoje){descartadas++;return;} // encerrada: nunca lançar
+      var fimT=pmpeImpDate(e.fim); // encerradas TAMBÉM entram (viram "Concluída" no status auto)
       var row=navComissoes.find(function(r){return String(r.meio||"").trim()===e.meio&&String(r.pmpe||"").trim()===e.nEvt;});
       var it={e:e,meio:e.meio,pmpe:e.nEvt,comissao:e.operacao,inicio:e.inicio,fim:e.fim,sel:false,info:""};
       if(!row){
@@ -6741,7 +6740,6 @@ setTimeout(hideSplash,12000);
       if(vistos[String(r.meio||"").trim()+"|"+String(r.pmpe||"").trim()])return;
       impPmpeItens.push({kind:"remover",rowId:r.id,meio:r.meio,pmpe:r.pmpe,comissao:r.comissao||"",inicio:r.inicio,fim:r.fim,sel:false,info:"não consta no PMPE lido — remova só se tiver certeza"});
     });
-    if(descartadas)impPmpeAvisos.push(descartadas+" comissão(ões) do PDF já encerrada(s) (fim antes de hoje) — descartada(s), nunca são lançadas");
   }
   var PMPE_IMP_K={
     novo:{lbl:"Nova comissão",cor:"var(--c-teal)"},
