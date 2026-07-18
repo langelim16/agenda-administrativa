@@ -2401,6 +2401,23 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
   </div>
 </div>
 
+<div class="dt-section-head">
+  <div class="dt-title-wrap"><h3 class="dt-table-title">PPSS — Pedidos de Serviço (Correntes + Programadas)</h3><span class="last-edit">Planilhas CORRENTE e PROGRAMADA (ODS ou XLSX, uma aba por navio). Cada leitura espelha a planilha: novos e alterados entram; o que sumiu vira sugestão de remoção.</span></div>
+</div>
+<div class="stats-card" style="flex:none;margin-bottom:18px">
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <input type="file" id="imp_ppss_file" accept=".ods,.xlsx" multiple style="font-size:12px;max-width:100%">
+    <button class="btn primary" id="imp_ppss_read">🔍 Ler e conferir</button>
+  </div>
+  <div style="font-size:10.5px;color:var(--text3);margin-top:8px">A SITUAÇÃO vem do texto da coluna (cor de fundo da linha como reserva) e é conferida contra as MSGs preenchidas — conflitos viram avisos. As colunas de MSG só <b>anexam</b> conteúdo novo, nunca apagam o que já está no artefato. Nada é gravado antes da sua conferência.</div>
+  <div id="imp_ppss_avisos" style="margin-top:10px"></div>
+  <div id="imp_ppss_prev" style="margin-top:12px"></div>
+  <div id="imp_ppss_actions" style="display:none;justify-content:flex-end;gap:8px;margin-top:12px">
+    <button class="btn" id="imp_ppss_clear">Limpar</button>
+    <button class="btn primary" id="imp_ppss_save">✓ Gravar itens selecionados</button>
+  </div>
+</div>
+
 <div class="foot">Importar · Planilhas mensais ·</div>
 </div>
 
@@ -2519,6 +2536,7 @@ var clgImportBind;   // liga o bloco CLG da aba Importar (definido no módulo CL
 var navGetComissoes; // tabela Comissões do CONDEF p/ o importador de CLG (dias de comissão por nº PMPE)
 var pessoalInit,renderPessoal,pessoalGetState,pessoalSetState;
 var ppssInit,renderPpss,garInit,renderGaragem,ppssGetState,ppssSetState,garGetState,garSetState;
+var ppssImportBind; // liga o bloco PPSS da aba Importar (definido no módulo PPSS, chamado pelo importInit)
 // Cadeado de edição compartilhado por TODAS as abas (Navios/CLG/Horas/Pessoal): enquanto qualquer
 // tabela ou cartão estiver em edição não salva, nenhuma outra seção do app pode iniciar edição —
 // evita sobreposição de dados entre abas. Cada módulo só troca seu cadeado local por este.
@@ -8332,6 +8350,342 @@ function openPpssKpiDrawer(navio,metric){
       save:ppssSaveCards,pushTag:"ppssPush",key:function(){return PPSS_CARDS_KEY;},
       label:"cartão PPSS",render:renderPpss});
   };
+  /* ── ABA IMPORTAR — PPSS (planilhas CORRENTE/PROGRAMADA → espelho de aa_ppss_v1) ──
+     Porte fiel de scripts/ppss_extrair.py. Diferente de Horas/CLG (que acumulam
+     lançamentos), aqui cada leitura ESPELHA a planilha: upsert por navio+tipo+numero.
+     XLSX: colunas resolvidas pelos cabeçalhos das linhas 8 (grupos mesclados) e 9
+     (sub-colunas), nunca por índice fixo — o layout varia por aba; namespace OOXML
+     resolvido por localName (alguns exportadores usam purl.oclc.org); zero-padding
+     do N° aplicado pelo numFmt custom ('0000') do styles.xml; cor de preenchimento
+     da linha é o fallback da SITUAÇÃO quando a coluna de texto está vazia.
+     ODS: índices fixos 0-18 (layout estável) + estilos de célula p/ a cor.
+     MSG: append-only (nunca sobrescreve o que o usuário guardou). Pedido que sumiu
+     da planilha vira SUGESTÃO de remoção, nunca pré-marcada. Conflitos SITUAÇÃO×MSG
+     (mecanismo anti-erro do skill) viram avisos na prévia. ── */
+  var PPSS_IMP_COR_SIT={"#33cccc":"Concluído","#ff0000":"Cancelado","#dc85e9":"Falta Indicar","#2cee0e":"Recurso Indicado","#ffcc99":"Orçado e não Indicado","#536dfe":"Não orçado"};
+  var PPSS_IMP_TXT_SIT={"TERMINADO":"Concluído","CONCLUÍDO":"Concluído","CANCELADO":"Cancelado","FALTA INDICAR":"Falta Indicar","RECURSO INDICADO":"Recurso Indicado","ORÇADO E NÃO INDICADO":"Orçado e não Indicado","NÃO ORÇADO":"Não orçado"};
+  var PPSS_IMP_STAGE={"Não orçado":0,"Orçado e não Indicado":1,"Falta Indicar":2,"Recurso Indicado":3,"Concluído":4,"Cancelado":4};
+  var PPSS_IMP_MSG_STAGE={msgOmpsOrc:1,msgNavSolIndRec:2,msgCominsupIndRec:3,msgSatisfCancelado:4};
+  var PPSS_IMP_STAGE_NOME={0:"Não orçado",1:"Orçado e não Indicado",2:"Falta Indicar",3:"Recurso Indicado",4:"Concluído/Cancelado"};
+  var PPSS_IMP_MSG_XLSX=[["OMPS – ORÇ","msgOmpsOrc"],["NAV – SOL IND REC","msgNavSolIndRec"],["COMINSUP – IND REC","msgCominsupIndRec"],["COMINSUP/NAV – IND REC","msgCominsupIndRec"],["COMINSUP/NAVIO – IND REC","msgCominsupIndRec"],["OMPS-TÉRMINO","msgOmpsTermino"],["SATISFEITO / CANCELADO","msgSatisfCancelado"]];
+  function ppssImpXml(txt){var d=new DOMParser().parseFromString(txt,"text/xml");if(d.getElementsByTagName("parsererror").length)throw new Error("XML corrompido");return d;}
+  function ppssImpEls(node,name){return Array.prototype.slice.call(node.getElementsByTagNameNS("*",name));}
+  function ppssImpAttr(el,name){for(var i=0;i<el.attributes.length;i++){if(el.attributes[i].localName===name)return el.attributes[i].value;}return null;}
+  function ppssImpColIdx(ref){var n=0;for(var i=0;i<ref.length;i++){var c=ref.charCodeAt(i);if(c>=65&&c<=90)n=n*26+(c-64);else if(c>=97&&c<=122)n=n*26+(c-96);else break;}return n-1;}
+  function ppssImpMoney(v){
+    var s=String(v==null?"":v).trim();
+    if(s==="")return"";
+    if(!/^-?\d+(\.\d+)?$/.test(s))return s; // não-numérico puro (ex.: texto já formatado do ODS) passa direto
+    var n=parseFloat(s);
+    if(n===0)return"";
+    return "R$ "+n.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+  }
+  function ppssImpConflitos(p){
+    var avisos=[];
+    var sitStage=(p.situacao in PPSS_IMP_STAGE)?PPSS_IMP_STAGE[p.situacao]:null;
+    var ident=p.navio+" #"+p.numero+" ("+p.tipo+")";
+    Object.keys(PPSS_IMP_MSG_STAGE).forEach(function(k){
+      if(!String(p[k]||"").trim())return;
+      var stage=PPSS_IMP_MSG_STAGE[k];
+      if(sitStage==null)avisos.push(ident+': SITUAÇÃO vazia, mas "'+k+'" preenchida sugere estágio "'+PPSS_IMP_STAGE_NOME[stage]+'"');
+      else if(stage>sitStage)avisos.push(ident+': SITUAÇÃO="'+p.situacao+'", porém "'+k+'" preenchida evidencia estágio mais avançado "'+PPSS_IMP_STAGE_NOME[stage]+'" — conferir/atualizar situação');
+    });
+    return avisos;
+  }
+  function ppssImpOds(files,tipo){
+    var root=ppssImpXml(zipFileText(files,"content.xml"));
+    var styles={};
+    ppssImpEls(root,"style").forEach(function(s){
+      if(ppssImpAttr(s,"family")!=="table-cell")return;
+      var name=ppssImpAttr(s,"name");
+      ppssImpEls(s,"table-cell-properties").forEach(function(pr){
+        var bg=ppssImpAttr(pr,"background-color");
+        if(bg)styles[name]=bg.toLowerCase();
+      });
+    });
+    var out={pedidos:[],abas:[]};
+    ppssImpEls(root,"table").forEach(function(tb){
+      var navio=ppssImpAttr(tb,"name");
+      if(PPSS_NAVIOS.indexOf(navio)<0)return;
+      out.abas.push(navio);
+      var rows=[];
+      ppssImpEls(tb,"table-row").forEach(function(tr){
+        var repRow=+(ppssImpAttr(tr,"number-rows-repeated")||1);
+        var cells=[];
+        Array.prototype.slice.call(tr.childNodes).forEach(function(tc){
+          if(tc.nodeType!==1||!/table-cell$/.test(tc.localName))return;
+          var rep=Math.min(+(ppssImpAttr(tc,"number-columns-repeated")||1),25);
+          var txt=ppssImpEls(tc,"p").map(function(pp){return pp.textContent;}).join(" ").replace(/\r\n?/g,"\n");
+          var bg=styles[ppssImpAttr(tc,"style-name")]||null;
+          for(var k=0;k<rep;k++)cells.push([txt,bg]);
+        });
+        if(repRow>1&&!cells.some(function(c){return c[0];}))return;
+        rows.push(cells);
+      });
+      function T(r,i){return(r.length>i&&r[i])?String(r[i][0]).trim():"";}
+      for(var ri=9;ri<rows.length;ri++){
+        var r=rows[ri];
+        var numero=T(r,1),navioCell=T(r,0);
+        if(numero.toUpperCase()==="SUBTOTAL"||navioCell.toUpperCase()==="SUBTOTAL")break; // nada abaixo do SUBTOTAL é pedido
+        if(!numero)continue;
+        var bg=r[0]?r[0][1]:null;
+        var situacao=PPSS_IMP_TXT_SIT[T(r,17).toUpperCase()]||PPSS_IMP_COR_SIT[bg||""]||"";
+        var orc=T(r,5);
+        var rec=T(r,8)||T(r,9);
+        if(!rec&&situacao==="Recurso Indicado")rec=orc; // indicado integral = o próprio orçado
+        out.pedidos.push({navio:navio,tipo:tipo,numero:numero,descricao:T(r,2),omps:T(r,3),ds:T(r,4),
+          orcamento:orc,aditamentos:[T(r,6),T(r,7)].filter(Boolean).join(" + "),recInd:rec,
+          faltaIndicar:T(r,10),altEscopo:T(r,11),
+          msgOmpsOrc:T(r,12),msgNavSolIndRec:T(r,13),msgCominsupIndRec:T(r,14),msgOmpsTermino:T(r,15),msgSatisfCancelado:T(r,16),
+          situacao:situacao,situacaoCor:bg||"",altcredBnvc:T(r,18)});
+      }
+    });
+    return out;
+  }
+  function ppssImpXlsx(files,tipo){
+    function xml(name){return ppssImpXml(zipFileText(files,name));}
+    var wb=xml("xl/workbook.xml");
+    var ss=[];
+    // \r\n → \n: o DOMParser preserva o CR que o extrator Python (ElementTree) normaliza —
+    // sem isso todo campo multilinha divergiria do que já está gravado no artefato
+    if(files["xl/sharedStrings.xml"])ppssImpEls(xml("xl/sharedStrings.xml"),"si").forEach(function(si){
+      ss.push(ppssImpEls(si,"t").map(function(t){return t.textContent;}).join("").replace(/\r\n?/g,"\n"));
+    });
+    var rels={};
+    ppssImpEls(xml("xl/_rels/workbook.xml.rels"),"Relationship").forEach(function(r){rels[r.getAttribute("Id")]=r.getAttribute("Target");});
+    var st=xml("xl/styles.xml");
+    var fills=[];
+    var fillsEl=ppssImpEls(st,"fills")[0];
+    if(fillsEl)ppssImpEls(fillsEl,"fill").forEach(function(fl){
+      var fg=ppssImpEls(fl,"fgColor")[0];
+      var rgb=fg?fg.getAttribute("rgb"):null;
+      fills.push(rgb?("#"+rgb.slice(2).toLowerCase()):null);
+    });
+    var xfFill=[],xfNum=[];
+    var cellXfs=ppssImpEls(st,"cellXfs")[0];
+    if(cellXfs)ppssImpEls(cellXfs,"xf").forEach(function(x){xfFill.push(+(x.getAttribute("fillId")||0));xfNum.push(+(x.getAttribute("numFmtId")||0));});
+    var numfmts={};
+    var nfEl=ppssImpEls(st,"numFmts")[0];
+    if(nfEl)ppssImpEls(nfEl,"numFmt").forEach(function(f){numfmts[+f.getAttribute("numFmtId")]=f.getAttribute("formatCode");});
+    function zeroPad(raw,styleIdx){
+      var code=numfmts[xfNum[styleIdx]||0];
+      if(code&&/^0+$/.test(code)){
+        var n=parseFloat(raw);
+        if(!isNaN(n))return String(Math.round(n)).padStart(code.length,"0");
+      }
+      return raw;
+    }
+    function V(vals,i){return String(vals[i]==null?"":vals[i]).trim();}
+    var out={pedidos:[],abas:[]};
+    ppssImpEls(wb,"sheet").forEach(function(sh){
+      var navio=sh.getAttribute("name");
+      if(PPSS_NAVIOS.indexOf(navio)<0)return;
+      var tgt=rels[ppssImpAttr(sh,"id")];
+      if(!tgt)return;
+      out.abas.push(navio);
+      tgt=tgt.replace(/^\//,"");
+      if(tgt.indexOf("xl/")!==0)tgt="xl/"+tgt;
+      var root=xml(tgt);
+      var merges={};
+      ppssImpEls(root,"mergeCell").forEach(function(m){
+        var ref=(m.getAttribute("ref")||"").split(":");
+        if(ref.length<2)return;
+        if(parseInt(ref[0].replace(/^[A-Za-z]+/,""),10)!==8)return;
+        merges[ppssImpColIdx(ref[0])]=ppssImpColIdx(ref[1]);
+      });
+      var hdr={},colsSeen=[];
+      ppssImpEls(root,"row").forEach(function(row){
+        var rn=+row.getAttribute("r");
+        if(rn!==8&&rn!==9)return;
+        ppssImpEls(row,"c").forEach(function(c){
+          var v=ppssImpEls(c,"v")[0];
+          if(!v||!v.textContent)return;
+          var txt=c.getAttribute("t")==="s"?ss[+v.textContent]:v.textContent;
+          txt=String(txt==null?"":txt).trim().toUpperCase();
+          if(!txt)return;
+          var col=ppssImpColIdx(c.getAttribute("r"));
+          if(rn===9)(hdr[txt]||(hdr[txt]=[])).push(col);
+          else colsSeen.push([col,txt]);
+        });
+      });
+      var grp={};
+      colsSeen.forEach(function(e,i){
+        grp[e[1]]=[e[0],(e[0] in merges)?merges[e[0]]:(i+1<colsSeen.length?colsSeen[i+1][0]-1:e[0])];
+      });
+      function groupCols(lbl){var g=grp[lbl];if(!g)return[];var o=[];for(var i=g[0];i<=g[1];i++)o.push(i);return o;}
+      function h1(lbl,dflt){return(hdr[lbl]&&hdr[lbl].length)?hdr[lbl][0]:dflt;}
+      var cNavio=h1("NAVIO",0),cNum=h1("N°",1),cDesc=h1("DESCRIÇÃO",2),cOmps=h1("OMPS",3),cDs=h1("DS",4);
+      var colsOrc=groupCols("ORÇAMENTO"),colsAdit=groupCols("ADITAMENTO"),colsRec=groupCols("REC IND");
+      var cFalta=grp["FALTA INDICAR"]?grp["FALTA INDICAR"][0]:null;
+      var cAltEsc=hdr["ALT ESCOPO"]?hdr["ALT ESCOPO"][0]:null;
+      var cSit=grp["SITUAÇÃO"]?grp["SITUAÇÃO"][0]:null;
+      var cAltcred=grp["ALTCRED P/ BNVC"]?grp["ALTCRED P/ BNVC"][0]:null;
+      var stop=false;
+      ppssImpEls(root,"row").forEach(function(row){
+        if(stop||+row.getAttribute("r")<10)return;
+        var vals={},stylesRow={};
+        ppssImpEls(row,"c").forEach(function(c){
+          var v=ppssImpEls(c,"v")[0];
+          if(!v||v.textContent==null||v.textContent==="")return;
+          var i=ppssImpColIdx(c.getAttribute("r"));
+          vals[i]=c.getAttribute("t")==="s"?ss[+v.textContent]:v.textContent;
+          stylesRow[i]=+(c.getAttribute("s")||0);
+        });
+        var numero=V(vals,cNum);
+        if(cNum in stylesRow)numero=zeroPad(numero,stylesRow[cNum]);
+        if(numero.toUpperCase()==="SUBTOTAL"||V(vals,cNavio).toUpperCase()==="SUBTOTAL"){stop=true;return;}
+        if(!numero)return;
+        var sitTxt=cSit!=null?V(vals,cSit).toUpperCase():"";
+        var bg=(cNavio in stylesRow)?(fills[xfFill[stylesRow[cNavio]]||0]||""):"";
+        var situacao=PPSS_IMP_TXT_SIT[sitTxt]||PPSS_IMP_COR_SIT[bg]||"";
+        function first(cols){for(var i2=0;i2<cols.length;i2++){var vv=V(vals,cols[i2]);if(vv)return vv;}return"";}
+        var orc=first(colsOrc);
+        var rec=first(colsRec);
+        if(!rec&&situacao==="Recurso Indicado")rec=orc; // indicado integral = o próprio orçado
+        var msgs={msgOmpsOrc:[],msgNavSolIndRec:[],msgCominsupIndRec:[],msgOmpsTermino:[],msgSatisfCancelado:[]};
+        PPSS_IMP_MSG_XLSX.forEach(function(mx){
+          var idxs=hdr[mx[0]];
+          if(!idxs)return;
+          var vv=V(vals,idxs[0]);
+          if(vv)msgs[mx[1]].push(vv);
+        });
+        out.pedidos.push({navio:navio,tipo:tipo,numero:numero,descricao:V(vals,cDesc),omps:V(vals,cOmps),ds:V(vals,cDs),
+          orcamento:ppssImpMoney(orc),
+          aditamentos:colsAdit.map(function(i2){return V(vals,i2);}).filter(Boolean).map(ppssImpMoney).join(" + "),
+          recInd:ppssImpMoney(rec),
+          faltaIndicar:cFalta!=null?ppssImpMoney(V(vals,cFalta)):"",
+          altEscopo:cAltEsc!=null?V(vals,cAltEsc):"",
+          msgOmpsOrc:msgs.msgOmpsOrc.join("\n"),msgNavSolIndRec:msgs.msgNavSolIndRec.join("\n"),msgCominsupIndRec:msgs.msgCominsupIndRec.join("\n"),msgOmpsTermino:msgs.msgOmpsTermino.join("\n"),msgSatisfCancelado:msgs.msgSatisfCancelado.join("\n"),
+          situacao:situacao,situacaoCor:bg||"",altcredBnvc:cAltcred!=null?V(vals,cAltcred):""});
+      });
+    });
+    return out;
+  }
+  var impPpssItens=[],impPpssAvisos=[];
+  // campos que a planilha traz e portanto sobrescreve; MSG é append-only (abaixo)
+  var PPSS_IMP_CAMPOS=["descricao","omps","ds","orcamento","aditamentos","recInd","faltaIndicar","altEscopo","situacao","situacaoCor","altcredBnvc"];
+  function ppssImpMergeMsg(oldV,newV){
+    var oldS=String(oldV||"");
+    var add=String(newV||"").split("\n").map(function(s){return s.trim();}).filter(function(l){return l&&oldS.indexOf(l)<0;});
+    if(!add.length)return oldS;
+    return(oldS?oldS+"\n":"")+add.join("\n");
+  }
+  function impPpssMontar(extraidos,covered){
+    impPpssItens=[];
+    var byKey={};
+    extraidos.forEach(function(p){byKey[p.navio+"|"+p.tipo+"|"+p.numero]=true;});
+    extraidos.forEach(function(p){
+      var row=ppssRows.find(function(r){return r.navio===p.navio&&r.tipo===p.tipo&&String(r.numero)===p.numero;});
+      var it={p:p,navio:p.navio,tipo:p.tipo,numero:p.numero,situacao:p.situacao,sel:false,info:""};
+      if(!row){it.kind="novo";it.sel=true;it.info=p.descricao.slice(0,70);}
+      else{
+        var muda=[];
+        PPSS_IMP_CAMPOS.forEach(function(k){if(String(row[k]||"")!==String(p[k]||""))muda.push(k);});
+        PPSS_MSG_KEYS.forEach(function(k){if(ppssImpMergeMsg(row[k],p[k])!==String(row[k]||""))muda.push(k+" (+msg)");});
+        if(muda.length){it.kind="upd";it.rowId=row.id;it.sel=true;it.info=muda.join(", ");}
+        else it.kind="emdia";
+      }
+      impPpssItens.push(it);
+    });
+    // pedidos do artefato que sumiram da planilha — SÓ para abas cobertas pelos arquivos lidos
+    ppssRows.forEach(function(r){
+      if(!covered[r.navio+"|"+r.tipo])return;
+      if(byKey[r.navio+"|"+r.tipo+"|"+String(r.numero)])return;
+      impPpssItens.push({kind:"remover",rowId:r.id,navio:r.navio,tipo:r.tipo,numero:String(r.numero),situacao:r.situacao||"",sel:false,info:(r.descricao||"").slice(0,70)});
+    });
+  }
+  var PPSS_IMP_K={
+    novo:{lbl:"Novo",cor:"var(--c-teal)"},
+    upd:{lbl:"Atualizar",cor:"var(--c-blue)"},
+    remover:{lbl:"REMOVER? sumiu da planilha",cor:"var(--c-red)"}
+  };
+  function impPpssRender(){
+    var prev=document.getElementById("imp_ppss_prev"),av=document.getElementById("imp_ppss_avisos"),act=document.getElementById("imp_ppss_actions");
+    if(!prev)return;
+    av.innerHTML=impPpssAvisos.map(function(a){return '<div class="ferias-msg warn" style="margin-top:6px">⚠ '+esc(a)+'</div>';}).join("");
+    if(!impPpssItens.length){prev.innerHTML="";act.style.display="none";return;}
+    var resumo={novo:0,upd:0,emdia:0,remover:0};
+    impPpssItens.forEach(function(it){resumo[it.kind]++;});
+    var visiveis=impPpssItens.map(function(it,i){return[it,i];}).filter(function(e){return e[0].kind!=="emdia";});
+    prev.innerHTML='<div style="font-size:11.5px;color:var(--text2);margin-bottom:8px">'+resumo.novo+' novo(s) · '+resumo.upd+' a atualizar · '+resumo.emdia+' em dia (não listados) · '+resumo.remover+' sugestão(ões) de remoção</div>'+
+      (visiveis.length?'<div class="dt-table-wrap"><table class="dt-table"><thead><tr><th style="width:26px"></th><th>Navio</th><th>Tipo</th><th>Nº</th><th>Situação (planilha)</th><th>Ação</th><th>Detalhe</th></tr></thead><tbody>'+
+      visiveis.map(function(e){
+        var it=e[0],k=PPSS_IMP_K[it.kind];
+        return '<tr><td><input type="checkbox" data-i="'+e[1]+'"'+(it.sel?" checked":"")+'></td><td>'+esc(it.navio)+'</td><td>'+esc(it.tipo)+'</td><td>'+esc(it.numero)+'</td><td>'+esc(it.situacao||"—")+'</td><td style="color:'+k.cor+';white-space:nowrap">'+esc(k.lbl)+'</td><td style="font-size:11px">'+esc(it.info)+'</td></tr>';
+      }).join("")+'</tbody></table></div>':'<div style="font-size:12px;color:var(--text3);font-style:italic">Tudo em dia — nenhuma diferença entre as planilhas e o artefato.</div>');
+    prev.querySelectorAll('input[type="checkbox"][data-i]').forEach(function(c){c.onchange=function(){impPpssItens[+c.dataset.i].sel=c.checked;};});
+    act.style.display="flex";
+    document.getElementById("imp_ppss_save").disabled=!visiveis.length;
+  }
+  async function impPpssLer(){
+    var inp=document.getElementById("imp_ppss_file");
+    var files=Array.prototype.slice.call(inp.files||[]);
+    impPpssAvisos=[];impPpssItens=[];
+    if(!files.length){toast("Selecione as planilhas de PPSS (CORRENTE e/ou PROGRAMADA).","info");impPpssRender();return;}
+    await ppssInit(); // garante os dados de PPSS carregados mesmo sem a aba ter sido aberta
+    var extraidos=[],covered={};
+    for(var i=0;i<files.length;i++){
+      var nome=files[i].name,nomeU=nome.toUpperCase();
+      var tipo=nomeU.indexOf("CORRENTE")>=0?"Corrente":(nomeU.indexOf("PROGRAMADA")>=0?"Programada":null);
+      if(!tipo){impPpssAvisos.push(nome+": nome sem CORRENTE/PROGRAMADA — arquivo ignorado");continue;}
+      try{
+        var zf=zipRead(await files[i].arrayBuffer());
+        var out=zf["content.xml"]?ppssImpOds(zf,tipo):(zf["xl/workbook.xml"]?ppssImpXlsx(zf,tipo):null);
+        if(!out)throw new Error("formato não reconhecido (nem ODS nem XLSX)");
+        out.abas.forEach(function(n){covered[n+"|"+tipo]=true;});
+        var faltam=PPSS_NAVIOS.filter(function(n){return out.abas.indexOf(n)<0;});
+        if(faltam.length)impPpssAvisos.push(nome+": sem aba de "+faltam.join(", "));
+        extraidos=extraidos.concat(out.pedidos);
+      }catch(e){impPpssAvisos.push(nome+": "+e.message);}
+    }
+    extraidos.forEach(function(p){ppssImpConflitos(p).forEach(function(a){impPpssAvisos.push("Conflito SITUAÇÃO × MSG: "+a);});});
+    impPpssMontar(extraidos,covered);
+    impPpssRender();
+  }
+  async function impPpssGravar(){
+    var sel=impPpssItens.filter(function(it){return it.sel&&it.kind!=="emdia";});
+    if(!sel.length){toast("Nenhum item selecionado.","info");return;}
+    var btn=document.getElementById("imp_ppss_save");
+    btn.disabled=true;btn.textContent="Gravando…";
+    var nN=0,nU=0,nR=0;
+    sel.forEach(function(it){
+      if(it.kind==="novo"){
+        var r={id:genUid("ps"),navio:it.p.navio,tipo:it.p.tipo,numero:it.p.numero};
+        PPSS_IMP_CAMPOS.forEach(function(k){r[k]=it.p[k]||"";});
+        PPSS_MSG_KEYS.forEach(function(k){r[k]=it.p[k]||"";});
+        ppssRows.push(r);
+        auditPushOne("ppss_tbl",r.id,"PPSS importado: "+r.navio+" #"+r.numero+" · "+(r.situacao||"—")+(r.orcamento?" ("+r.orcamento+")":""));
+        nN++;
+      }else if(it.kind==="upd"){
+        var row=ppssRows.find(function(x){return x.id===it.rowId;});
+        if(!row)return;
+        PPSS_IMP_CAMPOS.forEach(function(k){row[k]=it.p[k]||"";});
+        PPSS_MSG_KEYS.forEach(function(k){row[k]=ppssImpMergeMsg(row[k],it.p[k]);});
+        auditPushOne("ppss_tbl",row.id,"PPSS importado: "+row.navio+" #"+row.numero+" · "+(row.situacao||"—")+(row.orcamento?" ("+row.orcamento+")":""));
+        nU++;
+      }else{
+        var idx=ppssRows.findIndex(function(x){return x.id===it.rowId;});
+        if(idx<0)return;
+        var rr=ppssRows[idx];
+        ppssRows.splice(idx,1);
+        auditPushOne("ppss_tbl",rr.id,"PPSS removido na importação (não consta mais na planilha): "+rr.navio+" #"+rr.numero+" ("+rr.tipo+")");
+        nR++;
+      }
+    });
+    ppssSaveRows();
+    await pushKV("ppssPush",PPSS_KEY,ppssRows);
+    touchLastEdit("ppss_tbl");paintLastEdit("ppss_tbl_lastedit","ppss_tbl");
+    btn.disabled=false;btn.textContent="✓ Gravar itens selecionados";
+    impPpssItens=[];impPpssAvisos=[];impPpssRender();
+    document.getElementById("imp_ppss_file").value="";
+    renderPpss();
+    toast("✓ Importação de PPSS concluída: "+nN+" novo(s), "+nU+" atualizado(s)"+(nR?", "+nR+" removido(s)":""),"ok");
+  }
+  ppssImportBind=function(){
+    document.getElementById("imp_ppss_read").onclick=impPpssLer;
+    document.getElementById("imp_ppss_save").onclick=impPpssGravar;
+    document.getElementById("imp_ppss_clear").onclick=function(){impPpssItens=[];impPpssAvisos=[];impPpssRender();document.getElementById("imp_ppss_file").value="";};
+  };
 })();
 
 /* ═══════════════════════════════════════════════════════════
@@ -9874,8 +10228,10 @@ async function planilhaSheets(file){
     document.getElementById("imp_horas_save").onclick=impHorasGravar;
     document.getElementById("imp_horas_clear").onclick=function(){impHorasItens=[];impHorasAvisos=[];impHorasRender();document.getElementById("imp_horas_file").value="";};
     if(typeof clgImportBind==="function")clgImportBind();
+    if(typeof ppssImportBind==="function")ppssImportBind();
     horasInit(); // pré-carrega os dados de Horas em segundo plano
     if(typeof clgInit==="function")clgInit(); // idem para CLG
+    if(typeof ppssInit==="function")ppssInit(); // idem para PPSS
   };
 })();
 
