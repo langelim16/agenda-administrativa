@@ -1481,21 +1481,23 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
 /* ── 14. Mobile: dock flutuante inferior estilo iOS ── */
 @media(max-width:700px){
   .appnav{
-    top:auto;left:10px;right:10px;width:auto;
-    bottom:calc(10px + env(safe-area-inset-bottom,0px));
-    height:64px;flex-direction:row;justify-content:space-evenly;align-items:center;
-    gap:2px;padding:5px 8px;border-radius:26px;
+    top:auto;left:8px;right:8px;width:auto;
+    bottom:calc(8px + env(safe-area-inset-bottom,0px));
+    height:82px;flex-direction:row;justify-content:space-evenly;align-items:center;
+    gap:3px;padding:8px 10px;border-radius:30px;
     border:1px solid rgba(255,255,255,.18);
     overflow-x:auto;overflow-y:hidden;
     box-shadow:0 12px 36px rgba(0,0,0,.3);
   }
   body{padding-left:0;padding-bottom:0}
-  .wrap{padding:12px 10px 108px}
-  .nav-item{width:auto;min-width:48px;flex:1 0 auto;height:52px;border-radius:18px;gap:2px}
-  .nav-item .nav-lbl{font-size:7.5px}
+  .wrap{padding:12px 10px 124px}
+  .nav-item{width:auto;min-width:56px;flex:1 0 auto;height:66px;border-radius:20px;gap:3px}
+  .nav-item .nav-ic{font-size:24px}
+  .nav-item .nav-ic svg{width:26px;height:26px}
+  .nav-item .nav-lbl{font-size:9.5px}
   .tab{padding:9px 7px;min-width:46px}
   .btn,.hbtn{padding:8px 13px}
-  #toast-container{bottom:calc(86px + env(safe-area-inset-bottom,0px));right:12px;left:12px;align-items:center}
+  #toast-container{bottom:calc(104px + env(safe-area-inset-bottom,0px));right:12px;left:12px;align-items:center}
   .drawer{width:100vw;max-width:100vw;border-left:none}
 }
 
@@ -12152,10 +12154,10 @@ button:not(:disabled):active,.tab:active,.segbtn:active,.vtbtn:active{transform:
 @media(max-width:768px){
   body{padding-left:0}
   .appnav{
-    top:auto;left:12px;right:12px;width:auto;
-    bottom:calc(12px + env(safe-area-inset-bottom,0px));
-    height:66px;flex-direction:row;justify-content:space-between;align-items:center;
-    gap:2px;padding:6px 8px;border-radius:30px;
+    top:auto;left:8px;right:8px;width:auto;
+    bottom:calc(8px + env(safe-area-inset-bottom,0px));
+    height:82px;flex-direction:row;justify-content:space-between;align-items:center;
+    gap:3px;padding:8px 10px;border-radius:32px;
     border:1px solid rgba(255,255,255,.18);border-right:1px solid rgba(255,255,255,.18);
     overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
     background:color-mix(in srgb,var(--header-bg) 76%,transparent);
@@ -12164,14 +12166,16 @@ button:not(:disabled):active,.tab:active,.segbtn:active,.vtbtn:active{transform:
     transition:transform .5s var(--mpx-sheet),opacity .35s ease;
   }
   .appnav::-webkit-scrollbar{display:none}
-  .appnav.mpx-hide{transform:translateY(calc(100% + 24px + env(safe-area-inset-bottom,0px)))}
+  .appnav.mpx-hide{transform:translateY(calc(100% + 20px + env(safe-area-inset-bottom,0px)))}
   .nav-grp{display:none}
   .nav-sep{display:none}
-  .nav-item{width:auto;min-width:48px;flex:1 0 auto;height:54px;border-radius:20px;gap:2px}
-  .nav-item .nav-lbl{font-size:7.5px}
-  .wrap{padding:calc(14px + env(safe-area-inset-top,0px)) 12px calc(112px + env(safe-area-inset-bottom,0px))}
+  .nav-item{width:auto;min-width:56px;flex:1 0 auto;height:66px;border-radius:22px;gap:3px}
+  .nav-item .nav-ic{font-size:24px}
+  .nav-item .nav-ic svg{width:26px;height:26px}
+  .nav-item .nav-lbl{font-size:9.5px}
+  .wrap{padding:calc(14px + env(safe-area-inset-top,0px)) 12px calc(124px + env(safe-area-inset-bottom,0px))}
   input[type="text"],input[type="search"],input[type="number"],input[type="date"],input[type="time"],select,textarea{font-size:16px;min-height:44px}
-  #toast-container{left:14px;right:14px;bottom:calc(96px + env(safe-area-inset-bottom,0px));align-items:center}
+  #toast-container{left:14px;right:14px;bottom:calc(112px + env(safe-area-inset-bottom,0px));align-items:center}
   .toast{max-width:100%}
   /* drawer → bottom sheet iOS */
   .drawer-bg{justify-content:stretch;align-items:flex-end}
