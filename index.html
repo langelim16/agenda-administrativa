@@ -12461,16 +12461,20 @@ function pdfTextRuns(buf){
     var thr=pessoalOverlapThreshold();
     var ym=pessoalCalCurYM(),y=ym.y,m=ym.m,lastDay=new Date(y,m+1,0).getDate();
     var mm=String(m+1).padStart(2,"0");
+    var isCurMonth=(y===TODAY.getFullYear()&&m===TODAY.getMonth());
     var peakDay=null,peakCount=0,divClash={},divTotals={};
     for(var t=0;t<pessoalRows.length;t++){var tv=((pessoalRows[t].divisao||"").trim())||"Sem divisão";divTotals[tv]=(divTotals[tv]||0)+1;}
     for(var d=1;d<=lastDay;d++){
-      var ds=dstr(new Date(y,m,d)),outNow=0,byDiv={};
+      var dt=new Date(y,m,d);
+      if(isCurMonth&&dt<TODAY)continue; // mês corrente: oculta dias já passados; mês encerrado/futuro: mostra tudo (os alertas voltam quando o mês encerra)
+      var ds=dstr(dt),outNow=0,byDiv={};
       for(var i=0;i<pessoalRows.length;i++){
         var r=pessoalRows[i];
         if(pessoalIndisponivelNoDia(r.nome||"",ds)){
           outNow++;
           var dv=((r.divisao||"").trim())||"Sem divisão";
-          (byDiv[dv]=byDiv[dv]||[]).push(r.nome||"—");
+          var po=(r.posto||"").trim(),no=(r.nome||"").trim()||"—";
+          (byDiv[dv]=byDiv[dv]||[]).push(po?po+" "+no:no);
         }
       }
       if(outNow>peakCount){peakCount=outNow;peakDay=d;}
@@ -12489,7 +12493,7 @@ function pdfTextRuns(buf){
     }
     Object.keys(divClash).sort(function(a,b){return divClash[b].count-divClash[a].count;}).forEach(function(dv){
       var c=divClash[dv];
-      msgs.push('<div class="ferias-msg warn" style="display:block">⚠ Choque de férias na <b>'+esc(dv)+'</b> em '+c.day+'/'+mm+': <b>'+c.count+' de '+c.total+'</b> fora ao mesmo tempo (≥50% da divisão) — '+esc(c.names.join(", "))+'.</div>');
+      msgs.push('<div class="ferias-msg warn" style="display:block">⚠ Choque de férias/afastamento na <b>'+esc(dv)+'</b> em '+c.day+'/'+mm+': <b>'+c.count+' de '+c.total+'</b> fora ao mesmo tempo (≥50% da divisão) — '+esc(c.names.join(", "))+'.</div>');
     });
     box.innerHTML=msgs.length?'<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">'+msgs.join("")+'</div>':"";
   }
