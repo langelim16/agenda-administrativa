@@ -2697,6 +2697,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
         <div class="fld full"><button type="button" class="nv-editbtn" id="uso_itin_add" style="width:100%">+ Inserir outros destinos</button></div>
         <div class="fld full"><label>Destino final (fixo)</label><input value="CHN-4" disabled style="opacity:.65"></div>
       </div>
+      <div class="fld full"><label>Descrição da faina</label><input id="uso_faina" placeholder="Ex.: Transporte de material para o NHoGSampaio"></div>
     </div>
     <datalist id="uso_militares_dl"></datalist>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
@@ -10089,6 +10090,7 @@ function openPpssKpiDrawer(navio,metric,tipo){
         '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;color:var(--text)">'+per+' · '+esc(e.placa||e.modelo||"?")+'</div>'+
         '<div style="font-size:11px;color:var(--text2)">'+(USO_ACAO_LBL[e.acao]||e.acao)+' — '+(USO_MOTIVO_LBL[e.motivo]||"—")+' · '+esc(usoQuemE(e))+(e.motorista?' · Motorista: '+esc(e.motorista):"")+'</div>'+
         ((e.itinOrigem||(e.itinDest&&e.itinDest.length))?'<div style="font-size:10.5px;color:var(--text3)">Itinerário: '+esc([e.itinOrigem].concat(e.itinDest||[]).filter(Boolean).join(" → "))+' → CHN-4'+(e.hora?' · '+esc(e.hora):'')+'</div>':"")+
+        (e.faina?'<div style="font-size:10.5px;color:var(--text3)">Faina: '+esc(e.faina)+'</div>':"")+
         (e.justificativa?'<div style="font-size:10.5px;color:var(--c-gold,#977b43)">Justificativa: '+esc(e.justificativa)+'</div>':"")+'</div>'+
         '<button class="nv-editbtn" data-ed="'+e.id+'" title="Editar">✎</button>'+
         '<button class="nv-cancelbtn" data-del="'+e.id+'" title="Excluir">✕</button></div>';
@@ -10235,12 +10237,11 @@ function openPpssKpiDrawer(navio,metric,tipo){
         var io2=document.getElementById("uso_itin_origem");
         if(io2&&!io2.value)io2.value="CHN-4";
         var dv2=itinVals().filter(Boolean);
-        if(!dv2.length)itinPaint(["CeIMBe",""]);
+        if(!dv2.length)itinPaint(["CeIMBe"]);
       }
     }
     function itinPaint(dests){
-      dests=dests&&dests.length?dests:["",""];
-      if(dests.length<2)dests=dests.concat([""]);
+      dests=dests&&dests.length?dests:[""];
       document.getElementById("uso_itin_dest").innerHTML=dests.map(function(v,i){
         return '<div class="fld full"><label>Destino '+(i+1)+'</label><input class="uso-itin-d" value="'+esc(v||"")+'"></div>';
       }).join("");
@@ -10271,12 +10272,12 @@ function openPpssKpiDrawer(navio,metric,tipo){
     if(dvEl)dvEl.value=(edit&&edit.devolucao)||"2º tempo";
     var ioEl=document.getElementById("uso_itin_origem");
     if(ioEl)ioEl.value=(edit&&edit.itinOrigem)||"";
-    itinPaint(edit&&edit.itinDest&&edit.itinDest.length?edit.itinDest.slice():["",""]);
+    itinPaint(edit&&edit.itinDest&&edit.itinDest.length?edit.itinDest.slice():[""]);
     if(edit){
       if(!Array.prototype.some.call(vSel.options,function(o){return o.value===edit.vid;}))vSel.insertAdjacentHTML("beforeend",'<option value="'+esc(edit.vid)+'">'+esc(edit.placa||edit.modelo||"?")+(edit.modelo?" — "+esc(edit.modelo):"")+'</option>');
       vSel.value=edit.vid;
       var sv=function(id,v){var el2=document.getElementById(id);if(el2&&v!=null)el2.value=v;};
-      sv("uso_navio",edit.navio);sv("uso_om",edit.om);sv("uso_destino",edit.destino);sv("uso_militar",edit.militar);sv("uso_motorista",edit.motorista);sv("uso_hora",edit.hora);
+      sv("uso_navio",edit.navio);sv("uso_om",edit.om);sv("uso_destino",edit.destino);sv("uso_militar",edit.militar);sv("uso_motorista",edit.motorista);sv("uso_hora",edit.hora);sv("uso_faina",edit.faina);
     }else if(opt.vid){
       if(!Array.prototype.some.call(vSel.options,function(o){return o.value===opt.vid;})){
         var rv0=vtrRows.find(function(x){return x.id===opt.vid;});
@@ -10348,6 +10349,7 @@ function openPpssKpiDrawer(navio,metric,tipo){
         if(document.getElementById("uso_hora"))e.hora=g("uso_hora");
         if(justificativa)e.justificativa=justificativa;
         e.itinOrigem=g("uso_itin_origem");
+        e.faina=g("uso_faina");
         e.itinDest=Array.prototype.map.call(document.querySelectorAll("#uso_itin_dest .uso-itin-d"),function(el2){return el2.value.trim();}).filter(Boolean);
       }
       garSaveUso();renderGarKpis();renderGarFleet();renderGarCal();
@@ -10369,7 +10371,7 @@ function openPpssKpiDrawer(navio,metric,tipo){
     touchLastEdit("vtr_tbl");paintLastEdit("vtr_tbl_lastedit","vtr_tbl");
     pushUndo("Uso viatura "+(r.modelo||r.placa||"")+": → "+VTR_USO_META[r.usoStatus].lbl,async function(){vtrRows=pre;vtrSaveRows();await pushKV("garPush",VTR_KEY,vtrRows);renderGaragem();});
     if(acao!=="tornar_disponivel"){
-      vtrUsoLog.push({id:usoUid(),vid:r.id,placa:r.placa||"",modelo:r.modelo||"",acao:acao,motivo:motivo,data:per.data,dataFim:per.dataFim,tempo:per.tempo,devolucao:per.devolucao,hora:g("uso_hora"),justificativa:justificativa,navio:g("uso_navio"),om:g("uso_om"),destino:g("uso_destino"),militar:g("uso_militar"),motorista:g("uso_motorista"),itinOrigem:g("uso_itin_origem"),itinDest:Array.prototype.map.call(document.querySelectorAll("#uso_itin_dest .uso-itin-d"),function(el2){return el2.value.trim();}).filter(Boolean),ts:Date.now()});
+      vtrUsoLog.push({id:usoUid(),vid:r.id,placa:r.placa||"",modelo:r.modelo||"",acao:acao,motivo:motivo,data:per.data,dataFim:per.dataFim,tempo:per.tempo,devolucao:per.devolucao,hora:g("uso_hora"),justificativa:justificativa,navio:g("uso_navio"),om:g("uso_om"),destino:g("uso_destino"),militar:g("uso_militar"),motorista:g("uso_motorista"),faina:g("uso_faina"),itinOrigem:g("uso_itin_origem"),itinDest:Array.prototype.map.call(document.querySelectorAll("#uso_itin_dest .uso-itin-d"),function(el2){return el2.value.trim();}).filter(Boolean),ts:Date.now()});
       garSaveUso();
     }
     renderGaragem();
