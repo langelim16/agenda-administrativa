@@ -1310,11 +1310,14 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
 @keyframes ruleGrow{to{width:130px}}
 .splash-sub{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.5)}
 .splash-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:9px;margin-top:16px}
-.splash-bar{width:340px;height:10px;border-radius:99px;background:rgba(0,0,0,.22);overflow:hidden;position:relative;box-shadow:inset 0 1px 4px rgba(0,0,0,.4),0 1px 0 rgba(255,255,255,.08)}
+.splash-bar{width:min(340px,82vw);height:10px;border-radius:99px;background:rgba(0,0,0,.22);overflow:hidden;position:relative;box-shadow:inset 0 1px 4px rgba(0,0,0,.4),0 1px 0 rgba(255,255,255,.08)}
 .splash-bar-fill{position:absolute;top:0;left:0;height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#8fd9d0 0%,#fff 100%);box-shadow:0 0 18px rgba(255,255,255,.55),0 0 5px rgba(143,217,208,.65);transition:width .5s cubic-bezier(.4,0,.2,1);overflow:hidden}
 .splash-bar-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.8) 48%,transparent 66%);background-size:200% 100%;animation:barShine 1.8s linear infinite}
 @keyframes barShine{from{background-position:160% 0}to{background-position:-60% 0}}
-.splash-meta{display:flex;align-items:center;justify-content:space-between;width:340px;font-family:var(--mono,monospace)}
+.splash-meta{display:flex;align-items:center;justify-content:space-between;width:min(340px,82vw);font-family:var(--mono,monospace)}
+/* [fix mobile] splash sem largura fixa que estourava/entortava em telas estreitas */
+.splash-inner{max-width:100vw;padding:0 16px;box-sizing:border-box}
+@media(max-width:520px){.splash-crest-wrap,.splash-crest{width:150px;height:150px}.splash-title{font-size:17px;letter-spacing:2px}.splash-welcome{letter-spacing:2.5px}}
 .splash-stage{font-size:10.5px;letter-spacing:1.2px;color:rgba(255,255,255,.6);text-transform:uppercase}
 .splash-pct{font-size:13px;letter-spacing:1px;color:#fff;font-weight:600;font-family:var(--mono,monospace)}
 .splash-bubbles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
