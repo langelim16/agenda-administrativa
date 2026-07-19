@@ -9838,7 +9838,7 @@ function openPpssKpiDrawer(navio,metric,tipo){
     el.innerHTML=html;
     document.getElementById("gar_cal_prev").onclick=function(){garCalRef.m--;if(garCalRef.m<0){garCalRef.m=11;garCalRef.y--;}renderGarCal();};
     document.getElementById("gar_cal_next").onclick=function(){garCalRef.m++;if(garCalRef.m>11){garCalRef.m=0;garCalRef.y++;}renderGarCal();};
-    el.querySelectorAll(".cal-chip[data-uid]").forEach(function(ch){ch.onclick=function(ev){ev.stopPropagation();usoOpenEdit(ch.dataset.uid);};});
+    el.querySelectorAll(".cal-chip[data-uid]").forEach(function(ch){ch.onclick=function(ev){ev.stopPropagation();usoOpenResumo(ch.dataset.uid);};});
     el.querySelectorAll(".cal-day[data-gday]").forEach(function(cell){
       cell.onclick=function(ev){
         if(ev.target.closest(".cal-chip"))return;
@@ -9916,7 +9916,7 @@ function openPpssKpiDrawer(navio,metric,tipo){
     el.innerHTML=html;
     el.querySelectorAll(".tl-cell[data-vid]").forEach(function(c){
       c.onclick=function(){
-        if(c.dataset.uid){usoOpenEdit(c.dataset.uid);return;}
+        if(c.dataset.uid){usoOpenResumo(c.dataset.uid);return;}
         if(c.dataset.im){toast("Viatura IM — não pode receber lançamento de uso.","info");return;}
         openUsoModal({date:c.dataset.ds,vid:c.dataset.vid});
       };
@@ -9937,6 +9937,30 @@ function openPpssKpiDrawer(navio,metric,tipo){
     if(!e){toast("Lançamento não encontrado.","info");return;}
     openUsoModal({edit:e});
   }
+  /* Resumo do agendamento (clique no calendário/timeline): box de leitura,
+     com ✎ Editar abrindo a janela de criação preenchida. */
+  function usoOpenResumo(id){
+    var e=vtrUsoLog.find(function(x){return x.id===id;});
+    if(!e){toast("Lançamento não encontrado.","info");return;}
+    var bg=ensureModal("garUsoResBg","Resumo — "+(e.modelo||e.placa||"Viatura"));
+    var body=bg.querySelector(".mbody");
+    function row(l,v){return v?'<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed var(--border);font-size:12px"><span style="color:var(--text3);flex:none">'+l+'</span><b style="text-align:right;min-width:0">'+esc(v)+'</b></div>':'';}
+    var per=usoBR(e.data)+((e.dataFim&&e.dataFim!==e.data)?" – "+usoBR(e.dataFim):"")+(e.tempo?" · "+e.tempo:"");
+    var itin=(e.itinOrigem||(e.itinDest&&e.itinDest.length))?[e.itinOrigem].concat(e.itinDest||[]).filter(Boolean).join(" → ")+" → CHN-4":"";
+    body.innerHTML=
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap"><span class="sit-badge" style="background:'+(e.acao==="previsao"?"var(--c-amber)":"var(--c-red)")+'">'+(USO_ACAO_LBL[e.acao]||e.acao)+'</span><b style="font-size:14px">'+esc(e.modelo||e.placa||"?")+'</b>'+(e.placa&&e.modelo?'<span style="font-size:11px;color:var(--text3)">'+esc(e.placa)+'</span>':'')+'</div>'+
+      row("Período",per)+
+      row("Devolução",e.devolucao)+
+      row("Motivo",USO_MOTIVO_LBL[e.motivo]||"—")+
+      row("Solicitante",usoQuemE(e))+
+      row("Itinerário",itin)+
+      row("Período do dia",e.hora&&e.hora!==e.tempo?e.hora:"")+
+      row("Motorista",e.motorista||"— preencher —")+
+      row("Justificativa",e.justificativa)+
+      '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="nv-editbtn" id="garres_edit">✎ Editar</button></div>';
+    document.getElementById("garres_edit").onclick=function(){bg.classList.remove("open");openUsoModal({edit:e});};
+    bg.classList.add("open");
+  }
   /* ── Rancho CeIMBe diário: lançamento automático (1º tempo, 10:00) sempre com a S10;
      se a S10 estiver IM ou emprestada no dia, a L200 assume. ── */
   function garRanchoViatura(ds){
@@ -9956,13 +9980,31 @@ function openPpssKpiDrawer(navio,metric,tipo){
     return null;
   }
   function garEnsureRancho(){
-    var ds=usoDateStr(new Date());
-    if(vtrUsoLog.some(function(e){return e.motivo==="rotina"&&e.data===ds;}))return;
-    var v=garRanchoViatura(ds);
-    if(!v)return;
-    vtrUsoLog.push({id:usoUid(),vid:v.id,placa:v.placa||"",modelo:v.modelo||"",acao:"em_uso",motivo:"rotina",data:ds,dataFim:"",tempo:"1º tempo",devolucao:"",hora:"1º tempo",itinOrigem:"CHN-4",itinDest:["CeIMBe"],motorista:"",auto:true,ts:Date.now()});
+    var today=new Date(),y=today.getFullYear();
+    var added=0,removed=0;
+    // Rancho é só de segunda a sexta: remove lançamentos automáticos que caíram em sáb/dom.
+    vtrUsoLog=vtrUsoLog.filter(function(e){
+      if(e.motivo==="rotina"&&e.auto&&e.data){
+        var p=e.data.split("-"),dw=new Date(+p[0],+p[1]-1,+p[2]).getDay();
+        if(dw===0||dw===6){removed++;return false;}
+      }
+      return true;
+    });
+    // Lança o rancho para todos os dias úteis restantes do ano (alterações pontuais são feitas em cima do lançado).
+    var d=new Date(today.getFullYear(),today.getMonth(),today.getDate()),fim=new Date(y,11,31);
+    for(;d<=fim;d.setDate(d.getDate()+1)){
+      var dw=d.getDay();
+      if(dw===0||dw===6)continue;
+      var ds=usoDateStr(d);
+      if(vtrUsoLog.some(function(e){return e.motivo==="rotina"&&e.data===ds;}))continue;
+      var v=garRanchoViatura(ds);
+      if(!v)continue;
+      vtrUsoLog.push({id:usoUid(),vid:v.id,placa:v.placa||"",modelo:v.modelo||"",acao:"em_uso",motivo:"rotina",data:ds,dataFim:"",tempo:"1º tempo",devolucao:"",hora:"1º tempo",itinOrigem:"CHN-4",itinDest:["CeIMBe"],motorista:"",auto:true,ts:Date.now()});
+      added++;
+    }
+    if(!added&&!removed)return;
     garSaveUso();
-    setTimeout(function(){toast("🍞 Rancho CeIMBe de hoje lançado — "+(v.modelo||v.placa)+" às 10:00 (1º tempo). Preencha o motorista no lançamento.","info");},1400);
+    if(added)setTimeout(function(){toast("🍞 Rancho CeIMBe lançado para os dias úteis até 31/12/"+y+" — 10:00 (1º tempo), S10 (L200 assume quando indisponível). Preencha os motoristas nos lançamentos.","info");},1400);
     renderGarCal();renderGarTl();renderGarKpis();renderGarFleet();
   }
   function garUsoList(fil){
