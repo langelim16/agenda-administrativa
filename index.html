@@ -2915,7 +2915,7 @@ async function aaLogout(){
 
 /* ── UI do login ── */
 function aaShowLogin(force){var el=document.getElementById("aa_login");if(!el)return;el.classList.add("on");try{document.body.classList.add("aa-login-open");window.scrollTo(0,0);}catch(e){}var em=document.getElementById("aa_login_email");if(em)setTimeout(function(){em.focus();},50);}
-function aaHideLogin(){var el=document.getElementById("aa_login");if(el)el.classList.remove("on");try{document.body.classList.remove("aa-login-open");}catch(e){}}
+function aaHideLogin(){var el=document.getElementById("aa_login");if(el)el.classList.remove("on");try{document.body.classList.remove("aa-login-open");}catch(e){}try{document.documentElement.classList.remove("aa-preauth");}catch(e){}}
 function aaLoginError(msg){var e=document.getElementById("aa_login_err");if(!e)return;if(msg){e.textContent=msg;e.classList.add("on");}else{e.textContent="";e.classList.remove("on");}}
 function aaPaintAuth(){
   // Item ADMIN do menu lateral (ex-lugar da CONFIG OM): só aparece para o administrador.
