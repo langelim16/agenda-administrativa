@@ -2681,6 +2681,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
       <option value="om">Empréstimo outra OM</option>
       <option value="comissao">Comissão</option>
       <option value="rotina">Rotina — Rancho CeIMBe</option>
+      <option value="rotina_diretor">Rotina — Diretor</option>
     </select></div>
     <div class="fld full"><label>Viatura</label><select id="uso_viatura"></select></div>
     <div id="uso_motivo_wrap">
@@ -9843,14 +9844,14 @@ function openPpssKpiDrawer(navio,metric,tipo){
   var _gcN=new Date();
   var garCalRef={y:_gcN.getFullYear(),m:_gcN.getMonth()};
   var usoEditId=null,garUsoLstFil=null;
-  var USO_MOTIVO_LBL={navio:"Empréstimo p/ Navio",om:"Empréstimo outra OM",comissao:"Comissão",rotina:"Rotina — Rancho CeIMBe"};
+  var USO_MOTIVO_LBL={navio:"Empréstimo p/ Navio",om:"Empréstimo outra OM",comissao:"Comissão",rotina:"Rotina — Rancho CeIMBe",rotina_diretor:"Rotina — Diretor"};
   var USO_ACAO_LBL={em_uso:"Em uso",previsao:"Previsão de uso"};
   async function garLoadUso(){var h=null;try{h=await gtj(VTR_USO_KEY);}catch(e){}if(!h){try{h=JSON.parse(localStorage.getItem(VTR_USO_KEY));}catch(e){}}vtrUsoLog=Array.isArray(h)?h:[];}
   function garSaveUso(){try{localStorage.setItem(VTR_USO_KEY,JSON.stringify(vtrUsoLog));}catch(e){}pushKV("garPush",VTR_USO_KEY,vtrUsoLog);}
   function usoUid(){return "u"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
   function usoDateStr(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
   function usoBR(s){var p=(s||"").split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:(s||"—");}
-  function usoQuemE(e){if(e.motivo==="navio")return e.navio||"—";if(e.motivo==="om")return e.om||"—";if(e.motivo==="comissao")return e.destino||e.militar||"—";return"Rotina (rancho CeIMBe)";}
+  function usoQuemE(e){if(e.motivo==="navio")return e.navio||"—";if(e.motivo==="om")return e.om||"—";if(e.motivo==="comissao")return e.destino||e.militar||"—";if(e.motivo==="rotina_diretor")return"Rotina (Diretor)";return"Rotina (rancho CeIMBe)";}
   function usoInMonth(e,y,m){if(!e.data)return false;var p=e.data.split("-");return +p[0]===y&&+p[1]===m+1;}
   function usoFim(e){return e.dataFim&&e.dataFim>=e.data?e.dataFim:e.data;}
   function usoCovers(e,ds){return !!e.data&&e.data<=ds&&ds<=usoFim(e);}
@@ -9896,7 +9897,7 @@ function openPpssKpiDrawer(navio,metric,tipo){
       var dow=(firstDay+d-1)%7,wknd=(dow===0||dow===6);
       var cls="cal-day has-tasks"+(isCur&&d===today.getDate()?" today":"")+(wknd?" weekend":"");
       var chips=items.slice(0,3).map(function(e){
-        var quem=usoQuemE(e);if(quem==="Rotina (rancho CeIMBe)")quem="CeIMBe";
+        var quem=usoQuemE(e);if(quem==="Rotina (rancho CeIMBe)")quem="CeIMBe";else if(quem==="Rotina (Diretor)")quem="Diretor";
         var lbl=(e.modelo||e.placa||"?")+" – "+quem;
         return'<button class="cal-chip '+(e.acao==="previsao"?"prox":"venc")+'" data-uid="'+e.id+'" title="'+esc((e.modelo||e.placa||"?")+" — "+(USO_ACAO_LBL[e.acao]||e.acao)+" · "+(USO_MOTIVO_LBL[e.motivo]||"")+" · "+usoQuemE(e))+'">'+esc(lbl)+'</button>';
       }).join("");
@@ -10209,6 +10210,9 @@ function openPpssKpiDrawer(navio,metric,tipo){
       '<div class="fld full"><label>Destino da comissão</label><input id="uso_destino"></div>'+
       '<div class="fld full"><label>Militar/Divisão solicitante</label><input id="uso_militar"></div>'+
       '<div class="fld full"><label>Motorista designado</label><input id="uso_motorista"></div>';
+    if(motivo==="rotina_diretor")return''+
+      '<div class="fld full"><label>Período</label><select id="uso_hora"><option value="1º tempo" selected="">1° tempo</option><option value="2º tempo">2° tempo</option></select></div>'+
+      '<div class="fld full"><label>Motorista escalado (Diretor)</label><input id="uso_motorista" placeholder="Preencher"></div>';
     return''+ // rotina — rancho CeIMBe (período padrão 1º tempo; motorista é a lacuna a preencher)
       '<div class="fld full"><label>Período</label><select id="uso_hora"><option value="1º tempo" selected="">1° tempo</option><option value="2º tempo">2° tempo</option></select></div>'+
       '<div class="fld full"><label>Motorista escalado (rancho CeIMBe)</label><input id="uso_motorista" placeholder="Preencher"></div>';
@@ -10218,6 +10222,7 @@ function openPpssKpiDrawer(navio,metric,tipo){
     if(motivo==="navio")return g("uso_navio");
     if(motivo==="om")return g("uso_om");
     if(motivo==="comissao")return g("uso_militar");
+    if(motivo==="rotina_diretor")return"Rotina (Diretor)";
     return"Rotina (rancho CeIMBe)";
   }
   function usoSummary(acao,motivo,g){
