@@ -488,6 +488,8 @@ tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .stats-grid{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}
 #clg_previsao{display:grid;grid-template-columns:repeat(4,1fr)}
 #clg_previsao .stats-card{min-width:0}
+#ppss_stats{display:grid;grid-template-columns:repeat(2,1fr)}
+#ppss_stats .stats-card{min-width:0;width:auto}
 @media (max-width:900px){#clg_previsao{grid-template-columns:1fr 1fr}}
 @media (max-width:560px){#clg_previsao{grid-template-columns:1fr}}
 .stats-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px;flex:1;min-width:240px}
@@ -12939,6 +12941,7 @@ button:not(:disabled):active,.tab:active,.segbtn:active,.vtbtn:active{transform:
   /* cards de estatística (Valor Orçado / Valor Indicado) empilhados */
   .stats-grid{flex-direction:column}
   .stats-grid .stats-card{min-width:0;width:100%}
+  #ppss_stats{grid-template-columns:1fr}
   /* barras do PPSS: nome + valor na 1ª linha, barra em largura total na 2ª */
   .ppss-kpi-bar-row{flex-wrap:wrap!important;row-gap:3px!important;padding:6px 4px!important}
   .ppss-kpi-bar-row>span{width:auto!important;flex:1 1 auto!important;min-width:0!important;order:1}
