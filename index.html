@@ -457,7 +457,7 @@ tr.comissao-cancelada td{color:var(--c-red);text-decoration:line-through}
 tr.comissao-adiada{background:color-mix(in srgb,var(--c-amber) 30%,transparent)}
 tr.comissao-andamento{background:color-mix(in srgb,var(--c-blue) 22%,transparent)}
 tr.comissao-prevista{background:color-mix(in srgb,#c9b21a 30%,transparent)}
-.comissao-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--text2);margin:8px 2px 14px}
+.comissao-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--text2);margin:2px 2px 8px}
 .comissao-legend span{display:inline-flex;align-items:center;gap:5px}
 .comissao-legend i{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
 tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
@@ -2181,12 +2181,12 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
     </span>
   </div>
 </div>
+<div class="comissao-legend" id="nv_comissao_legend"></div>
 <div class="dt-table-wrap">
   <table class="dt-table dt-nowrap" style="table-layout:auto" id="nv_comissao_table">
     <thead id="nv_comissao_thead"><tr><th>Meio</th><th>Comissão</th><th>Início</th><th>Fim</th><th>Localização</th><th>CLG Autorizado</th><th>PMPE</th><th class="dt-actions-col">Ações</th></tr></thead>
     <tbody id="nv_comissao_tbody"></tbody>
   </table>
-  <div class="comissao-legend" id="nv_comissao_legend"></div>
 </div>
 
 <div id="nv_tl_sec"></div>
