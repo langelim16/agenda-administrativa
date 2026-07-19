@@ -1664,6 +1664,8 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
 .lchart-modal-k{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:600}
 .lchart-modal-v{font-size:13.5px;color:var(--text);font-weight:700;text-align:right}
 .lchart-modal-note{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--c-50);border-left:3px solid var(--c-blue);font-size:11.5px;line-height:1.5;color:var(--text2)}
+/* Zoom de gráfico ativo (após clique): moldura azul indica que a roda dá zoom */
+.lc-zoom-on{outline:2px solid var(--c-blue);outline-offset:3px;border-radius:8px}
 tr.row-crit{background:rgba(233,150,53,.20)}
 .hr-sem{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle;flex:none}
 </style>
@@ -4163,6 +4165,7 @@ function svgLineChart(box,series,opts){
   });
   svg.addEventListener("mouseleave",hide);
   svg.addEventListener("click",function(ev){
+    box._lcActive=true;box.classList.add("lc-zoom-on");
     var r=svg.getBoundingClientRect(),sc=r.width/W;
     var hit=nearestPoint((ev.clientX-r.left)/sc,(ev.clientY-r.top)/sc);
     if(hit&&hit.p.meta)openLchartDetail(hit.p.meta);
@@ -4173,7 +4176,7 @@ function svgLineChart(box,series,opts){
   if(opts.zoomable){
     var hintEl=document.createElement("div");
     hintEl.style.cssText="font-size:9.5px;color:var(--text3);margin-top:4px";
-    hintEl.textContent="🔍 Zoom na escala de dias: role o mouse sobre o gráfico (desktop) ou faça pinça contínua com dois dedos (touch) · deslize com um dedo para navegar os valores · duplo clique/toque restaura";
+    hintEl.textContent="🔍 Zoom: clique no gráfico para ativar, então role o mouse (desktop) ou faça pinça com dois dedos (touch) · duplo clique/toque restaura · sem clicar, a roda rola a página normalmente";
     box.appendChild(hintEl);
     if(box._lcZoom)svg.querySelectorAll(".cl-line").forEach(function(p2){p2.style.strokeDasharray="none";p2.style.strokeDashoffset="0";});
     svg.style.touchAction="pan-y";
@@ -4201,7 +4204,9 @@ function svgLineChart(box,series,opts){
         box._lcZoom=(ns>=full-1000)?null:{minT:nMin,maxT:nMax};
         lcRerender();
       };
+      if(!box._lcLeaveBound){box._lcLeaveBound=true;box.addEventListener("mouseleave",function(){box._lcActive=false;box.classList.remove("lc-zoom-on");});}
       box.addEventListener("wheel",function(e){
+        if(!box._lcActive)return; // só dá zoom depois de clicar no gráfico; sem clicar, a roda rola a página normalmente
         if(!e.target.closest||!e.target.closest("svg"))return;
         e.preventDefault();
         var s=lcSt();
