@@ -416,7 +416,7 @@ body{
 button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inherit}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
 .wrap{max-width:1340px;margin:0 auto;padding:20px 24px 80px}
-.appnav{position:fixed;left:0;top:0;bottom:0;width:84px;background:var(--header-bg);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:8px;z-index:600;box-shadow:var(--sh-lg)}
+.appnav{position:fixed;left:0;top:0;bottom:0;width:84px;background:var(--header-bg);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:4px;justify-content:space-evenly;z-index:600;box-shadow:var(--sh-lg)}
 .nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:70px;height:58px;border:none;border-radius:var(--r-md);background:none;color:rgba(255,255,255,.55);font-family:var(--sans)}
 .nav-item .nav-ic{font-size:19px;display:flex;align-items:center;justify-content:center}
 .nav-item .nav-ic svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
@@ -649,6 +649,8 @@ td.dt-daterange-cell input[type="date"]{width:100%;background:var(--c-50);border
 .pstat-pie-legend span{display:inline-flex;align-items:center;gap:4px}
 .pstat-pie-legend i{width:8px;height:8px;border-radius:50%;flex:none}
 .ferias-years-btn{background:var(--c-100);border:1px solid var(--border2);color:var(--text2);font-size:11px;padding:6px 11px;border-radius:var(--r-sm)}
+#pessoal_cal_nav .hbtn{background:var(--header-bg);color:#fff;border:1px solid var(--header-bg);font-weight:700;min-width:34px}
+#pessoal_cal_nav .hbtn:hover{filter:brightness(1.15)}
 .ferias-years-btn.active{background:var(--c-blue);color:#fff;border-color:var(--c-blue)}
 .ferias-cat-pick{background:var(--c-50);border:1.5px solid var(--border);border-radius:var(--r-md);padding:12px 14px;text-align:left;font-size:13px;color:var(--text);display:flex;align-items:center;gap:10px}
 .ferias-cat-pick:hover{border-color:var(--c-blue);background:var(--c-sky)}
@@ -1092,6 +1094,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .tl-month-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:block;opacity:.7}
 .tl-row{display:flex;min-height:32px;align-items:stretch;border-bottom:1px solid var(--border);transition:background .1s}
 .tl-name:hover{background:var(--c-sky);cursor:pointer}
+.tl-header .tl-label-col{position:sticky;left:0;z-index:3}
+.tl-row .tl-name{position:sticky;left:0;background:var(--surface);z-index:2}
+.tl-row .tl-name:hover{background:var(--c-sky)}
 .tl-row:last-child{border-bottom:none}
 .tl-name{min-width:200px;max-width:200px;font-size:10px;color:var(--text2);padding:4px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:2px solid var(--border);display:flex;align-items:center;gap:5px;font-weight:600;cursor:pointer;transition:background .1s}
 .tl-name .tl-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
@@ -1526,7 +1531,7 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
   }
   body{padding-left:0;padding-bottom:0}
   .wrap{padding:12px 10px 124px}
-  .nav-item{width:auto;min-width:56px;flex:1 0 auto;height:66px;border-radius:20px;gap:3px}
+  .nav-item{width:auto;min-width:44px;flex:1 1 0;height:66px;border-radius:20px;gap:3px}
   .nav-item .nav-ic{font-size:24px}
   .nav-item .nav-ic svg{width:26px;height:26px}
   .nav-item .nav-lbl{font-size:9.5px}
@@ -1992,7 +1997,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
     <button class="hbtn aa-authbtn" id="authbtn" style="display:none"></button>
     <button class="hbtn theme-toggle-btn" id="themebtn">🌙 Noturno</button>
     <select class="yearsel" id="yearsel" style="font-size: 12px"><option value="2026" selected="">2026</option></select>
-    <button class="hbtn add-year" id="addyearbtn">+ Ano</button><button class="hbtn" id="delyearbtn" title="Excluir ano selecionado" style="background:rgba(168,85,75,.25);border-color:rgba(168,85,75,.5)">✕ Ano</button>
+    <button class="hbtn add-year" id="addyearbtn" style="display:none">+ Ano</button><button class="hbtn" id="delyearbtn" title="Excluir ano selecionado" style="display:none;background:rgba(168,85,75,.25);border-color:rgba(168,85,75,.5)">✕ Ano</button>
   </div>
 </header>
 <div class="profilebar">
@@ -2030,7 +2035,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 </div>
 <div id="iobar" class="iobar" style="display:none"></div>
 <div class="scope" id="scope"><b>Junho de 2026</b>  — 25 de 25 tarefas</div>
-<div class="view-toggle" id="viewtog"><button class="vtbtn active" data-v="lista">☰ Lista</button><button class="vtbtn" data-v="cal">📅 Calendário</button><button class="vtbtn" data-v="tl">📊 Timeline 30d</button><button class="vtbtn" data-v="hm-mes">🌡 HeatMap Mensal</button><button class="vtbtn" data-v="hm-ano">🌡 HeatMap Anual</button></div>
+<div class="view-toggle" id="viewtog"><button class="vtbtn active" data-v="lista">☰ Lista</button><button class="vtbtn" data-v="cal">📅 Calendário</button><button class="vtbtn" data-v="tl">📊 Timeline</button><button class="vtbtn" data-v="hm-mes">🌡 HeatMap Mensal</button><button class="vtbtn" data-v="hm-ano">🌡 HeatMap Anual</button></div>
 <div id="body"></div>
 <div class="foot">Agenda Administrativa<br><br> <span class="kbd">/ buscar</span> <span class="kbd">N inserir</span> <span class="kbd">Ctrl+Z desfazer</span> <span class="kbd">Ctrl+Y refazer</span></div>
 </div>
@@ -2859,7 +2864,7 @@ function aaPaintAuth(){
       b.style.display="";b.textContent="⏻ "+short;b.title="Sair ("+who+")"+(aaIsAdmin()?" · admin":"");
       b.onclick=function(){if(confirm("Sair da conta "+who+"?"))aaLogout();};
     }else{
-      b.style.display="";b.textContent="🔑 Entrar";b.title="Fazer login";b.onclick=function(){aaShowLogin(true);};
+      b.style.display="none"; // sem sessão só existe a tela de login — botão Entrar no cabeçalho aposentado
     }
   });
 }
@@ -3171,7 +3176,7 @@ function startRT(){
 /* ── CONSTANTES ── */
 var TODAY=(function(){var d=new Date();d.setHours(0,0,0,0);return d;})();
 var CUR_YEAR=TODAY.getFullYear();
-var MAX_YEARS=10;
+var MAX_YEARS=30;
 var MONTHS=["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
 var ML=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 var KL={MENSAL:"Mensal",SEMANAL:"Semanal",ANUAL:"Anual",DIVERSO:"Diverso",ESPORADICA:"Esporádica"};
@@ -3888,7 +3893,15 @@ function svgLineChart(box,series,opts){
   // Eixo do tempo: ano corrente inteiro (1º jan → hoje), igual ao preview — dá contexto e ancora a linha "HOJE".
   var yr=new Date().getFullYear();
   var minT=new Date(yr,0,1).getTime(),nowT=Date.now(),maxT=Math.max(nowT,rawMaxT);
-  var minV=opts.yMin0?0:Math.min.apply(null,pts.map(function(p){return p.v;})),maxV=Math.max.apply(null,pts.map(function(p){return p.v;}));
+  var fullMinT=minT,fullMaxT=maxT;
+  if(opts.zoomable&&box._lcZoom){
+    minT=Math.max(fullMinT,box._lcZoom.minT);
+    maxT=Math.min(fullMaxT,box._lcZoom.maxT);
+    if(maxT-minT<3600000)maxT=minT+3600000;
+  }
+  var visPts=pts.filter(function(p){return p.t>=minT&&p.t<=maxT;});
+  if(!visPts.length)visPts=pts;
+  var minV=opts.yMin0?0:Math.min.apply(null,visPts.map(function(p){return p.v;})),maxV=Math.max.apply(null,visPts.map(function(p){return p.v;}));
   (opts.refLines||[]).forEach(function(r){if(r.v>maxV)maxV=r.v;if(!opts.yMin0&&r.v<minV)minV=r.v;});
   if(maxV===minV){minV-=1;maxV+=1;}
   var step=lchartNiceStep((maxV-minV)/(opts.yMin0?5:4));
@@ -3913,6 +3926,7 @@ function svgLineChart(box,series,opts){
   var ts=Object.keys(evT).map(Number).sort(function(a,b){return a-b;});
   var lastX=-1e9;
   ts.forEach(function(t){
+    if(t<minT||t>maxT)return;
     var x=X(t);
     if(x-lastX<54)return;
     lastX=x;
@@ -3980,7 +3994,7 @@ function svgLineChart(box,series,opts){
   var legend2='<div class="lchart-legend">'+series.map(function(s,si){var pal=PAL[si%PAL.length];return '<span class="lchart-legend-item"><span class="lchart-legend-swatch" style="background:linear-gradient(90deg,'+pal[0]+','+pal[1]+')"></span>'+esc(s.name)+'</span>';}).join("")+'</div>';
   /* linha "HOJE" */
   var tx=X(nowT);
-  var today='<line x1="'+tx.toFixed(1)+'" y1="'+(T-2)+'" x2="'+tx.toFixed(1)+'" y2="'+baseY+'" stroke="var(--c-red)" stroke-width="1.3" opacity=".38"></line>'+
+  var today=(nowT<minT||nowT>maxT)?"":'<line x1="'+tx.toFixed(1)+'" y1="'+(T-2)+'" x2="'+tx.toFixed(1)+'" y2="'+baseY+'" stroke="var(--c-red)" stroke-width="1.3" opacity=".38"></line>'+
     '<text x="'+(tx-4).toFixed(1)+'" y="'+(T-6)+'" text-anchor="end" font-size="8.5" fill="var(--c-red)" letter-spacing=".8" opacity=".8">HOJE</text>';
   /* crosshair: linhas tracejadas do ponto até os eixos X e Y, com balões de valor */
   var xh='<g class="lchart-xh" style="display:none">'+
@@ -3990,7 +4004,7 @@ function svgLineChart(box,series,opts){
     '<g class="xh-yb"><rect rx="5.5" height="19"></rect><text text-anchor="middle"></text></g>'+
     '<g class="xh-xb"><rect rx="5.5" height="19"></rect><text text-anchor="middle"></text></g>'+
     '</g>';
-  box.innerHTML='<div class="lchart-root"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;overflow:visible"><defs>'+defs+'</defs>'+grid+refHtml+lines+today+xh+'</svg>'+
+  box.innerHTML='<div class="lchart-root"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;overflow:visible"><defs>'+defs+'<clipPath id="lclip'+uid+'"><rect x="'+L+'" y="-6" width="'+(W-L-R)+'" height="'+(H+12)+'"></rect></clipPath></defs>'+grid+refHtml+'<g clip-path="url(#lclip'+uid+')">'+lines+'</g>'+today+xh+'</svg>'+
     '<div class="lchart-tt"></div></div>'+legend2;
   /* ── interação: hover mostra crosshair+tooltip; clique num ponto sinalizado abre o detalhe ── */
   var svg=box.querySelector("svg"),tt=box.querySelector(".lchart-tt");
@@ -4012,6 +4026,7 @@ function svgLineChart(box,series,opts){
     seriesData.forEach(function(sd,si){
       (sd.pts||[]).forEach(function(p){
         if(!p.meta)return;
+        if(p.t<minT||p.t>maxT)return;
         var d=Math.hypot(X(p.t)-mx,Y(p.v)-my);
         if(d<=13&&(!found||d<found.d))found={p:p,si:si,d:d};
       });
@@ -4067,6 +4082,48 @@ function svgLineChart(box,series,opts){
     var hit=nearestPoint((ev.clientX-r.left)/sc,(ev.clientY-r.top)/sc);
     if(hit&&hit.p.meta)openLchartDetail(hit.p.meta);
   });
+  /* ── Zoom na escala de tempo (opts.zoomable): wheel no desktop, pinça no touch ── */
+  if(opts.zoomable){
+    var hintEl=document.createElement("div");
+    hintEl.style.cssText="font-size:9.5px;color:var(--text3);margin-top:4px";
+    hintEl.textContent="🔍 Zoom na escala de dias: role o mouse sobre o gráfico (desktop) ou faça pinça com dois dedos (touch) · duplo clique/toque restaura";
+    box.appendChild(hintEl);
+    if(box._lcZoom)svg.querySelectorAll(".cl-line").forEach(function(p2){p2.style.strokeDasharray="none";p2.style.strokeDashoffset="0";});
+    svg.style.touchAction="pan-y";
+    var lcRerender=function(){svgLineChart(box,series,opts);};
+    var lcFrac=function(cx){var r2=svg.getBoundingClientRect();var mx=(cx-r2.left)/(r2.width/W);return Math.max(0,Math.min(1,(mx-L)/(W-L-R)));};
+    var lcApply=function(frac,factor){
+      var sp=maxT-minT,full=fullMaxT-fullMinT;
+      var ns=Math.max(5*86400000,Math.min(full,sp*factor));
+      var anchorT=minT+frac*sp;
+      var nMin=anchorT-frac*ns,nMax=nMin+ns;
+      if(nMin<fullMinT){nMin=fullMinT;nMax=nMin+ns;}
+      if(nMax>fullMaxT){nMax=fullMaxT;nMin=nMax-ns;}
+      box._lcZoom=(ns>=full-1000)?null:{minT:nMin,maxT:nMax};
+      lcRerender();
+    };
+    svg.addEventListener("wheel",function(e){e.preventDefault();lcApply(lcFrac(e.clientX),e.deltaY>0?1.3:0.72);},{passive:false});
+    svg.addEventListener("dblclick",function(e){e.preventDefault();box._lcZoom=null;lcRerender();});
+    var lcPD=null,lcPF=0,lcLastTap=0;
+    svg.addEventListener("touchstart",function(e){
+      if(e.touches.length===2){
+        lcPD=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+        lcPF=lcFrac((e.touches[0].clientX+e.touches[1].clientX)/2);
+      }else if(e.touches.length===1){
+        var now2=Date.now();
+        if(now2-lcLastTap<320){box._lcZoom=null;lcRerender();}
+        lcLastTap=now2;
+      }
+    },{passive:true});
+    svg.addEventListener("touchmove",function(e){
+      if(lcPD&&e.touches.length===2){
+        e.preventDefault();
+        var d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+        if(d>0&&Math.abs(d-lcPD)>18){lcApply(lcPF,lcPD/d);lcPD=null;}
+      }
+    },{passive:false});
+    svg.addEventListener("touchend",function(){lcPD=null;});
+  }
 }
 
 function bindDataTable(cfg){
@@ -4833,8 +4890,9 @@ function buildInstRange(dateFrom,dateTo){
 
 function renderTimeline(rows){
   var today=new Date(TODAY);today.setHours(0,0,0,0);
-  var dateEnd=new Date(today);dateEnd.setDate(today.getDate()+29);dateEnd.setHours(23,59,59,999);
-  var rangeInst=buildInstRange(today,dateEnd).filter(function(i){return statusOf(i)!=="EXCLUIDA";});
+  var winStart=new Date(today.getFullYear(),today.getMonth()-1,1);
+  var winEnd=new Date(winStart.getFullYear(),winStart.getMonth()+12,0);winEnd.setHours(23,59,59,999);
+  var rangeInst=buildInstRange(winStart,winEnd).filter(function(i){return statusOf(i)!=="EXCLUIDA";});
   rangeInst=rangeInst.filter(function(i){
     if(catFilter!=="ALL"&&i.cat!==catFilter)return false;
     if(profile!=="ALL"&&i.divisao!==profile)return false;
@@ -4844,12 +4902,15 @@ function renderTimeline(rows){
   rangeInst.sort(function(a,b){return(a.deadline?a.deadline.getTime():Infinity)-(b.deadline?b.deadline.getTime():Infinity);});
 
   if(!rangeInst.length){
-    document.getElementById("body").innerHTML='<div class="empty">Nenhuma tarefa com prazo nos próximos 30 dias</div>';
+    document.getElementById("body").innerHTML='<div class="empty">Nenhuma tarefa com prazo nos 12 meses</div>';
     return;
   }
 
   var days30=[];
-  for(var x=0;x<30;x++){var dd=new Date(today);dd.setDate(today.getDate()+x);days30.push(dd);}
+  for(var dd=new Date(winStart);dd<=winEnd;dd.setDate(dd.getDate()+1))days30.push(new Date(dd));
+  var TLCW=26;
+  var tlDs=function(d){return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();};
+  var tlMonthList=[];days30.forEach(function(d){var k=d.getFullYear()+'-'+d.getMonth();if(!tlMonthList.some(function(x){return x.k===k;}))tlMonthList.push({k:k,y:d.getFullYear(),m:d.getMonth()});});
 
   var fmt=function(d){return d.getDate().toString().padStart(2,"0")+"/"+(d.getMonth()+1).toString().padStart(2,"0");};
   var isWeekend=function(d){var dw=d.getDay();return dw===0||dw===6;};
@@ -4861,12 +4922,14 @@ function renderTimeline(rows){
   html+='<span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-blue)"></span>A vencer</span>';
   html+='<span class="tl-leg-sep"><b>P</b>&nbsp;=&nbsp;Própria&nbsp;&nbsp;<b>S</b>&nbsp;=&nbsp;Subsídio</span>';
   html+='</div>';
+  html+='<div class="ferias-jump" id="atl_jump">'+tlMonthList.map(function(mo){return '<button type="button" data-mk="'+mo.k+'"'+((mo.y===today.getFullYear()&&mo.m===today.getMonth())?' style="background:var(--header-bg);color:#fff;border-color:var(--header-bg)"':'')+'>'+MONTHS[mo.m]+'/'+String(mo.y).slice(2)+'</button>';}).join('')+'</div>';
   html+='<div class="tl-wrap"><div class="tl-header"><div class="tl-label-col">Tarefa</div><div class="tl-days">';
   days30.forEach(function(d,idx){
-    var cls="tl-day-head"+(d.getTime()===today.getTime()?" today":"")+(isWeekend(d)?" weekend":"")+(isMonthStart(d,idx)?" month-start":"");
-    var lbl=isMonthStart(d,idx)?'<span class="tl-month-label">'+MONTHS[d.getMonth()]+'</span>':'';
-    var iso=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
-    html+='<div class="'+cls+'" data-date="'+iso+'" style="cursor:pointer">'+lbl+fmt(d)+'</div>';
+    var ms=(d.getDate()===1);
+    var cls="tl-day-head"+(d.getTime()===today.getTime()?" today":"")+(isWeekend(d)?" weekend":"")+(idx>0&&ms?" month-start":"");
+    var lbl=(idx>0&&ms)?'<span class="tl-month-label">'+MONTHS[d.getMonth()]+'</span>':'';
+    var iso=tlDs(d);
+    html+='<div class="'+cls+'"'+(ms?' id="atl-m'+d.getFullYear()+'-'+d.getMonth()+'"':'')+' data-date="'+iso+'" style="cursor:pointer;min-width:'+TLCW+'px;flex:none">'+lbl+fmt(d)+'</div>';
   });
   html+="</div></div>";
 
@@ -4881,7 +4944,7 @@ function renderTimeline(rows){
     var rowKey=i.id;
     var g=groupByRowKey[rowKey];
     if(!g){g={tarefa:i.tarefa,occurrences:[]};groupByRowKey[rowKey]=g;groups.push(g);}
-    g.occurrences.push({key:i.key,diff:diffDl,s:s,tarefa:i.tarefa,cat:i.cat});
+    g.occurrences.push({key:i.key,diff:diffDl,ds:tlDs(dl),s:s,tarefa:i.tarefa,cat:i.cat});
   });
   groups.forEach(function(g){
     g.occurrences.sort(function(a,b){return a.diff-b.diff;});
@@ -4892,21 +4955,33 @@ function renderTimeline(rows){
     var first=g.occurrences[0];
     var dotColor=dotColors[first.s]||"var(--text3)";
     html+='<div class="tl-row" data-key="'+esc(first.key)+'"><div class="tl-name" data-tarefa="'+esc(g.tarefa)+'"><div class="tl-dot" style="background:'+dotColor+'"></div>'+esc(g.tarefa.substring(0,30))+'</div><div class="tl-cells">';
-    var occByDiff={};
-    g.occurrences.forEach(function(o){occByDiff[o.diff]=o;});
+    var occByDs={};
+    g.occurrences.forEach(function(o){occByDs[o.ds]=o;});
     days30.forEach(function(d,idx){
-      var isToday=(idx===0);
-      var diff=Math.round((d-today)/86400000);
-      var occ=occByDiff[diff];
-      var cls="tl-cell"+(isToday?" today":"")+(isWeekend(d)?" weekend":"")+(isMonthStart(d,idx)?" month-start":"");
+      var isToday=(d.getTime()===today.getTime());
+      var occ=occByDs[tlDs(d)];
+      var ms=(d.getDate()===1);
+      var cls="tl-cell"+(isToday?" today":"")+(isWeekend(d)?" weekend":"")+(idx>0&&ms?" month-start":"");
       var marker=occ?'<div class="tl-marker '+occ.s+'" title="'+esc(occ.tarefa)+'" data-mkey="'+esc(occ.key)+'">'+tlMark(occ)+'</div>':"";
       var todayLine=isToday?'<div class="tl-today-line"></div>':"";
-      html+='<div class="'+cls+'">'+marker+todayLine+'</div>';
+      html+='<div class="'+cls+'" style="min-width:'+TLCW+'px;flex:none">'+marker+todayLine+'</div>';
     });
     html+="</div></div>";
   });
   html+="</div>";
   document.getElementById("body").innerHTML=html;
+  (function(){
+    var wrap=document.querySelector("#body .tl-wrap");if(!wrap)return;
+    function atlScroll(mk,smooth){
+      var h=document.getElementById("atl-m"+mk);if(!h)return;
+      var lw=wrap.querySelector(".tl-label-col");var pad=lw?lw.offsetWidth:0;
+      var left=Math.max(0,h.getBoundingClientRect().left-wrap.getBoundingClientRect().left+wrap.scrollLeft-pad);
+      if(smooth)wrap.scrollTo({left:left,behavior:"smooth"});else wrap.scrollLeft=left;
+    }
+    var jb=document.getElementById("atl_jump");
+    if(jb)jb.querySelectorAll("button").forEach(function(b){b.onclick=function(){atlScroll(b.dataset.mk,true);};});
+    atlScroll(today.getFullYear()+"-"+today.getMonth(),false);
+  })();
   // Bolinha individual → focusTask
   document.querySelectorAll(".tl-marker[data-mkey]").forEach(function(mk){
     mk.onclick=function(e){e.stopPropagation();focusTask(mk.dataset.mkey);};
@@ -5554,6 +5629,45 @@ document.getElementById("addyearbtn").onclick=async function(){
   if(activeYears.length>=MAX_YEARS){var old=activeYears[0];confirmDel("Limite de "+MAX_YEARS+" anos. Para adicionar "+next+", o ano "+old+" será removido. Confirmar?",async function(){activeYears.shift();Object.keys(ovStatus).filter(function(k){return k.indexOf("|"+old+"|")>=0||k.endsWith("|"+old);}).forEach(function(k){delete ovStatus[k];});await svs(K.st,ovStatus);await addYear(next);toast(old+" removido. "+next+" adicionado.","info");});return;}
   await addYear(next);toast("✓ "+next+" adicionado.","ok");
 };
+/* ── VIRADA DE ANO AUTOMÁTICA ──
+   Ao abrir o app num ano-calendário novo: arquiva snapshot integral do ano anterior
+   (aa_hist_<ano>), adiciona o ano novo à Agenda, marca aa_rollover_pending — cada módulo
+   (Comissões, PPSS, Férias) aplica sua regra de continuidade ao carregar — e mostra o aviso
+   único com o pedido de renovação dos PPSS. Nenhuma ação do operador é necessária. */
+(function(){
+  function roll(){
+    if(typeof activeYears==="undefined"||!activeYears.length){setTimeout(roll,700);return;}
+    var lastY=activeYears[activeYears.length-1];
+    if(CUR_YEAR<=lastY){aaShowRollNotice(null);return;}
+    try{
+      var snap={};
+      for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&/^aa_/.test(k)&&k.indexOf("aa_hist_")!==0&&k.indexOf("aa_rd_")!==0)snap[k]=localStorage.getItem(k);}
+      localStorage.setItem("aa_hist_"+lastY,JSON.stringify(snap));
+    }catch(e){}
+    try{localStorage.setItem("aa_rollover_pending",JSON.stringify({from:lastY,to:CUR_YEAR}));}catch(e){}
+    var chain=Promise.resolve();
+    for(var y=lastY+1;y<=CUR_YEAR;y++)(function(yy){chain=chain.then(function(){return addYear(yy);});})(y);
+    chain.then(function(){aaShowRollNotice({from:lastY,to:CUR_YEAR});}).catch(function(){});
+  }
+  window.aaShowRollNotice=function(p){
+    if(!p){try{p=JSON.parse(localStorage.getItem("aa_rollover_pending")||"null");}catch(e){p=null;}}
+    if(!p||p.to!==CUR_YEAR)return;
+    if(localStorage.getItem("aa_rd_notice_"+p.to))return;
+    var ls=document.getElementById("aa_login_submit");
+    if(ls&&ls.offsetParent!==null){setTimeout(function(){aaShowRollNotice(p);},2000);return;} // espera o login
+    localStorage.setItem("aa_rd_notice_"+p.to,"1");
+    var bg=ensureModal("aaYearRollBg","Virada de ano — "+p.from+" → "+p.to);
+    bg.querySelector(".mbody").innerHTML=
+      '<div style="display:flex;flex-direction:column;gap:9px;font-size:12.5px;line-height:1.55">'+
+      '<div>✅ <b>Continuam automaticamente:</b> demandas do dia, eficiência dos meios e tabela do CONDEF, PPSS com recurso indicado / serviço em andamento, timeline de CONDEF (a última condição segue evoluindo dia a dia), estoque de CLG (o novo ano parte do estoque de 31/12), previsão de duração (médias acumuladas com todo o histórico), horas de motores, militares do departamento e frota da Garagem.</div>'+
+      '<div>♻ <b>Reiniciados para '+p.to+':</b> comissões concluídas (arquivadas — as em andamento na virada continuam), PPSS concluídos/cancelados, percentual de férias gozadas (novo ciclo criado) e relatórios mensais da Garagem.</div>'+
+      '<div style="background:color-mix(in srgb,var(--c-amber) 14%,transparent);border:1px solid var(--c-amber);border-radius:8px;padding:9px 11px">⚠ <b>PPSS:</b> solicite aos Navios a <b>renovação dos pedidos</b> vinculados às restrições de CONDEF, visando o orçamento de '+p.to+'.</div>'+
+      '<div>🗂 O ano de '+p.from+' permanece disponível para consulta nas próprias abas (navegação de anos e timelines) — snapshot arquivado automaticamente.</div>'+
+      '</div>';
+    bg.classList.add("open");
+  };
+  setTimeout(roll,1200);
+})();
 document.getElementById("delyearbtn").onclick=function(){
   var Y=curYear;
   if(activeYears.length<=1){toast("Não é possível excluir o único ano ativo.","err");return;}
@@ -6439,6 +6553,20 @@ setTimeout(hideSplash,12000);
     if(!c||!c.length){try{c=JSON.parse(localStorage.getItem(NAVIOS_COMISSAO_COLS_KEY));}catch(e){}}
     if(c&&c.length)navComissaoCols=c;
     navComissaoCols.forEach(function(col){if(col.key==="inicio"||col.key==="fim")col.type="date";});
+    // Virada de ano: comissões concluídas até 31/12 são arquivadas (ficam no snapshot);
+    // só continuam as que atravessam a virada (fim em jan do ano novo em diante).
+    try{
+      var _rp2=JSON.parse(localStorage.getItem("aa_rollover_pending")||"null");
+      if(_rp2&&!localStorage.getItem("aa_rd_com_"+_rp2.to)){
+        var _j1=new Date(_rp2.to,0,1).getTime(),_n0=navComissoes.length;
+        navComissoes=navComissoes.filter(function(c){
+          var f=c&&c.fim?new Date(String(c.fim).split("/").reverse().join("-")+"T00:00:00").getTime():0;
+          return f>=_j1||String(c&&c.status||"")==="Em andamento";
+        });
+        if(navComissoes.length!==_n0)navSaveComissoes();
+        localStorage.setItem("aa_rd_com_"+_rp2.to,"1");
+      }
+    }catch(e){}
   }
   function navSaveComissoes(){try{localStorage.setItem(NAVIOS_COMISSAO_KEY,JSON.stringify(navComissoes));}catch(e){}}
   function navSaveComissaoCols(){try{localStorage.setItem(NAVIOS_COMISSAO_COLS_KEY,JSON.stringify(navComissaoCols));}catch(e){}}
@@ -6537,7 +6665,6 @@ setTimeout(hideSplash,12000);
       '<button type="button" class="nv-editbtn" id="'+idPrefix+'_prev"'+(navYear<=NAV_YEAR_MIN?' disabled':'')+' title="Ano anterior">◀</button>'+
       '<span style="font-weight:700;font-size:13px;padding:0 4px">'+navYear+'</span>'+
       '<button type="button" class="nv-editbtn" id="'+idPrefix+'_next"'+(navYear>=maxY?' disabled':'')+' title="Próximo ano">▶</button>'+
-      (navYear>=maxY?'<button type="button" class="nv-editbtn add-year" id="'+idPrefix+'_addyear">+ Ano</button>':'')+
       (piePref?'<button type="button" class="nv-editbtn blue" id="'+idPrefix+'_piebtn" title="Gerar gráfico de operacionalidade (consolidado + por navio)">📊 Gerar gráfico</button>':'')+
     '</div>';
   }
@@ -7409,6 +7536,13 @@ document.getElementById("detailDrawerBg").onclick=function(e){if(e.target.id==="
         }
         return{t:p.t,v:p.v,dot:!!l,meta:meta};
       });
+      // Virada de ano: âncora em 01/jan com o estoque de 31/12 do ano anterior — o novo ano
+      // parte de (x0,y0) = estoque na virada, não do primeiro lançamento.
+      var prevClg=(clgHist[r.id]||[]).filter(function(p){return p.t<cutoff.getTime();});
+      if(prevClg.length){
+        var lastPrev=prevClg.reduce(function(a,p){return p.t>a.t?p:a;},prevClg[0]);
+        pts.unshift({t:cutoff.getTime(),v:lastPrev.v,dot:false});
+      }
       // Ponto-âncora na véspera do início de cada comissão: sem ele, a linha interpola direto do
       // último ponto anterior até o 1º dia do período e o gráfico "desce antes" da comissão começar.
       // O âncora segura o valor plano até a véspera; só entra se não houver ponto naquele intervalo.
@@ -7457,7 +7591,7 @@ document.getElementById("detailDrawerBg").onclick=function(e){if(e.target.id==="
       }
       return{name:r.meio||"—",points:pts};
     }).filter(function(x){return x.points.length;});
-    svgLineChart(box,series,{height:330,yMin0:true,markedDotsOnly:true,fmtY:function(v){return v.toLocaleString("pt-BR");},fmtVal:function(v){return v.toLocaleString("pt-BR")+" L";}});
+    svgLineChart(box,series,{height:330,yMin0:true,markedDotsOnly:true,zoomable:true,fmtY:function(v){return v.toLocaleString("pt-BR");},fmtVal:function(v){return v.toLocaleString("pt-BR")+" L";}});
     var temProj=series.some(function(s){return(s.points||[]).some(function(p){return p.proj;});});
     if(temProj)box.insertAdjacentHTML("beforeend",'<div style="font-size:10.5px;color:var(--text3);margin-top:6px">Trecho <b>tracejado</b> = estimativa até o lançamento real: em comissão a curva cai pela média diária operativa do meio (a mesma da previsão de autonomia); atracado ou com a comissão encerrada, segue reta. O lançamento de fechamento do mês substitui o trecho estimado pelo consumo real.</div>');
   }
@@ -8925,8 +9059,8 @@ function openPpssKpiDrawer(navio,metric){
     var orcFn=function(r){return moneyVal(r.orcamento);};
     var hint='<div style="font-size:9px;color:var(--text3);margin-top:2px">Clique numa barra para ver a memória de cálculo do navio.</div>';
     el.innerHTML='<div class="stats-card"><h4>Valor orçado — Programadas</h4>'+barsSingle(porNavio("Programada",orcFn),"orcado","var(--c-blue)","Programada")+hint+'</div>'+
-      '<div class="stats-card"><h4>Valor orçado — Corrente</h4>'+barsSingle(porNavio("Corrente",orcFn),"orcado","var(--c-teal)","Corrente")+hint+'</div>'+
       '<div class="stats-card"><h4>Valor indicado — Programadas</h4>'+barsSingle(porNavio("Programada",ppssRecIndVal),"indicado","var(--c-blue)","Programada")+hint+'</div>'+
+      '<div class="stats-card"><h4>Valor orçado — Corrente</h4>'+barsSingle(porNavio("Corrente",orcFn),"orcado","var(--c-teal)","Corrente")+hint+'</div>'+
       '<div class="stats-card"><h4>Valor indicado — Corrente</h4>'+barsSingle(porNavio("Corrente",ppssRecIndVal),"indicado","var(--c-teal)","Corrente")+hint+'</div>';
     el.querySelectorAll(".ppss-kpi-bar-row").forEach(function(row){
       row.onclick=function(){openPpssKpiDrawer(row.dataset.navio,row.dataset.metric);};
@@ -8950,6 +9084,20 @@ function openPpssKpiDrawer(navio,metric){
     if(ppssBound){return;}
     ppssBound=true;
     await ppssLoad();
+    // Virada de ano: PPSS concluídos/cancelados do ano anterior são arquivados (snapshot);
+    // continuam só os com recurso indicado / serviço em andamento, a título de acompanhamento.
+    try{
+      var _rp3=JSON.parse(localStorage.getItem("aa_rollover_pending")||"null");
+      if(_rp3&&!localStorage.getItem("aa_rd_ppss_"+_rp3.to)){
+        var _keep=ppssRows.filter(function(r){
+          var st=r.situacao||"";
+          return st==="Recurso Indicado"||(st==="Falta Indicar"&&moneyVal(r.recInd)>0);
+        });
+        if(_keep.length!==ppssRows.length){ppssRows=_keep;ppssSaveRows();}
+        localStorage.setItem("aa_rd_ppss_"+_rp3.to,"1");
+        toast("Virada de ano: PPSS de "+_rp3.from+" arquivados. Solicite aos Navios a renovação dos PPSS para o orçamento de "+_rp3.to+".","info");
+      }
+    }catch(e){}
     var tag=document.getElementById("ppss_synctag");
     paintSyncTag(tag);
     var selNav=document.getElementById("ppss_f_navio");
@@ -9653,9 +9801,10 @@ function openPpssKpiDrawer(navio,metric){
       '<span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-amber)"></span>Saída prevista</span>'+
       '<span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-teal)"></span>Disponível</span>'+
       '<span class="tl-leg-item" style="font-style:italic">Ano de '+y+' — os 12 meses; clique numa célula para inserir ou editar</span></div>';
-    html+='<div class="tl-wrap"><div class="tl-header"><div class="tl-label-col" style="position:sticky;left:0;z-index:3">Viatura</div><div class="tl-days">';
+    html+='<div class="ferias-jump" id="gar_tl_jump">'+[0,1,2,3,4,5,6,7,8,9,10,11].map(function(mm){return '<button type="button" data-m="'+mm+'"'+(mm===garCalRef.m?' style="background:var(--header-bg);color:#fff;border-color:var(--header-bg)"':'')+'>'+MONTHS[mm]+'/'+String(y).slice(2)+'</button>';}).join('')+'</div>';
+    html+='<div class="tl-wrap"><div class="tl-header"><div class="tl-label-col">Viatura</div><div class="tl-days">';
     days.forEach(function(dy){
-      html+='<div class="tl-day-head'+(dy.ds===todayDs?" today":"")+(dy.wk?" weekend":"")+(dy.ms?" month-start":"")+'" style="min-width:'+CW+'px;flex:none">'+(dy.ms?'<span class="tl-month-label">'+MONTHS[dy.m]+'</span>':'')+dy.d+'</div>';
+      html+='<div class="tl-day-head'+(dy.ds===todayDs?" today":"")+(dy.wk?" weekend":"")+(dy.ms?" month-start":"")+'"'+(dy.ms?' id="gtl-m'+dy.m+'"':'')+' style="min-width:'+CW+'px;flex:none">'+(dy.ms?'<span class="tl-month-label">'+MONTHS[dy.m]+'</span>':'')+dy.d+'</div>';
     });
     html+='</div></div>';
     frota.forEach(function(r){
@@ -9691,11 +9840,15 @@ function openPpssKpiDrawer(navio,metric){
       };
     });
     var wrap=el.querySelector(".tl-wrap");
-    if(wrap){
-      var idx=0;
-      for(var i4=0;i4<days.length;i4++){if(days[i4].m===garCalRef.m){idx=i4;break;}}
-      wrap.scrollLeft=Math.max(0,idx*CW-40);
+    function gtlScrollTo(mm,smooth){
+      var h=document.getElementById("gtl-m"+mm);if(!h||!wrap)return;
+      var lw=wrap.querySelector(".tl-label-col");var pad=lw?lw.offsetWidth:0;
+      var left=Math.max(0,h.getBoundingClientRect().left-wrap.getBoundingClientRect().left+wrap.scrollLeft-pad);
+      if(smooth)wrap.scrollTo({left:left,behavior:"smooth"});else wrap.scrollLeft=left;
     }
+    var jb=document.getElementById("gar_tl_jump");
+    if(jb)jb.querySelectorAll("button").forEach(function(b){b.onclick=function(){gtlScrollTo(+b.dataset.m,true);};});
+    gtlScrollTo(garCalRef.m,false);
   }
   function usoOpenEdit(id){
     var e=vtrUsoLog.find(function(x){return x.id===id;});
@@ -10874,7 +11027,7 @@ function pdfTextRuns(buf){
     if(!sel||!box)return;
     if(!sel.options.length){
       sel.innerHTML=HORAS_SHIP_LIST.map(function(sk){return '<option value="'+sk.key+'">'+esc(horasShips[sk.key].title)+'</option>';}).join("");
-      sel.onchange=horasRenderChart;
+      sel.onchange=function(){box._lcZoom=null;horasRenderChart();};
     }
     var s=horasShips[sel.value]||horasShips[HORAS_SHIP_LIST[0].key];
     var cutoff=new Date(new Date().getFullYear(),0,1).getTime(); // ano corrente inteiro
@@ -10913,16 +11066,19 @@ function pdfTextRuns(buf){
         return{t:p.t,v:p.v,dot:!!l,meta:meta};
       });
       // O gráfico mostra a acumulação DENTRO do período exibido (desde 01/01), não o total
-      // absoluto de vida do motor (dezenas de milhares de horas) — senão os incrementos
-      // mensais (centenas de horas) ficam invisíveis na escala do total histórico. O total
-      // absoluto continua disponível no detalhe de cada ponto ("Horas acumuladas" no popup).
-      if(pts.length){
-        var base=pts[0].v;
-        pts=pts.map(function(p){return{t:p.t,v:p.v-base,dot:p.dot,meta:p.meta};});
-      }
+      // absoluto de vida do motor. A âncora de 01/jan representa o acumulado na virada do ano
+      // (o motor já vinha de histórico) e liga em linha reta até o 1º lançamento do ano.
+      var prevH=(horasHist[r.id]||[]).filter(function(p){return p.t<cutoff;}).sort(function(a,b){return a.t-b.t;});
+      var base;
+      if(prevH.length)base=prevH[prevH.length-1].v;
+      else if(pts.length){var fl0=byT[pts[0].t];base=pts[0].v-((fl0&&+fl0.qtd)||0);}
+      else base=0;
+      pts=pts.map(function(p){return{t:p.t,v:Math.max(0,p.v-base),dot:p.dot,meta:p.meta};});
+      pts.unshift({t:cutoff,v:0,dot:false});
+      if(pts.length===1)pts.push({t:Date.now(),v:0,dot:false}); // motor sem lançamento no ano: linha plana
       return{name:(r.tipoMotor||"Motor")+(r.bordo?" "+r.bordo:""),points:pts};
     }).filter(function(x){return x.points.length;});
-    svgLineChart(box,series,{height:300,markedDotsOnly:true,yMin0:true,fmtY:function(v){return(v>0?"+":"")+horasFmtNum(v)+"h";},fmtVal:function(v){return(v>0?"+":"")+horasFmtNum(v)+" h no período";}});
+    svgLineChart(box,series,{height:300,markedDotsOnly:true,yMin0:true,zoomable:true,fmtY:function(v){return(v>0?"+":"")+horasFmtNum(v)+"h";},fmtVal:function(v){return(v>0?"+":"")+horasFmtNum(v)+" h no período";}});
   }
   /* ── Lançamento mensal de horas em operação (mesmo padrão dos botões de CLG):
      navio → motor → formulário (mês de referência + horas no mês + observação).
@@ -11601,6 +11757,20 @@ function pdfTextRuns(buf){
     if(!cy||!cy.length){try{cy=JSON.parse(localStorage.getItem(PESSOAL_CYCLES_KEY));}catch(e){}}
     pessoalCycles=(cy&&cy.length)?cy:[2025];
     pessoalCurCycle=pessoalCycles[pessoalCycles.length-1];
+    // Virada de ano: cria o novo ciclo de férias automaticamente (percentuais zeram; os
+    // ciclos anteriores continuam consultáveis nas abas de ano).
+    try{
+      var _rp4=JSON.parse(localStorage.getItem("aa_rollover_pending")||"null");
+      if(_rp4&&_rp4.to){
+        var _want=_rp4.to-1;
+        if(pessoalCycles.indexOf(_want)<0){
+          pessoalCycles.push(_want);pessoalCycles.sort(function(a,b){return a-b;});
+          pessoalSaveCycles();pushKV("pessoalPush",PESSOAL_CYCLES_KEY,pessoalCycles);
+        }
+        pessoalCurCycle=pessoalCycles[pessoalCycles.length-1];
+        PESSOAL_FERIAS_KEY=cycleFeriasKey(pessoalCurCycle);
+      }
+    }catch(e){}
     rebuildFeriasRange();
     PESSOAL_FERIAS_KEY=cycleFeriasKey(pessoalCurCycle);
     await pessoalLoadFeriasForCurrentCycle();
@@ -11947,7 +12117,7 @@ function pdfTextRuns(buf){
     var bg=ensureModal("pstatBucketBg",(groupKey?groupKey+" — ":"")+FERIAS_BUCKET_LABEL[bucket]);
     var body=bg.querySelector(".mbody");
     body.innerHTML=filtered.length?filtered.map(function(r){
-      return '<div class="ps-item" style="padding:8px 4px;border-bottom:1px solid var(--border)">'+esc(r.nome||"—")+
+      return '<div class="ps-item" style="padding:8px 4px;border-bottom:1px solid var(--border)"><span style="color:var(--text2);font-weight:600">'+esc(r.posto||"—")+'</span> '+esc(r.nome||"—")+
         '<span style="float:right;color:var(--text3);font-size:11px">'+(+r.feriasGozadas||0)+'/'+FERIAS_TOTAL_DIAS+' dias</span></div>';
     }).join(""):'<div style="font-size:12px;color:var(--text3);font-style:italic;padding:8px 0">Nenhum militar neste grupo.</div>';
     bg.classList.add("open");
@@ -12071,9 +12241,7 @@ function pdfTextRuns(buf){
     if(!box)return;
     box.innerHTML=pessoalCycles.map(function(y){
       return '<button type="button" class="ferias-years-btn'+(y===pessoalCurCycle?" active":"")+'" data-y="'+y+'">'+cycleLabel(y)+'</button>';
-    }).join("")+
-      '<button type="button" class="hbtn add-year" id="pessoal_addyear">+ Ano</button>'+
-      (pessoalCycles.length>1?'<button type="button" class="hbtn" id="pessoal_delyear" style="background:rgba(168,85,75,.25);border-color:rgba(168,85,75,.5)">✕ Ano</button>':"");
+    }).join("");
     box.querySelectorAll(".ferias-years-btn").forEach(function(b){
       b.onclick=function(){if(+b.dataset.y!==pessoalCurCycle)switchPessoalCycle(+b.dataset.y);};
     });
@@ -12571,7 +12739,7 @@ button:not(:disabled):active,.tab:active,.segbtn:active,.vtbtn:active{transform:
   .appnav{
     top:auto;left:8px;right:8px;width:auto;
     bottom:calc(8px + env(safe-area-inset-bottom,0px));
-    height:82px;flex-direction:row;justify-content:space-between;align-items:center;
+    height:82px;flex-direction:row;justify-content:space-evenly;align-items:center;
     gap:3px;padding:8px 10px;border-radius:32px;
     border:1px solid rgba(255,255,255,.18);border-right:1px solid rgba(255,255,255,.18);
     overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
@@ -12584,7 +12752,7 @@ button:not(:disabled):active,.tab:active,.segbtn:active,.vtbtn:active{transform:
   .appnav.mpx-hide{transform:translateY(calc(100% + 20px + env(safe-area-inset-bottom,0px)))}
   .nav-grp{display:none}
   .nav-sep{display:none}
-  .nav-item{width:auto;min-width:56px;flex:1 0 auto;height:66px;border-radius:22px;gap:3px}
+  .nav-item{width:auto;min-width:44px;flex:1 1 0;height:66px;border-radius:22px;gap:3px}
   .nav-item .nav-ic{font-size:24px}
   .nav-item .nav-ic svg{width:26px;height:26px}
   .nav-item .nav-lbl{font-size:9.5px}
