@@ -792,6 +792,12 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .brand .sub{font-size:12px;text-align:left;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:3px;overflow-wrap:break-word;word-break:break-word}
 .hright{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .yearsel{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:var(--r-md);padding:6px 10px;font-size:14px;font-weight:600;outline:none}
+/* Barra de ano + undo/redo abaixo das abas de mês (Agenda) */
+.ag-yearbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 2px 16px}
+.ag-yearbar .ag-year-lbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);font-weight:700}
+.ag-yearbar .ag-yearsel{background:var(--c-blue);color:#fff;border:1.5px solid var(--c-blue);border-radius:99px;padding:6px 16px;font-weight:700;letter-spacing:.5px;box-shadow:0 2px 8px color-mix(in srgb,var(--c-blue) 30%,transparent);cursor:pointer;outline:none}
+.ag-yearbar .ag-hbtn{background:var(--surface);color:var(--text2);border:1.5px solid var(--border);border-radius:99px;padding:6px 12px;font-size:12px;cursor:pointer}
+.ag-yearbar .ag-undo-wrap{margin-left:auto;display:flex;gap:8px}
 .hbtn{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.85);border-radius:var(--r-md);padding:6px 11px;font-size:12px;white-space:nowrap}
 .hbtn:hover{background:rgba(255,255,255,.2);color:#fff}
 .hbtn.add-year{background:rgba(85,122,102,.3);border-color:rgba(85,122,102,.6)}
@@ -2054,8 +2060,6 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
     <span class="synctag" id="backend_tag" title="Estado de gravação" style="background-color: rgba(247, 247, 247, 0.94); opacity: 0.8">⏳ verificando…</span>
     <button class="hbtn aa-authbtn" id="authbtn" style="display:none"></button>
     <button class="hbtn theme-toggle-btn" id="themebtn">🌙 Noturno</button>
-    <select class="yearsel" id="yearsel" style="font-size: 12px"><option value="2026" selected="">2026</option></select>
-    <button class="hbtn add-year" id="addyearbtn" style="display:none">+ Ano</button><button class="hbtn" id="delyearbtn" title="Excluir ano selecionado" style="display:none;background:rgba(168,85,75,.25);border-color:rgba(168,85,75,.5)">✕ Ano</button>
   </div>
 </header>
 <div class="profilebar">
@@ -2069,6 +2073,12 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
   <div class="spot-body" id="spotBody"><div class="spot-empty">Nenhuma demanda do dia.</div></div>
 </div>
 <div class="tabs" id="tabs"><button class="tab" data-m="1">JAN</button><button class="tab" data-m="2">FEV</button><button class="tab" data-m="3">MAR</button><button class="tab" data-m="4">ABR</button><button class="tab" data-m="5">MAI</button><button class="tab active" data-m="6">JUN</button><button class="tab" data-m="7">JUL</button><button class="tab" data-m="8">AGO</button><button class="tab" data-m="9">SET</button><button class="tab" data-m="10">OUT</button><button class="tab" data-m="11">NOV</button><button class="tab" data-m="12">DEZ</button></div>
+<div class="ag-yearbar">
+  <span class="ag-year-lbl">Ano</span>
+  <select class="yearsel ag-yearsel" id="yearsel" style="font-size:15px"><option value="2026" selected="">2026</option></select>
+  <button class="hbtn add-year ag-hbtn" id="addyearbtn" style="display:none">+ Ano</button><button class="hbtn ag-hbtn" id="delyearbtn" title="Excluir ano selecionado" style="display:none">✕ Ano</button>
+  <span class="ag-undo-wrap"><button class="btn undo-btn" id="undobtn" disabled="">↩ Desfazer</button><button class="btn redo-btn" id="redobtn" disabled="">↪ Refazer</button></span>
+</div>
 <div class="kpis" id="kpis"><div class="kpi k-purple" data-k="all"><div class="kpi-n">25</div><div class="kpi-t">Tarefas</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:100%"></div></div></div></div><div class="kpi k-red" data-k="venc"><div class="kpi-n">16</div><div class="kpi-t">Vencidas</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:64%"></div></div></div></div><div class="kpi k-amber" data-k="prox"><div class="kpi-n">3</div><div class="kpi-t">Vencem ≤7d</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:12%"></div></div></div></div><div class="kpi k-blue" data-k="fut"><div class="kpi-n">1</div><div class="kpi-t">A vencer</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:4%"></div></div></div></div><div class="kpi k-teal" data-k="ok"><div class="kpi-n">3</div><div class="kpi-t">Concluídas 12%</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:12%"></div></div></div></div><div class="kpi k-grey" data-k="nav"><div class="kpi-n">17</div><div class="kpi-t">Subsídios pend.</div></div></div>
 <div class="seg" id="seg"><button class="segbtn all active">Todas <span class="seg-cc">25</span></button><button class="segbtn div"><span class="seg-sw" style="background:var(--c-blue)"></span>Tarefas da Divisão <span class="seg-cc">19</span></button><button class="segbtn nav"><span class="seg-sw" style="background:var(--c-amber)"></span>Subsídios das Unidades Subordinadas <span class="seg-cc">6</span></button></div>
 <div class="recline" id="recline"><span class="rec-lbl">Recorrência:</span><button class="recbtn active" data-r="ALL">Todos</button><button class="recbtn" data-r="MENSAL">Mensal</button><button class="recbtn" data-r="ANUAL">Anual</button><button class="recbtn" data-r="SEMANAL">Semanal</button><button class="recbtn" data-r="DIVERSO">Prazos Diversos</button></div>
@@ -2076,8 +2086,6 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
   <div class="search-wrap" id="qWrap"><span class="icon">🔍</span><input id="q" placeholder="Buscar… (atalho: /)"><button type="button" class="qclear" id="qClear" title="Limpar busca">✕</button></div>
   <select class="tselect" id="f_assunto"><option value="">Assunto</option><option>CIGEE</option><option>CLG</option><option>DIVERSOS</option><option>EMBARCAÇÕES</option><option>PROGEM</option></select>
   <label class="chk"><input type="checkbox" id="f_done" checked=""> Concluídas</label>
-  <button class="btn undo-btn" id="undobtn" disabled="">↩ Desfazer</button>
-  <button class="btn redo-btn" id="redobtn" disabled="">↪ Refazer</button>
   <button class="btn primary" id="addbtn">+ Inserir</button>
   <button class="btn" id="reportbtn">📋 Passagem de função</button>
   <div class="menu-wrap">
