@@ -2604,6 +2604,12 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
       <option value="previsao">Registrar previsão de uso</option>
       <option value="em_uso" selected="">Em uso</option>
     </select></div>
+    <div class="fld full" id="uso_motivo_row"><label>Motivo de uso</label><select id="uso_motivo">
+      <option value="navio">Empréstimo para Navio</option>
+      <option value="om">Empréstimo outra OM</option>
+      <option value="comissao">Comissão</option>
+      <option value="rotina">Rotina — Rancho CeIMBe</option>
+    </select></div>
     <div class="fld full"><label>Viatura</label><select id="uso_viatura"></select></div>
     <div id="uso_motivo_wrap">
       <div class="fld full"><label>Período</label><select id="uso_periodo_tipo">
@@ -2624,9 +2630,10 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
       </select></div>
       <div id="uso_fields_dynamic"></div>
       <div id="uso_itin_wrap">
-        <div class="fld full" style="margin-top:2px"><label>Itinerário — Origem</label><input id="uso_itin_origem" placeholder="Ex.: CeIMBe"></div>
+        <div class="fld full" style="margin-top:2px"><label>Itinerário — Origem</label><input id="uso_itin_origem" placeholder="Ex.: CHN-4"></div>
         <div id="uso_itin_dest"></div>
         <div class="fld full"><button type="button" class="nv-editbtn" id="uso_itin_add" style="width:100%">+ Inserir outros destinos</button></div>
+        <div class="fld full"><label>Destino final (fixo)</label><input value="CHN-4" disabled style="opacity:.65"></div>
       </div>
     </div>
     <datalist id="uso_militares_dl"></datalist>
@@ -4101,47 +4108,83 @@ function svgLineChart(box,series,opts){
     var hit=nearestPoint((ev.clientX-r.left)/sc,(ev.clientY-r.top)/sc);
     if(hit&&hit.p.meta)openLchartDetail(hit.p.meta);
   });
-  /* ── Zoom na escala de tempo (opts.zoomable): wheel no desktop, pinça no touch ── */
+  /* ── Zoom na escala de tempo (opts.zoomable): wheel no desktop; no touch, pinça CONTÍNUA
+     (janela recalculada a cada movimento a partir do início do gesto) e deslizar com um dedo
+     navega o crosshair/tooltip. Handlers ficam no box — sobrevivem ao re-render. ── */
   if(opts.zoomable){
     var hintEl=document.createElement("div");
     hintEl.style.cssText="font-size:9.5px;color:var(--text3);margin-top:4px";
-    hintEl.textContent="🔍 Zoom na escala de dias: role o mouse sobre o gráfico (desktop) ou faça pinça com dois dedos (touch) · duplo clique/toque restaura";
+    hintEl.textContent="🔍 Zoom na escala de dias: role o mouse sobre o gráfico (desktop) ou faça pinça contínua com dois dedos (touch) · deslize com um dedo para navegar os valores · duplo clique/toque restaura";
     box.appendChild(hintEl);
     if(box._lcZoom)svg.querySelectorAll(".cl-line").forEach(function(p2){p2.style.strokeDasharray="none";p2.style.strokeDashoffset="0";});
     svg.style.touchAction="pan-y";
-    var lcRerender=function(){svgLineChart(box,series,opts);};
-    var lcFrac=function(cx){var r2=svg.getBoundingClientRect();var mx=(cx-r2.left)/(r2.width/W);return Math.max(0,Math.min(1,(mx-L)/(W-L-R)));};
-    var lcApply=function(frac,factor){
-      var sp=maxT-minT,full=fullMaxT-fullMinT;
-      var ns=Math.max(5*86400000,Math.min(full,sp*factor));
-      var anchorT=minT+frac*sp;
-      var nMin=anchorT-frac*ns,nMax=nMin+ns;
-      if(nMin<fullMinT){nMin=fullMinT;nMax=nMin+ns;}
-      if(nMax>fullMaxT){nMax=fullMaxT;nMin=nMax-ns;}
-      box._lcZoom=(ns>=full-1000)?null:{minT:nMin,maxT:nMax};
-      lcRerender();
-    };
-    svg.addEventListener("wheel",function(e){e.preventDefault();lcApply(lcFrac(e.clientX),e.deltaY>0?1.3:0.72);},{passive:false});
-    svg.addEventListener("dblclick",function(e){e.preventDefault();box._lcZoom=null;lcRerender();});
-    var lcPD=null,lcPF=0,lcLastTap=0;
-    svg.addEventListener("touchstart",function(e){
-      if(e.touches.length===2){
-        lcPD=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-        lcPF=lcFrac((e.touches[0].clientX+e.touches[1].clientX)/2);
-      }else if(e.touches.length===1){
-        var now2=Date.now();
-        if(now2-lcLastTap<320){box._lcZoom=null;lcRerender();}
-        lcLastTap=now2;
-      }
-    },{passive:true});
-    svg.addEventListener("touchmove",function(e){
-      if(lcPD&&e.touches.length===2){
+    box._lcState={minT:minT,maxT:maxT,fullMinT:fullMinT,fullMaxT:fullMaxT,series:series,opts:opts,svg:svg};
+    if(!box._lcBound){
+      box._lcBound=true;
+      var lcRaf=false;
+      var lcSt=function(){return box._lcState;};
+      var lcRerender=function(){
+        if(lcRaf)return;lcRaf=true;
+        requestAnimationFrame(function(){lcRaf=false;svgLineChart(box,lcSt().series,lcSt().opts);});
+      };
+      var lcFrac=function(cx){
+        var r2=lcSt().svg.getBoundingClientRect();
+        var mx=(cx-r2.left)/(r2.width/W);
+        return Math.max(0,Math.min(1,(mx-L)/(W-L-R)));
+      };
+      var lcZoomAt=function(fr,factor,baseMin,baseMax){
+        var s=lcSt(),full=s.fullMaxT-s.fullMinT,sp=baseMax-baseMin;
+        var ns=Math.max(5*86400000,Math.min(full,sp*factor));
+        var anchorT=baseMin+fr*sp;
+        var nMin=anchorT-fr*ns,nMax=nMin+ns;
+        if(nMin<s.fullMinT){nMin=s.fullMinT;nMax=nMin+ns;}
+        if(nMax>s.fullMaxT){nMax=s.fullMaxT;nMin=nMax-ns;}
+        box._lcZoom=(ns>=full-1000)?null:{minT:nMin,maxT:nMax};
+        lcRerender();
+      };
+      box.addEventListener("wheel",function(e){
+        if(!e.target.closest||!e.target.closest("svg"))return;
         e.preventDefault();
-        var d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-        if(d>0&&Math.abs(d-lcPD)>18){lcApply(lcPF,lcPD/d);lcPD=null;}
-      }
-    },{passive:false});
-    svg.addEventListener("touchend",function(){lcPD=null;});
+        var s=lcSt();
+        lcZoomAt(lcFrac(e.clientX),e.deltaY>0?1.3:0.72,s.minT,s.maxT);
+      },{passive:false});
+      box.addEventListener("dblclick",function(e){
+        if(!e.target.closest||!e.target.closest("svg"))return;
+        e.preventDefault();box._lcZoom=null;lcRerender();
+      });
+      var lcPinch=null,lcLastTap=0;
+      box.addEventListener("touchstart",function(e){
+        if(!e.target.closest||!e.target.closest("svg"))return;
+        if(e.touches.length===2){
+          var s2=lcSt();
+          lcPinch={
+            d0:Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY),
+            fr:lcFrac((e.touches[0].clientX+e.touches[1].clientX)/2),
+            min0:s2.minT,max0:s2.maxT
+          };
+        }else if(e.touches.length===1){
+          var now2=Date.now();
+          if(now2-lcLastTap<320){box._lcZoom=null;lcRerender();}
+          lcLastTap=now2;
+        }
+      },{passive:true});
+      box.addEventListener("touchmove",function(e){
+        if(e.touches.length===2&&lcPinch){
+          e.preventDefault();
+          var d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+          if(d>0&&lcPinch.d0>0)lcZoomAt(lcPinch.fr,lcPinch.d0/d,lcPinch.min0,lcPinch.max0);
+        }else if(e.touches.length===1&&!lcPinch){
+          var t0=e.touches[0];
+          try{lcSt().svg.dispatchEvent(new MouseEvent("mousemove",{clientX:t0.clientX,clientY:t0.clientY}));}catch(e2){}
+        }
+      },{passive:false});
+      box.addEventListener("touchend",function(e){
+        if(e.touches.length<2)lcPinch=null;
+        if(!e.touches.length){
+          setTimeout(function(){try{lcSt().svg.dispatchEvent(new MouseEvent("mouseleave"));}catch(e2){}},1400);
+        }
+      });
+    }
   }
 }
 
@@ -9710,7 +9753,7 @@ function openPpssKpiDrawer(navio,metric){
   var _gcN=new Date();
   var garCalRef={y:_gcN.getFullYear(),m:_gcN.getMonth()};
   var usoEditId=null,garUsoLstFil=null;
-  var USO_MOTIVO_LBL={navio:"Empréstimo p/ Navio",om:"Empréstimo outra OM",comissao:"Comissão",rotina:"Uso de rotina pela OM"};
+  var USO_MOTIVO_LBL={navio:"Empréstimo p/ Navio",om:"Empréstimo outra OM",comissao:"Comissão",rotina:"Rotina — Rancho CeIMBe"};
   var USO_ACAO_LBL={em_uso:"Em uso",previsao:"Previsão de uso"};
   async function garLoadUso(){var h=null;try{h=await gtj(VTR_USO_KEY);}catch(e){}if(!h){try{h=JSON.parse(localStorage.getItem(VTR_USO_KEY));}catch(e){}}vtrUsoLog=Array.isArray(h)?h:[];}
   function garSaveUso(){try{localStorage.setItem(VTR_USO_KEY,JSON.stringify(vtrUsoLog));}catch(e){}pushKV("garPush",VTR_USO_KEY,vtrUsoLog);}
@@ -9874,6 +9917,34 @@ function openPpssKpiDrawer(navio,metric){
     if(!e){toast("Lançamento não encontrado.","info");return;}
     openUsoModal({edit:e});
   }
+  /* ── Rancho CeIMBe diário: lançamento automático (1º tempo, 10:00) sempre com a S10;
+     se a S10 estiver IM ou emprestada no dia, a L200 assume. ── */
+  function garRanchoViatura(ds){
+    var s10=null,l200=null;
+    vtrRows.forEach(function(r){
+      if(r.existencia==="0")return;
+      if(!s10&&/S10/i.test(r.modelo||""))s10=r;
+      if(!l200&&/L200/i.test(r.modelo||""))l200=r;
+    });
+    function ok(r){
+      if(!r)return false;
+      if(r.sit==="IM")return false;
+      return !vtrUsoLog.some(function(e){return e.vid===r.id&&e.acao==="em_uso"&&e.motivo!=="rotina"&&usoCovers(e,ds);});
+    }
+    if(ok(s10))return s10;
+    if(ok(l200))return l200;
+    return null;
+  }
+  function garEnsureRancho(){
+    var ds=usoDateStr(new Date());
+    if(vtrUsoLog.some(function(e){return e.motivo==="rotina"&&e.data===ds;}))return;
+    var v=garRanchoViatura(ds);
+    if(!v)return;
+    vtrUsoLog.push({id:usoUid(),vid:v.id,placa:v.placa||"",modelo:v.modelo||"",acao:"em_uso",motivo:"rotina",data:ds,dataFim:"",tempo:"1º tempo",devolucao:"",hora:"1º tempo",itinOrigem:"CHN-4",itinDest:["CeIMBe"],motorista:"",auto:true,ts:Date.now()});
+    garSaveUso();
+    setTimeout(function(){toast("🍞 Rancho CeIMBe de hoje lançado — "+(v.modelo||v.placa)+" às 10:00 (1º tempo). Preencha o motorista no lançamento.","info");},1400);
+    renderGarCal();renderGarTl();renderGarKpis();renderGarFleet();
+  }
   function garUsoList(fil){
     garUsoLstFil=fil||{y:garCalRef.y,m:garCalRef.m};fil=garUsoLstFil;
     var title=fil.date?("Lançamentos — "+usoBR(fil.date)):("Lançamentos — "+ML[fil.m]+" de "+fil.y);
@@ -9890,7 +9961,8 @@ function openPpssKpiDrawer(navio,metric){
       return'<div style="display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:10px;padding:8px 11px;margin-bottom:7px">'+
         '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;color:var(--text)">'+per+' · '+esc(e.placa||e.modelo||"?")+'</div>'+
         '<div style="font-size:11px;color:var(--text2)">'+(USO_ACAO_LBL[e.acao]||e.acao)+' — '+(USO_MOTIVO_LBL[e.motivo]||"—")+' · '+esc(usoQuemE(e))+(e.motorista?' · Motorista: '+esc(e.motorista):"")+'</div>'+
-        ((e.itinOrigem||(e.itinDest&&e.itinDest.length))?'<div style="font-size:10.5px;color:var(--text3)">Itinerário: '+esc([e.itinOrigem].concat(e.itinDest||[]).filter(Boolean).join(" → "))+'</div>':"")+'</div>'+
+        ((e.itinOrigem||(e.itinDest&&e.itinDest.length))?'<div style="font-size:10.5px;color:var(--text3)">Itinerário: '+esc([e.itinOrigem].concat(e.itinDest||[]).filter(Boolean).join(" → "))+' → CHN-4'+(e.hora?' · '+esc(e.hora):'')+'</div>':"")+
+        (e.justificativa?'<div style="font-size:10.5px;color:var(--c-gold,#977b43)">Justificativa: '+esc(e.justificativa)+'</div>':"")+'</div>'+
         '<button class="nv-editbtn" data-ed="'+e.id+'" title="Editar">✎</button>'+
         '<button class="nv-cancelbtn" data-del="'+e.id+'" title="Excluir">✕</button></div>';
     }).join(""):'<div style="font-size:12px;color:var(--text3);font-style:italic;padding:8px 0">Nenhum lançamento no período.</div>')+
@@ -9981,16 +10053,9 @@ function openPpssKpiDrawer(navio,metric){
     if(!r)return;
     if(r.sit==="IM"){toast("Viatura IM — LED travado em vermelho até a situação mudar.","info");return;}
     var a0=garUsoAtivo(r,usoDateStr(new Date()));
-    if(a0.em||a0.pv){toast("LED controlado por lançamento do calendário ("+(a0.em?"em uso":"saída prevista")+" hoje). Edite o lançamento para alterar.","info");return;}
-    var cur=VTR_USO_CYCLE.indexOf(r.usoStatus)+1;
-    var pre=JSON.parse(JSON.stringify(vtrRows));
-    r.usoStatus=VTR_USO_CYCLE[cur%VTR_USO_CYCLE.length];
-    vtrSaveRows();
-    pushKV("garPush",VTR_KEY,vtrRows).then(function(){toast("✓ "+VTR_USO_META[r.usoStatus].lbl,"ok");});
-    auditDiffRows("vtr_tbl",pre,vtrRows);
-    touchLastEdit("vtr_tbl");paintLastEdit("vtr_tbl_lastedit","vtr_tbl");
-    pushUndo("Uso viatura "+(r.modelo||r.placa||"")+": → "+VTR_USO_META[r.usoStatus].lbl,async function(){vtrRows=pre;vtrSaveRows();await pushKV("garPush",VTR_KEY,vtrRows);renderGaragem();});
-    renderGarFleet();
+    if(a0.em||a0.pv){usoOpenEdit((a0.em||a0.pv).id);return;}
+    // Mudança de status só via formulário: clique no LED abre o registro de uso preenchendo a viatura.
+    openUsoModal({vid:id,date:usoDateStr(new Date())});
   }
   /* ── Registro de uso da viatura — preenche a coluna Observações automaticamente e
      marca a viatura como "Em uso" (LED vermelho) ao confirmar. ── */
@@ -10010,8 +10075,9 @@ function openPpssKpiDrawer(navio,metric){
       '<div class="fld full"><label>Destino da comissão</label><input id="uso_destino"></div>'+
       '<div class="fld full"><label>Militar/Divisão solicitante</label><input id="uso_militar"></div>'+
       '<div class="fld full"><label>Motorista designado</label><input id="uso_motorista"></div>';
-    return''+ // rotina
-      '<div class="fld full"><label>Motorista escalado (rancho CeIMBe)</label><input id="uso_motorista"></div>';
+    return''+ // rotina — rancho CeIMBe (período padrão 1º tempo; motorista é a lacuna a preencher)
+      '<div class="fld full"><label>Período</label><select id="uso_hora"><option value="1º tempo" selected="">1° tempo</option><option value="2º tempo">2° tempo</option></select></div>'+
+      '<div class="fld full"><label>Motorista escalado (rancho CeIMBe)</label><input id="uso_motorista" placeholder="Preencher"></div>';
   }
   /* Identifica o Navio/OM/Divisão do pedido, conforme o motivo, para compor o texto de Observações. */
   function usoQuem(motivo,g){
@@ -10036,7 +10102,15 @@ function openPpssKpiDrawer(navio,metric){
       var lista=acaoSel.value==="tornar_disponivel"?usoOcupadas():usoLivres();
       vSel.innerHTML=lista.length?lista.map(function(r){return '<option value="'+r.id+'">'+esc(r.placa||r.modelo)+" — "+esc(r.modelo||"")+'</option>';}).join(""):'<option value="">— nenhuma viatura nessa condição —</option>';
     }
-    function refreshFields(){document.getElementById("uso_fields_dynamic").innerHTML=usoFieldsHtml(motivoSel.value);}
+    function refreshFields(){
+      document.getElementById("uso_fields_dynamic").innerHTML=usoFieldsHtml(motivoSel.value);
+      if(motivoSel.value==="rotina"){
+        var io2=document.getElementById("uso_itin_origem");
+        if(io2&&!io2.value)io2.value="CHN-4";
+        var dv2=itinVals().filter(Boolean);
+        if(!dv2.length)itinPaint(["CeIMBe",""]);
+      }
+    }
     function itinPaint(dests){
       dests=dests&&dests.length?dests:["",""];
       if(dests.length<2)dests=dests.concat([""]);
@@ -10053,7 +10127,7 @@ function openPpssKpiDrawer(navio,metric){
       document.getElementById("uso_dev_wrap").style.display=t==="multi"?"":"none";
       document.getElementById("uso_data_lbl").textContent=t==="dia"?"Data":"Início";
     }
-    function refreshAll(){motivoWrap.hidden=acaoSel.value==="tornar_disponivel";document.getElementById("uso_itin_wrap").style.display=motivoWrap.hidden?"none":"";refreshViaturas();if(!motivoWrap.hidden){refreshFields();refreshPeriodo();}}
+    function refreshAll(){motivoWrap.hidden=acaoSel.value==="tornar_disponivel";var mr2=document.getElementById("uso_motivo_row");if(mr2)mr2.style.display=motivoWrap.hidden?"none":"";document.getElementById("uso_itin_wrap").style.display=motivoWrap.hidden?"none":"";refreshViaturas();if(!motivoWrap.hidden){refreshFields();refreshPeriodo();}}
     acaoSel.onchange=refreshAll;
     motivoSel.onchange=refreshFields;
     document.getElementById("uso_periodo_tipo").onchange=refreshPeriodo;
@@ -10075,7 +10149,7 @@ function openPpssKpiDrawer(navio,metric){
       if(!Array.prototype.some.call(vSel.options,function(o){return o.value===edit.vid;}))vSel.insertAdjacentHTML("beforeend",'<option value="'+esc(edit.vid)+'">'+esc(edit.placa||edit.modelo||"?")+(edit.modelo?" — "+esc(edit.modelo):"")+'</option>');
       vSel.value=edit.vid;
       var sv=function(id,v){var el2=document.getElementById(id);if(el2&&v!=null)el2.value=v;};
-      sv("uso_navio",edit.navio);sv("uso_om",edit.om);sv("uso_destino",edit.destino);sv("uso_militar",edit.militar);sv("uso_motorista",edit.motorista);
+      sv("uso_navio",edit.navio);sv("uso_om",edit.om);sv("uso_destino",edit.destino);sv("uso_militar",edit.militar);sv("uso_motorista",edit.motorista);sv("uso_hora",edit.hora);
     }else if(opt.vid){
       if(!Array.prototype.some.call(vSel.options,function(o){return o.value===opt.vid;})){
         var rv0=vtrRows.find(function(x){return x.id===opt.vid;});
@@ -10096,6 +10170,25 @@ function openPpssKpiDrawer(navio,metric){
     if(multi&&fim&&fim<data){toast("A data de fim não pode ser anterior ao início.","info");return null;}
     return{data:data,dataFim:multi?(fim||data):"",tempo:multi?"":g("uso_tempo"),devolucao:multi?g("uso_devolucao"):""};
   }
+  /* Empréstimo da S10 (navio/OM) cobrindo o 1º tempo sem a L200 para assumir o rancho:
+     retorna o primeiro dia conflitante, ou null. */
+  function garRanchoConflito(vId,acao,motivo,per){
+    if(acao!=="em_uso"&&acao!=="previsao")return null;
+    if(motivo!=="navio"&&motivo!=="om")return null;
+    var r=vtrRows.find(function(x){return x.id===vId;});
+    if(!r||!/S10/i.test(r.modelo||""))return null;
+    if(per.tempo==="2º tempo")return null;
+    var l200=vtrRows.find(function(x){return x.existencia!=="0"&&/L200/i.test(x.modelo||"");});
+    function l200Ok(ds){
+      if(!l200||l200.sit==="IM")return false;
+      return !vtrUsoLog.some(function(e){return e.vid===l200.id&&e.acao==="em_uso"&&e.motivo!=="rotina"&&usoCovers(e,ds)&&e.tempo!=="2º tempo";});
+    }
+    var d1=per.dataFim||per.data;
+    for(var d=new Date(per.data+"T00:00:00");usoDateStr(d)<=d1;d.setDate(d.getDate()+1)){
+      if(!l200Ok(usoDateStr(d)))return usoDateStr(d);
+    }
+    return null;
+  }
   function confirmUso(){
     var vId=document.getElementById("uso_viatura").value;
     if(!vId){toast("Selecione uma viatura.","info");return;}
@@ -10105,6 +10198,13 @@ function openPpssKpiDrawer(navio,metric){
     function g(id){var el=document.getElementById(id);return el?el.value.trim():"";}
     var per=usoCollectPeriodo(g);
     if(!per)return;
+    var conflito=garRanchoConflito(vId,acao,motivo,per);
+    var justificativa="";
+    if(conflito){
+      if(!confirm("⚠ A S10 é a única viatura disponível para fazer o rancho CeIMBe em "+usoBR(conflito)+" (a L200 não pode cobrir). O rancho sai às 10:00, no 1° tempo.\n\nDeseja mesmo emprestar nesse período (1° tempo)?"))return;
+      justificativa=(prompt("Justificativa (fica registrada no histórico do lançamento):","Faina rápida, terminará antes das 10:00")||"").trim();
+      if(!justificativa){toast("Empréstimo não registrado — a justificativa é obrigatória nesse caso.","info");return;}
+    }
     if(usoEditId){
       var e=vtrUsoLog.find(function(x){return x.id===usoEditId;});
       if(!e){toast("Lançamento não encontrado.","info");closeUsoModal();return;}
@@ -10118,6 +10218,8 @@ function openPpssKpiDrawer(navio,metric){
         e.data=per.data;e.dataFim=per.dataFim;e.tempo=per.tempo;e.devolucao=per.devolucao;
         delete e.h1;delete e.h2;
         e.navio=g("uso_navio");e.om=g("uso_om");e.destino=g("uso_destino");e.militar=g("uso_militar");e.motorista=g("uso_motorista");
+        if(document.getElementById("uso_hora"))e.hora=g("uso_hora");
+        if(justificativa)e.justificativa=justificativa;
         e.itinOrigem=g("uso_itin_origem");
         e.itinDest=Array.prototype.map.call(document.querySelectorAll("#uso_itin_dest .uso-itin-d"),function(el2){return el2.value.trim();}).filter(Boolean);
       }
@@ -10140,7 +10242,7 @@ function openPpssKpiDrawer(navio,metric){
     touchLastEdit("vtr_tbl");paintLastEdit("vtr_tbl_lastedit","vtr_tbl");
     pushUndo("Uso viatura "+(r.modelo||r.placa||"")+": → "+VTR_USO_META[r.usoStatus].lbl,async function(){vtrRows=pre;vtrSaveRows();await pushKV("garPush",VTR_KEY,vtrRows);renderGaragem();});
     if(acao!=="tornar_disponivel"){
-      vtrUsoLog.push({id:usoUid(),vid:r.id,placa:r.placa||"",modelo:r.modelo||"",acao:acao,motivo:motivo,data:per.data,dataFim:per.dataFim,tempo:per.tempo,devolucao:per.devolucao,navio:g("uso_navio"),om:g("uso_om"),destino:g("uso_destino"),militar:g("uso_militar"),motorista:g("uso_motorista"),itinOrigem:g("uso_itin_origem"),itinDest:Array.prototype.map.call(document.querySelectorAll("#uso_itin_dest .uso-itin-d"),function(el2){return el2.value.trim();}).filter(Boolean),ts:Date.now()});
+      vtrUsoLog.push({id:usoUid(),vid:r.id,placa:r.placa||"",modelo:r.modelo||"",acao:acao,motivo:motivo,data:per.data,dataFim:per.dataFim,tempo:per.tempo,devolucao:per.devolucao,hora:g("uso_hora"),justificativa:justificativa,navio:g("uso_navio"),om:g("uso_om"),destino:g("uso_destino"),militar:g("uso_militar"),motorista:g("uso_motorista"),itinOrigem:g("uso_itin_origem"),itinDest:Array.prototype.map.call(document.querySelectorAll("#uso_itin_dest .uso-itin-d"),function(el2){return el2.value.trim();}).filter(Boolean),ts:Date.now()});
       garSaveUso();
     }
     renderGaragem();
@@ -10213,6 +10315,14 @@ function openPpssKpiDrawer(navio,metric){
     if(calAdd)calAdd.onclick=function(){openUsoModal({date:usoDateStr(new Date())});};
     var calEd=document.getElementById("gar_cal_edit");
     if(calEd)calEd.onclick=function(){garUsoList({y:garCalRef.y,m:garCalRef.m});};
+    // Zera (uma vez) o status setado por clique direto no LED — de agora em diante só via formulário.
+    if(!localStorage.getItem("aa_led_hist_wipe_v1")){
+      var chg0=false;
+      vtrRows.forEach(function(r0){if(r0.usoStatus&&r0.usoStatus!=="disponivel"){r0.usoStatus="disponivel";chg0=true;}});
+      if(chg0){vtrSaveRows();pushKV("garPush",VTR_KEY,vtrRows);}
+      localStorage.setItem("aa_led_hist_wipe_v1","1");
+    }
+    garEnsureRancho();
     var tag=document.getElementById("gar_synctag");
     paintSyncTag(tag);
     var selSit=document.getElementById("gar_f_sit");
