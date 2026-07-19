@@ -1984,7 +1984,14 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
   var locked=mob&&localStorage.getItem("aa_mob_lock")==="1";
   var act=+localStorage.getItem("aa_last_activity")||0;
   var idle=!mob&&act&&(Date.now()-act)>15*60*1000;
-  if(!s||locked||idle)document.write('<style>#splash{display:none!important}</style>');
+  if(!s||locked||idle){
+    // Sem sessão / travado / inativo: vai DIRETO pro login, sem flash da agenda.
+    // Esconde o splash E o conteúdo do app (as .wrap) já na 1ª pintura; o login
+    // (#aa_login, fora das .wrap) sobrepõe. Só entra aqui quando NÃO autenticado,
+    // então esconder o conteúdo é seguro. O ramo autenticado não passa por aqui.
+    document.documentElement.className+=" aa-preauth";
+    document.write('<style>#splash{display:none!important}html.aa-preauth .wrap{visibility:hidden!important}</style>');
+  }
 }catch(e){}})();
 </script>
 <div id="splash" class="splash">
@@ -12447,7 +12454,8 @@ function pdfTextRuns(buf){
     var thr=pessoalOverlapThreshold();
     var ym=pessoalCalCurYM(),y=ym.y,m=ym.m,lastDay=new Date(y,m+1,0).getDate();
     var mm=String(m+1).padStart(2,"0");
-    var peakDay=null,peakCount=0,divClash={};
+    var peakDay=null,peakCount=0,divClash={},divTotals={};
+    for(var t=0;t<pessoalRows.length;t++){var tv=((pessoalRows[t].divisao||"").trim())||"Sem divisão";divTotals[tv]=(divTotals[tv]||0)+1;}
     for(var d=1;d<=lastDay;d++){
       var ds=dstr(new Date(y,m,d)),outNow=0,byDiv={};
       for(var i=0;i<pessoalRows.length;i++){
@@ -12461,8 +12469,10 @@ function pdfTextRuns(buf){
       if(outNow>peakCount){peakCount=outNow;peakDay=d;}
       // choque de férias por divisão: 2+ da mesma divisão fora no mesmo dia (divisão desguarnecida)
       for(var dv2 in byDiv){
-        if(byDiv[dv2].length>=2 && byDiv[dv2].length>((divClash[dv2]||{}).count||0)){
-          divClash[dv2]={count:byDiv[dv2].length,day:d,names:byDiv[dv2].slice()};
+        var tot=divTotals[dv2]||0;
+        // choque = 50% ou mais da divisão (com 2+ militares) fora no mesmo dia
+        if(tot>=2 && byDiv[dv2].length*2>=tot && byDiv[dv2].length>((divClash[dv2]||{}).count||0)){
+          divClash[dv2]={count:byDiv[dv2].length,day:d,names:byDiv[dv2].slice(),total:tot};
         }
       }
     }
@@ -12472,7 +12482,7 @@ function pdfTextRuns(buf){
     }
     Object.keys(divClash).sort(function(a,b){return divClash[b].count-divClash[a].count;}).forEach(function(dv){
       var c=divClash[dv];
-      msgs.push('<div class="ferias-msg warn" style="display:block">⚠ Choque de férias na <b>'+esc(dv)+'</b> em '+c.day+'/'+mm+': <b>'+c.count+'</b> militares fora ao mesmo tempo ('+esc(c.names.join(", "))+').</div>');
+      msgs.push('<div class="ferias-msg warn" style="display:block">⚠ Choque de férias na <b>'+esc(dv)+'</b> em '+c.day+'/'+mm+': <b>'+c.count+' de '+c.total+'</b> fora ao mesmo tempo (≥50% da divisão) — '+esc(c.names.join(", "))+'.</div>');
     });
     box.innerHTML=msgs.length?'<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">'+msgs.join("")+'</div>':"";
   }
