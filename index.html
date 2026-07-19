@@ -1955,6 +1955,19 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
     </div>
   </div>
 </div>
+<script>
+/* Splash só depois do login: sem sessão válida (ou app bloqueado/inativo), a tela de
+   carregamento nem chega a aparecer — vai direto para o login. Após o login o app
+   recarrega com sessão salva e o splash roda normalmente. */
+(function(){try{
+  var s=localStorage.getItem("aa_session_v1");
+  var mob=matchMedia("(max-width:800px)").matches||matchMedia("(pointer:coarse)").matches;
+  var locked=mob&&localStorage.getItem("aa_mob_lock")==="1";
+  var act=+localStorage.getItem("aa_last_activity")||0;
+  var idle=!mob&&act&&(Date.now()-act)>15*60*1000;
+  if(!s||locked||idle)document.write('<style>#splash{display:none!important}</style>');
+}catch(e){}})();
+</script>
 <div id="splash" class="splash">
 <div class="splash-waves"><svg class="w1" viewBox="0 0 1600 200" preserveAspectRatio="none"><path d="M0,110 C200,150 200,70 400,110 C600,150 600,70 800,110 C1000,150 1000,70 1200,110 C1400,150 1400,70 1600,110 L1600,200 L0,200 Z" fill="rgba(255,255,255,.55)"></path></svg><svg class="w2" viewBox="0 0 1600 200" preserveAspectRatio="none"><path d="M0,130 C200,90 200,160 400,130 C600,90 600,160 800,130 C1000,90 1000,160 1200,130 C1400,90 1400,160 1600,130 L1600,200 L0,200 Z" fill="rgba(255,255,255,.45)"></path></svg></div>
 <div class="splash-bubbles">
@@ -2609,6 +2622,11 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
         <option value="rotina">Uso de rotina pela OM</option>
       </select></div>
       <div id="uso_fields_dynamic"></div>
+      <div id="uso_itin_wrap">
+        <div class="fld full" style="margin-top:2px"><label>Itinerário — Origem</label><input id="uso_itin_origem" placeholder="Ex.: CeIMBe"></div>
+        <div id="uso_itin_dest"></div>
+        <div class="fld full"><button type="button" class="nv-editbtn" id="uso_itin_add" style="width:100%">+ Inserir outros destinos</button></div>
+      </div>
     </div>
     <datalist id="uso_militares_dl"></datalist>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
@@ -9744,8 +9762,9 @@ function openPpssKpiDrawer(navio,metric){
       var cls="cal-day has-tasks"+(isCur&&d===today.getDate()?" today":"")+(wknd?" weekend":"");
       var chips=items.slice(0,3).map(function(e){
         var tshort=(e.dataFim&&e.dataFim!==e.data)?"⇤⇥ ":(e.tempo==="1º tempo"?"1ºT ":e.tempo==="2º tempo"?"2ºT ":"");
-        var lbl=tshort+(e.placa||e.modelo||"?");
-        return'<button class="cal-chip '+(e.acao==="previsao"?"prox":"venc")+'" data-uid="'+e.id+'" title="'+esc((e.placa||e.modelo||"?")+" — "+(USO_ACAO_LBL[e.acao]||e.acao)+" · "+(USO_MOTIVO_LBL[e.motivo]||"")+" · "+usoQuemE(e))+'">'+esc(lbl)+'</button>';
+        var quem=usoQuemE(e);if(quem==="Rotina (rancho CeIMBe)")quem="CeIMBe";
+        var lbl=tshort+(e.modelo||e.placa||"?")+" – "+quem;
+        return'<button class="cal-chip '+(e.acao==="previsao"?"prox":"venc")+'" data-uid="'+e.id+'" title="'+esc((e.modelo||e.placa||"?")+" — "+(USO_ACAO_LBL[e.acao]||e.acao)+" · "+(USO_MOTIVO_LBL[e.motivo]||"")+" · "+usoQuemE(e))+'">'+esc(lbl)+'</button>';
       }).join("");
       var more=items.length>3?'<div class="cal-more">+'+(items.length-3)+' mais</div>':"";
       html+='<div class="'+cls+'" data-gday="'+d+'" title="Clique para ver/inserir lançamentos"><div class="cal-dn">'+d+'</div>'+chips+more+'</div>';
@@ -9870,7 +9889,8 @@ function openPpssKpiDrawer(navio,metric){
       var per=usoBR(e.data)+((e.dataFim&&e.dataFim!==e.data)?" – "+usoBR(e.dataFim)+(e.devolucao?" · devolução no "+e.devolucao:""):(e.tempo?" · "+e.tempo:""));
       return'<div style="display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:10px;padding:8px 11px;margin-bottom:7px">'+
         '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;color:var(--text)">'+per+' · '+esc(e.placa||e.modelo||"?")+'</div>'+
-        '<div style="font-size:11px;color:var(--text2)">'+(USO_ACAO_LBL[e.acao]||e.acao)+' — '+(USO_MOTIVO_LBL[e.motivo]||"—")+' · '+esc(usoQuemE(e))+(e.motorista?' · Motorista: '+esc(e.motorista):"")+'</div></div>'+
+        '<div style="font-size:11px;color:var(--text2)">'+(USO_ACAO_LBL[e.acao]||e.acao)+' — '+(USO_MOTIVO_LBL[e.motivo]||"—")+' · '+esc(usoQuemE(e))+(e.motorista?' · Motorista: '+esc(e.motorista):"")+'</div>'+
+        ((e.itinOrigem||(e.itinDest&&e.itinDest.length))?'<div style="font-size:10.5px;color:var(--text3)">Itinerário: '+esc([e.itinOrigem].concat(e.itinDest||[]).filter(Boolean).join(" → "))+'</div>':"")+'</div>'+
         '<button class="nv-editbtn" data-ed="'+e.id+'" title="Editar">✎</button>'+
         '<button class="nv-cancelbtn" data-del="'+e.id+'" title="Excluir">✕</button></div>';
     }).join(""):'<div style="font-size:12px;color:var(--text3);font-style:italic;padding:8px 0">Nenhum lançamento no período.</div>')+
@@ -10017,6 +10037,15 @@ function openPpssKpiDrawer(navio,metric){
       vSel.innerHTML=lista.length?lista.map(function(r){return '<option value="'+r.id+'">'+esc(r.placa||r.modelo)+" — "+esc(r.modelo||"")+'</option>';}).join(""):'<option value="">— nenhuma viatura nessa condição —</option>';
     }
     function refreshFields(){document.getElementById("uso_fields_dynamic").innerHTML=usoFieldsHtml(motivoSel.value);}
+    function itinPaint(dests){
+      dests=dests&&dests.length?dests:["",""];
+      if(dests.length<2)dests=dests.concat([""]);
+      document.getElementById("uso_itin_dest").innerHTML=dests.map(function(v,i){
+        return '<div class="fld full"><label>Destino '+(i+1)+'</label><input class="uso-itin-d" value="'+esc(v||"")+'"></div>';
+      }).join("");
+    }
+    function itinVals(){return Array.prototype.map.call(document.querySelectorAll("#uso_itin_dest .uso-itin-d"),function(el2){return el2.value.trim();});}
+    document.getElementById("uso_itin_add").onclick=function(){itinPaint(itinVals().concat([""]));};
     function refreshPeriodo(){
       var t=document.getElementById("uso_periodo_tipo").value;
       document.getElementById("uso_tempo_wrap").style.display=t==="dia"?"":"none";
@@ -10024,7 +10053,7 @@ function openPpssKpiDrawer(navio,metric){
       document.getElementById("uso_dev_wrap").style.display=t==="multi"?"":"none";
       document.getElementById("uso_data_lbl").textContent=t==="dia"?"Data":"Início";
     }
-    function refreshAll(){motivoWrap.hidden=acaoSel.value==="tornar_disponivel";refreshViaturas();if(!motivoWrap.hidden){refreshFields();refreshPeriodo();}}
+    function refreshAll(){motivoWrap.hidden=acaoSel.value==="tornar_disponivel";document.getElementById("uso_itin_wrap").style.display=motivoWrap.hidden?"none":"";refreshViaturas();if(!motivoWrap.hidden){refreshFields();refreshPeriodo();}}
     acaoSel.onchange=refreshAll;
     motivoSel.onchange=refreshFields;
     document.getElementById("uso_periodo_tipo").onchange=refreshPeriodo;
@@ -10039,6 +10068,9 @@ function openPpssKpiDrawer(navio,metric){
     if(tEl)tEl.value=(edit&&edit.tempo)||"Dia todo";
     var dvEl=document.getElementById("uso_devolucao");
     if(dvEl)dvEl.value=(edit&&edit.devolucao)||"2º tempo";
+    var ioEl=document.getElementById("uso_itin_origem");
+    if(ioEl)ioEl.value=(edit&&edit.itinOrigem)||"";
+    itinPaint(edit&&edit.itinDest&&edit.itinDest.length?edit.itinDest.slice():["",""]);
     if(edit){
       if(!Array.prototype.some.call(vSel.options,function(o){return o.value===edit.vid;}))vSel.insertAdjacentHTML("beforeend",'<option value="'+esc(edit.vid)+'">'+esc(edit.placa||edit.modelo||"?")+(edit.modelo?" — "+esc(edit.modelo):"")+'</option>');
       vSel.value=edit.vid;
@@ -10086,6 +10118,8 @@ function openPpssKpiDrawer(navio,metric){
         e.data=per.data;e.dataFim=per.dataFim;e.tempo=per.tempo;e.devolucao=per.devolucao;
         delete e.h1;delete e.h2;
         e.navio=g("uso_navio");e.om=g("uso_om");e.destino=g("uso_destino");e.militar=g("uso_militar");e.motorista=g("uso_motorista");
+        e.itinOrigem=g("uso_itin_origem");
+        e.itinDest=Array.prototype.map.call(document.querySelectorAll("#uso_itin_dest .uso-itin-d"),function(el2){return el2.value.trim();}).filter(Boolean);
       }
       garSaveUso();renderGarKpis();renderGarFleet();renderGarCal();
       pushUndo("Editar lançamento de uso",async function(){vtrUsoLog=preL;garSaveUso();renderGaragem();});
@@ -10106,7 +10140,7 @@ function openPpssKpiDrawer(navio,metric){
     touchLastEdit("vtr_tbl");paintLastEdit("vtr_tbl_lastedit","vtr_tbl");
     pushUndo("Uso viatura "+(r.modelo||r.placa||"")+": → "+VTR_USO_META[r.usoStatus].lbl,async function(){vtrRows=pre;vtrSaveRows();await pushKV("garPush",VTR_KEY,vtrRows);renderGaragem();});
     if(acao!=="tornar_disponivel"){
-      vtrUsoLog.push({id:usoUid(),vid:r.id,placa:r.placa||"",modelo:r.modelo||"",acao:acao,motivo:motivo,data:per.data,dataFim:per.dataFim,tempo:per.tempo,devolucao:per.devolucao,navio:g("uso_navio"),om:g("uso_om"),destino:g("uso_destino"),militar:g("uso_militar"),motorista:g("uso_motorista"),ts:Date.now()});
+      vtrUsoLog.push({id:usoUid(),vid:r.id,placa:r.placa||"",modelo:r.modelo||"",acao:acao,motivo:motivo,data:per.data,dataFim:per.dataFim,tempo:per.tempo,devolucao:per.devolucao,navio:g("uso_navio"),om:g("uso_om"),destino:g("uso_destino"),militar:g("uso_militar"),motorista:g("uso_motorista"),itinOrigem:g("uso_itin_origem"),itinDest:Array.prototype.map.call(document.querySelectorAll("#uso_itin_dest .uso-itin-d"),function(el2){return el2.value.trim();}).filter(Boolean),ts:Date.now()});
       garSaveUso();
     }
     renderGaragem();
