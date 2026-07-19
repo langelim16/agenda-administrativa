@@ -6882,7 +6882,7 @@ setTimeout(hideSplash,12000);
   }
   
   // Ordem/cores dos buckets de situação (compartilhada consolidado + por navio).
-  var OPER_PIE_ORDER=[["P","var(--c-blue)","Pronta (P)"],["PO","var(--c-teal)","Restrição (PO)"],["IO","var(--c-amber)","Indisponível-Op (IO)"],["IM","var(--c-red)","Indisponível-Manut (IM)"],["unk","var(--c-500)","Sem registro"]];
+  var OPER_PIE_ORDER=[["P","var(--c-blue)","Pronto (P)"],["PO","var(--c-teal)","Operando com restrição (PO)"],["IO","var(--c-amber)","Impossibilitado de Operar (IO)"],["IM","var(--c-red)","Impossibilitado de Manobrar (IM)"],["unk","var(--c-500)","Sem registro"]];
   function operPieAcc(ships){
     var acc={P:0,PO:0,IO:0,IM:0,unk:0};
     ships.forEach(function(s){
@@ -6917,8 +6917,8 @@ setTimeout(hideSplash,12000);
     return{svg:'<svg viewBox="0 0 100 100" width="'+size+'" height="'+size+'" style="display:block">'+segs+'</svg>',legend:legend};
   }
   function openOperPieModal(){
-    var navios=["NHoGSampaio","NHiBTenCastelo","AvHoFluRioTocantins","AvHoFluRioXingu"];
-    var ships=navios.map(function(nm){return navShips.find(function(s){return s.nome===nm;});}).filter(Boolean);
+    var EXCLUIR_OPER=["AvBRégulus","AvBBoto"].map(normNm);
+    var ships=navShips.filter(function(s){return s&&EXCLUIR_OPER.indexOf(normNm(s.nome))<0;});
     // Consolidado (maior, no topo).
     var cons=operPieSvg(operPieAcc(ships),200);
     var html='<div style="text-align:center;font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px">Consolidado — '+navYear+' ('+ships.length+' navios)</div>'+
@@ -6932,7 +6932,7 @@ setTimeout(hideSplash,12000);
           '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;min-height:30px;display:flex;align-items:center">'+esc(s.nome||"—")+'</div>'+
           p.svg+'<div style="margin-top:8px;text-align:left;align-self:stretch">'+p.legend+'</div></div>';
       }).join("")+'</div>';
-    html+='<div style="font-size:10px;color:var(--text3);margin-top:14px;font-style:italic">Considera apenas os 4 navios controlados na aba PPSS (NHoGSampaio, NHiBTenCastelo, AvHoFluRioTocantins, AvHoFluRioXingu) — não inclui os demais meios do CHN (AvBs e LHAIs).</div>';
+    html+='<div style="font-size:10px;color:var(--text3);margin-top:14px;font-style:italic">Considera todos os meios do CHN, exceto AvBRégulus e AvBBoto.</div>';
     var bg=ensureModal("nvOperPieBg","Gráfico de operacionalidade — "+navYear);
     bg.querySelector(".mbody").innerHTML=html;
     bg.classList.add("open");
