@@ -1985,12 +1985,15 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
   var act=+localStorage.getItem("aa_last_activity")||0;
   var idle=!mob&&act&&(Date.now()-act)>15*60*1000;
   if(!s||locked||idle){
-    // Sem sessão / travado / inativo: vai DIRETO pro login, sem flash da agenda.
-    // Esconde o splash E o conteúdo do app (as .wrap) já na 1ª pintura; o login
-    // (#aa_login, fora das .wrap) sobrepõe. Só entra aqui quando NÃO autenticado,
-    // então esconder o conteúdo é seguro. O ramo autenticado não passa por aqui.
+    // Sem sessão / travado / inativo: vai DIRETO pro login, sem flash. Reusa o
+    // aa-login-open (esconde TODO conteúdo de topo — nav, views, banner — menos o
+    // login e o fundo #app_sea) e já mostra o card de login na 1ª pintura. Só entra
+    // aqui quando NÃO autenticado; login/biometria/logout fazem reload (sessão
+    // presente -> conteúdo visível). Sem lockout.
     document.documentElement.className+=" aa-preauth";
     document.write('<style>#splash{display:none!important}html.aa-preauth .wrap{visibility:hidden!important}</style>');
+    try{document.body.classList.add("aa-login-open");}catch(e){}
+    try{var _lg=document.getElementById("aa_login");if(_lg)_lg.classList.add("on");}catch(e){}
   }
 }catch(e){}})();
 </script>
