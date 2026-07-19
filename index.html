@@ -2117,7 +2117,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 <header>
   <div class="brand">
     <div class="crest" id="nv_hdr_crest" style="background:none"><span style="font-size:22px">⚓</span></div>
-    <div><h1 id="nv_hdr_title">Controle de CONDEF</h1><div class="sub" id="nv_hdr_sub">Seção de Logística</div></div>
+    <div><h1 id="nv_hdr_title">Controle de CONDEF</h1><div class="sub" id="nv_hdr_sub">Departamento de Logística</div></div>
   </div>
   <div class="hright">
     <span class="synctag" id="nv_synctag" style="color:var(--c-teal)">💾 Somente local</span>
@@ -2201,7 +2201,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 <header>
   <div class="brand">
     <div class="crest" id="clg_hdr_crest" style="background:none"><span style="font-size:22px">⛽</span></div>
-    <div><h1 id="clg_hdr_title">Controle de CLG</h1><div class="sub" id="clg_hdr_sub">Combustíveis, Lubrificantes e Graxas · Seção de Logística</div></div>
+    <div><h1 id="clg_hdr_title">Controle de CLG</h1><div class="sub" id="clg_hdr_sub">Combustíveis, Lubrificantes e Graxas · Departamento de Logística</div></div>
   </div>
   <div class="hright">
     <span class="synctag" id="clg_synctag" style="color:var(--c-teal)">💾 Somente local</span>
@@ -2311,7 +2311,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 <header>
   <div class="brand">
     <div class="crest" id="horas_hdr_crest" style="background:none"><span style="font-size:22px">🔧</span></div>
-    <div><h1 id="horas_hdr_title">Motores</h1><div class="sub" id="horas_hdr_sub">Horas de Funcionamento · Seção de Logística</div></div>
+    <div><h1 id="horas_hdr_title">Motores</h1><div class="sub" id="horas_hdr_sub">Gestão de Motores · Departamento de Logística</div></div>
   </div>
   <div class="hright">
     <span class="synctag" id="horas_synctag" style="color:var(--c-teal)">💾 Somente local</span>
@@ -2424,7 +2424,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 <header>
   <div class="brand">
     <div class="crest" id="ppss_hdr_crest" style="background:none"><span style="font-size:22px">🛠</span></div>
-    <div><h1 id="ppss_hdr_title">Controle de PPSS</h1><div class="sub" id="ppss_hdr_sub">Pedidos de Serviço dos Meios · Seção de Logística</div></div>
+    <div><h1 id="ppss_hdr_title">Controle de PPSS</h1><div class="sub" id="ppss_hdr_sub">Pedidos de Serviço dos Meios · Departamento de Logística</div></div>
   </div>
   <div class="hright">
     <span class="synctag" id="ppss_synctag" style="color:var(--c-teal)">💾 Somente local</span>
@@ -2485,7 +2485,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 <header>
   <div class="brand">
     <div class="crest" id="gar_hdr_crest" style="background:none"><span style="font-size:22px">🚛</span></div>
-    <div><h1 id="gar_hdr_title">Garagem</h1><div class="sub" id="gar_hdr_sub">Mapa de Controle de Viaturas · Seção de Logística</div></div>
+    <div><h1 id="gar_hdr_title">Garagem</h1><div class="sub" id="gar_hdr_sub">Mapa de Controle de Viaturas · Departamento de Logística</div></div>
   </div>
   <div class="hright">
     <span class="synctag" id="gar_synctag" style="color:var(--c-teal)">💾 Somente local</span>
@@ -3293,10 +3293,10 @@ var CFG0={
     agenda:{title:"Agenda Administrativa",sub:"Departamento de Logística · CHN-4"},
     navios:{title:"Controle dos Meios",sub:"Condição de Eficiência · Departamento de Logística"},
     clg:{title:"Controle de CLG",sub:"Combustíveis, Lubrificantes e Graxas · Departamento de Logística"},
-    horas:{title:"Horas de Funcionamento",sub:"Controle de Horas de Funcionamento dos Navios · Seção de Logística"},
+    horas:{title:"Horas de Funcionamento",sub:"Gestão de Motores · Departamento de Logística"},
     pessoal:{title:"Pessoal",sub:"Militares do Departamento · Controle de Férias"},
-    ppss:{title:"Controle de PPSS",sub:"Pedidos de Serviço dos Meios · Seção de Logística"},
-    garagem:{title:"Garagem",sub:"Mapa de Controle de Viaturas · Seção de Logística"}
+    ppss:{title:"Controle de PPSS",sub:"Pedidos de Serviço dos Meios · Departamento de Logística"},
+    garagem:{title:"Garagem",sub:"Mapa de Controle de Viaturas · Departamento de Logística"}
   }
 };
 var K={base:"ag_base",st:"ag_status",sh:"ag_ships",ed:"ag_edits",us:"ag_user",dn:"ag_done",hi:"ag_hist",np:"ag_nup",pf:"ag_profile",sp:"ag_spots",sb:"ag_subsids",sub:"ag_subtasks",tsh:"ag_tships",ord:"ag_order",op:"ag_op",th:"ag_theme",ob:"ag_obs",fn:"ag_func",yrs:"ag_years",ie:"ag_instedit"};
@@ -5735,12 +5735,12 @@ document.getElementById("m_restore").onclick=async function(){if(cMode){setForm(
 // (Agenda fica de fora do "crest" porque seu ícone usa outro elemento/lógica — ver applyHdr().)
 var TABS=[
   {id:"agenda",label:"Agenda",title:"agenda_hdr_title",sub:"appSub",dTitle:"Agenda Administrativa",dSub:function(){return(cfg.departamento||"Logística")+" · "+(cfg.om||"OM");}},
-  {id:"navios",label:"Navios",title:"nv_hdr_title",sub:"nv_hdr_sub",crest:"nv_hdr_crest",foot:"nv_hdr_foot",dTitle:"Controle de CONDEF",dSub:"Seção de Logística"},
-  {id:"clg",label:"CLG",title:"clg_hdr_title",sub:"clg_hdr_sub",crest:"clg_hdr_crest",foot:"clg_hdr_foot",dTitle:"Controle de CLG",dSub:"Combustíveis, Lubrificantes e Graxas · Seção de Logística"},
-  {id:"horas",label:"Horas Motores",title:"horas_hdr_title",sub:"horas_hdr_sub",crest:"horas_hdr_crest",dTitle:"Horas Motores",dSub:"Horas de Funcionamento · Seção de Logística"},
+  {id:"navios",label:"Navios",title:"nv_hdr_title",sub:"nv_hdr_sub",crest:"nv_hdr_crest",foot:"nv_hdr_foot",dTitle:"Controle de CONDEF",dSub:"Departamento de Logística"},
+  {id:"clg",label:"CLG",title:"clg_hdr_title",sub:"clg_hdr_sub",crest:"clg_hdr_crest",foot:"clg_hdr_foot",dTitle:"Controle de CLG",dSub:"Combustíveis, Lubrificantes e Graxas · Departamento de Logística"},
+  {id:"horas",label:"Horas Motores",title:"horas_hdr_title",sub:"horas_hdr_sub",crest:"horas_hdr_crest",dTitle:"Horas Motores",dSub:"Gestão de Motores · Departamento de Logística"},
   {id:"pessoal",label:"Pessoal",title:"pessoal_hdr_title",sub:"pessoal_hdr_sub",crest:"pessoal_hdr_crest",dTitle:"Pessoal",dSub:"Militares do Departamento · Controle de Férias"},
-  {id:"ppss",label:"PPSS",title:"ppss_hdr_title",sub:"ppss_hdr_sub",crest:"ppss_hdr_crest",foot:"ppss_hdr_foot",dTitle:"Controle de PPSS",dSub:"Pedidos de Serviço dos Meios · Seção de Logística"},
-  {id:"garagem",label:"Garagem",title:"gar_hdr_title",sub:"gar_hdr_sub",crest:"gar_hdr_crest",foot:"gar_hdr_foot",dTitle:"Garagem",dSub:"Mapa de Controle de Viaturas · Seção de Logística"}
+  {id:"ppss",label:"PPSS",title:"ppss_hdr_title",sub:"ppss_hdr_sub",crest:"ppss_hdr_crest",foot:"ppss_hdr_foot",dTitle:"Controle de PPSS",dSub:"Pedidos de Serviço dos Meios · Departamento de Logística"},
+  {id:"garagem",label:"Garagem",title:"gar_hdr_title",sub:"gar_hdr_sub",crest:"gar_hdr_crest",foot:"gar_hdr_foot",dTitle:"Garagem",dSub:"Mapa de Controle de Viaturas · Departamento de Logística"}
 ];
 function defaultTabHeader(tab){
   var t=TABS.find(function(x){return x.id===tab;});
