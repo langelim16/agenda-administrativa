@@ -11724,11 +11724,32 @@ function pdfTextRuns(buf){
         it.rowId=row.id;it.motor=horasMotorLabel(row);
         if(mo.numSerie&&impTxt(row.numSerie)&&mo.numSerie!==impTxt(row.numSerie))
           impHorasAvisos.push(pf.arquivo+": nº de série divergente em "+it.shipTitle+" · "+it.motor+" (planilha "+mo.numSerie+" × artefato "+impTxt(row.numSerie)+") — confira o casamento antes de gravar");
+        var histArr=(horasHist[row.id]||[]).slice().sort(function(a,b){return a.t-b.t;});
+        var refFim=new Date(pf.ano,pf.mes,0);refFim.setHours(0,0,0,0);var tRef=refFim.getTime();
+        var latestT=histArr.length?histArr[histArr.length-1].t:null;
         var atual=(row.id in virt)?virt[row.id]:horasParseNum(row.horasOperacao);
-        if(isNaN(atual)){
+        if(isNaN(atual)&&histArr.length)atual=histArr[histArr.length-1].v;
+        if(isNaN(atual)&&!histArr.length){
           it.kind="baseline";it.sel=true;
           virt[row.id]=mo.acum;
+        }else if(latestT!==null&&tRef<latestT){
+          // RETROATIVO: mês anterior às leituras já existentes → implantação histórica,
+          // sem mexer no valor atual (horas nunca regridem). Compara com o mês que se segue.
+          var nxt=null,prv=null;
+          histArr.forEach(function(p){if(p.t>tRef&&(!nxt||p.t<nxt.t))nxt=p;if(p.t<tRef&&(!prv||p.t>prv.t))prv=p;});
+          var lblT=function(t){var d=new Date(t);return impPad2(d.getMonth()+1)+"/"+d.getFullYear();};
+          it.retro=true;it.acumAtual=nxt?nxt.v:(prv?prv.v:null);
+          if(nxt&&mo.acum>nxt.v+0.05){
+            it.kind="revisar";it.delta=Math.round((mo.acum-nxt.v)*10)/10;
+            it.info="acumulado retroativo maior que a leitura seguinte ("+lblT(nxt.t)+": "+impFmtH(nxt.v)+" h)";
+          }else if(prv&&mo.acum<prv.v-0.05){
+            it.kind="revisar";it.delta=Math.round((mo.acum-prv.v)*10)/10;
+            it.info="acumulado retroativo menor que a leitura anterior ("+lblT(prv.t)+": "+impFmtH(prv.v)+" h)";
+          }else{
+            it.kind="retro";it.sel=true;
+          }
         }else{
+          // FORWARD (mês mais recente): compara com o valor atual; se vier menor, é regressão.
           it.acumAtual=atual;
           var delta=Math.round((mo.acum-atual)*10)/10;
           it.delta=delta;
@@ -11743,6 +11764,7 @@ function pdfTextRuns(buf){
   var IMP_KIND={
     lanc:{lbl:"Lançar",cor:"var(--c-teal)"},
     baseline:{lbl:"Baseline — define o acumulado inicial, sem lançamento",cor:"var(--c-purple)"},
+    retro:{lbl:"Retroativo — carrega como histórico; NÃO altera o valor atual",cor:"var(--c-blue)"},
     emdia:{lbl:"Já em dia",cor:"var(--text3)"},
     revisar:{lbl:"REVISAR — acumulado diminuiu (erro na planilha?)",cor:"var(--c-red)"},
     semmotor:{lbl:"Sem correspondência",cor:"var(--c-gold)"}
@@ -11757,13 +11779,13 @@ function pdfTextRuns(buf){
       '</tr></thead><tbody>'+
       impHorasItens.map(function(it,i){
         var k=IMP_KIND[it.kind];
-        var chk=(it.kind==="lanc"||it.kind==="baseline")?'<input type="checkbox" data-i="'+i+'"'+(it.sel?" checked":"")+'>':"";
-        var deltaTxt=it.kind==="lanc"?"+"+impFmtH(it.delta)+" h":(it.kind==="baseline"?impFmtH(it.acumArq)+" h":(it.kind==="revisar"?impFmtH(it.delta)+" h":"—"));
+        var chk=(it.kind==="lanc"||it.kind==="baseline"||it.kind==="retro")?'<input type="checkbox" data-i="'+i+'"'+(it.sel?" checked":"")+'>':"";
+        var deltaTxt=it.kind==="lanc"?"+"+impFmtH(it.delta)+" h":((it.kind==="baseline"||it.kind==="retro")?impFmtH(it.acumArq)+" h":(it.kind==="revisar"?impFmtH(it.delta)+" h":"—"));
         return '<tr><td>'+chk+'</td><td>'+esc(it.mesLbl)+'</td><td>'+esc(it.shipTitle)+'</td><td>'+esc(it.motor)+'</td><td>'+(it.acumAtual==null?"—":impFmtH(it.acumAtual)+" h")+'</td><td>'+impFmtH(it.acumArq)+' h</td><td style="color:'+k.cor+';white-space:nowrap">'+deltaTxt+'</td><td style="color:'+k.cor+'">'+esc(k.lbl+(it.info?" — "+it.info:""))+'</td></tr>';
       }).join("")+'</tbody></table></div>';
     prev.querySelectorAll('input[type="checkbox"][data-i]').forEach(function(c){c.onchange=function(){impHorasItens[+c.dataset.i].sel=c.checked;};});
     act.style.display="flex";
-    document.getElementById("imp_horas_save").disabled=!impHorasItens.some(function(it){return it.kind==="lanc"||it.kind==="baseline";});
+    document.getElementById("imp_horas_save").disabled=!impHorasItens.some(function(it){return it.kind==="lanc"||it.kind==="baseline"||it.kind==="retro";});
   }
   async function impHorasLer(){
     var inp=document.getElementById("imp_horas_file");
@@ -11804,8 +11826,28 @@ function pdfTextRuns(buf){
     touchLastEdit("horas_"+it.shipKey);paintLastEdit("horas_"+it.shipKey+"_lastedit","horas_"+it.shipKey);
     return true;
   }
+  /* Retroativo: grava a leitura no HISTÓRICO (gráfico/relatório) sem tocar no acumulado
+     atual — o valor atual é mais recente e maior; horas nunca regridem. */
+  async function impHorasRetro(it){
+    var s=horasShips[it.shipKey],row=s.rows.find(function(r){return r.id===it.rowId;});
+    if(!row)return false;
+    var y=+it.mesInput.slice(0,4),m=+it.mesInput.slice(5,7);
+    var fim=new Date(y,m,0);fim.setHours(0,0,0,0);
+    var dataFmt=String(fim.getDate()).padStart(2,"0")+"/"+impPad2(m)+"/"+y;
+    var arr=horasHist[row.id]||(horasHist[row.id]=[]);
+    var t=fim.getTime();
+    var ex=arr.find(function(p){return p.t===t;});
+    if(ex)ex.v=it.acumArq;else arr.push({t:t,v:it.acumArq});
+    arr.sort(function(a,b){return a.t-b.t;});
+    if(arr.length>200)arr.splice(0,arr.length-200);
+    horasSaveHist();
+    horasLogReadings(it.shipKey);
+    auditPushOne("horas_"+it.shipKey,row.id,"Importação retroativa: leitura histórica "+impFmtH(it.acumArq)+" h ("+dataFmt+") — valor atual não alterado");
+    touchLastEdit("horas_"+it.shipKey);paintLastEdit("horas_"+it.shipKey+"_lastedit","horas_"+it.shipKey);
+    return true;
+  }
   async function impHorasGravar(){
-    var sel=impHorasItens.filter(function(it){return it.sel&&(it.kind==="lanc"||it.kind==="baseline");});
+    var sel=impHorasItens.filter(function(it){return it.sel&&(it.kind==="lanc"||it.kind==="baseline"||it.kind==="retro");});
     if(!sel.length){toast("Nenhum lançamento selecionado.","info");return;}
     var btn=document.getElementById("imp_horas_save");
     btn.disabled=true;btn.textContent="Gravando…";
@@ -11813,6 +11855,7 @@ function pdfTextRuns(buf){
     for(var i=0;i<sel.length;i++){
       var it=sel[i];
       if(it.kind==="lanc"){if(await horasApplyLanc(it.shipKey,it.rowId,it.delta,it.mesInput,"importado da planilha de "+it.mesLbl))nL++;}
+      else if(it.kind==="retro"){if(await impHorasRetro(it))nB++;}
       else{if(await impHorasBaseline(it))nB++;}
     }
     btn.disabled=false;btn.textContent="✓ Gravar lançamentos selecionados";
