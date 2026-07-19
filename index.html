@@ -2076,13 +2076,13 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
   <div class="spot-head"><span style="font-size:17px">⚡</span><h2>Demandas do dia</h2><span class="sh-count" id="spotCount">0 ativas</span><button class="spot-add" id="spotAddBtn">+ Nova demanda</button></div>
   <div class="spot-body" id="spotBody"><div class="spot-empty">Nenhuma demanda do dia.</div></div>
 </div>
-<div class="tabs" id="tabs"><button class="tab" data-m="1">JAN</button><button class="tab" data-m="2">FEV</button><button class="tab" data-m="3">MAR</button><button class="tab" data-m="4">ABR</button><button class="tab" data-m="5">MAI</button><button class="tab active" data-m="6">JUN</button><button class="tab" data-m="7">JUL</button><button class="tab" data-m="8">AGO</button><button class="tab" data-m="9">SET</button><button class="tab" data-m="10">OUT</button><button class="tab" data-m="11">NOV</button><button class="tab" data-m="12">DEZ</button></div>
 <div class="ag-yearbar">
   <span class="ag-year-lbl">Ano</span>
   <select class="yearsel ag-yearsel" id="yearsel" style="font-size:15px"><option value="2026" selected="">2026</option></select>
   <button class="hbtn add-year ag-hbtn" id="addyearbtn" style="display:none">+ Ano</button><button class="hbtn ag-hbtn" id="delyearbtn" title="Excluir ano selecionado" style="display:none">✕ Ano</button>
   <span class="ag-undo-wrap"><button class="btn undo-btn" id="undobtn" disabled="">↩ Desfazer</button><button class="btn redo-btn" id="redobtn" disabled="">↪ Refazer</button></span>
 </div>
+<div class="tabs" id="tabs"><button class="tab" data-m="1">JAN</button><button class="tab" data-m="2">FEV</button><button class="tab" data-m="3">MAR</button><button class="tab" data-m="4">ABR</button><button class="tab" data-m="5">MAI</button><button class="tab active" data-m="6">JUN</button><button class="tab" data-m="7">JUL</button><button class="tab" data-m="8">AGO</button><button class="tab" data-m="9">SET</button><button class="tab" data-m="10">OUT</button><button class="tab" data-m="11">NOV</button><button class="tab" data-m="12">DEZ</button></div>
 <div class="kpis" id="kpis"><div class="kpi k-purple" data-k="all"><div class="kpi-n">25</div><div class="kpi-t">Tarefas</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:100%"></div></div></div></div><div class="kpi k-red" data-k="venc"><div class="kpi-n">16</div><div class="kpi-t">Vencidas</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:64%"></div></div></div></div><div class="kpi k-amber" data-k="prox"><div class="kpi-n">3</div><div class="kpi-t">Vencem ≤7d</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:12%"></div></div></div></div><div class="kpi k-blue" data-k="fut"><div class="kpi-n">1</div><div class="kpi-t">A vencer</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:4%"></div></div></div></div><div class="kpi k-teal" data-k="ok"><div class="kpi-n">3</div><div class="kpi-t">Concluídas 12%</div><div class="kpi-bar"><div class="kpi-prog"><div class="kpi-prog-fill" style="width:12%"></div></div></div></div><div class="kpi k-grey" data-k="nav"><div class="kpi-n">17</div><div class="kpi-t">Subsídios pend.</div></div></div>
 <div class="seg" id="seg"><button class="segbtn all active">Todas <span class="seg-cc">25</span></button><button class="segbtn div"><span class="seg-sw" style="background:var(--c-blue)"></span>Tarefas da Divisão <span class="seg-cc">19</span></button><button class="segbtn nav"><span class="seg-sw" style="background:var(--c-amber)"></span>Subsídios das Unidades Subordinadas <span class="seg-cc">6</span></button></div>
 <div class="recline" id="recline"><span class="rec-lbl">Recorrência:</span><button class="recbtn active" data-r="ALL">Todos</button><button class="recbtn" data-r="MENSAL">Mensal</button><button class="recbtn" data-r="ANUAL">Anual</button><button class="recbtn" data-r="SEMANAL">Semanal</button><button class="recbtn" data-r="DIVERSO">Prazos Diversos</button></div>
@@ -6488,7 +6488,7 @@ setTimeout(hideSplash,12000);
         '</button>'+
         '<button type="button" class="ps-item" id="nva_tipo_retro" style="text-align:left;cursor:pointer">'+
           '<div class="ps-main"><div class="ps-num">Alteração retroativa</div>'+
-          '<div class="ps-meta">Um período já ocorrido (início e retorno no passado) — só entra na Timeline e no Relatório.</div></div>'+
+          '<div class="ps-meta">Uma condição com data de início no passado — entra na Timeline e no Relatório, sem alterar o estado atual da tabela.</div></div>'+
         '</button>'+
       '</div>';
     document.getElementById("nva_tipo_nova").onclick=function(){bg.classList.remove("open");navOpenAltForm(ship,null,"nova");};
@@ -6504,14 +6504,10 @@ setTimeout(hideSplash,12000);
     var todayStr=navDstr(TODAY);
     var fields=isRetro?(
         '<div class="fld"><label>Data de início</label><input type="date" id="nva_vigencia" value="'+(editEntry?editEntry.vigencia:"")+'"></div>'+
-        '<div class="fld"><label>Data de retorno</label><input type="date" id="nva_fim" value="'+(editEntry?(editEntry.fim||""):"")+'"></div>'+
-        '<div class="fld"><label>Condição anterior (durante o período)</label><select id="nva_condicaoAnterior"><option value="">—</option>'+
+        '<div class="fld"><label>Condição CONDEF</label><select id="nva_condicaoAnterior"><option value="">—</option>'+
           ["P","PO","IO","IM"].map(function(k){return '<option value="'+k+'"'+(editEntry&&editEntry.condicaoAnterior===k?" selected":"")+'>'+esc(NAV_ST_LABELS[k])+'</option>';}).join("")+
         '</select></div>'+
-        '<div class="fld"><label>Condição final (após o retorno)</label><select id="nva_condicaoFinal"><option value="">—</option>'+
-          ["P","PO","IO","IM"].map(function(k){return '<option value="'+k+'"'+(editEntry&&editEntry.condicaoFinal===k?" selected":"")+'>'+esc(NAV_ST_LABELS[k])+'</option>';}).join("")+
-        '</select></div>'+
-        '<div class="fld full" style="font-size:10.5px;color:var(--text3)">A condição anterior vale a partir da própria data de início; a condição final vale a partir da própria data de retorno e permanece até uma alteração mais recente.</div>'
+        '<div class="fld full" style="font-size:10.5px;color:var(--text3)">A condição vale a partir da data de início e permanece até uma alteração mais recente (sem data de retorno).</div>'
       ):(
         '<div class="fld"><label>Nova condição CONDEF</label><select id="nva_condef"><option value="">Manter atual</option>'+
           ["P","PO","IO","IM"].map(function(k){return '<option value="'+k+'"'+(editEntry&&editEntry.condefDepois===k?" selected":"")+'>'+esc(NAV_ST_LABELS[k])+'</option>';}).join("")+
@@ -6549,15 +6545,13 @@ setTimeout(hideSplash,12000);
       errEl.style.display="block";
       return;
     }
-    var fim=isRetro?(document.getElementById("nva_fim").value||""):"";
     var novaCondef=isRetro?"":(document.getElementById("nva_condef").value||"");
     var condicaoAnterior=isRetro?(document.getElementById("nva_condicaoAnterior").value||""):"";
-    var condicaoFinal=isRetro?(document.getElementById("nva_condicaoFinal").value||""):"";
-    if(isRetro&&fim&&fim<vigencia){
-      errEl.textContent="A data de retorno não pode ser anterior à data de início.";
-      errEl.style.display="block";
-      return;
-    }
+    // Data de retorno e condição-final saíram do formulário (uma alteração persiste até a
+    // próxima). Preserva valores antigos ao EDITAR um período já lançado — não mexe em
+    // dados existentes; vazio para novos lançamentos.
+    var fim=isRetro&&editEntry?(editEntry.fim||""):"";
+    var condicaoFinal=isRetro&&editEntry?(editEntry.condicaoFinal||""):"";
     errEl.style.display="none";
     var restricaoTxt=(document.getElementById("nva_restricao").value||"").trim();
     var obsTxt=(document.getElementById("nva_obs").value||"").trim();
@@ -6568,7 +6562,7 @@ setTimeout(hideSplash,12000);
       // esse srcId) antes de recalcular — nunca mexe nos campos atuais da tabela quando retroativo
       // (o período, por definição, já é passado).
       ship.stHist=ship.stHist.filter(function(h){return h.srcId!==editEntry.id;});
-      if(isRetro?(condicaoAnterior||condicaoFinal):novaCondef)navClearStHistRange(ship,vigencia,isRetro?fim:null);
+      if(isRetro){if(fim&&(condicaoAnterior||condicaoFinal))navClearStHistRange(ship,vigencia,fim);}else if(novaCondef)navClearStHistRange(ship,vigencia,null);
       editEntry.vigencia=vigencia;editEntry.fim=fim||"";
       editEntry.condefDepois=novaCondef||editEntry.condefAntes;
       editEntry.condicaoAnterior=condicaoAnterior;editEntry.condicaoFinal=condicaoFinal;
@@ -6598,7 +6592,7 @@ setTimeout(hideSplash,12000);
       obs:obsTxt,retroativo:isRetro
     };
     ship.condefHist.push(entry);
-    if(isRetro?(condicaoAnterior||condicaoFinal):novaCondef)navClearStHistRange(ship,vigencia,isRetro?fim:null);
+    if(isRetro){if(fim&&(condicaoAnterior||condicaoFinal))navClearStHistRange(ship,vigencia,fim);}else if(novaCondef)navClearStHistRange(ship,vigencia,null);
     if(!isRetro){
       // Nova alteração: já entra em vigor na própria data de início (não no dia seguinte) e
       // atualiza os campos atuais da tabela.
