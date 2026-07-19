@@ -2950,6 +2950,10 @@ function aaPaintAuth(){
         await aaLogin(email,pw);
         try{await aaBioOffer();}catch(e){}
         // Sessão válida: recarrega a página já autenticada (boot limpo com token).
+        // aaReloading impede que pagehide/visibilitychange re-armem a trava mobile
+        // (aa_mob_lock) durante ESTE reload — senão o boot limparia a sessão recém
+        // salva e voltaria pro login (loop de login no celular).
+        window.aaReloading=true;try{localStorage.removeItem("aa_mob_lock");}catch(e){}
         location.reload();
       }catch(e){
         aaLoginError(e.message||"Não foi possível entrar.");
@@ -13160,10 +13164,10 @@ syncTheme();
   };
   document.addEventListener("visibilitychange",function(){
     if(!aaMob())return;
-    if(document.visibilityState==="hidden"){try{localStorage.setItem("aa_mob_lock","1");}catch(e){}}
+    if(document.visibilityState==="hidden"){if(!window.aaReloading){try{localStorage.setItem("aa_mob_lock","1");}catch(e){}}}
     else if(localStorage.getItem("aa_mob_lock")==="1"){aaLockNow();}
   });
-  window.addEventListener("pagehide",function(){if(aaMob()){try{localStorage.setItem("aa_mob_lock","1");}catch(e){}}});
+  window.addEventListener("pagehide",function(){if(aaMob()&&!window.aaReloading){try{localStorage.setItem("aa_mob_lock","1");}catch(e){}}});
   document.addEventListener("DOMContentLoaded",function(){
     if(wasLocked)setTimeout(function(){aaBioBtnPaint();if(typeof aaShowLogin==="function")aaShowLogin(true);},600);
     var eye=$("aa_pw_eye"),pw=$("aa_login_pw");
@@ -13192,6 +13196,7 @@ syncTheme();
           var ch=new Uint8Array(32);crypto.getRandomValues(ch);
           await navigator.credentials.get({publicKey:{challenge:ch,allowCredentials:[{type:"public-key",id:id}],userVerification:"required",timeout:60000}});
           localStorage.setItem("aa_session_v1",localStorage.getItem("aa_bio_sess"));
+          window.aaReloading=true;try{localStorage.removeItem("aa_mob_lock");}catch(e){}
           location.reload();
         }catch(e){if(typeof aaLoginError==="function")aaLoginError("Biometria não reconhecida. Use e-mail e senha.");}
       });
