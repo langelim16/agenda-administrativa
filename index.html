@@ -433,6 +433,8 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
 .dt-section-head .nv-toolbar{margin-bottom:0}
 .dt-title-wrap{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px}
 .last-edit{font-style:italic;color:var(--text3);font-size:11px;font-weight:400;text-transform:none;letter-spacing:0}
+/* Frase explicativa de tabela/grade — sempre ACIMA dos dados (e abaixo da legenda, quando houver) */
+.dt-note{font-size:10px;color:var(--text3);font-style:italic;line-height:1.4;margin:2px 2px 8px}
 .card-lastedit{display:block;margin:-4px 0 8px;text-align:left}
 .flt-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .flt-bar select,.flt-bar input{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-md);color:var(--text);font-size:12px;padding:6px 9px;font-family:inherit}
@@ -6852,8 +6854,9 @@ setTimeout(hideSplash,12000);
       var pct=((Date.now()-new Date(y,0,1).getTime())/totalMs*100).toFixed(2);
       todayMarker='<div class="nv-tl-today" style="left:calc(var(--tl-namew) + (100% - var(--tl-namew)) * '+(pct/100)+')"></div>';
     }
-    el.innerHTML='<div class="nv-tl-wrap"><h3 class="dt-table-title">Timeline de CONDEF dos Meios</h3>'+navYearControls("nvtl")+legend+'<div class="nv-tl-body">'+months+rows+todayMarker+'</div>'+
-      '<div style="font-size:10px;color:var(--text3);margin-top:10px;font-style:italic">O histórico é registrado automaticamente a cada mudança de CONDEF salva na tabela. Períodos anteriores ao início do registro aparecem como “Sem registro”.</div></div>';
+    el.innerHTML='<div class="nv-tl-wrap"><h3 class="dt-table-title">Timeline de CONDEF dos Meios</h3>'+navYearControls("nvtl")+legend+
+      '<div class="dt-note">O histórico é registrado automaticamente a cada mudança de CONDEF salva na tabela. Períodos anteriores ao início do registro aparecem como “Sem registro”.</div>'+
+      '<div class="nv-tl-body">'+months+rows+todayMarker+'</div></div>';
     navBindYearControls("nvtl");
     el.querySelectorAll(".nv-tl-clickable").forEach(function(seg){
       seg.onclick=function(){
@@ -6880,12 +6883,12 @@ setTimeout(hideSplash,12000);
       return{nome:s.nome||"—",acc:acc,pct:pct};
     });
     el.innerHTML='<h3 class="dt-table-title">Relatório de operacionalidade — '+y+'</h3>'+navYearControls("nvop",true)+
+      '<div class="dt-note">Dias contados de 01/01/'+y+' até '+(y===CUR_YEAR?"hoje":"31/12/"+y)+', a partir do histórico registrado. “% Operacional” = (P + PO) ÷ dias com registro.</div>'+
       '<div class="dt-table-wrap" style="margin-bottom:0"><table class="dt-table dt-nowrap" style="table-layout:auto"><thead><tr><th>Meio</th><th>P</th><th>PO</th><th>IO</th><th>IM</th><th>Sem registro</th><th>% Operacional</th></tr></thead><tbody>'+
       rows.map(function(r){
         var cls=r.pct===null?"":(r.pct>=70?"row-ok":(r.pct>=40?"row-warn":"row-bad"));
         return '<tr class="'+cls+'"><td>'+esc(r.nome)+'</td><td>'+r.acc.P+'</td><td>'+r.acc.PO+'</td><td>'+r.acc.IO+'</td><td>'+r.acc.IM+'</td><td>'+r.acc.unk+'</td><td><b>'+(r.pct===null?"—":r.pct+"%")+'</b></td></tr>';
-      }).join("")+'</tbody></table></div>'+
-      '<div style="font-size:10px;color:var(--text3);margin-top:8px;font-style:italic">Dias contados de 01/01/'+y+' até '+(y===CUR_YEAR?"hoje":"31/12/"+y)+', a partir do histórico registrado. “% Operacional” = (P + PO) ÷ dias com registro.</div>';
+      }).join("")+'</tbody></table></div>';
     navBindYearControls("nvop");
   }
   
@@ -6929,7 +6932,8 @@ setTimeout(hideSplash,12000);
     var ships=navShips.filter(function(s){return s&&EXCLUIR_OPER.indexOf(normNm(s.nome))<0;});
     // Consolidado (maior, no topo).
     var cons=operPieSvg(operPieAcc(ships),200);
-    var html='<div style="text-align:center;font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px">Consolidado — '+navYear+' ('+ships.length+' navios)</div>'+
+    var html='<div class="dt-note">Considera todos os meios do CHN, exceto AvBRégulus e AvBBoto.</div>'+
+      '<div style="text-align:center;font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px">Consolidado — '+navYear+' ('+ships.length+' navios)</div>'+
       '<div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;justify-content:center;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:16px">'+
         cons.svg+'<div style="min-width:180px">'+cons.legend+'</div></div>';
     // Grid de gráficos por navio — 3 por linha, cada um com legenda de cor + texto.
@@ -6940,7 +6944,6 @@ setTimeout(hideSplash,12000);
           '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;min-height:30px;display:flex;align-items:center">'+esc(s.nome||"—")+'</div>'+
           p.svg+'<div style="margin-top:8px;text-align:left;align-self:stretch">'+p.legend+'</div></div>';
       }).join("")+'</div>';
-    html+='<div style="font-size:10px;color:var(--text3);margin-top:14px;font-style:italic">Considera todos os meios do CHN, exceto AvBRégulus e AvBBoto.</div>';
     var bg=ensureModal("nvOperPieBg","Gráfico de operacionalidade — "+navYear);
     bg.querySelector(".mbody").innerHTML=html;
     bg.classList.add("open");
@@ -10138,12 +10141,12 @@ function openPpssKpiDrawer(navio,metric,tipo){
         '<button class="nv-editbtn" id="garrep_cur">Mês atual</button><button class="nv-editbtn" id="garrep_all">Ano completo</button></div>'+
         '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">'+[0,1,2,3,4,5,6,7,8,9,10,11].map(chip).join("")+'</div>'+
         '<div style="font-size:11px;color:var(--text2);margin-bottom:10px"><b>'+periodLbl()+'</b> · Km no período: <b>'+totKm.toLocaleString("pt-BR")+' km</b> · Usos/empréstimos: <b>'+totUsos+'</b> · Custo acumulado da frota (manut. + comb.): <b>'+fmtBRL(totCusto)+'</b></div>'+
+        '<div class="dt-note">Clique nos meses para somar períodos — km e usos ficam acumulados mês a mês. “Km no período” usa o histórico de leituras do odômetro; “Usos” conta os lançamentos do calendário. Manutenção e combustível são os acumulados atuais da tabela.</div>'+
         '<div class="dt-table-wrap" style="margin-bottom:0;max-height:46vh;overflow-y:auto"><table class="dt-table"><thead><tr><th>Placa</th><th>Modelo</th><th>Odômetro</th><th>Km no período</th><th>Usos</th><th>Manutenção (R$)</th><th>Combustível (R$)</th><th>Docs</th></tr></thead><tbody>'+
         rows.map(function(x){
           var docsTxt=x.docs.length?x.docs.map(function(dd){return dd.doc+(dd.lvl==="over"?" vencido":" ≤30d");}).join(", "):"ok";
           return '<tr'+(x.docs.length?' class="row-warn"':'')+'><td>'+esc(x.placa)+'</td><td>'+esc(x.modelo)+'</td><td>'+esc(String(x.kmAtual))+'</td><td>'+(x.kmMes===null?"—":x.kmMes.toLocaleString("pt-BR")+" km")+'</td><td>'+x.usos+'</td><td>'+fmtBRL(x.manut)+'</td><td>'+fmtBRL(x.comb)+'</td><td>'+esc(docsTxt)+'</td></tr>';
         }).join("")+'</tbody></table></div>'+
-        '<div style="font-size:10px;color:var(--text3);margin-top:8px;font-style:italic">Clique nos meses para somar períodos — km e usos ficam acumulados mês a mês. “Km no período” usa o histórico de leituras do odômetro; “Usos” conta os lançamentos do calendário. Manutenção e combustível são os acumulados atuais da tabela.</div>'+
         '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button class="nv-editbtn" id="garrep_csv">⬇ Exportar CSV</button></div>';
       document.getElementById("garrep_year").onchange=function(){selY=+this.value;render();};
       document.getElementById("garrep_cur").onclick=function(){selY=now.getFullYear();selM={};selM[now.getMonth()]=1;render();};
