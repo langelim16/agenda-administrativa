@@ -461,6 +461,16 @@ tr.comissao-prevista{background:color-mix(in srgb,#c9b21a 30%,transparent)}
 .comissao-legend span{display:inline-flex;align-items:center;gap:5px}
 .comissao-legend i{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
 tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
+/* [impeccable a11y] Contraste AA no tema ESCURO: no fundo #000 a tinta de status
+   fica escura e o texto na cor cheia (--c-red/--c-amber) caía a ~3,98:1. Aqui só
+   o texto é clareado, no dark; tema claro, tokens e botões ficam intactos.
+   Também clareia os eyebrows azuis (.plbl), que caíam a ~3,97:1 no escuro. */
+[data-theme="dark"] tr.row-vencido td,[data-theme="dark"] tr.comissao-cancelada td{color:#e08472}
+[data-theme="dark"] tr.row-avencer td,[data-theme="dark"] tr.comissao-adiada td{color:#d6ab55}
+[data-theme="dark"] .plbl{color:#7aa2d6}
+/* [impeccable legibilidade] Dígitos tabulares nas tabelas e KPIs densos: colunas
+   de números alinham por dígito e ficam mais fáceis de comparar na vertical. */
+.nv-table td,.dt-table td,.ferias-table td,.hm-table td,.ovw-big,.kpi-n,.pstat b,.eng-val{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
 .dt-table-row{display:flex;gap:16px;flex-wrap:wrap}
 .drawer-bg{position:fixed;inset:0;background:rgba(38,42,46,.5);backdrop-filter:blur(4px);display:none;justify-content:flex-end;z-index:750}
 .drawer-bg.open{display:flex}
@@ -604,7 +614,7 @@ tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .ferias-table th.fname-h{position:sticky;left:0;z-index:3;text-align:left;padding:5px 10px;border-right:2px solid var(--border)}
 .ferias-table td.fcell{width:17px;height:20px;min-width:17px;background:var(--mtint,transparent)}
 .ferias-table td.fcell.fprev{background:#e8b81c}
-.ferias-table td.fcell.fgozo{background:#3aa864}
+.ferias-table td.fcell.fgozo{background:#2a7d4f}/* [impeccable a11y] verde escurecido: branco sobre #3aa864 era 3,02:1; agora ~5:1 */
 .ferias-table td.fcell.fcat-curso{background:#9a55c4}
 .ferias-table td.fcell.fcat-comissao{background:#9a55c4}
 .ferias-table td.fcell.fcat-lts{background:#c34f45}
@@ -681,10 +691,13 @@ input.nv-comissao-date{width:100%;border:none;background:transparent;font:inheri
 .dt-actions{text-align:center;white-space:nowrap}
 .dt-addrow-tr td{padding:0;border-bottom:none}
 .nv-condef{display:inline-flex;align-items:center;justify-content:center;text-align:center;padding:2px 6px;border-radius:99px;font-size:9px;font-family:var(--mono);font-weight:600;border:1px solid transparent;white-space:nowrap;width:100%}
-.nv-condef[data-st="IM"]{background:color-mix(in srgb,var(--c-red) 30%,#fff);color:var(--c-red);border-color:rgba(168,85,75,.4);font-weight:600}
-.nv-condef[data-st="IO"]{background:#f5dd8f;color:#6b520f;border-color:rgba(216,178,58,.55);font-weight:600}
-.nv-condef[data-st="PO"]{background:color-mix(in srgb,var(--c-teal) 30%,#fff);color:var(--c-teal);border-color:rgba(85,122,102,.4);font-weight:600}
-.nv-condef[data-st="P"]{background:color-mix(in srgb,var(--c-blue) 26%,#fff);color:var(--c-blue);border-color:rgba(65,97,140,.35);font-weight:600}
+/* [impeccable a11y+consistência] Badges CONDEF: texto escuro sobre o pastel para
+   passar AA nos quatro estados (o texto na cor cheia caía a ~3,98:1). IO agora usa
+   o token âmbar em vez do #f5dd8f/#6b520f hardcoded (Regra do Léxico Fixo). */
+.nv-condef[data-st="IM"]{background:color-mix(in srgb,var(--c-red) 30%,#fff);color:#7a2318;border-color:rgba(168,85,75,.4);font-weight:700}
+.nv-condef[data-st="IO"]{background:color-mix(in srgb,var(--c-amber) 32%,#fff);color:#5a4300;border-color:rgba(173,130,38,.5);font-weight:700}
+.nv-condef[data-st="PO"]{background:color-mix(in srgb,var(--c-teal) 30%,#fff);color:#184e35;border-color:rgba(85,122,102,.4);font-weight:700}
+.nv-condef[data-st="P"]{background:color-mix(in srgb,var(--c-blue) 26%,#fff);color:#1e3f70;border-color:rgba(65,97,140,.35);font-weight:700}
 .nv-condef[data-st=""]{background:var(--c-100);color:var(--text3);border-color:var(--border)}
 select.nv-condef{appearance:none;-webkit-appearance:none;cursor:pointer;outline:none}
 select.nv-condef:disabled{opacity:1;cursor:default}
@@ -8483,7 +8496,7 @@ document.getElementById("detailDrawerBg").onclick=function(e){if(e.target.id==="
     renderThead(document.getElementById("clg_t1_thead"),clgT1Cols,editing,"dt-actions-col",false,CLG_T1_FIXED_KEYS);
     var colspan=clgT1Cols.length+1;
     tb.innerHTML=clgT1.map(function(r){
-      var cls=(!editing&&clgEstoqueAlert(r))?" row-warn":"";
+      var cls=editing?"":clgEstoqueAlert(r);
       return '<tr'+(cls?' class="'+cls.trim()+'"':'')+(editing?' data-rid="'+r.id+'"':'')+'>'+
         clgT1Cols.map(function(col){return colTd(r,col,editing,"dt-cell","dt-cell-ro");}).join("")+
         actionsTd(editing,r.id)+
@@ -8494,9 +8507,14 @@ document.getElementById("detailDrawerBg").onclick=function(e){if(e.target.id==="
   }
   function clgNum(v){var m=String(v||"").replace(/[^\d,.-]/g,"").replace(/\./g,"").replace(",",".");var n=parseFloat(m);return isNaN(n)?NaN:n;}
   function clgEstoqueAlert(r){
-    var est=clgNum(r.estoque),min=clgNum(r.estoqueMin);
-    if(isNaN(est)||isNaN(min))return false;
-    return est<=min;
+    // Sinaliza a situação de estoque como as demais abas (quadro de situação):
+    // abaixo/no Estoque Mínimo = crítico (row-bad, vermelho); abaixo/no ROP
+    // (ponto de reposição) = repor (row-warn, âmbar). Sem os limites, sem alerta.
+    var est=clgNum(r.estoque),min=clgNum(r.estoqueMin),rop=clgNum(r.rop);
+    if(isNaN(est))return "";
+    if(!isNaN(min)&&est<=min)return "row-bad";
+    if(!isNaN(rop)&&est<=rop)return "row-warn";
+    return "";
   }
   // Ordenação de exibição (não mexe em clgT2 nem no drag de edição): previstos mantêm a ordem do
   // array; efetivados vão pro fim, com o recebimento mais recente logo abaixo do último previsto
