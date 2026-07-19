@@ -1226,12 +1226,13 @@ body.aa-login-open #app_sea{visibility:visible}
 .aa-bio-btn:hover{background:color-mix(in srgb,var(--header-bg) 10%,transparent)}
 [data-theme="dark"] .aa-bio-btn{color:#b9cfc0;border-color:rgba(185,207,192,.4)}
 /* ── Inputs de arquivo: botão translúcido no padrão do artefato ── */
-.file-btn{display:inline-flex;align-items:center;gap:7px;font-family:var(--sans);font-size:12.5px;font-weight:700;letter-spacing:.3px;color:var(--header-bg);background:color-mix(in srgb,var(--header-bg) 12%,transparent);backdrop-filter:blur(8px) saturate(1.2);-webkit-backdrop-filter:blur(8px) saturate(1.2);border:1.5px solid color-mix(in srgb,var(--header-bg) 30%,transparent);border-radius:12px;padding:9px 16px;cursor:pointer;transition:background .15s;white-space:nowrap;user-select:none;-webkit-user-select:none}
+.file-btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-size:11.5px;font-weight:600;letter-spacing:.2px;color:var(--text2);background:color-mix(in srgb,var(--text2) 8%,transparent);border:1.5px solid var(--border2);border-radius:var(--r-md);padding:7px 12px;cursor:pointer;transition:background .15s,border-color .15s;white-space:nowrap;user-select:none;-webkit-user-select:none}
+.file-btn:hover{border-color:var(--c-blue);color:var(--c-blue)}
 .file-btn:hover{background:color-mix(in srgb,var(--header-bg) 22%,transparent)}
 .file-btn:active{background:color-mix(in srgb,var(--header-bg) 30%,transparent)}
 .file-lbl{flex:1;min-width:180px;font-size:12px;color:var(--text3);line-height:1.5}
 .file-lbl.has{color:var(--text);font-weight:600}
-[data-theme="dark"] .file-btn{color:#b9cfc0;border-color:rgba(185,207,192,.35);background:rgba(185,207,192,.12)}
+[data-theme="dark"] .file-btn{color:var(--text2);border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.06)}
 #app_sea{position:fixed;inset:0;width:100vw;height:100vh;display:block;filter:blur(30px) saturate(.55) brightness(1.22);opacity:.55;transform:scale(1.08);z-index:-1;pointer-events:none}
 [data-theme="dark"] #app_sea{filter:blur(28px) saturate(.6) brightness(.3)}
 body.aa-login-open #app_sea{filter:blur(12px) saturate(1.12);opacity:1;transform:scale(1.06)}
@@ -2539,8 +2540,9 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
   </div>
 </header>
 
+<div style="font-size:11px;color:var(--c-teal);margin:0 0 14px;font-weight:600">💾 Nada é gravado antes da sua conferência — cada importação mostra uma prévia primeiro.</div>
 <div class="dt-section-head">
-  <div class="dt-title-wrap"><h3 class="dt-table-title">Horas de Funcionamento — motores</h3><span class="last-edit">Planilha mensal ODS (aba CHN4). O mês de referência vem do nome do arquivo (ex.: Ref-JUN2026); pode selecionar vários meses de uma vez.</span></div>
+  <div class="dt-title-wrap"><h3 class="dt-table-title">Horas de Funcionamento — motores</h3><span class="last-edit">ODS mensal (aba CHN4). Mês vem do nome do arquivo (ex.: Ref-JUN2026); vários de uma vez.</span></div>
 </div>
 <div class="stats-card" style="flex:none;margin-bottom:18px">
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -2549,7 +2551,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
     <span class="file-lbl" id="imp_horas_file_lbl" data-empty="Importar a Planilha de Horas de Funcionamento do último envio ao Com4°DN"></span>
     <button class="btn primary" id="imp_horas_read" style="margin-left:auto">🔍 Ler e conferir</button>
   </div>
-  <div style="font-size:10.5px;color:var(--text3);margin-top:8px">A planilha traz o <b>acumulado</b> de horas por motor no fim do mês; o lançamento proposto é a diferença para o acumulado atual do artefato. Nada é gravado antes da sua conferência.</div>
+  <div style="font-size:10.5px;color:var(--text3);margin-top:8px">Traz o <b>acumulado</b> por motor; o lançamento é a diferença para o valor atual.</div>
   <div id="imp_horas_avisos" style="margin-top:10px"></div>
   <div id="imp_horas_prev" style="margin-top:12px"></div>
   <div id="imp_horas_actions" style="display:none;justify-content:flex-end;gap:8px;margin-top:12px">
@@ -2559,7 +2561,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 </div>
 
 <div class="dt-section-head">
-  <div class="dt-title-wrap"><h3 class="dt-table-title">CLG — Consumos e Estoques (ODM · Gasolina · Lubrificantes · Graxas)</h3><span class="last-edit">Planilha mensal ODS (abas Consumos + Estoques Físicos). O mês de referência vem do nome do arquivo (ex.: REF-ABR2026); pode selecionar vários meses de uma vez.</span></div>
+  <div class="dt-title-wrap"><h3 class="dt-table-title">CLG — Consumos e Estoques (ODM · Gasolina · Lubrificantes · Graxas)</h3><span class="last-edit">ODS mensal (Consumos + Estoques Físicos). Mês vem do nome (ex.: REF-ABR2026); vários de uma vez.</span></div>
 </div>
 <div class="stats-card" style="flex:none;margin-bottom:18px">
   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -2568,7 +2570,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
     <span class="file-lbl" id="imp_clg_file_lbl" data-empty="Importar a Planilha de CLG do último envio ao Com4°DN"></span>
     <button class="btn primary" id="imp_clg_read" style="margin-left:auto">🔍 Ler e conferir</button>
   </div>
-  <div style="font-size:10.5px;color:var(--text3);margin-top:8px">Consumos viram lançamentos retroativos no <b>último dia do mês</b> (dias de comissão buscados na tabela Comissões do CONDEF pelo nº do evento PMPE); abastecimentos são <b>inferidos</b> comparando o estoque físico de fim do mês com o saldo calculado. Nada é gravado antes da sua conferência.</div>
+  <div style="font-size:10.5px;color:var(--text3);margin-top:8px">Consumos entram como lançamentos retroativos no <b>último dia do mês</b>; abastecimentos são <b>inferidos</b> pelo estoque físico.</div>
   <div id="imp_clg_avisos" style="margin-top:10px"></div>
   <div id="imp_clg_prev" style="margin-top:12px"></div>
   <div id="imp_clg_actions" style="display:none;justify-content:flex-end;gap:8px;margin-top:12px">
@@ -2587,7 +2589,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
     <span class="file-lbl" id="imp_ppss_file_lbl" data-empty="Importar a Planilha de PPSS compilado dos Navios"></span>
     <button class="btn primary" id="imp_ppss_read" style="margin-left:auto">🔍 Ler e conferir</button>
   </div>
-  <div style="font-size:10.5px;color:var(--text3);margin-top:8px">A SITUAÇÃO vem do texto da coluna (cor de fundo da linha como reserva) e é conferida contra as MSGs preenchidas — conflitos viram avisos. As colunas de MSG só <b>anexam</b> conteúdo novo, nunca apagam o que já está no artefato. Nada é gravado antes da sua conferência.</div>
+  <div style="font-size:10.5px;color:var(--text3);margin-top:8px">SITUAÇÃO conferida contra as MSGs (conflitos viram avisos); colunas de MSG só <b>anexam</b>, nunca apagam.</div>
   <div id="imp_ppss_avisos" style="margin-top:10px"></div>
   <div id="imp_ppss_prev" style="margin-top:12px"></div>
   <div id="imp_ppss_actions" style="display:none;justify-content:flex-end;gap:8px;margin-top:12px">
@@ -2606,7 +2608,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
     <span class="file-lbl" id="imp_pmpe_file_lbl" data-empty="Importar o PDF do PMPE mais recente"></span>
     <button class="btn primary" id="imp_pmpe_read" style="margin-left:auto">🔍 Ler e conferir</button>
   </div>
-  <div style="font-size:10.5px;color:var(--text3);margin-top:8px">Campos que você editou manualmente na tabela Comissões (travados) <b>nunca</b> são sobrescritos, e status como "A ser adiada" é decisão sua — o importador não mexe. Comissão que sumiu do PMPE vira <b>sugestão</b> de remoção, nunca pré-marcada. Nada é gravado antes da sua conferência.</div>
+  <div style="font-size:10.5px;color:var(--text3);margin-top:8px">Campos travados (editados por você) <b>nunca</b> são sobrescritos; comissão que sumiu vira <b>sugestão</b> de remoção, nunca pré-marcada.</div>
   <div id="imp_pmpe_avisos" style="margin-top:10px"></div>
   <div id="imp_pmpe_prev" style="margin-top:12px"></div>
   <div id="imp_pmpe_actions" style="display:none;justify-content:flex-end;gap:8px;margin-top:12px">
@@ -4652,6 +4654,19 @@ function dateTd(row,col,editing){
   if(!editing)return '<td data-id="'+row.id+'" data-key="'+col.key+'">'+esc(v?v.split("-").reverse().join("/"):"—")+'</td>';
   return '<td data-id="'+row.id+'" data-key="'+col.key+'"><input type="date" class="dt-date" data-id="'+row.id+'" data-key="'+col.key+'" value="'+esc(v)+'"></td>';
 }
+// Colunas numéricas da CLG que ganham separador de milhar SÓ na exibição (a edição
+// mostra o valor cru, então o round-trip de edição não quebra). Chaves específicas
+// da CLG — não colidem com outras abas.
+var CLG_NUM_KEYS={estoque:1,capacidade:1,rop:1,naoAsp:1,estoqueMin:1};
+function fmtMilhar(v){
+  var s=String(v==null?"":v).trim();
+  if(!s||!/^-?[\d.]*\d(,\d+)?$/.test(s))return s; // não é número puro: devolve como está
+  var neg=s[0]==="-";if(neg)s=s.slice(1);
+  var p=s.split(","),intp=p[0].replace(/\./g,"");
+  if(!/^\d+$/.test(intp))return (neg?"-":"")+s;
+  intp=intp.replace(/\B(?=(\d{3})+(?!\d))/g,".");
+  return (neg?"-":"")+intp+(p[1]!=null?(","+p[1]):"");
+}
 function colTd(row,col,editing,cellCls,roCls,forceEditableRowId){
   if(col.type==="select")return navCondefTd(row.id,row[col.key],editing);
   if(col.type==="choice")return choiceTd(row,col,editing);
@@ -4661,7 +4676,9 @@ function colTd(row,col,editing,cellCls,roCls,forceEditableRowId){
   var isEditable=(editing&&col.type!=="locked")||row.id===forceEditableRowId;
   var compCls=col.computed?' dt-cell-computed':'';
   var compTitle=(col.computed&&editing)?' title="Calculado automaticamente (Operação, Manutenção e Cronograma)"':'';
-  return '<td class="'+cellCls+(isEditable?'':' '+roCls)+compCls+'"'+wStyle+compTitle+' data-id="'+row.id+'" data-key="'+col.key+'"'+(isEditable?' contenteditable="true"':'')+' spellcheck="false">'+esc(row[col.key]||"")+'</td>';
+  var raw=row[col.key]||"";
+  var disp=(!isEditable&&CLG_NUM_KEYS[col.key])?fmtMilhar(raw):raw;
+  return '<td class="'+cellCls+(isEditable?'':' '+roCls)+compCls+'"'+wStyle+compTitle+' data-id="'+row.id+'" data-key="'+col.key+'"'+(isEditable?' contenteditable="true"':'')+' spellcheck="false">'+esc(disp)+'</td>';
 }
 function addTableColumn(cols,rows){
   var n=0;
@@ -12429,15 +12446,35 @@ function pdfTextRuns(buf){
     if(!total){box.innerHTML="";return;}
     var thr=pessoalOverlapThreshold();
     var ym=pessoalCalCurYM(),y=ym.y,m=ym.m,lastDay=new Date(y,m+1,0).getDate();
-    var peakDay=null,peakCount=0;
+    var mm=String(m+1).padStart(2,"0");
+    var peakDay=null,peakCount=0,divClash={};
     for(var d=1;d<=lastDay;d++){
-      var ds=dstr(new Date(y,m,d));
-      var n=pessoalRows.filter(function(r){return pessoalIndisponivelNoDia(r.nome||"",ds);}).length;
-      if(n>peakCount){peakCount=n;peakDay=d;}
+      var ds=dstr(new Date(y,m,d)),outNow=0,byDiv={};
+      for(var i=0;i<pessoalRows.length;i++){
+        var r=pessoalRows[i];
+        if(pessoalIndisponivelNoDia(r.nome||"",ds)){
+          outNow++;
+          var dv=((r.divisao||"").trim())||"Sem divisão";
+          (byDiv[dv]=byDiv[dv]||[]).push(r.nome||"—");
+        }
+      }
+      if(outNow>peakCount){peakCount=outNow;peakDay=d;}
+      // choque de férias por divisão: 2+ da mesma divisão fora no mesmo dia (divisão desguarnecida)
+      for(var dv2 in byDiv){
+        if(byDiv[dv2].length>=2 && byDiv[dv2].length>((divClash[dv2]||{}).count||0)){
+          divClash[dv2]={count:byDiv[dv2].length,day:d,names:byDiv[dv2].slice()};
+        }
+      }
     }
+    var msgs=[];
     if(peakCount>=thr){
-      box.innerHTML='<div class="ferias-msg warn" style="display:block;margin-bottom:14px">⚠ Sobreposição alta em '+peakDay+'/'+String(m+1).padStart(2,"0")+': <b>'+peakCount+' de '+total+'</b> militares indisponíveis (limite de atenção: '+thr+').</div>';
-    }else box.innerHTML="";
+      msgs.push('<div class="ferias-msg warn" style="display:block">⚠ Sobreposição alta em '+peakDay+'/'+mm+': <b>'+peakCount+' de '+total+'</b> militares indisponíveis (limite de atenção: '+thr+').</div>');
+    }
+    Object.keys(divClash).sort(function(a,b){return divClash[b].count-divClash[a].count;}).forEach(function(dv){
+      var c=divClash[dv];
+      msgs.push('<div class="ferias-msg warn" style="display:block">⚠ Choque de férias na <b>'+esc(dv)+'</b> em '+c.day+'/'+mm+': <b>'+c.count+'</b> militares fora ao mesmo tempo ('+esc(c.names.join(", "))+').</div>');
+    });
+    box.innerHTML=msgs.length?'<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">'+msgs.join("")+'</div>':"";
   }
   /* ── Militares disponíveis num dia — clique no calendário ── */
   function pessoalShowDayEscala(dia){
