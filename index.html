@@ -8690,53 +8690,53 @@ document.getElementById("detailDrawerBg").onclick=function(e){if(e.target.id==="
    ABA: PPSS — pedidos de serviço dos meios (Programadas + Correntes)
    ═══════════════════════════════════════════════════════════ */
 (function(){
-function openPpssKpiDrawer(navio,metric){
+function openPpssKpiDrawer(navio,metric,tipo){
   var bg=document.getElementById("detailDrawerBg");
   if(!bg)return;
-  var rows=ppssRows.filter(function(r){return r.navio===navio;});
+  tipo=tipo||"Programada";
+  var cor=tipo==="Programada"?"var(--c-blue)":"var(--c-teal)";
+  var tipoLabel=tipo==="Programada"?"Programadas":"Correntes";
   var valFn=function(r){return metric==="orcado"?moneyVal(r.orcamento):ppssRecIndVal(r);};
-  // Só os PPSS que de fato entram na métrica (orçado>0, ou recurso indicado>0).
-  var prog=rows.filter(function(r){return r.tipo==="Programada"&&valFn(r)>0;});
-  var corr=rows.filter(function(r){return r.tipo==="Corrente"&&valFn(r)>0;});
-  var progTotal=prog.reduce(function(a,r){return a+valFn(r);},0);
-  var corrTotal=corr.reduce(function(a,r){return a+valFn(r);},0);
+  // Só os PPSS deste navio+tipo que de fato entram na métrica do card clicado.
+  var itens=ppssRows.filter(function(r){return r.navio===navio&&r.tipo===tipo&&valFn(r)>0;})
+    .sort(function(a,b){return valFn(b)-valFn(a);});
+  var total=itens.reduce(function(a,r){return a+valFn(r);},0);
   var metricLabel=metric==="orcado"?"orçado":"indicado";
   var alvoLabel=metric==="orcado"?"orçados":"com recurso indicado";
   function rowCard(r){
-    var indicado=ppssRecIndVal(r);
-    var fallback=(!moneyVal(r.recInd)&&r.situacao==="Recurso Indicado");
+    var v=valFn(r),pct=total?Math.round(v/total*100):0;
+    var orc=moneyVal(r.orcamento),ind=ppssRecIndVal(r);
+    var fallback=(metric==="indicado"&&!moneyVal(r.recInd)&&r.situacao==="Recurso Indicado");
+    var secundario=metric==="orcado"
+      ?'Indicado: '+fmtBRLFull(ind)
+      :'Orçado: '+fmtBRLFull(orc);
     return '<div style="border:1px solid var(--border);border-radius:10px;padding:9px 11px;margin-bottom:8px">'+
-      '<div style="display:flex;justify-content:space-between;gap:8px">'+
-        '<div><div style="font-size:10px;color:var(--text3);letter-spacing:.3px">#'+esc(r.numero||"—")+' · '+esc(r.tipo||"—")+'</div>'+
+      '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">'+
+        '<div style="min-width:0"><div style="font-size:10px;color:var(--text3);letter-spacing:.3px">#'+esc(r.numero||"—")+'</div>'+
         '<div style="font-size:12.5px;font-weight:600;color:var(--text);margin:2px 0">'+esc(r.descricao||"—")+'</div></div>'+
-        '<span class="sit-badge" style="background:'+ppssSituColor(r)+'">'+esc(r.situacao||"—")+'</span>'+
+        '<span class="sit-badge" style="background:'+ppssSituColor(r)+';flex:none">'+esc(r.situacao||"—")+'</span>'+
       '</div>'+
-      '<div style="display:flex;gap:14px;margin-top:6px;font-size:11px;color:var(--text2)">'+
-        '<span>Orçado: <b>'+fmtBRLFull(moneyVal(r.orcamento))+'</b></span>'+
-        '<span>Indicado: <b>'+fmtBRLFull(indicado)+'</b></span>'+
-        (fallback?'<span style="color:var(--c-amber);font-style:italic">(indicado integral = orçado)</span>':'')+
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:7px">'+
+        '<b style="font-size:13px">'+fmtBRLFull(v)+'</b>'+
+        '<span style="font-size:10.5px;color:var(--text3)">'+secundario+'</span>'+
       '</div>'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-top:5px">'+
+        '<div style="flex:1;background:var(--c-100);border-radius:6px;height:6px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+cor+'"></div></div>'+
+        '<span style="font-size:10px;color:var(--text3);width:34px;text-align:right">'+pct+'%</span>'+
+      '</div>'+
+      (fallback?'<div style="font-size:10px;color:var(--c-amber);font-style:italic;margin-top:4px">Indicado integral: situação “Recurso Indicado” sem valor em REC IND — assume o orçado.</div>':'')+
     '</div>';
-  }
-  function groupSection(titulo,arr,cor){
-    if(!arr.length)return'';
-    return '<div style="margin-bottom:14px"><div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px"><i style="width:10px;height:10px;border-radius:3px;background:'+cor+';display:inline-block"></i>'+titulo+' ('+arr.length+')</div>'+arr.map(rowCard).join("")+'</div>';
   }
   document.getElementById("detailDrawerTitle").textContent=navio;
   document.getElementById("detailDrawerBody").innerHTML=
-    '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);font-weight:700;margin-bottom:8px">Memória de cálculo — Valor '+metricLabel+'</div>'+
+    '<div style="display:flex;align-items:center;gap:6px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);font-weight:700;margin-bottom:8px"><i style="width:10px;height:10px;border-radius:3px;background:'+cor+';display:inline-block"></i>Memória de cálculo — Valor '+metricLabel+' · '+tipoLabel+'</div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'+
-      '<div style="background:var(--c-50);border:1px solid var(--border);border-radius:10px;padding:10px 12px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);font-weight:700;margin-bottom:3px">Total '+metricLabel+'</div><div style="font-size:19px;font-weight:800">'+fmtBRLFull(progTotal+corrTotal)+'</div></div>'+
-      '<div style="background:var(--c-50);border:1px solid var(--border);border-radius:10px;padding:10px 12px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);font-weight:700;margin-bottom:3px">Pedidos '+alvoLabel+'</div><div style="font-size:19px;font-weight:800">'+(prog.length+corr.length)+'</div></div>'+
+      '<div style="background:var(--c-50);border:1px solid var(--border);border-radius:10px;padding:10px 12px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);font-weight:700;margin-bottom:3px">Total '+metricLabel+'</div><div style="font-size:19px;font-weight:800">'+fmtBRLFull(total)+'</div></div>'+
+      '<div style="background:var(--c-50);border:1px solid var(--border);border-radius:10px;padding:10px 12px"><div style="font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);font-weight:700;margin-bottom:3px">Pedidos '+alvoLabel+'</div><div style="font-size:19px;font-weight:800">'+itens.length+'</div></div>'+
     '</div>'+
-    '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px dashed var(--border)"><span style="display:inline-flex;align-items:center;gap:6px;color:var(--text2)"><i style="width:10px;height:10px;border-radius:3px;background:var(--c-blue);display:inline-block"></i>Programada ('+prog.length+' pedidos)</span><b>'+fmtBRLFull(progTotal)+'</b></div>'+
-      '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px dashed var(--border)"><span style="display:inline-flex;align-items:center;gap:6px;color:var(--text2)"><i style="width:10px;height:10px;border-radius:3px;background:var(--c-teal);display:inline-block"></i>Corrente ('+corr.length+' pedidos)</span><b>'+fmtBRLFull(corrTotal)+'</b></div>'+
-    '</div>'+
-    '<div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-bottom:8px">PPSS '+alvoLabel+' — Programadas, depois Correntes</div>'+
-    groupSection("Programadas",prog,"var(--c-blue)")+
-    groupSection("Correntes",corr,"var(--c-teal)")+
-    ((prog.length+corr.length)?"":'<div style="font-size:12px;color:var(--text3);font-style:italic">Nenhum PPSS '+alvoLabel+' para este navio.</div>');
+    '<div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-bottom:8px">PPSS '+alvoLabel+' (maior → menor)</div>'+
+    (itens.length?itens.map(rowCard).join(""):'<div style="font-size:12px;color:var(--text3);font-style:italic">Nenhum PPSS '+alvoLabel+' de manutenção '+tipoLabel.toLowerCase()+' para este navio.</div>')+
+    '<div style="font-size:10px;color:var(--text3);margin-top:12px">A soma dos pedidos acima compõe a barra deste navio no card “Valor '+metricLabel+' — '+tipoLabel+'”.</div>';
   bg.classList.add("open");
 }
   window.openPpssKpiDrawer=openPpssKpiDrawer;
@@ -9123,13 +9123,13 @@ function openPpssKpiDrawer(navio,metric){
     function porNavio(tipo,valueFn){
       return PPSS_NAVIOS.map(function(n){
         return{k:n,v:ppssRows.filter(function(r){return r.navio===n&&r.tipo===tipo;}).reduce(function(a,r){return a+valueFn(r);},0)};
-      }).filter(function(p){return p.v;});
+      });
     }
     function barsSingle(pairs,metric,cor,tipoLbl){
       if(!pairs.length)return '<div style="font-size:11px;color:var(--text3);font-style:italic;padding:8px 0">Sem dados.</div>';
       var max=Math.max.apply(null,pairs.map(function(p){return p.v;}))||1;
       return '<div>'+pairs.map(function(p){
-        return '<div class="ppss-kpi-bar-row" data-navio="'+esc(p.k)+'" data-metric="'+metric+'" style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:10px;cursor:pointer;padding:3px 4px;border-radius:6px;transition:background-color .15s">'+
+        return '<div class="ppss-kpi-bar-row" data-navio="'+esc(p.k)+'" data-metric="'+metric+'" data-tipo="'+tipoLbl+'" style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:10px;cursor:pointer;padding:3px 4px;border-radius:6px;transition:background-color .15s">'+
           '<span style="width:100px;flex:none;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(p.k)+'">'+esc(p.k)+'</span>'+
           '<div class="ppss-kpi-bar-track" style="flex:1;background:var(--c-100);border-radius:6px;height:11px;overflow:hidden;display:flex;transition:box-shadow .15s">'+
             '<div title="'+tipoLbl+': '+fmtBRLFull(p.v)+'" style="width:'+(p.v/max*100)+'%;height:100%;background:'+cor+'"></div>'+
@@ -9145,7 +9145,7 @@ function openPpssKpiDrawer(navio,metric){
       '<div class="stats-card"><h4>Valor orçado — Corrente</h4>'+barsSingle(porNavio("Corrente",orcFn),"orcado","var(--c-teal)","Corrente")+hint+'</div>'+
       '<div class="stats-card"><h4>Valor indicado — Corrente</h4>'+barsSingle(porNavio("Corrente",ppssRecIndVal),"indicado","var(--c-teal)","Corrente")+hint+'</div>';
     el.querySelectorAll(".ppss-kpi-bar-row").forEach(function(row){
-      row.onclick=function(){openPpssKpiDrawer(row.dataset.navio,row.dataset.metric);};
+      row.onclick=function(){openPpssKpiDrawer(row.dataset.navio,row.dataset.metric,row.dataset.tipo);};
     });
   }
   function ppssFindCard(cid){return ppssCards.find(function(c){return c.id===cid;});}
