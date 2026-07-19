@@ -435,6 +435,14 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
 .last-edit{font-style:italic;color:var(--text3);font-size:11px;font-weight:400;text-transform:none;letter-spacing:0}
 /* Frase explicativa de tabela/grade — sempre ACIMA dos dados (e abaixo da legenda, quando houver) */
 .dt-note{font-size:10px;color:var(--text3);font-style:italic;line-height:1.4;margin:2px 2px 8px}
+/* Linha que emparelha a frase (ou a legenda) com a toolbar de ano/ações, à direita */
+.dt-noterow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.dt-noterow>.dt-note,.dt-noterow>.nv-tl-legend,.dt-noterow>.tl-legend-top{flex:1;min-width:240px;margin:0}
+.dt-noterow>.nv-toolbar{flex:none;margin-bottom:0}
+/* Cápsula de legenda — mesma casca do .tl-legend-top: fundo, borda fina e cantos arredondados,
+   para a legenda não ficar flutuando solta sobre o fundo da página. */
+.comissao-legend,.cal-legend,.nv-tl-legend,.hm-legend,.ferias-legend{
+  padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg)}
 .card-lastedit{display:block;margin:-4px 0 8px;text-align:left}
 .flt-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .flt-bar select,.flt-bar input{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-md);color:var(--text);font-size:12px;padding:6px 9px;font-family:inherit}
@@ -1151,7 +1159,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .hm-month-cell:hover{transform:scale(1.06);z-index:2}
 .hm-month-name{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3)}
 .hm-month-cnt{font-size:20px;font-weight:800}
-.hm-legend{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.hm-legend{display:flex;align-items:center;gap:8px;margin:2px 0 8px;flex-wrap:wrap}
 .hm-legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text2)}
 .hm-legend-box{width:14px;height:14px;border-radius:3px}
 /* ── EMPTY MONTH MSG ── */
@@ -1612,7 +1620,7 @@ tr[draggable="true"] td{background:var(--c-sky)!important}
 .nv-table:not(.nv-editing) td.nv-restr-link{cursor:pointer}
 .nv-table:not(.nv-editing) td.nv-restr-link:hover{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 .nv-tl-wrap{--tl-namew:158px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-xs);padding:16px 18px 14px;position:relative}
-.nv-tl-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:10.5px;color:var(--text2);margin-bottom:12px}
+.nv-tl-legend{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:10.5px;color:var(--text2);margin-bottom:8px}
 .nv-tl-legend span{display:inline-flex;align-items:center;gap:6px}
 .nv-tl-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
 .nv-tl-months{display:flex;margin-left:var(--tl-namew);font-size:8.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;padding-bottom:7px;border-bottom:1px solid var(--border);margin-bottom:2px}
@@ -2130,13 +2138,6 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
   </div>
 </header>
 
-<div class="tl-legend-top" id="nv_legend">
-  <span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-red)"></span>"IM" — Impossibilitado de manobrar</span>
-  <span class="tl-leg-item"><span class="tl-leg-dot" style="background:#d8b23a"></span>"IO" — Impossibilitado de operar</span>
-  <span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-blue)"></span>"P" — Pronto para operar</span>
-  <span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-teal)"></span>"PO" — Operando com restrição</span>
-</div>
-
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Condição de Eficiência dos Meios</h3><span class="last-edit" id="nv_table_lastedit"></span></div>
   <div class="nv-toolbar" id="nv_table_toolbar">
@@ -2149,6 +2150,12 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
     <button class="nv-cancelbtn" id="nv_table_cancel">Cancelar</button>
   </span>
   </div>
+</div>
+<div class="tl-legend-top" id="nv_legend">
+  <span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-red)"></span>"IM" — Impossibilitado de manobrar</span>
+  <span class="tl-leg-item"><span class="tl-leg-dot" style="background:#d8b23a"></span>"IO" — Impossibilitado de operar</span>
+  <span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-blue)"></span>"P" — Pronto para operar</span>
+  <span class="tl-leg-item"><span class="tl-leg-dot" style="background:var(--c-teal)"></span>"PO" — Operando com restrição</span>
 </div>
 <div class="nv-table-wrap">
   <table class="nv-table">
@@ -2192,7 +2199,7 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 </div>
 
 <div id="nv_tl_sec"></div>
-<div id="nv_oper_sec" style="margin-top:16px"></div>
+<div id="nv_oper_sec" style="margin:16px 0 34px"></div>
 
 <div class="nv-grid" id="nv_grid"></div>
 
@@ -6855,7 +6862,8 @@ setTimeout(hideSplash,12000);
       var pct=((Date.now()-new Date(y,0,1).getTime())/totalMs*100).toFixed(2);
       todayMarker='<div class="nv-tl-today" style="left:calc(var(--tl-namew) + (100% - var(--tl-namew)) * '+(pct/100)+')"></div>';
     }
-    el.innerHTML='<div class="nv-tl-wrap"><h3 class="dt-table-title">Timeline de CONDEF dos Meios</h3>'+navYearControls("nvtl")+legend+
+    el.innerHTML='<div class="nv-tl-wrap"><h3 class="dt-table-title">Timeline de CONDEF dos Meios</h3>'+
+      '<div class="dt-noterow">'+legend+navYearControls("nvtl")+'</div>'+
       '<div class="dt-note">O histórico é registrado automaticamente a cada mudança de CONDEF salva na tabela. Períodos anteriores ao início do registro aparecem como “Sem registro”.</div>'+
       '<div class="nv-tl-body">'+months+rows+todayMarker+'</div></div>';
     navBindYearControls("nvtl");
@@ -6883,8 +6891,8 @@ setTimeout(hideSplash,12000);
       var pct=known?Math.round(oper/known*100):null;
       return{nome:s.nome||"—",acc:acc,pct:pct};
     });
-    el.innerHTML='<h3 class="dt-table-title">Relatório de operacionalidade — '+y+'</h3>'+navYearControls("nvop",true)+
-      '<div class="dt-note">Dias contados de 01/01/'+y+' até '+(y===CUR_YEAR?"hoje":"31/12/"+y)+', a partir do histórico registrado. “% Operacional” = (P + PO) ÷ dias com registro.</div>'+
+    el.innerHTML='<h3 class="dt-table-title">Relatório de operacionalidade — '+y+'</h3>'+
+      '<div class="dt-noterow"><div class="dt-note">Dias contados de 01/01/'+y+' até '+(y===CUR_YEAR?"hoje":"31/12/"+y)+', a partir do histórico registrado. “% Operacional” = (P + PO) ÷ dias com registro.</div>'+navYearControls("nvop",true)+'</div>'+
       '<div class="dt-table-wrap" style="margin-bottom:0"><table class="dt-table dt-nowrap" style="table-layout:auto"><thead><tr><th>Meio</th><th>P</th><th>PO</th><th>IO</th><th>IM</th><th>Sem registro</th><th>% Operacional</th></tr></thead><tbody>'+
       rows.map(function(r){
         var cls=r.pct===null?"":(r.pct>=70?"row-ok":(r.pct>=40?"row-warn":"row-bad"));
