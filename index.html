@@ -1701,6 +1701,10 @@ tr.row-crit{background:rgba(233,150,53,.20)}
 .nv-table th,.dt-table th{padding:9px 8px;letter-spacing:.5px}
 .nv-table td,.dt-table td{padding:8px 7px}
 .nv-table th,.nv-table td,.dt-table th,.dt-table td{overflow-wrap:anywhere}
+/* CONDEF "Condição de Eficiência": cada célula em uma única linha; se não couber,
+   a tabela rola na horizontal (.nv-table-wrap já tem overflow-x:auto) em vez de
+   quebrar linha. Cabeçalhos com <br> mantêm suas quebras intencionais. */
+.nv-table-wrap .nv-table th,.nv-table-wrap .nv-table td{white-space:nowrap!important;overflow-wrap:normal!important}
 /* Comissões/Relatório de Operacionalidade: colunas crescem pelo conteúdo em vez de quebrar
    linha — table-layout:auto (ver navRenderComissoes/navRenderOperReport) some com a quebra feia
    em telas estreitas; o wrapper .dt-table-wrap já tem overflow-x:auto pra rolagem horizontal. */
