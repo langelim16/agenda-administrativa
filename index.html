@@ -1333,6 +1333,9 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
 /* [fix mobile] splash sem largura fixa que estourava/entortava em telas estreitas */
 .splash-inner{max-width:100vw;padding:0 20px;box-sizing:border-box;text-align:center}
 .splash-title{text-wrap:balance}
+/* [fix mobile] a âncora tem width/height 220 no atributo do <svg>; sem isto ela ignora o
+   encolhimento do container no media query e transborda por cima do "Bem-vindo ao" */
+.splash-crest svg{width:100%;height:100%;display:block}
 @media(max-width:520px){.splash-crest-wrap,.splash-crest{width:150px;height:150px}.splash-title{font-size:16px;letter-spacing:1.5px}.splash-welcome{letter-spacing:2.5px}.splash-sub{letter-spacing:1.5px}}
 .splash-stage{font-size:10.5px;letter-spacing:1.2px;color:rgba(255,255,255,.6);text-transform:uppercase}
 .splash-pct{font-size:13px;letter-spacing:1px;color:#fff;font-weight:600;font-family:var(--mono,monospace)}
