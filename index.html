@@ -1099,7 +1099,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .cal-chip.sem{background:var(--c-100);color:var(--text3)}
 .cal-more{font-size:8px;color:var(--text3);padding:1px 4px;font-style:italic;cursor:pointer}
 .cal-more:hover{color:var(--c-blue)}
-.cal-legend{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.cal-legend{display:flex;gap:10px;margin:2px 0 8px;flex-wrap:wrap}
 .cal-legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text3)}
 .cal-legend-dot{width:8px;height:8px;border-radius:2px}
 /* ── TIMELINE ── */
@@ -4946,6 +4946,7 @@ function renderCal(allInst){
   var totalTasks=allInst.filter(function(i){return i.deadline&&i.deadline.getFullYear()===Y&&i.deadline.getMonth()+1===M;}).length;
   var html='<div class="cal-wrap">';
   html+='<div class="cal-month-hdr"><h3>'+ML[M-1]+' de '+Y+'</h3><small>'+totalTasks+' tarefa'+(totalTasks!==1?'s':'')+' neste mês</small></div>';
+  html+='<div class="cal-legend"><div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--c-teal)"></div>Concluída</div><div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--c-red)"></div>Vencida</div><div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--c-amber)"></div>Vence ≤7d</div><div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--c-blue)"></div>A vencer</div></div>';
   html+='<div class="cal-grid">'+dows.map(function(d){return'<div class="cal-dow">'+d+'</div>';}).join("");
   // células vazias
   for(var b=0;b<firstDay;b++)html+='<div class="cal-day other"></div>';
@@ -4970,7 +4971,6 @@ function renderCal(allInst){
   var total=firstDay+daysInMonth;var rem=total%7?7-(total%7):0;
   for(var a=0;a<rem;a++)html+='<div class="cal-day other"></div>';
   html+="</div>";
-  html+='<div class="cal-legend"><div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--c-teal)"></div>Concluída</div><div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--c-red)"></div>Vencida</div><div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--c-amber)"></div>Vence ≤7d</div><div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--c-blue)"></div>A vencer</div></div>';
   html+='</div>';
   document.getElementById("body").innerHTML=html;
   bindCalDayClicks();
@@ -9879,6 +9879,7 @@ function openPpssKpiDrawer(navio,metric,tipo){
     Object.keys(byDay).forEach(function(k){byDay[k].sort(function(a,b){return (a.h1||"").localeCompare(b.h1||"");});});
     var dows=["DOM","SEG","TER","QUA","QUI","SEX","SÁB"];
     var html='<div class="cal-wrap"><div class="cal-month-hdr"><div style="display:flex;align-items:center;gap:9px"><button class="nv-editbtn" id="gar_cal_prev" title="Mês anterior" style="padding:3px 11px">‹</button><h3>'+ML[m]+' de '+y+'</h3><button class="nv-editbtn" id="gar_cal_next" title="Próximo mês" style="padding:3px 11px">›</button></div><small>'+tot+' lançamento'+(tot!==1?'s':'')+' neste mês</small></div>';
+    html+='<div class="cal-legend"><div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--c-red)"></div>Em uso / Empréstimo</div><div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--c-amber)"></div>Previsão de uso</div><div class="cal-legend-item" style="margin-left:auto;font-style:italic">Clique num dia para detalhar ou inserir</div></div>';
     html+='<div class="cal-grid">'+dows.map(function(d){return'<div class="cal-dow">'+d+'</div>';}).join("");
     for(var b=0;b<firstDay;b++)html+='<div class="cal-day other"></div>';
     for(var d=1;d<=dim;d++){
@@ -9895,7 +9896,7 @@ function openPpssKpiDrawer(navio,metric,tipo){
     }
     var rem=(firstDay+dim)%7?7-((firstDay+dim)%7):0;
     for(var a2=0;a2<rem;a2++)html+='<div class="cal-day other"></div>';
-    html+='</div><div class="cal-legend"><div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--c-red)"></div>Em uso / Empréstimo</div><div class="cal-legend-item"><div class="cal-legend-dot" style="background:var(--c-amber)"></div>Previsão de uso</div><div class="cal-legend-item" style="margin-left:auto;font-style:italic">Clique num dia para detalhar ou inserir</div></div></div>';
+    html+='</div></div>';
     el.innerHTML=html;
     document.getElementById("gar_cal_prev").onclick=function(){garCalRef.m--;if(garCalRef.m<0){garCalRef.m=11;garCalRef.y--;}renderGarCal();};
     document.getElementById("gar_cal_next").onclick=function(){garCalRef.m++;if(garCalRef.m>11){garCalRef.m=0;garCalRef.y++;}renderGarCal();};
