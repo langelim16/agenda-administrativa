@@ -6822,7 +6822,17 @@ setTimeout(hideSplash,12000);
       if(to>end)to=end;
       if(from<to)segs.push({st:h[i].st,from:from,to:to,srcId:h[i].srcId});
     }
-    return segs;
+    /* Funde segmentos vizinhos de MESMA condição quando o de trás é auto-semeado (sem srcId):
+       ele não representa lançamento nenhum e só partia a barra em dois, com o segundo pedaço
+       ganhando o brilho de "CONDEF atual". Lançamento de verdade sempre tem srcId e é
+       preservado, pra não estragar o clique-para-editar. */
+    var merged=[];
+    for(var k=0;k<segs.length;k++){
+      var last=merged[merged.length-1],g=segs[k];
+      if(last&&last.st===g.st&&!g.srcId&&last.to.getTime()===g.from.getTime())last.to=g.to;
+      else merged.push(g);
+    }
+    return merged;
   }
   function navSetYear(y){
     navYear=Math.max(y,NAV_YEAR_MIN);
