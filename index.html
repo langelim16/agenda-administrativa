@@ -1248,10 +1248,9 @@ body.aa-login-open #app_sea{visibility:visible}
 .file-lbl{flex:1;min-width:180px;font-size:12px;color:var(--text3);line-height:1.5}
 .file-lbl.has{color:var(--text);font-weight:600}
 [data-theme="dark"] .file-btn{color:var(--text2);border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.06)}
-#app_sea{position:fixed;inset:0;width:100vw;height:100vh;display:block;filter:blur(30px) saturate(.55) brightness(1.22);opacity:.55;transform:scale(1.08);z-index:-1;pointer-events:none}
-[data-theme="dark"] #app_sea{filter:blur(28px) saturate(.6) brightness(.3)}
-body.aa-login-open #app_sea{filter:blur(12px) saturate(1.12);opacity:1;transform:scale(1.06)}
-[data-theme="dark"] body.aa-login-open #app_sea{filter:blur(14px) saturate(.7) brightness(.3)}
+/* Água barrenta do Amazonas: um único tratamento nos dois temas — sem a versão clara/lavada. */
+#app_sea{position:fixed;inset:0;width:100vw;height:100vh;display:block;filter:blur(28px) saturate(.85) brightness(.42);opacity:.55;transform:scale(1.08);z-index:-1;pointer-events:none}
+body.aa-login-open #app_sea{filter:blur(14px) saturate(.95) brightness(.38);opacity:1;transform:scale(1.06)}
 .aa-login-card{position:relative;z-index:1}
 .aa-lg-visual{position:relative;border-radius:0 28px 28px 0;background:linear-gradient(180deg,rgba(46,107,74,.78),rgba(21,46,32,.84));backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:44px 30px;overflow:hidden}
 .aa-lg-visual::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 80% 45% at 50% -5%,rgba(255,255,255,.17),transparent 70%)}
@@ -1347,6 +1346,10 @@ body.is-dragging,body.is-dragging *{-webkit-user-select:none!important;user-sele
 .splash-title{background:linear-gradient(100deg,#fff 30%,#a9d3e8 45%,#fff 60%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:titleShimmer 3.6s ease-in-out infinite}
 @keyframes titleShimmer{0%{background-position:200% 0}100%{background-position:-60% 0}}
 .splash-anchor-draw{stroke-dasharray:1000;stroke-dashoffset:1000;animation:drawAnchor 1.9s .15s cubic-bezier(.3,0,.2,1) forwards}
+/* Barquinho: desce até a linha d'água (as ondas são pintadas por cima do cenário) e balança */
+.splash-boat{transform-box:fill-box;transform-origin:50% 100%;animation:boatBob 5s ease-in-out infinite}
+@keyframes boatBob{0%,100%{transform:translateY(8px) rotate(-1.3deg)}50%{transform:translateY(12px) rotate(1.3deg)}}
+@media(prefers-reduced-motion:reduce){.splash-boat{animation:none;transform:translateY(10px)}}
 @keyframes drawAnchor{to{stroke-dashoffset:0}}
 .flag-inst{background:color-mix(in srgb,var(--c-purple) 14%,#fff);color:var(--c-purple);border-color:color-mix(in srgb,var(--c-purple) 30%,#fff)}
 .recdlg-opt{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1.5px solid var(--border);border-radius:var(--r-md);background:var(--surface);color:var(--text1);cursor:pointer;text-align:left;width:100%;font-family:inherit;font-size:13px;transition:border-color .15s,box-shadow .15s}
@@ -2019,6 +2022,8 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
     // aqui quando NÃO autenticado; login/biometria/logout fazem reload (sessão
     // presente -> conteúdo visível). Sem lockout.
     document.documentElement.className+=" aa-preauth";
+    // A tela de login é SEMPRE escura, independente do tema salvo (applyTheme respeita isto).
+    document.documentElement.setAttribute("data-theme","dark");
     document.write('<style>#splash{display:none!important}html.aa-preauth .wrap{visibility:hidden!important}</style>');
     try{document.body.classList.add("aa-login-open");}catch(e){}
     try{var _lg=document.getElementById("aa_login");if(_lg)_lg.classList.add("on");}catch(e){}
@@ -2041,7 +2046,17 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 <rect x="1264" y="224" width="14" height="34"></rect><rect x="1286" y="224" width="18" height="20"></rect><rect x="1312" y="224" width="14" height="34"></rect>
 <rect x="1240" y="258" width="110" height="6"></rect>
 </g>
-<g opacity=".8">
+<g opacity=".7">
+<rect x="1090" y="262" width="156" height="5"></rect>
+<rect x="1098" y="267" width="5" height="38"></rect>
+<rect x="1132" y="267" width="5" height="38"></rect>
+<rect x="1166" y="267" width="5" height="38"></rect>
+<rect x="1200" y="267" width="5" height="38"></rect>
+<rect x="1234" y="267" width="5" height="38"></rect>
+<rect x="1088" y="255" width="4" height="12"></rect>
+<rect x="1244" y="255" width="4" height="12"></rect>
+</g>
+<g class="splash-boat" opacity=".8">
 <path d="M700,282 Q740,296 800,296 Q860,296 900,282 Q870,272 800,272 Q730,272 700,282 Z"></path>
 <path d="M792,272 C790,258 794,248 800,242 C806,248 810,258 808,272 Z"></path>
 </g>
@@ -2943,8 +2958,8 @@ async function aaLogout(){
 }
 
 /* ── UI do login ── */
-function aaShowLogin(force){var el=document.getElementById("aa_login");if(!el)return;el.classList.add("on");try{document.body.classList.add("aa-login-open");window.scrollTo(0,0);}catch(e){}var em=document.getElementById("aa_login_email");if(em)setTimeout(function(){em.focus();},50);}
-function aaHideLogin(){var el=document.getElementById("aa_login");if(el)el.classList.remove("on");try{document.body.classList.remove("aa-login-open");}catch(e){}try{document.documentElement.classList.remove("aa-preauth");}catch(e){}}
+function aaShowLogin(force){var el=document.getElementById("aa_login");if(!el)return;el.classList.add("on");try{document.body.classList.add("aa-login-open");document.documentElement.setAttribute("data-theme","dark");window.scrollTo(0,0);}catch(e){}var em=document.getElementById("aa_login_email");if(em)setTimeout(function(){em.focus();},50);}
+function aaHideLogin(){var el=document.getElementById("aa_login");if(el)el.classList.remove("on");try{document.body.classList.remove("aa-login-open");}catch(e){}try{document.documentElement.classList.remove("aa-preauth");}catch(e){}try{applyTheme();}catch(e){}}
 function aaLoginError(msg){var e=document.getElementById("aa_login_err");if(!e)return;if(msg){e.textContent=msg;e.classList.add("on");}else{e.textContent="";e.classList.remove("on");}}
 function aaPaintAuth(){
   // Item ADMIN do menu lateral (ex-lugar da CONFIG OM): só aparece para o administrador.
@@ -4701,6 +4716,14 @@ function dateTd(row,col,editing){
 // mostra o valor cru, então o round-trip de edição não quebra). Chaves específicas
 // da CLG — não colidem com outras abas.
 var CLG_NUM_KEYS={estoque:1,capacidade:1,rop:1,naoAsp:1,estoqueMin:1};
+/* Colunas que exibem um item por linha (quebra em ";"). Só na leitura — ao editar,
+   a célula volta a ser o texto cru, pra não brigar com o contenteditable. */
+var MULTILINE_KEYS={clg:1};
+function multilineCellHtml(raw){
+  var parts=String(raw||"").split(/\r?\n|;/).map(function(x){return x.trim();}).filter(Boolean);
+  if(!parts.length)return "";
+  return parts.map(function(p,i){return esc(p)+(i<parts.length-1?";":"");}).join("<br>");
+}
 function fmtMilhar(v){
   var s=String(v==null?"":v).trim();
   if(!s||!/^-?[\d.]*\d(,\d+)?$/.test(s))return s; // não é número puro: devolve como está
@@ -4721,7 +4744,8 @@ function colTd(row,col,editing,cellCls,roCls,forceEditableRowId){
   var compTitle=(col.computed&&editing)?' title="Calculado automaticamente (Operação, Manutenção e Cronograma)"':'';
   var raw=row[col.key]||"";
   var disp=(!isEditable&&CLG_NUM_KEYS[col.key])?fmtMilhar(raw):raw;
-  return '<td class="'+cellCls+(isEditable?'':' '+roCls)+compCls+'"'+wStyle+compTitle+' data-id="'+row.id+'" data-key="'+col.key+'"'+(isEditable?' contenteditable="true"':'')+' spellcheck="false">'+esc(disp)+'</td>';
+  var inner=(!isEditable&&MULTILINE_KEYS[col.key])?multilineCellHtml(raw):esc(disp);
+  return '<td class="'+cellCls+(isEditable?'':' '+roCls)+compCls+'"'+wStyle+compTitle+' data-id="'+row.id+'" data-key="'+col.key+'"'+(isEditable?' contenteditable="true"':'')+' spellcheck="false">'+inner+'</td>';
 }
 function addTableColumn(cols,rows){
   var n=0;
@@ -4752,7 +4776,7 @@ function passF(i){
 }
 
 /* ── TEMA / HEADER ── */
-function applyTheme(){document.documentElement.setAttribute("data-theme",theme);document.querySelectorAll(".theme-toggle-btn").forEach(function(b){b.textContent=theme==="light"?"🌙 Noturno":"☀ Diurno";});}
+function applyTheme(){var lg=document.body&&document.body.classList.contains("aa-login-open");document.documentElement.setAttribute("data-theme",lg?"dark":theme);document.querySelectorAll(".theme-toggle-btn").forEach(function(b){b.textContent=theme==="light"?"🌙 Noturno":"☀ Diurno";});}
 var PAL0={danger:"#bb4f3f",warning:"#ad8226",success:"#47906c"};
 function applyPalette(){var p=(typeof cfg!=="undefined"&&cfg&&cfg.palette)||PAL0,r=document.documentElement.style;r.setProperty("--c-red",p.danger||PAL0.danger);r.setProperty("--c-amber",p.warning||PAL0.warning);r.setProperty("--c-gold",p.warning||PAL0.warning);r.setProperty("--c-teal",p.success||PAL0.success);}
 function applyHdr(){document.documentElement.style.setProperty("--header-bg",cfg.headerColor||"#2f3a44");var el=document.getElementById("crestEl"),inn=document.getElementById("crestContent");if(cfg.crestType==="img"&&cfg.crestImg){inn.innerHTML='<img src="'+cfg.crestImg+'" alt="">';el.style.background="none";}else{inn.innerHTML="<span>"+esc(cfg.crestText||"AA")+"</span>";el.style.background="";}applyTabHeaders();applyPalette();}
@@ -13289,8 +13313,8 @@ syncTheme();
     function reduced(){return matchMedia("(prefers-reduced-motion:reduce)").matches;}
     function active(){return !document.hidden&&!reduced()&&transLock===0;}
     function size(){var d=Math.min(window.devicePixelRatio||1,1.25);cv.width=Math.max(2,Math.floor(innerWidth/2.5*d));cv.height=Math.max(2,Math.floor(innerHeight/2.5*d));if(gl)gl.viewport(0,0,cv.width,cv.height);}
-    if(!gl){cv.style.background="linear-gradient(180deg,#a8ccd8 0%,#7fb2b5 45%,#2e6470 100%)";return;}
-    var fsrc="precision mediump float;uniform float t;uniform vec2 r;\nfloat h21(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\nfloat vn(vec2 p){vec2 i=floor(p);vec2 f=fract(p);vec2 u=f*f*(3.0-2.0*f);\n return mix(mix(h21(i),h21(i+vec2(1.,0.)),u.x),mix(h21(i+vec2(0.,1.)),h21(i+vec2(1.,1.)),u.x),u.y);}\nfloat fbm(vec2 p){float v=0.0;float a=0.5;\n for(int i=0;i<5;i++){v+=a*vn(p);p=p*2.03+vec2(1.7,9.2);a*=0.5;}return v;}\nvoid main(){\n vec2 uv=gl_FragCoord.xy/r;\n float hor=0.62;\n vec3 skyTop=vec3(0.55,0.74,0.84);vec3 skyHor=vec3(0.83,0.90,0.92);\n if(uv.y>hor){float k=(uv.y-hor)/(1.0-hor);gl_FragColor=vec4(mix(skyHor,skyTop,k),1.0);return;}\n float v=(hor-uv.y)/hor;\n float persp=1.0/(v+0.10);\n vec2 sp=vec2((uv.x-0.5)*6.0*persp, persp*5.0 - t*1.2);\n float swell=sin(sp.y*0.55 - t*1.4 + sin(sp.x*0.4)*0.8)*0.5+0.5;\n float w1=fbm(sp*0.9);\n float w2=fbm(sp*2.3+vec2(t*0.5,t*0.2));\n float ht=w1*0.55+w2*0.30+swell*0.30;\n float e=0.08;\n float hx=fbm((sp+vec2(e,0.))*0.9)*0.55+fbm((sp+vec2(e,0.))*2.3+vec2(t*0.5,t*0.2))*0.30;\n float hy=fbm((sp+vec2(0.,e))*0.9)*0.55+fbm((sp+vec2(0.,e))*2.3+vec2(t*0.5,t*0.2))*0.30;\n vec2 grad=vec2(ht-hx,ht-hy)/e;\n vec3 deep=vec3(0.07,0.28,0.35);vec3 mid=vec3(0.15,0.42,0.47);vec3 shal=vec3(0.34,0.60,0.62);\n vec3 col=mix(mid,deep,clamp(v*1.4,0.,1.));\n col=mix(col,shal,clamp(grad.y*0.5+0.2,0.,1.)*0.5);\n col+=vec3(0.06,0.09,0.09)*(ht-0.55)*2.0;\n float foam=smoothstep(0.78,0.95,ht)+smoothstep(0.55,0.9,ht)*smoothstep(0.6,1.0,w2)*0.6;\n col=mix(col,vec3(0.94,0.97,0.96),clamp(foam*0.9,0.,1.));\n float band=exp(-pow((uv.x-0.62)*4.0,2.0));\n float sparkle=pow(max(0.,w2),9.0)*band*(1.0-v)*2.2;\n col+=vec3(1.0,0.97,0.88)*sparkle;\n col=mix(mix(skyHor,vec3(0.72,0.84,0.87),0.5),col,smoothstep(0.0,0.18,v));\n gl_FragColor=vec4(col,1.0);\n}";
+    if(!gl){cv.style.background="linear-gradient(180deg,#c8b48e 0%,#9a7647 45%,#412d17 100%)";return;}
+    var fsrc="precision mediump float;uniform float t;uniform vec2 r;\nfloat h21(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\nfloat vn(vec2 p){vec2 i=floor(p);vec2 f=fract(p);vec2 u=f*f*(3.0-2.0*f);\n return mix(mix(h21(i),h21(i+vec2(1.,0.)),u.x),mix(h21(i+vec2(0.,1.)),h21(i+vec2(1.,1.)),u.x),u.y);}\nfloat fbm(vec2 p){float v=0.0;float a=0.5;\n for(int i=0;i<5;i++){v+=a*vn(p);p=p*2.03+vec2(1.7,9.2);a*=0.5;}return v;}\nvoid main(){\n vec2 uv=gl_FragCoord.xy/r;\n float hor=0.62;\n vec3 skyTop=vec3(0.55,0.74,0.84);vec3 skyHor=vec3(0.83,0.90,0.92);\n if(uv.y>hor){float k=(uv.y-hor)/(1.0-hor);gl_FragColor=vec4(mix(skyHor,skyTop,k),1.0);return;}\n float v=(hor-uv.y)/hor;\n float persp=1.0/(v+0.10);\n vec2 sp=vec2((uv.x-0.5)*6.0*persp, persp*5.0 - t*1.2);\n float swell=sin(sp.y*0.55 - t*1.4 + sin(sp.x*0.4)*0.8)*0.5+0.5;\n float w1=fbm(sp*0.9);\n float w2=fbm(sp*2.3+vec2(t*0.5,t*0.2));\n float ht=w1*0.55+w2*0.30+swell*0.30;\n float e=0.08;\n float hx=fbm((sp+vec2(e,0.))*0.9)*0.55+fbm((sp+vec2(e,0.))*2.3+vec2(t*0.5,t*0.2))*0.30;\n float hy=fbm((sp+vec2(0.,e))*0.9)*0.55+fbm((sp+vec2(0.,e))*2.3+vec2(t*0.5,t*0.2))*0.30;\n vec2 grad=vec2(ht-hx,ht-hy)/e;\n vec3 deep=vec3(0.19,0.13,0.07);vec3 mid=vec3(0.40,0.28,0.15);vec3 shal=vec3(0.62,0.47,0.27);\n vec3 col=mix(mid,deep,clamp(v*1.4,0.,1.));\n col=mix(col,shal,clamp(grad.y*0.5+0.2,0.,1.)*0.5);\n col+=vec3(0.10,0.07,0.03)*(ht-0.55)*2.0;\n float foam=smoothstep(0.78,0.95,ht)+smoothstep(0.55,0.9,ht)*smoothstep(0.6,1.0,w2)*0.6;\n col=mix(col,vec3(0.87,0.80,0.66),clamp(foam*0.9,0.,1.));\n float band=exp(-pow((uv.x-0.62)*4.0,2.0));\n float sparkle=pow(max(0.,w2),9.0)*band*(1.0-v)*2.2;\n col+=vec3(1.0,0.97,0.88)*sparkle;\n col=mix(mix(skyHor,vec3(0.72,0.84,0.87),0.5),col,smoothstep(0.0,0.18,v));\n gl_FragColor=vec4(col,1.0);\n}";
     function sh(ty,src){var s=gl.createShader(ty);gl.shaderSource(s,src);gl.compileShader(s);return s;}
     var pr=gl.createProgram();
     gl.attachShader(pr,sh(gl.VERTEX_SHADER,"attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}"));
