@@ -12552,12 +12552,21 @@ function pdfTextRuns(buf){
       days.push({d:d,disp:total-indispo,total:total,isToday:dt.getTime()===TODAY.getTime()});
     }
     var max=total;
-    box.innerHTML='<div style="display:flex;gap:3px;align-items:flex-end;height:104px">'+days.map(function(x){
+    box.innerHTML='<div style="display:flex;gap:3px;align-items:flex-end;height:90px">'+days.map(function(x){
       var pct=Math.round(x.disp/max*100);
       var color=pct>=70?"var(--c-teal)":(pct>=40?"var(--c-amber)":"var(--c-red)");
+      /* O número vai DENTRO da barra e acompanha o topo do preenchimento — fora dali ele
+         encostava no dia do mês e os dois se confundiam. Fica logo ACIMA do topo enquanto
+         houver vazio; quando não houver, desce pra DENTRO da cor e vira branco. Ancorar
+         sempre no topo do preenchimento garante que ele nunca caia metade na trilha e
+         metade na cor, que é onde qualquer cor única fica ilegível em um dos temas. */
+      var vazioPx=Math.round((1-pct/100)*70),sobrePreenchido=vazioPx<14;
+      var posY=sobrePreenchido?("calc("+pct+"% - 12px)"):("calc("+pct+"% + 2px)");
       return '<div class="pessoal-cal-day" data-d="'+x.d+'" role="button" tabindex="0" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer" title="Dia '+x.d+': '+x.disp+'/'+x.total+' disponíveis — clique para ver a escala">'+
-        '<span style="font-size:9px;font-weight:700;color:'+color+';line-height:1">'+x.disp+'</span>'+
-        '<div style="width:100%;height:70px;display:flex;align-items:flex-end;background:var(--c-100);border-radius:3px;overflow:hidden'+(x.isToday?';box-shadow:0 0 0 2px var(--c-blue)':'')+'"><div style="width:100%;height:'+pct+'%;background:'+color+'"></div></div>'+
+        '<div style="position:relative;width:100%;height:70px;display:flex;align-items:flex-end;background:var(--c-100);border-radius:3px;overflow:hidden'+(x.isToday?';box-shadow:0 0 0 2px var(--c-blue)':'')+'">'+
+          '<div style="width:100%;height:'+pct+'%;background:'+color+'"></div>'+
+          '<span style="position:absolute;bottom:'+posY+';left:0;right:0;text-align:center;font-size:9px;font-weight:700;line-height:1;color:'+(sobrePreenchido?"#fff":"var(--text)")+'">'+x.disp+'</span>'+
+        '</div>'+
         '<span style="font-size:8px;color:var(--text3)">'+x.d+'</span>'+
       '</div>';
     }).join("")+'</div>';
