@@ -1859,7 +1859,7 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
   box-shadow:0 2px 4px rgba(38,42,46,.08),0 10px 22px color-mix(in srgb,var(--kpi-c) 22%,rgba(38,42,46,.08)),0 18px 40px rgba(38,42,46,.10),inset 0 1px 0 color-mix(in srgb,#fff 65%,transparent);
 }
 .kpi:active{transform:translateY(-1px) scale(.985)}
-.kpi.active{box-shadow:0 0 0 2.5px var(--kpi-c) inset,0 8px 20px color-mix(in srgb,var(--kpi-c) 26%,transparent)}
+.kpi.active,.kpi.active:hover{box-shadow:0 0 0 2.5px var(--kpi-c) inset,0 8px 24px color-mix(in srgb,var(--kpi-c) 40%,transparent),0 2px 5px rgba(38,42,46,.10)}
 .kpi-n{text-shadow:0 1px 0 color-mix(in srgb,#fff 40%,transparent),0 2px 6px color-mix(in srgb,var(--kpi-c) 26%,transparent)}
 .kpi-prog-fill{background:linear-gradient(90deg,color-mix(in srgb,var(--kpi-c) 60%,#fff),var(--kpi-c));box-shadow:0 0 6px color-mix(in srgb,var(--kpi-c) 50%,transparent)}
 /* Noturno: sem a mistura de branco no fundo nem o brilho claro — sombra escura em camadas */
@@ -1869,6 +1869,12 @@ html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-r
 }
 [data-theme="dark"] .kpi:hover{
   box-shadow:0 2px 4px rgba(0,0,0,.4),0 10px 22px color-mix(in srgb,var(--kpi-c) 26%,rgba(0,0,0,.4)),0 18px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.07);
+}
+/* Filtro ativo: precisa vir DEPOIS de [data-theme="dark"] .kpi e do :hover — mesma
+   especificidade, então quem está por último vence. Sem isto a sombra colorida do
+   .kpi.active só aparecia no hover, no tema escuro. */
+[data-theme="dark"] .kpi.active,[data-theme="dark"] .kpi.active:hover{
+  box-shadow:0 0 0 2.5px var(--kpi-c) inset,0 8px 24px color-mix(in srgb,var(--kpi-c) 42%,transparent),0 2px 6px rgba(0,0,0,.35);
 }
 [data-theme="dark"] .kpi-n{text-shadow:0 2px 8px color-mix(in srgb,var(--kpi-c) 40%,transparent)}
 
