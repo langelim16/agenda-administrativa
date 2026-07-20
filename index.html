@@ -437,11 +437,11 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
 .dt-note{font-size:10px;color:var(--text3);font-style:italic;line-height:1.4;margin:2px 2px 8px}
 /* Linha que emparelha a frase (ou a legenda) com a toolbar de ano/ações, à direita */
 .dt-noterow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
-.dt-noterow>.dt-note,.dt-noterow>.nv-tl-legend,.dt-noterow>.tl-legend-top{flex:1;min-width:240px;margin:0}
+.dt-noterow>.dt-note,.dt-noterow>.nv-tl-legend,.dt-noterow>.tl-legend-top,.dt-noterow>.oper-legend{flex:1;min-width:240px;margin:0}
 .dt-noterow>.nv-toolbar{flex:none;margin-bottom:0}
 /* Cápsula de legenda — mesma casca do .tl-legend-top: fundo, borda fina e cantos arredondados,
    para a legenda não ficar flutuando solta sobre o fundo da página. */
-.comissao-legend,.cal-legend,.nv-tl-legend,.hm-legend,.ferias-legend{
+.comissao-legend,.cal-legend,.nv-tl-legend,.hm-legend,.ferias-legend,.oper-legend{
   padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg)}
 .card-lastedit{display:block;margin:-4px 0 8px;text-align:left}
 .flt-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
@@ -467,9 +467,9 @@ tr.comissao-cancelada td{color:var(--c-red);text-decoration:line-through}
 tr.comissao-adiada{background:color-mix(in srgb,var(--c-amber) 30%,transparent)}
 tr.comissao-andamento{background:color-mix(in srgb,var(--c-blue) 22%,transparent)}
 tr.comissao-prevista{background:color-mix(in srgb,#c9b21a 30%,transparent)}
-.comissao-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--text2);margin:2px 2px 8px}
-.comissao-legend span{display:inline-flex;align-items:center;gap:5px}
-.comissao-legend i{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
+.comissao-legend,.oper-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--text2);margin:2px 2px 8px}
+.comissao-legend span,.oper-legend span{display:inline-flex;align-items:center;gap:5px}
+.comissao-legend i,.oper-legend i{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
 tr.row-info{background:color-mix(in srgb,var(--c-blue) 8%,transparent)}
 /* [impeccable a11y] Contraste AA no tema ESCURO: no fundo #000 a tinta de status
    fica escura e o texto na cor cheia (--c-red/--c-amber) caía a ~3,98:1. Aqui só
@@ -6924,7 +6924,14 @@ setTimeout(hideSplash,12000);
       return{nome:s.nome||"—",acc:acc,pct:pct};
     });
     el.innerHTML='<h3 class="dt-table-title">Relatório de operacionalidade — '+y+'</h3>'+
-      '<div class="dt-noterow"><div class="dt-note">Dias contados de 01/01/'+y+' até '+(y===CUR_YEAR?"hoje":"31/12/"+y)+', a partir do histórico registrado. “% Operacional” = (P + PO) ÷ dias com registro.</div>'+navYearControls("nvop",true)+'</div>'+
+      '<div class="dt-noterow">'+
+        '<div class="oper-legend">'+
+          '<span><i style="background:color-mix(in srgb,var(--c-teal) 28%,transparent)"></i>≥ 70% operacional</span>'+
+          '<span><i style="background:color-mix(in srgb,var(--c-amber) 30%,transparent)"></i>40% a 69%</span>'+
+          '<span><i style="background:color-mix(in srgb,var(--c-red) 28%,transparent)"></i>menos de 40%</span>'+
+          '<span><i style="background:var(--c-100)"></i>Sem dias registrados</span>'+
+        '</div>'+navYearControls("nvop",true)+'</div>'+
+      '<div class="dt-note" style="margin:0 2px 5px">Dias contados de 01/01/'+y+' até '+(y===CUR_YEAR?"hoje":"31/12/"+y)+', a partir do histórico registrado. “% Operacional” = (P + PO) ÷ dias com registro.</div>'+
       '<div class="dt-table-wrap" style="margin-bottom:0"><table class="dt-table dt-nowrap" style="table-layout:auto"><thead><tr><th>Meio</th><th>P</th><th>PO</th><th>IO</th><th>IM</th><th>Sem registro</th><th>% Operacional</th></tr></thead><tbody>'+
       rows.map(function(r){
         var cls=r.pct===null?"":(r.pct>=70?"row-ok":(r.pct>=40?"row-warn":"row-bad"));
