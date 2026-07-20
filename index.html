@@ -2359,16 +2359,18 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 
 
 <div class="kpis" id="horas_kpis"></div>
-<div class="dt-section-head"><h3 class="dt-table-title">Situação dos motores — próximas revisões</h3></div>
+<div class="dt-section-head">
+  <div class="dt-title-wrap"><h3 class="dt-table-title">Situação dos motores — próximas revisões</h3></div>
+  <div class="nv-toolbar">
+    <button class="nv-editbtn blue" id="horas_lanc_btn">+ Inserir horas em operação</button>
+    <button class="nv-editbtn" id="horas_editlanc_btn">✎ Editar lançamentos</button>
+  </div>
+</div>
 <div class="tl-legend-top" id="horas_legend"></div>
 <div class="stats-card" id="horas_dash" style="margin-bottom:18px;flex:none"></div>
 
 <div class="dt-section-head">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Horas acumuladas</h3></div>
-  <div class="nv-toolbar">
-    <button class="nv-editbtn blue" id="horas_lanc_btn">+ Inserir horas em operação</button>
-    <button class="nv-editbtn" id="horas_editlanc_btn">✎ Editar lançamentos</button>
-  </div>
 </div>
 <div class="stats-card" id="horas_chart_card" style="margin-bottom:18px;flex:none">
   <div class="flt-bar" style="margin-bottom:8px"><select id="horas_chart_ship"></select></div>
@@ -2404,10 +2406,16 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
     <h3 class="dt-table-title">Militares disponíveis</h3>
     <div style="font-size:11px;color:var(--text3);font-style:italic">Selecione o dia do mês para verificar os militares disponíveis.</div>
   </div>
-  <div class="nv-toolbar" id="pessoal_cal_nav">
-    <button class="hbtn" id="pessoal_cal_prev">‹</button>
-    <span id="pessoal_cal_label"></span>
-    <button class="hbtn" id="pessoal_cal_next">›</button>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div class="nv-toolbar">
+      <button class="nv-editbtn blue" id="ferias_add_btn">+ Inserir férias/afastamento</button>
+      <button class="nv-editbtn" id="ferias_edit_btn">Editar períodos lançados</button>
+    </div>
+    <div class="nv-toolbar" id="pessoal_cal_nav">
+      <button class="hbtn" id="pessoal_cal_prev">‹</button>
+      <span id="pessoal_cal_label"></span>
+      <button class="hbtn" id="pessoal_cal_next">›</button>
+    </div>
   </div>
 </div>
 <div class="stats-card" id="pessoal_disp_cal" style="margin-bottom:14px;flex:none"></div>
@@ -2437,10 +2445,6 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 
 <div class="dt-section-head" style="margin-top:18px">
   <h3 class="dt-table-title">Controle de Férias/Afastamentos</h3>
-  <div class="nv-toolbar">
-    <button class="nv-editbtn blue" id="ferias_add_btn">+ Inserir período</button>
-    <button class="nv-editbtn" id="ferias_edit_btn">Editar períodos lançados</button>
-  </div>
 </div>
 <div class="nv-toolbar" id="pessoal_year_tabs" style="margin-bottom:8px"></div>
 <div class="ferias-legend" id="ferias_legend"></div>
@@ -2531,6 +2535,10 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
   </div>
 </header>
 
+<div class="nv-toolbar">
+  <button class="nv-editbtn blue" id="gar_cal_add">+ Inserir uso da viatura</button>
+  <button class="nv-editbtn" id="gar_cal_edit">✎ Editar lançamentos</button>
+</div>
 <div class="kpis" id="gar_kpis"></div>
 
 <div class="tl-legend-top">
@@ -2550,10 +2558,6 @@ button,.tab,.nav-item,.menu-item{touch-action:manipulation}
 
 <div class="dt-section-head" style="margin-top:18px">
   <div class="dt-title-wrap"><h3 class="dt-table-title">Calendário de uso de viaturas</h3></div>
-  <div class="nv-toolbar">
-    <button class="nv-editbtn" id="gar_cal_add">+ Inserir uso da viatura</button>
-    <button class="nv-editbtn" id="gar_cal_edit">✎ Editar lançamentos</button>
-  </div>
 </div>
 <div class="stats-card" style="flex:none;margin-bottom:18px"><div id="gar_cal"></div></div>
 
